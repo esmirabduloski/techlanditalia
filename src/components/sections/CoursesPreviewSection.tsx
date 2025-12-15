@@ -12,7 +12,7 @@ const courses = [
     level: "Beginner",
     duration: "12 settimane",
     emoji: "🎨",
-    color: "tech-purple",
+    color: "tech-green",
   },
   {
     id: "game-development",
@@ -22,7 +22,7 @@ const courses = [
     level: "Intermediate",
     duration: "16 settimane",
     emoji: "🎮",
-    color: "tech-orange",
+    color: "tech-teal",
   },
   {
     id: "roblox-studio",
@@ -42,7 +42,7 @@ const courses = [
     level: "Intermediate",
     duration: "20 settimane",
     emoji: "🌐",
-    color: "tech-pink",
+    color: "tech-blue",
   },
   {
     id: "python-ai",
@@ -52,14 +52,14 @@ const courses = [
     level: "Advanced",
     duration: "24 settimane",
     emoji: "🤖",
-    color: "tech-green",
+    color: "tech-emerald",
   },
 ];
 
 const levelColors: Record<string, string> = {
   Beginner: "bg-tech-green/10 text-tech-green",
-  Intermediate: "bg-tech-orange/10 text-tech-orange",
-  Advanced: "bg-tech-purple/10 text-tech-purple",
+  Intermediate: "bg-tech-teal/10 text-tech-teal",
+  Advanced: "bg-tech-cyan/10 text-tech-cyan",
 };
 
 export function CoursesPreviewSection() {

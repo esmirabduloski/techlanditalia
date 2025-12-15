@@ -60,18 +60,19 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // TECHLAND custom colors
+        // TECHLAND custom colors - Green & Blue
         tech: {
-          purple: "hsl(var(--tech-purple))",
-          "purple-dark": "hsl(var(--tech-purple-dark))",
-          "purple-light": "hsl(var(--tech-purple-light))",
-          orange: "hsl(var(--tech-orange))",
-          "orange-light": "hsl(var(--tech-orange-light))",
+          green: "hsl(var(--tech-green))",
+          "green-dark": "hsl(var(--tech-green-dark))",
+          "green-light": "hsl(var(--tech-green-light))",
+          teal: "hsl(var(--tech-teal))",
+          "teal-light": "hsl(var(--tech-teal-light))",
           cyan: "hsl(var(--tech-cyan))",
           "cyan-light": "hsl(var(--tech-cyan-light))",
-          yellow: "hsl(var(--tech-yellow))",
-          pink: "hsl(var(--tech-pink))",
-          green: "hsl(var(--tech-green))",
+          blue: "hsl(var(--tech-blue))",
+          "blue-light": "hsl(var(--tech-blue-light))",
+          mint: "hsl(var(--tech-mint))",
+          emerald: "hsl(var(--tech-emerald))",
         },
       },
       borderRadius: {
@@ -86,7 +87,7 @@ export default {
         "tech-md": "var(--shadow-md)",
         "tech-lg": "var(--shadow-lg)",
         "tech-glow": "var(--shadow-glow)",
-        "tech-orange": "var(--shadow-orange)",
+        "tech-cyan": "var(--shadow-cyan)",
       },
       backgroundImage: {
         "gradient-hero": "var(--gradient-hero)",

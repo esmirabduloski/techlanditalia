@@ -4,11 +4,11 @@ import { Play, Sparkles, Users, Award, Shield } from "lucide-react";
 
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-tech-purple-light via-background to-background">
+    <section className="relative overflow-hidden bg-gradient-to-b from-tech-green-light via-background to-background">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-tech-purple/10 rounded-full blur-3xl" />
-        <div className="absolute top-20 -left-20 w-72 h-72 bg-tech-orange/10 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-tech-green/10 rounded-full blur-3xl" />
+        <div className="absolute top-20 -left-20 w-72 h-72 bg-tech-teal/10 rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-tech-cyan/10 rounded-full blur-3xl" />
       </div>
 
@@ -16,7 +16,7 @@ export function HeroSection() {
         <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[calc(100vh-5rem)] py-12">
           {/* Content */}
           <div className="space-y-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-tech-orange/10 text-tech-orange text-sm font-medium">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-tech-teal/10 text-tech-teal text-sm font-medium">
               <Sparkles className="w-4 h-4" />
               <span>La scuola di coding #1 per bambini in Italia</span>
             </div>
@@ -47,14 +47,14 @@ export function HeroSection() {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-6 pt-8 border-t border-border/50">
               <div className="text-center sm:text-left">
-                <div className="flex items-center justify-center sm:justify-start gap-2 text-tech-purple mb-1">
+                <div className="flex items-center justify-center sm:justify-start gap-2 text-tech-green mb-1">
                   <Users className="w-5 h-5" />
                   <span className="text-2xl font-bold">15.000+</span>
                 </div>
                 <p className="text-sm text-muted-foreground">Studenti formati</p>
               </div>
               <div className="text-center sm:text-left">
-                <div className="flex items-center justify-center sm:justify-start gap-2 text-tech-orange mb-1">
+                <div className="flex items-center justify-center sm:justify-start gap-2 text-tech-teal mb-1">
                   <Award className="w-5 h-5" />
                   <span className="text-2xl font-bold">98%</span>
                 </div>
@@ -87,7 +87,7 @@ export function HeroSection() {
             {/* Floating elements */}
             <div className="absolute top-10 -left-10 p-4 rounded-2xl bg-card shadow-tech-lg animate-bounce-slow" style={{ animationDelay: "0.5s" }}>
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-tech-orange/20 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-xl bg-tech-teal/20 flex items-center justify-center">
                   <span className="text-2xl">🎮</span>
                 </div>
                 <div>

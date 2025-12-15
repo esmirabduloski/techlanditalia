@@ -92,7 +92,7 @@ export default function Prenota() {
 
   return (
     <Layout>
-      <section className="tech-section bg-gradient-to-b from-tech-purple-light to-background">
+      <section className="tech-section bg-gradient-to-b from-tech-green-light to-background">
         <div className="tech-container">
           <div className="grid lg:grid-cols-2 gap-12 items-start">
             {/* Info Column */}

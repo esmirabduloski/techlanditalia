@@ -26,7 +26,7 @@ export function Navbar() {
             </div>
             <span className="text-2xl font-bold">
               <span className="text-primary">TECH</span>
-              <span className="text-secondary">LAND</span>
+              <span className="text-tech-cyan">LAND</span>
             </span>
           </Link>
 

@@ -5,13 +5,13 @@ const features = [
     icon: GraduationCap,
     title: "Docenti esperti e verificati",
     description: "I nostri insegnanti sono professionisti del settore tech, formati per insegnare ai giovani con metodologie coinvolgenti.",
-    color: "tech-purple",
+    color: "tech-green",
   },
   {
     icon: Users,
     title: "Percorsi per ogni età",
     description: "Corsi studiati per 3 fasce d'età (6-8, 9-12, 13-18) con contenuti adatti al livello di sviluppo cognitivo.",
-    color: "tech-orange",
+    color: "tech-teal",
   },
   {
     icon: Rocket,
@@ -23,7 +23,7 @@ const features = [
     icon: Shield,
     title: "Ambiente sicuro per i genitori",
     description: "Accesso completo ai progressi, registrazioni delle lezioni e supporto dedicato. Sicurezza online garantita.",
-    color: "tech-green",
+    color: "tech-blue",
   },
 ];
 

@@ -61,19 +61,19 @@ const articles = [
 ];
 
 const categoryColors: Record<string, string> = {
-  Educazione: "bg-tech-purple/10 text-tech-purple",
-  Guida: "bg-tech-orange/10 text-tech-orange",
+  Educazione: "bg-tech-green/10 text-tech-green",
+  Guida: "bg-tech-teal/10 text-tech-teal",
   Genitori: "bg-tech-cyan/10 text-tech-cyan",
-  Gaming: "bg-tech-pink/10 text-tech-pink",
-  Futuro: "bg-tech-green/10 text-tech-green",
-  Sicurezza: "bg-tech-yellow/10 text-tech-yellow",
+  Gaming: "bg-tech-blue/10 text-tech-blue",
+  Futuro: "bg-tech-emerald/10 text-tech-emerald",
+  Sicurezza: "bg-tech-mint/10 text-tech-mint",
 };
 
 export default function Blog() {
   return (
     <Layout>
       {/* Hero */}
-      <section className="tech-section bg-gradient-to-b from-tech-purple-light to-background">
+      <section className="tech-section bg-gradient-to-b from-tech-green-light to-background">
         <div className="tech-container">
           <div className="text-center max-w-3xl mx-auto">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">

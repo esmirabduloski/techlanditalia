@@ -6,30 +6,30 @@
 
 @layer base {
   :root {
-    /* TECHLAND Design System - Vivid EdTech for Kids */
-    --background: 220 30% 98%;
-    --foreground: 230 25% 15%;
+    /* TECHLAND Design System - Green & Blue EdTech */
+    --background: 150 20% 98%;
+    --foreground: 160 25% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 230 25% 15%;
+    --card-foreground: 160 25% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 230 25% 15%;
+    --popover-foreground: 160 25% 10%;
 
-    /* Primary: Deep Tech Purple-Blue */
-    --primary: 250 70% 50%;
+    /* Primary: Rich Green */
+    --primary: 152 60% 40%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary: Energetic Orange */
-    --secondary: 30 95% 55%;
+    /* Secondary: Teal/Cyan Blue */
+    --secondary: 190 70% 45%;
     --secondary-foreground: 0 0% 100%;
 
     /* Muted */
-    --muted: 220 20% 95%;
-    --muted-foreground: 220 15% 45%;
+    --muted: 150 15% 94%;
+    --muted-foreground: 160 15% 45%;
 
-    /* Accent: Teal/Cyan for growth */
-    --accent: 175 70% 45%;
+    /* Accent: Light Cyan */
+    --accent: 180 60% 45%;
     --accent-foreground: 0 0% 100%;
 
     /* Destructive */
@@ -37,36 +37,37 @@
     --destructive-foreground: 0 0% 100%;
 
     /* Borders & Inputs */
-    --border: 220 20% 90%;
-    --input: 220 20% 90%;
-    --ring: 250 70% 50%;
+    --border: 150 15% 88%;
+    --input: 150 15% 88%;
+    --ring: 152 60% 40%;
 
     --radius: 1rem;
 
-    /* Custom TECHLAND tokens */
-    --tech-purple: 250 70% 50%;
-    --tech-purple-dark: 250 70% 40%;
-    --tech-purple-light: 250 70% 95%;
-    --tech-orange: 30 95% 55%;
-    --tech-orange-light: 30 95% 95%;
-    --tech-cyan: 175 70% 45%;
-    --tech-cyan-light: 175 70% 95%;
-    --tech-yellow: 45 95% 55%;
-    --tech-pink: 330 80% 60%;
-    --tech-green: 140 60% 45%;
+    /* Custom TECHLAND Green tokens */
+    --tech-green: 152 60% 40%;
+    --tech-green-dark: 152 65% 30%;
+    --tech-green-light: 150 40% 95%;
+    --tech-teal: 170 55% 40%;
+    --tech-teal-light: 170 40% 95%;
+    --tech-cyan: 190 70% 45%;
+    --tech-cyan-light: 190 50% 95%;
+    --tech-blue: 210 70% 50%;
+    --tech-blue-light: 210 50% 95%;
+    --tech-mint: 160 50% 50%;
+    --tech-emerald: 145 65% 35%;
 
     /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(250 70% 50%) 0%, hsl(280 70% 55%) 50%, hsl(330 80% 60%) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(250 70% 98%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(30 95% 55%) 0%, hsl(45 95% 55%) 100%);
-    --gradient-cta: linear-gradient(135deg, hsl(250 70% 50%) 0%, hsl(280 70% 55%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(152 60% 40%) 0%, hsl(170 55% 40%) 50%, hsl(190 70% 45%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(150 40% 98%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(190 70% 45%) 0%, hsl(210 70% 50%) 100%);
+    --gradient-cta: linear-gradient(135deg, hsl(152 60% 40%) 0%, hsl(170 55% 40%) 100%);
 
     /* Shadows */
-    --shadow-sm: 0 2px 8px -2px hsl(250 70% 50% / 0.1);
-    --shadow-md: 0 8px 24px -4px hsl(250 70% 50% / 0.15);
-    --shadow-lg: 0 16px 48px -8px hsl(250 70% 50% / 0.2);
-    --shadow-glow: 0 0 40px hsl(250 70% 50% / 0.3);
-    --shadow-orange: 0 8px 24px -4px hsl(30 95% 55% / 0.3);
+    --shadow-sm: 0 2px 8px -2px hsl(152 60% 40% / 0.1);
+    --shadow-md: 0 8px 24px -4px hsl(152 60% 40% / 0.15);
+    --shadow-lg: 0 16px 48px -8px hsl(152 60% 40% / 0.2);
+    --shadow-glow: 0 0 40px hsl(152 60% 40% / 0.3);
+    --shadow-cyan: 0 8px 24px -4px hsl(190 70% 45% / 0.3);
 
     /* Sidebar */
     --sidebar-background: 0 0% 98%;
@@ -76,46 +77,46 @@
     --sidebar-accent: 240 4.8% 95.9%;
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: 152 60% 40%;
   }
 
   .dark {
-    --background: 230 25% 8%;
-    --foreground: 220 20% 95%;
+    --background: 160 25% 6%;
+    --foreground: 150 20% 95%;
 
-    --card: 230 25% 12%;
-    --card-foreground: 220 20% 95%;
+    --card: 160 25% 10%;
+    --card-foreground: 150 20% 95%;
 
-    --popover: 230 25% 12%;
-    --popover-foreground: 220 20% 95%;
+    --popover: 160 25% 10%;
+    --popover-foreground: 150 20% 95%;
 
-    --primary: 250 70% 60%;
+    --primary: 152 55% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 30 95% 55%;
+    --secondary: 190 65% 50%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 230 20% 18%;
-    --muted-foreground: 220 15% 65%;
+    --muted: 160 20% 15%;
+    --muted-foreground: 150 15% 65%;
 
-    --accent: 175 70% 50%;
+    --accent: 180 55% 50%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 230 20% 20%;
-    --input: 230 20% 20%;
-    --ring: 250 70% 60%;
+    --border: 160 20% 18%;
+    --input: 160 20% 18%;
+    --ring: 152 55% 50%;
 
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary: 152 60% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 3.7% 15.9%;
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: 152 60% 40%;
   }
 }
 
@@ -176,7 +177,7 @@
   }
 
   @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 20px hsl(250 70% 50% / 0.3); }
-    50% { box-shadow: 0 0 40px hsl(250 70% 50% / 0.5); }
+    0%, 100% { box-shadow: 0 0 20px hsl(152 60% 40% / 0.3); }
+    50% { box-shadow: 0 0 40px hsl(152 60% 40% / 0.5); }
   }
 }

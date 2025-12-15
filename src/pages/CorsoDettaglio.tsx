@@ -221,8 +221,8 @@ const coursesData: Record<string, {
 
 const levelColors: Record<string, string> = {
   Beginner: "bg-tech-green/10 text-tech-green border-tech-green/20",
-  Intermediate: "bg-tech-orange/10 text-tech-orange border-tech-orange/20",
-  Advanced: "bg-tech-purple/10 text-tech-purple border-tech-purple/20",
+  Intermediate: "bg-tech-teal/10 text-tech-teal border-tech-teal/20",
+  Advanced: "bg-tech-cyan/10 text-tech-cyan border-tech-cyan/20",
 };
 
 export default function CorsoDettaglio() {
@@ -248,7 +248,7 @@ export default function CorsoDettaglio() {
   return (
     <Layout>
       {/* Hero */}
-      <section className="tech-section bg-gradient-to-b from-tech-purple-light to-background">
+      <section className="tech-section bg-gradient-to-b from-tech-green-light to-background">
         <div className="tech-container">
           <Link 
             to="/corsi" 

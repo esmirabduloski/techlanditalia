@@ -6,14 +6,14 @@ const steps = [
     icon: BookOpen,
     title: "Scegli il corso",
     description: "Esplora i nostri percorsi e trova quello più adatto all'età e agli interessi del tuo bambino.",
-    color: "tech-purple",
+    color: "tech-green",
   },
   {
     step: 2,
     icon: Calendar,
     title: "Prenota la prova",
     description: "Prenota una lezione gratuita di prova per far conoscere TECHLAND al tuo bambino.",
-    color: "tech-orange",
+    color: "tech-teal",
   },
   {
     step: 3,
@@ -27,7 +27,7 @@ const steps = [
     icon: BarChart3,
     title: "Monitora i progressi",
     description: "Ricevi report dettagliati, accedi alle registrazioni e vedi i progetti realizzati.",
-    color: "tech-green",
+    color: "tech-blue",
   },
 ];
 

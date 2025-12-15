@@ -113,8 +113,8 @@ const typeFilters = ["Tutti", "Coding base", "Game dev", "Roblox", "Web", "Pytho
 
 const levelColors: Record<string, string> = {
   Beginner: "bg-tech-green/10 text-tech-green",
-  Intermediate: "bg-tech-orange/10 text-tech-orange",
-  Advanced: "bg-tech-purple/10 text-tech-purple",
+  Intermediate: "bg-tech-teal/10 text-tech-teal",
+  Advanced: "bg-tech-cyan/10 text-tech-cyan",
 };
 
 export default function Corsi() {
@@ -132,7 +132,7 @@ export default function Corsi() {
   return (
     <Layout>
       {/* Hero */}
-      <section className="tech-section bg-gradient-to-b from-tech-purple-light to-background">
+      <section className="tech-section bg-gradient-to-b from-tech-green-light to-background">
         <div className="tech-container">
           <div className="text-center max-w-3xl mx-auto">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">

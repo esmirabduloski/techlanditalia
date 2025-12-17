@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import DOMPurify from 'dompurify';
 import { Layout } from '@/components/layout/Layout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -167,7 +168,10 @@ export default function BlogArticle() {
             <div 
               className="prose prose-lg max-w-none"
               dangerouslySetInnerHTML={{ 
-                __html: `<p class="mb-4">${parseMarkdown(post.content)}</p>` 
+                __html: DOMPurify.sanitize(`<p class="mb-4">${parseMarkdown(post.content)}</p>`, {
+                  ALLOWED_TAGS: ['h1', 'h2', 'h3', 'p', 'strong', 'em', 'a', 'li', 'br'],
+                  ALLOWED_ATTR: ['href', 'class', 'target', 'rel'],
+                })
               }}
             />
           </article>

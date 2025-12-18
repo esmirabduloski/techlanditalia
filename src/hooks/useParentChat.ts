@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 
 type Message = {
   role: 'user' | 'assistant';
@@ -7,7 +7,11 @@ type Message = {
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/parent-chat`;
 
+// Generate a unique session ID for this chat session
+const generateSessionId = () => `session_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+
 export function useParentChat() {
+  const sessionIdRef = useRef(generateSessionId());
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
@@ -44,7 +48,7 @@ export function useParentChat() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ messages: newMessages }),
+        body: JSON.stringify({ messages: newMessages, sessionId: sessionIdRef.current }),
       });
 
       if (!resp.ok || !resp.body) {
@@ -95,6 +99,8 @@ export function useParentChat() {
   }, [messages, isLoading]);
 
   const clearChat = useCallback(() => {
+    // Generate new session ID for new conversation
+    sessionIdRef.current = generateSessionId();
     setMessages([
       {
         role: 'assistant',

@@ -115,6 +115,51 @@ export type Database = {
           },
         ]
       }
+      trial_bookings: {
+        Row: {
+          admin_notes: string | null
+          availability: string | null
+          child_age: number
+          created_at: string
+          email: string
+          id: string
+          interest: string
+          message: string | null
+          parent_name: string
+          phone: string | null
+          status: Database["public"]["Enums"]["booking_status"]
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          availability?: string | null
+          child_age: number
+          created_at?: string
+          email: string
+          id?: string
+          interest: string
+          message?: string | null
+          parent_name: string
+          phone?: string | null
+          status?: Database["public"]["Enums"]["booking_status"]
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          availability?: string | null
+          child_age?: number
+          created_at?: string
+          email?: string
+          id?: string
+          interest?: string
+          message?: string | null
+          parent_name?: string
+          phone?: string | null
+          status?: Database["public"]["Enums"]["booking_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -152,6 +197,12 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      booking_status:
+        | "pending"
+        | "contacted"
+        | "scheduled"
+        | "completed"
+        | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -280,6 +331,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      booking_status: [
+        "pending",
+        "contacted",
+        "scheduled",
+        "completed",
+        "cancelled",
+      ],
     },
   },
 } as const

@@ -14,6 +14,7 @@ import Prenota from "./pages/Prenota";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminBookings from "./pages/admin/AdminBookings";
 import BlogEditor from "./pages/admin/BlogEditor";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/prenota" element={<Prenota />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/prenotazioni" element={<AdminBookings />} />
             <Route path="/admin/blog/nuovo" element={<BlogEditor />} />
             <Route path="/admin/blog/:id/modifica" element={<BlogEditor />} />
             <Route path="*" element={<NotFound />} />

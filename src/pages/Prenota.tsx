@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -11,8 +13,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { CheckCircle2, Calendar, Video, Shield, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const interests = [
   { value: "coding-base", label: "Coding Base (6-8 anni)" },
@@ -30,25 +41,98 @@ const benefits = [
   { icon: Clock, text: "Durata: 30-45 minuti" },
 ];
 
+const bookingSchema = z.object({
+  parentName: z.string().trim().min(2, "Il nome deve avere almeno 2 caratteri").max(100, "Nome troppo lungo"),
+  email: z.string().trim().email("Inserisci un'email valida").max(255, "Email troppo lunga"),
+  phone: z.string().trim().max(20, "Numero troppo lungo").optional().or(z.literal("")),
+  childAge: z.string().min(1, "Seleziona l'età del bambino"),
+  interest: z.string().min(1, "Seleziona un'area di interesse"),
+  availability: z.string().optional(),
+  message: z.string().trim().max(1000, "Messaggio troppo lungo").optional(),
+});
+
+type BookingFormData = z.infer<typeof bookingSchema>;
+
+// Admin email - change this to your actual email
+const ADMIN_EMAIL = "info@techland.it";
+
 export default function Prenota() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const form = useForm<BookingFormData>({
+    resolver: zodResolver(bookingSchema),
+    defaultValues: {
+      parentName: "",
+      email: "",
+      phone: "",
+      childAge: "",
+      interest: "",
+      availability: "",
+      message: "",
+    },
+  });
+
+  const onSubmit = async (data: BookingFormData) => {
     setIsSubmitting(true);
-    
-    // Simulate form submission
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    
-    setIsSubmitting(false);
-    setIsSubmitted(true);
-    
-    toast({
-      title: "Richiesta inviata!",
-      description: "Ti contatteremo entro 24 ore per confermare la lezione.",
-    });
+
+    try {
+      // Save to database
+      const { error: dbError } = await supabase.from("trial_bookings").insert({
+        parent_name: data.parentName,
+        email: data.email,
+        phone: data.phone || null,
+        child_age: parseInt(data.childAge),
+        interest: data.interest,
+        availability: data.availability || null,
+        message: data.message || null,
+      });
+
+      if (dbError) {
+        console.error("Database error:", dbError);
+        throw new Error("Errore nel salvataggio della richiesta");
+      }
+
+      // Send email notifications
+      const { error: emailError } = await supabase.functions.invoke("send-booking-notification", {
+        body: {
+          parentName: data.parentName,
+          email: data.email,
+          phone: data.phone,
+          childAge: parseInt(data.childAge),
+          interest: data.interest,
+          availability: data.availability,
+          message: data.message,
+          adminEmail: ADMIN_EMAIL,
+        },
+      });
+
+      if (emailError) {
+        console.error("Email error:", emailError);
+        // Don't throw - booking was saved, email failed
+        toast({
+          title: "Richiesta inviata!",
+          description: "Ti contatteremo presto. (Nota: potrebbe esserci un ritardo nell'invio dell'email di conferma)",
+        });
+      } else {
+        toast({
+          title: "Richiesta inviata!",
+          description: "Ti contatteremo entro 24 ore per confermare la lezione.",
+        });
+      }
+
+      setIsSubmitted(true);
+    } catch (error: any) {
+      console.error("Submission error:", error);
+      toast({
+        title: "Errore",
+        description: error.message || "Si è verificato un errore. Riprova più tardi.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isSubmitted) {
@@ -127,111 +211,174 @@ export default function Prenota() {
             <div className="tech-card p-8">
               <h2 className="text-2xl font-semibold mb-6">Compila il form</h2>
               
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="parentName">Nome del genitore *</Label>
-                  <Input 
-                    id="parentName" 
-                    placeholder="Es. Maria Rossi" 
-                    required 
-                    className="h-12"
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="parentName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nome del genitore *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Es. Maria Rossi" 
+                            className="h-12"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email *</Label>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="Es. maria.rossi@email.com" 
-                    required 
-                    className="h-12"
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="email" 
+                            placeholder="Es. maria.rossi@email.com" 
+                            className="h-12"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Telefono (opzionale)</Label>
-                  <Input 
-                    id="phone" 
-                    type="tel" 
-                    placeholder="Es. +39 333 1234567" 
-                    className="h-12"
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Telefono (opzionale)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="tel" 
+                            placeholder="Es. +39 333 1234567" 
+                            className="h-12"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="childAge">Età del bambino *</Label>
-                  <Select required>
-                    <SelectTrigger className="h-12">
-                      <SelectValue placeholder="Seleziona l'età" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.from({ length: 13 }, (_, i) => i + 6).map((age) => (
-                        <SelectItem key={age} value={String(age)}>
-                          {age} anni
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="interest">Interesse principale *</Label>
-                  <Select required>
-                    <SelectTrigger className="h-12">
-                      <SelectValue placeholder="Seleziona un'area di interesse" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {interests.map((interest) => (
-                        <SelectItem key={interest.value} value={interest.value}>
-                          {interest.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="availability">Disponibilità preferita</Label>
-                  <Select>
-                    <SelectTrigger className="h-12">
-                      <SelectValue placeholder="Quando preferisci essere contattato?" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="mattina">Mattina (9-12)</SelectItem>
-                      <SelectItem value="pomeriggio">Pomeriggio (14-18)</SelectItem>
-                      <SelectItem value="sera">Sera (18-20)</SelectItem>
-                      <SelectItem value="weekend">Weekend</SelectItem>
-                      <SelectItem value="qualsiasi">Qualsiasi orario</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="message">Messaggio (opzionale)</Label>
-                  <Textarea 
-                    id="message" 
-                    placeholder="Raccontaci qualcosa sul tuo bambino o facci delle domande..."
-                    rows={4}
+                  <FormField
+                    control={form.control}
+                    name="childAge"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Età del bambino *</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="h-12">
+                              <SelectValue placeholder="Seleziona l'età" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {Array.from({ length: 13 }, (_, i) => i + 6).map((age) => (
+                              <SelectItem key={age} value={String(age)}>
+                                {age} anni
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
 
-                <Button 
-                  type="submit" 
-                  variant="hero" 
-                  size="xl" 
-                  className="w-full"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Invio in corso..." : "Prenota lezione gratuita"}
-                </Button>
+                  <FormField
+                    control={form.control}
+                    name="interest"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Interesse principale *</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="h-12">
+                              <SelectValue placeholder="Seleziona un'area di interesse" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {interests.map((interest) => (
+                              <SelectItem key={interest.value} value={interest.value}>
+                                {interest.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <p className="text-xs text-center text-muted-foreground">
-                  Inviando questo form accetti la nostra{" "}
-                  <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>
-                  {" "}e acconsenti a essere contattato da TECHLAND.
-                </p>
-              </form>
+                  <FormField
+                    control={form.control}
+                    name="availability"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Disponibilità preferita</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="h-12">
+                              <SelectValue placeholder="Quando preferisci essere contattato?" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="mattina">Mattina (9-12)</SelectItem>
+                            <SelectItem value="pomeriggio">Pomeriggio (14-18)</SelectItem>
+                            <SelectItem value="sera">Sera (18-20)</SelectItem>
+                            <SelectItem value="weekend">Weekend</SelectItem>
+                            <SelectItem value="qualsiasi">Qualsiasi orario</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="message"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Messaggio (opzionale)</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Raccontaci qualcosa sul tuo bambino o facci delle domande..."
+                            rows={4}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Button 
+                    type="submit" 
+                    variant="hero" 
+                    size="xl" 
+                    className="w-full"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Invio in corso..." : "Prenota lezione gratuita"}
+                  </Button>
+
+                  <p className="text-xs text-center text-muted-foreground">
+                    Inviando questo form accetti la nostra{" "}
+                    <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>
+                    {" "}e acconsenti a essere contattato da TECHLAND.
+                  </p>
+                </form>
+              </Form>
             </div>
           </div>
         </div>

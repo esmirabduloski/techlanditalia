@@ -11,6 +11,7 @@ import ChiSiamo from "./pages/ChiSiamo";
 import Blog from "./pages/Blog";
 import BlogArticle from "./pages/BlogArticle";
 import Prenota from "./pages/Prenota";
+import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:slug" element={<BlogArticle />} />
             <Route path="/prenota" element={<Prenota />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/prenotazioni" element={<AdminBookings />} />

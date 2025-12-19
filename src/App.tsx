@@ -18,6 +18,10 @@ import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminBookings from "./pages/admin/AdminBookings";
 import BlogEditor from "./pages/admin/BlogEditor";
+import AuthPage from "./pages/auth/AuthPage";
+import AreaRiservataDashboard from "./pages/area-riservata/Dashboard";
+import AreaRiservataProfile from "./pages/area-riservata/Profile";
+import CourseProgress from "./pages/area-riservata/CourseProgress";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +42,10 @@ const App = () => (
             <Route path="/prenota" element={<Prenota />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/termini" element={<Termini />} />
+            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/area-riservata" element={<AreaRiservataDashboard />} />
+            <Route path="/area-riservata/profilo" element={<AreaRiservataProfile />} />
+            <Route path="/area-riservata/corso/:courseId" element={<CourseProgress />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/prenotazioni" element={<AdminBookings />} />

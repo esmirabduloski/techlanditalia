@@ -115,6 +115,309 @@ export type Database = {
           },
         ]
       }
+      courses: {
+        Row: {
+          age_range: string | null
+          created_at: string
+          description: string | null
+          duration: string | null
+          emoji: string
+          id: string
+          level: string
+          slug: string
+          title: string
+          total_lessons: number
+        }
+        Insert: {
+          age_range?: string | null
+          created_at?: string
+          description?: string | null
+          duration?: string | null
+          emoji?: string
+          id?: string
+          level?: string
+          slug: string
+          title: string
+          total_lessons?: number
+        }
+        Update: {
+          age_range?: string | null
+          created_at?: string
+          description?: string | null
+          duration?: string | null
+          emoji?: string
+          id?: string
+          level?: string
+          slug?: string
+          title?: string
+          total_lessons?: number
+        }
+        Relationships: []
+      }
+      enrollments: {
+        Row: {
+          course_id: string
+          enrolled_at: string
+          id: string
+          status: string
+          student_id: string
+        }
+        Insert: {
+          course_id: string
+          enrolled_at?: string
+          id?: string
+          status?: string
+          student_id: string
+        }
+        Update: {
+          course_id?: string
+          enrolled_at?: string
+          id?: string
+          status?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enrollments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gamification_levels: {
+        Row: {
+          badge_emoji: string
+          level: number
+          min_points: number
+          name: string
+        }
+        Insert: {
+          badge_emoji: string
+          level: number
+          min_points: number
+          name: string
+        }
+        Update: {
+          badge_emoji?: string
+          level?: number
+          min_points?: number
+          name?: string
+        }
+        Relationships: []
+      }
+      homework: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          instructions: string | null
+          lesson_id: string
+          points_reward: number
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          instructions?: string | null
+          lesson_id: string
+          points_reward?: number
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          instructions?: string | null
+          lesson_id?: string
+          points_reward?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homework_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      homework_submissions: {
+        Row: {
+          homework_id: string
+          id: string
+          notes: string | null
+          points_earned: number
+          status: string
+          student_id: string
+          submitted_at: string
+        }
+        Insert: {
+          homework_id: string
+          id?: string
+          notes?: string | null
+          points_earned?: number
+          status?: string
+          student_id: string
+          submitted_at?: string
+        }
+        Update: {
+          homework_id?: string
+          id?: string
+          notes?: string | null
+          points_earned?: number
+          status?: string
+          student_id?: string
+          submitted_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homework_submissions_homework_id_fkey"
+            columns: ["homework_id"]
+            isOneToOne: false
+            referencedRelation: "homework"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "homework_submissions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_progress: {
+        Row: {
+          completed_at: string
+          id: string
+          lesson_id: string
+          points_earned: number
+          student_id: string
+        }
+        Insert: {
+          completed_at?: string
+          id?: string
+          lesson_id: string
+          points_earned?: number
+          student_id: string
+        }
+        Update: {
+          completed_at?: string
+          id?: string
+          lesson_id?: string
+          points_earned?: number
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_progress_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_progress_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lessons: {
+        Row: {
+          content: string | null
+          course_id: string
+          created_at: string
+          description: string | null
+          id: string
+          lesson_number: number
+          points_reward: number
+          title: string
+        }
+        Insert: {
+          content?: string | null
+          course_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          lesson_number: number
+          points_reward?: number
+          title: string
+        }
+        Update: {
+          content?: string | null
+          course_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          lesson_number?: number
+          points_reward?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lessons_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_id: number
+          created_at: string
+          full_name: string
+          id: string
+          parent_id: string | null
+          role: string
+          total_points: number
+          updated_at: string
+        }
+        Insert: {
+          avatar_id?: number
+          created_at?: string
+          full_name: string
+          id: string
+          parent_id?: string | null
+          role: string
+          total_points?: number
+          updated_at?: string
+        }
+        Update: {
+          avatar_id?: number
+          created_at?: string
+          full_name?: string
+          id?: string
+          parent_id?: string | null
+          role?: string
+          total_points?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trial_bookings: {
         Row: {
           admin_notes: string | null

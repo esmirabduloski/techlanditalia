@@ -13,7 +13,8 @@ import {
   EyeOff, 
   LogOut,
   FileText,
-  Loader2
+  Loader2,
+  BookOpen
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -130,6 +131,28 @@ export default function AdminDashboard() {
           </div>
         </div>
       </header>
+
+      {/* Navigation */}
+      <div className="border-b bg-background">
+        <div className="max-w-7xl mx-auto px-4">
+          <nav className="flex gap-4">
+            <Link 
+              to="/admin" 
+              className="py-3 px-2 border-b-2 border-primary text-primary font-medium flex items-center gap-2"
+            >
+              <FileText className="w-4 h-4" />
+              Blog
+            </Link>
+            <Link 
+              to="/admin/prenotazioni" 
+              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2"
+            >
+              <BookOpen className="w-4 h-4" />
+              Prenotazioni
+            </Link>
+          </nav>
+        </div>
+      </div>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">

@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { Menu, X, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -14,6 +15,8 @@ const navLinks = [
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const { user } = useAuth();
+  const isInAreaRiservata = location.pathname.startsWith('/area-riservata');
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
@@ -48,9 +51,18 @@ export function Navbar() {
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="ghost" asChild>
-              <Link to="/auth">Accedi</Link>
-            </Button>
+            {!user ? (
+              <Button variant="ghost" asChild>
+                <Link to="/auth">Accedi</Link>
+              </Button>
+            ) : !isInAreaRiservata ? (
+              <Button variant="ghost" asChild>
+                <Link to="/area-riservata" className="flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  Dashboard
+                </Link>
+              </Button>
+            ) : null}
             <Button variant="cta" asChild>
               <Link to="/prenota">Lezione gratuita</Link>
             </Button>
@@ -85,9 +97,18 @@ export function Navbar() {
                 </Link>
               ))}
               <div className="flex flex-col gap-2 mt-4 px-4">
-                <Button variant="outline" asChild>
-                  <Link to="/auth" onClick={() => setIsOpen(false)}>Accedi</Link>
-                </Button>
+                {!user ? (
+                  <Button variant="outline" asChild>
+                    <Link to="/auth" onClick={() => setIsOpen(false)}>Accedi</Link>
+                  </Button>
+                ) : !isInAreaRiservata ? (
+                  <Button variant="outline" asChild>
+                    <Link to="/area-riservata" onClick={() => setIsOpen(false)} className="flex items-center gap-2">
+                      <User className="w-4 h-4" />
+                      Dashboard
+                    </Link>
+                  </Button>
+                ) : null}
                 <Button variant="cta" asChild>
                   <Link to="/prenota" onClick={() => setIsOpen(false)}>Lezione gratuita</Link>
                 </Button>

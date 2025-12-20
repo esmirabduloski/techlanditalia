@@ -4,7 +4,7 @@ import { Menu, X, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
-
+import { useHasEnrollments } from "@/hooks/useHasEnrollments";
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/corsi", label: "Corsi" },
@@ -16,7 +16,11 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const { user } = useAuth();
+  const { hasEnrollments } = useHasEnrollments();
   const isInAreaRiservata = location.pathname.startsWith('/area-riservata');
+  
+  // Mostra bottone lezione gratuita solo se non loggato o senza iscrizioni
+  const showTrialButton = !user || !hasEnrollments;
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
@@ -63,9 +67,11 @@ export function Navbar() {
                 </Link>
               </Button>
             ) : null}
-            <Button variant="cta" asChild>
-              <Link to="/prenota">Lezione gratuita</Link>
-            </Button>
+            {showTrialButton && (
+              <Button variant="cta" asChild>
+                <Link to="/prenota">Lezione gratuita</Link>
+              </Button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -109,9 +115,11 @@ export function Navbar() {
                     </Link>
                   </Button>
                 ) : null}
-                <Button variant="cta" asChild>
-                  <Link to="/prenota" onClick={() => setIsOpen(false)}>Lezione gratuita</Link>
-                </Button>
+                {showTrialButton && (
+                  <Button variant="cta" asChild>
+                    <Link to="/prenota" onClick={() => setIsOpen(false)}>Lezione gratuita</Link>
+                  </Button>
+                )}
               </div>
             </div>
           </div>

@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { AvatarDisplay } from '@/components/gamification/AvatarSelector';
 import { LevelBadge, PointsDisplay, getLevelFromPoints } from '@/components/gamification/LevelBadge';
+import { HomeworkSection } from '@/components/dashboard/HomeworkSection';
+import { ParentFeedbackSection } from '@/components/dashboard/ParentFeedbackSection';
 import { Loader2, BookOpen, Trophy, Target, Settings, LogOut, Rocket } from 'lucide-react';
 
 export default function Dashboard() {
@@ -179,6 +181,16 @@ export default function Dashboard() {
                 })}
               </div>
             )}
+          </div>
+
+          {/* Homework Section for Students */}
+          <div className="mb-8">
+            <HomeworkSection />
+          </div>
+
+          {/* Parent Feedback Section - only visible for parents */}
+          <div className="mb-8">
+            <ParentFeedbackSection />
           </div>
 
           {/* Quick Actions */}

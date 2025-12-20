@@ -254,6 +254,7 @@ export type Database = {
       }
       homework_submissions: {
         Row: {
+          feedback_at: string | null
           homework_id: string
           id: string
           notes: string | null
@@ -261,8 +262,10 @@ export type Database = {
           status: string
           student_id: string
           submitted_at: string
+          teacher_feedback: string | null
         }
         Insert: {
+          feedback_at?: string | null
           homework_id: string
           id?: string
           notes?: string | null
@@ -270,8 +273,10 @@ export type Database = {
           status?: string
           student_id: string
           submitted_at?: string
+          teacher_feedback?: string | null
         }
         Update: {
+          feedback_at?: string | null
           homework_id?: string
           id?: string
           notes?: string | null
@@ -279,6 +284,7 @@ export type Database = {
           status?: string
           student_id?: string
           submitted_at?: string
+          teacher_feedback?: string | null
         }
         Relationships: [
           {

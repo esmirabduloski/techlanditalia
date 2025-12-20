@@ -88,9 +88,14 @@ export default function AuthPage() {
           });
         }
       } else {
+        // Send welcome email in background (non-blocking)
+        supabase.functions.invoke('send-welcome-email', {
+          body: { email, fullName, role }
+        }).catch(err => console.error('Welcome email error:', err));
+
         toast({
           title: 'Registrazione completata!',
-          description: 'Benvenuto nella famiglia TECHLAND!',
+          description: 'Benvenuto nella famiglia TECHLAND! Controlla la tua email 📧',
         });
         navigate('/area-riservata');
       }

@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.send-booking-notification]
 verify_jwt = false
+
+[functions.submit-booking]
+verify_jwt = false

@@ -78,24 +78,8 @@ export default function Prenota() {
     setIsSubmitting(true);
 
     try {
-      // Save to database
-      const { error: dbError } = await supabase.from("trial_bookings").insert({
-        parent_name: data.parentName,
-        email: data.email,
-        phone: data.phone || null,
-        child_age: parseInt(data.childAge),
-        interest: data.interest,
-        availability: data.availability || null,
-        message: data.message || null,
-      });
-
-      if (dbError) {
-        console.error("Database error:", dbError);
-        throw new Error("Errore nel salvataggio della richiesta");
-      }
-
-      // Send email notifications
-      const { error: emailError } = await supabase.functions.invoke("send-booking-notification", {
+      // Submit booking through secure Edge Function with rate limiting
+      const { data: bookingResult, error: bookingError } = await supabase.functions.invoke("submit-booking", {
         body: {
           parentName: data.parentName,
           email: data.email,
@@ -108,18 +92,35 @@ export default function Prenota() {
         },
       });
 
-      if (emailError) {
-        console.error("Email error:", emailError);
-        // Don't throw - booking was saved, email failed
-        toast({
-          title: "Richiesta inviata!",
-          description: "Ti contatteremo presto. (Nota: potrebbe esserci un ritardo nell'invio dell'email di conferma)",
+      if (bookingError) {
+        console.error("Booking error:", bookingError);
+        throw new Error("Errore nell'invio della richiesta");
+      }
+
+      if (!bookingResult?.success) {
+        throw new Error(bookingResult?.error || "Errore nell'invio della richiesta");
+      }
+
+      // Send email notification separately
+      const emailData = bookingResult.sendEmailNotification;
+      if (emailData) {
+        const { error: emailError } = await supabase.functions.invoke("send-booking-notification", {
+          body: emailData,
         });
-      } else {
-        toast({
-          title: "Richiesta inviata!",
-          description: "Ti contatteremo entro 24 ore per confermare la lezione.",
-        });
+
+        if (emailError) {
+          console.error("Email error:", emailError);
+          // Don't throw - booking was saved, email failed
+          toast({
+            title: "Richiesta inviata!",
+            description: "Ti contatteremo presto. (Nota: potrebbe esserci un ritardo nell'invio dell'email di conferma)",
+          });
+        } else {
+          toast({
+            title: "Richiesta inviata!",
+            description: "Ti contatteremo entro 24 ore per confermare la lezione.",
+          });
+        }
       }
 
       setIsSubmitted(true);

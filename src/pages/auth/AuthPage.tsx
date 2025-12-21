@@ -26,13 +26,24 @@ export default function AuthPage() {
   // Check if user came from password reset link
   useEffect(() => {
     const checkRecoverySession = async () => {
-      // Check URL hash for recovery token (Supabase puts it there)
+      // Debug: log all URL parts
+      console.log('Recovery check - Full URL:', window.location.href);
+      console.log('Recovery check - Hash:', window.location.hash);
+      console.log('Recovery check - Search:', window.location.search);
+      
+      // Check URL hash for recovery token (Supabase format: #access_token=...&type=recovery)
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const accessToken = hashParams.get('access_token');
-      const type = hashParams.get('type');
+      const hashType = hashParams.get('type');
       
-      if (type === 'recovery' && accessToken) {
-        // User clicked password reset link - show new password form
+      // Also check query params (alternative format: ?type=recovery)
+      const queryType = searchParams.get('type');
+      const resetParam = searchParams.get('reset');
+      
+      console.log('Recovery check - accessToken:', !!accessToken, 'hashType:', hashType, 'queryType:', queryType, 'resetParam:', resetParam);
+      
+      if ((hashType === 'recovery' && accessToken) || queryType === 'recovery') {
+        console.log('Recovery detected! Showing new password form');
         setShowNewPasswordForm(true);
         // Clear the hash from URL for cleaner display
         window.history.replaceState(null, '', '/auth?reset=true');
@@ -41,15 +52,17 @@ export default function AuthPage() {
     
     checkRecoverySession();
     
-    // Also listen for PASSWORD_RECOVERY event
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    // Listen for PASSWORD_RECOVERY event from Supabase Auth
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state change:', event, session ? 'with session' : 'no session');
       if (event === 'PASSWORD_RECOVERY') {
+        console.log('PASSWORD_RECOVERY event received!');
         setShowNewPasswordForm(true);
       }
     });
     
     return () => subscription.unsubscribe();
-  }, []);
+  }, [searchParams]);
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();

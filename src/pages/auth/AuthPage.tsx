@@ -129,15 +129,20 @@ export default function AuthPage() {
     
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth?reset=true`,
+      // Call our custom edge function to send branded email
+      const { data, error } = await supabase.functions.invoke('send-password-reset-email', {
+        body: { 
+          email: email.trim().toLowerCase(),
+          redirectUrl: `${window.location.origin}/auth?reset=true`
+        }
       });
 
       if (error) {
+        console.error('Reset password error:', error);
         toast({
           variant: 'destructive',
           title: 'Errore',
-          description: error.message,
+          description: 'Impossibile inviare l\'email. Riprova più tardi.',
         });
       } else {
         toast({
@@ -147,6 +152,7 @@ export default function AuthPage() {
         setShowResetPassword(false);
       }
     } catch (error) {
+      console.error('Reset password catch error:', error);
       toast({
         variant: 'destructive',
         title: 'Errore',

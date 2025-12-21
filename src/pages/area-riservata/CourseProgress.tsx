@@ -127,7 +127,7 @@ export default function CourseProgress() {
 
   const handleCompleteLesson = async (lesson: Lesson) => {
     setCompletingLesson(lesson.id);
-    const success = await completeLesson(lesson.id, lesson.points_reward);
+    const success = await completeLesson(lesson.id);
     setCompletingLesson(null);
 
     if (success) {
@@ -147,7 +147,7 @@ export default function CourseProgress() {
 
   const handleSubmitHomework = async (hw: Homework) => {
     setSubmittingHomework(hw.id);
-    const success = await submitHomework(hw.id, hw.points_reward);
+    const success = await submitHomework(hw.id);
     setSubmittingHomework(null);
 
     if (success) {

@@ -6,6 +6,35 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// In-memory rate limiting (persists per function instance)
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+
+function checkRateLimit(identifier: string): { allowed: boolean; retryAfterMs?: number } {
+  const now = Date.now();
+  const limit = rateLimitMap.get(identifier);
+  
+  // Clean up old entries periodically
+  if (rateLimitMap.size > 1000) {
+    for (const [key, value] of rateLimitMap.entries()) {
+      if (now > value.resetTime) {
+        rateLimitMap.delete(key);
+      }
+    }
+  }
+  
+  if (!limit || now > limit.resetTime) {
+    rateLimitMap.set(identifier, { count: 1, resetTime: now + 60000 }); // 1 min window
+    return { allowed: true };
+  }
+  
+  if (limit.count >= 10) {  // Max 10 messages per minute per IP
+    return { allowed: false, retryAfterMs: limit.resetTime - now };
+  }
+  
+  limit.count++;
+  return { allowed: true };
+}
+
 // Helper to save messages to DB
 async function saveMessage(
   supabase: any,
@@ -95,6 +124,27 @@ LINEE GUIDA:
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Rate limiting check
+  const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+                   req.headers.get('x-real-ip') || 'unknown';
+  
+  const rateLimitResult = checkRateLimit(clientIP);
+  if (!rateLimitResult.allowed) {
+    const retryAfterSeconds = Math.ceil((rateLimitResult.retryAfterMs || 60000) / 1000);
+    console.log(`Rate limit exceeded for IP: ${clientIP}`);
+    return new Response(
+      JSON.stringify({ error: 'Troppe richieste. Riprova tra poco.' }), 
+      { 
+        status: 429, 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json',
+          'Retry-After': String(retryAfterSeconds)
+        }
+      }
+    );
   }
 
   try {

@@ -150,7 +150,8 @@ export function useStudentProgress() {
     }
   };
 
-  const completeLesson = async (lessonId: string, pointsReward: number) => {
+  // Points are automatically calculated by database trigger - no client value accepted
+  const completeLesson = async (lessonId: string) => {
     if (!user) return false;
 
     try {
@@ -159,7 +160,7 @@ export function useStudentProgress() {
         .insert({
           student_id: user.id,
           lesson_id: lessonId,
-          points_earned: pointsReward,
+          // points_earned is set by database trigger from lessons.points_reward
         });
 
       if (!error) {
@@ -172,7 +173,8 @@ export function useStudentProgress() {
     }
   };
 
-  const submitHomework = async (homeworkId: string, pointsReward: number) => {
+  // Points are automatically calculated by database trigger - no client value accepted
+  const submitHomework = async (homeworkId: string) => {
     if (!user) return false;
 
     try {
@@ -181,7 +183,7 @@ export function useStudentProgress() {
         .insert({
           student_id: user.id,
           homework_id: homeworkId,
-          points_earned: pointsReward,
+          // points_earned is set by database trigger from homework.points_reward
         });
 
       if (!error) {

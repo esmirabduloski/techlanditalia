@@ -11,6 +11,7 @@ import ChiSiamo from "./pages/ChiSiamo";
 import Blog from "./pages/Blog";
 import BlogArticle from "./pages/BlogArticle";
 import Prenota from "./pages/Prenota";
+import FAQ from "./pages/FAQ";
 import Privacy from "./pages/Privacy";
 import Termini from "./pages/Termini";
 import NotFound from "./pages/NotFound";
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:slug" element={<BlogArticle />} />
             <Route path="/prenota" element={<Prenota />} />
+            <Route path="/faq" element={<FAQ />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/termini" element={<Termini />} />
             <Route path="/auth" element={<AuthPage />} />

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,18 +8,100 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Rocket, Users, GraduationCap } from 'lucide-react';
+import { Loader2, Rocket, Users, GraduationCap, KeyRound } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 
 export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [role, setRole] = useState<'parent' | 'student'>('student');
   const [showResetPassword, setShowResetPassword] = useState(false);
+  const [showNewPasswordForm, setShowNewPasswordForm] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
+  // Check if user came from password reset link
+  useEffect(() => {
+    const checkRecoverySession = async () => {
+      // Check URL hash for recovery token (Supabase puts it there)
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      const type = hashParams.get('type');
+      
+      if (type === 'recovery' && accessToken) {
+        // User clicked password reset link - show new password form
+        setShowNewPasswordForm(true);
+        // Clear the hash from URL for cleaner display
+        window.history.replaceState(null, '', '/auth?reset=true');
+      }
+    };
+    
+    checkRecoverySession();
+    
+    // Also listen for PASSWORD_RECOVERY event
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setShowNewPasswordForm(true);
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (password !== confirmPassword) {
+      toast({
+        variant: 'destructive',
+        title: 'Le password non coincidono',
+        description: 'Assicurati che le due password siano identiche',
+      });
+      return;
+    }
+    
+    if (password.length < 6) {
+      toast({
+        variant: 'destructive',
+        title: 'Password troppo corta',
+        description: 'La password deve avere almeno 6 caratteri',
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
+      
+      if (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Errore',
+          description: error.message,
+        });
+      } else {
+        toast({
+          title: 'Password aggiornata!',
+          description: 'La tua password è stata aggiornata con successo',
+        });
+        setShowNewPasswordForm(false);
+        setPassword('');
+        setConfirmPassword('');
+        navigate('/area-riservata');
+      }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Errore',
+        description: 'Si è verificato un errore. Riprova più tardi.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -159,15 +241,73 @@ export default function AuthPage() {
           {/* Header */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-4">
-              <Rocket className="w-8 h-8 text-primary" />
+              {showNewPasswordForm ? (
+                <KeyRound className="w-8 h-8 text-primary" />
+              ) : (
+                <Rocket className="w-8 h-8 text-primary" />
+              )}
             </div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Area Riservata</h1>
+            <h1 className="text-3xl font-bold text-foreground mb-2">
+              {showNewPasswordForm ? 'Nuova Password' : 'Area Riservata'}
+            </h1>
             <p className="text-muted-foreground">
-              Accedi per vedere i tuoi corsi e progressi
+              {showNewPasswordForm 
+                ? 'Inserisci la tua nuova password' 
+                : 'Accedi per vedere i tuoi corsi e progressi'}
             </p>
           </div>
 
-          {showResetPassword ? (
+          {/* New Password Form - After clicking reset link */}
+          {showNewPasswordForm ? (
+            <Card className="border-border/50 shadow-lg">
+              <CardHeader>
+                <CardTitle>Crea nuova password</CardTitle>
+                <CardDescription>
+                  Scegli una password sicura di almeno 6 caratteri
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleUpdatePassword} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="new-password">Nuova Password</Label>
+                    <Input
+                      id="new-password"
+                      type="password"
+                      placeholder="Minimo 6 caratteri"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      disabled={isLoading}
+                      minLength={6}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password">Conferma Password</Label>
+                    <Input
+                      id="confirm-password"
+                      type="password"
+                      placeholder="Ripeti la password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      disabled={isLoading}
+                      minLength={6}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Aggiornamento...
+                      </>
+                    ) : (
+                      'Aggiorna Password'
+                    )}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          ) : showResetPassword ? (
             <Card className="border-border/50 shadow-lg">
               <CardHeader>
                 <CardTitle>Reimposta Password</CardTitle>

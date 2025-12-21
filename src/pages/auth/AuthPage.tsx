@@ -17,8 +17,50 @@ export default function AuthPage() {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [role, setRole] = useState<'parent' | 'student'>('student');
+  const [showResetPassword, setShowResetPassword] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      toast({
+        variant: 'destructive',
+        title: 'Email richiesta',
+        description: 'Inserisci la tua email per reimpostare la password',
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth?reset=true`,
+      });
+
+      if (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Errore',
+          description: error.message,
+        });
+      } else {
+        toast({
+          title: 'Email inviata!',
+          description: 'Controlla la tua casella email per reimpostare la password',
+        });
+        setShowResetPassword(false);
+      }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Errore',
+        description: 'Si è verificato un errore. Riprova più tardi.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,6 +167,49 @@ export default function AuthPage() {
             </p>
           </div>
 
+          {showResetPassword ? (
+            <Card className="border-border/50 shadow-lg">
+              <CardHeader>
+                <CardTitle>Reimposta Password</CardTitle>
+                <CardDescription>
+                  Inserisci la tua email e ti invieremo un link per reimpostare la password
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleResetPassword} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-email">Email</Label>
+                    <Input
+                      id="reset-email"
+                      type="email"
+                      placeholder="mario@esempio.it"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Invio in corso...
+                      </>
+                    ) : (
+                      'Invia link di reset'
+                    )}
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => setShowResetPassword(false)}
+                    className="w-full text-center text-sm text-muted-foreground hover:text-foreground"
+                  >
+                    ← Torna al login
+                  </button>
+                </form>
+              </CardContent>
+            </Card>
+          ) : (
           <Card className="border-border/50 shadow-lg">
             <Tabs defaultValue="login" className="w-full">
               <CardHeader className="pb-4">
@@ -173,6 +258,13 @@ export default function AuthPage() {
                         'Accedi'
                       )}
                     </Button>
+                    <button
+                      type="button"
+                      onClick={() => setShowResetPassword(true)}
+                      className="w-full text-center text-sm text-primary hover:underline mt-2"
+                    >
+                      Password dimenticata?
+                    </button>
                   </form>
                 </TabsContent>
 
@@ -270,6 +362,7 @@ export default function AuthPage() {
               </CardContent>
             </Tabs>
           </Card>
+          )}
 
           {/* Footer */}
           <p className="text-center text-sm text-muted-foreground mt-6">

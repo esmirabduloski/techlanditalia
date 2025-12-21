@@ -1,233 +1,947 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Clock, Users, ArrowLeft, CheckCircle2, Calendar, 
-  Monitor, Wifi, BookOpen, Target, Rocket 
+  BookOpen, Target, Rocket, GraduationCap, Presentation, Code2, Lightbulb
 } from "lucide-react";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
+// Course data based on Kodland content
 const coursesData: Record<string, {
   title: string;
+  emoji: string;
   description: string;
   longDescription: string;
+  tags: string[];
   age: string;
   level: string;
   duration: string;
-  emoji: string;
-  learnings: string[];
-  projects: string[];
-  requirements: string[];
-  modules: { title: string; description: string }[];
-  faqs: { question: string; answer: string }[];
+  topics: string[];
+  projectExamples: { title: string; image?: string }[];
+  modules: { title: string; lessons: string[]; result: string }[];
 }> = {
-  "coding-base": {
-    title: "Coding Base",
-    description: "Primi passi nella programmazione con Scratch e logica computazionale.",
-    longDescription: "Un percorso pensato per i più piccoli che vogliono scoprire il mondo della programmazione. Attraverso Scratch, il linguaggio visuale sviluppato dal MIT, i bambini imparano i fondamenti della logica computazionale divertendosi.",
-    age: "6-8 anni",
-    level: "Beginner",
-    duration: "12 settimane",
-    emoji: "🎨",
-    learnings: [
-      "Pensiero computazionale e problem solving",
-      "Concetti base di programmazione (sequenze, cicli, condizioni)",
-      "Creazione di storie interattive",
-      "Design di personaggi e sfondi",
-      "Logica e ragionamento",
+  "abc-informatica": {
+    title: "L'ABC dell'informatica",
+    emoji: "💻",
+    description: "FunTech Explorers è un corso online interattivo che introduce i bambini alle componenti del computer, alle basi della programmazione a blocchi e all'uso del PC.",
+    longDescription: "FunTech Explorers è un corso online divertente e interattivo, pensato per introdurre i bambini alle principali componenti del computer, alle basi della programmazione a blocchi e all'uso del computer. Gli studenti svilupperanno il pensiero logico e critico attraverso giochi, strumenti interattivi e progetti creativi. Il corso affronterà diversi argomenti presentati in modo non lineare, per mantenere alto l'interesse degli studenti. Sono inclusi anche esercizi supplementari di matematica, utili per sviluppare abilità di calcolo e pensiero algoritmico.",
+    tags: ["Programmazione", "Matematica", "Creazione", "Informatica di base", "Uso del computer"],
+    age: "5-7 anni",
+    level: "Principiante",
+    duration: "32 lezioni",
+    topics: [
+      "Sviluppare il pensiero creativo e la creatività",
+      "Insegnare le basi dell'alfabetizzazione digitale",
+      "Sviluppare competenze di base nella programmazione a blocchi",
+      "Padroneggiare strumenti di creatività digitale per la realizzazione di progetti",
     ],
-    projects: [
-      "Gioco di labirinto interattivo",
-      "Storia animata con personaggi parlanti",
-      "Quiz a risposta multipla",
-      "Animazione musicale",
-    ],
-    requirements: [
-      "Computer (PC o Mac)",
-      "Connessione internet stabile",
-      "Mouse (consigliato)",
-      "Nessuna esperienza precedente richiesta",
+    projectExamples: [
+      { title: "Progetto creativo con Scratch Junior" },
+      { title: "Gioco interattivo" },
+      { title: "Animazione musicale" },
     ],
     modules: [
-      { title: "Settimana 1-2: Scopriamo Scratch", description: "Introduzione all'ambiente Scratch, primi blocchi e movimenti base." },
-      { title: "Settimana 3-4: Le sequenze", description: "Impariamo a dare istruzioni ordinate ai nostri personaggi." },
-      { title: "Settimana 5-6: I cicli", description: "Ripetiamo azioni e creiamo animazioni fluide." },
-      { title: "Settimana 7-8: Le condizioni", description: "Se...allora: il personaggio prende decisioni!" },
-      { title: "Settimana 9-10: Interattività", description: "Aggiungiamo controlli da tastiera e mouse." },
-      { title: "Settimana 11-12: Progetto finale", description: "Creiamo un gioco completo da condividere con amici e famiglia." },
-    ],
-    faqs: [
-      { question: "Mio figlio è troppo piccolo?", answer: "Il corso è pensato per bambini dai 6 anni. Utilizziamo un approccio visuale che non richiede di saper leggere o scrivere fluentemente." },
-      { question: "Quanto durano le lezioni?", answer: "Ogni lezione dura 60 minuti, una volta a settimana. La durata è ottimizzata per l'attenzione dei bambini di questa età." },
-      { question: "Mio figlio deve saper usare il computer?", answer: "No, insegniamo anche le basi dell'uso del computer nelle prime lezioni." },
+      {
+        title: "Modulo 1. Scoprire il Mondo Digitale",
+        lessons: [
+          "Lezione 1: Conoscere il mouse e la tastiera",
+          "Lezione 2: All'avventura! Imparare gli algoritmi",
+          "Lezione 3: Viaggiare con un robot! Giocare con giochi di digitazione e imparare le sequenze",
+          "Lezione 4: La città del futuro: affrontare sfide logiche nel nostro viaggio",
+        ],
+        result: "Grazie a questo modulo, i bambini impareranno a conoscere il computer: impareranno a usare il mouse e a digitare sulla tastiera. Inoltre, creeranno i loro primi algoritmi e risolveranno molti problemi logici.",
+      },
+      {
+        title: "Modulo 2. Un entusiasmante Viaggio nel Coding",
+        lessons: [
+          "Lezione 1: Nozioni di base sulla programmazione: sequenzialità e abilità di digitazione",
+          "Lezione 2: Ripetizioni divertenti e puzzle: una lezione sui cicli e sulla logica",
+          "Lezione 3: Puzzle logici e piattaforma degli avventurieri",
+          "Lezione 4: Il Laboratorio di Giochi. Migliora le tue abilità di digitazione!",
+        ],
+        result: "Grazie a questo modulo, i bambini continueranno i loro studi di programmazione e problemi logici. Impareranno il concetto di loop e come risolvere sequenze complesse.",
+      },
+      {
+        title: "Modulo 3. Avventure nella Valle dei Dati: la Magia del Computer",
+        lessons: [
+          "Lezione 1: Little Bit e la valle dei dati",
+          "Lezione 2: La grande avventura delle cartelle",
+          "Lezione 3: Viaggiando attraverso il World Wide Web",
+          "Lezione 4: Il detective dei dati",
+        ],
+        result: "Grazie a questo modulo, i bambini acquisiranno familiarità con la struttura dei file di un computer, impareranno cos'è Internet e come esplorarlo con i browser web.",
+      },
+      {
+        title: "Modulo 4. Techno-creators: costruire, cercare, creare!",
+        lessons: [
+          "Lezione 1: Una festa da ballo con Scratch Junior",
+          "Lezione 2: Costruire una fattoria!",
+          "Lezione 3: Andare nello spazio con un razzo!",
+          "Lezione 4: Le quattro stagioni",
+        ],
+        result: "I bambini creano un cartone animato in Scratch Junior imparando la piattaforma. Rafforzeranno le loro abilità di programmazione a blocchi attraverso la creazione di progetti.",
+      },
+      {
+        title: "Modulo 5. Cyber Sorcery: Un'avventura nel Mondo della Tecnologia!",
+        lessons: [
+          "Lezione 1: Il mondo sommerso della programmazione",
+          "Lezione 2: Il potere dei messaggi in Scratch Junior",
+          "Lezione 3: Cartoline dal vivo in Scratch Junior",
+          "Lezione 4: Personaggi dei cartoni animati sullo schermo!",
+        ],
+        result: "Durante questo modulo, i bambini continueranno lo studio di Scratch Junior. Creeranno il loro gioco e impareranno nuovi blocchi per la programmazione dei giochi.",
+      },
+      {
+        title: "Modulo 6. Avventura nel Mondo dei Numeri e della Tecnologia",
+        lessons: [
+          "Lezione 1: I maghi della Matematica: Imparare sui numeri",
+          "Lezione 2: Eroi dei Numeri: il Viaggio della Matematica",
+          "Lezione 3: Google Fogli: Un magico mondo di numeri",
+          "Lezione 4: Google Fogli: il festival dei Numeri",
+        ],
+        result: "Grazie a questo modulo, i bambini impareranno le operazioni matematiche di base e le applicheranno man mano che vengono introdotti a Google Fogli.",
+      },
+      {
+        title: "Modulo 7. Cyber Creators: Storie, musica e magia",
+        lessons: [
+          "Lezione 1: Il mio primo gioco: catturare Zippy",
+          "Lezione 2: Le Avventure nel mondo dei Videogiochi",
+          "Lezione 3: Le Meraviglie dei Videogiochi",
+          "Lezione 4: Lancio Stellare: il mio Gioco è pronto!",
+        ],
+        result: "Grazie a questo modulo, gli studenti continueranno ad apprendere la programmazione a blocchi in Scratch e creeranno nuovi giochi completi!",
+      },
+      {
+        title: "Modulo 8. La Sfida Finale",
+        lessons: [
+          "Lezione 1: Cyber-Revision: Tutto sulle Competenze Digitali",
+          "Lezione 2: Maratona di Programmazione: un Viaggio attraverso il Codice",
+          "Lezione 3: Missione Creativa Finale",
+          "Lezione 4: Il fantastico Diploma: celebrare il successo",
+        ],
+        result: "Grazie a questo modulo, i bambini potranno ripassare in modo divertente tutto il materiale appreso e creare il proprio portfolio digitale che riflette il percorso compiuto!",
+      },
     ],
   },
-  "game-development": {
-    title: "Game Development",
-    description: "Crea i tuoi videogiochi 2D e 3D con Unity.",
-    longDescription: "Un percorso entusiasmante per chi sogna di creare videogiochi. Impareremo a usare Unity, uno dei motori di gioco più utilizzati al mondo, e le basi di C# per dare vita a giochi professionali.",
-    age: "9-12 anni",
-    level: "Intermediate",
-    duration: "16 settimane",
-    emoji: "🎮",
-    learnings: [
-      "Fondamenti di Unity e il suo editor",
-      "Programmazione base in C#",
-      "Game design e meccaniche di gioco",
-      "Fisica e collisioni nei giochi",
-      "Audio e effetti sonori",
-      "Pubblicazione del gioco",
+  "scratch": {
+    title: "Programmazione visiva con Scratch",
+    emoji: "🧩",
+    description: "Con Scratch ogni bambino dà vita a giochi e personaggi, imparando la logica della programmazione a blocchi in modo intuitivo e coinvolgente.",
+    longDescription: "Questo corso è per bambini della scuola primaria che vogliono approcciarsi alla sfera dell'Information Technology. Con l'aiuto della programmazione visiva in Scratch, gli studenti saranno in grado di sviluppare non solo il loro pensiero logico ma anche le loro abilità creative. Durante il corso, i bambini trasformeranno vari progetti e impareranno come creare giochi e cartoni in modo indipendente.",
+    tags: ["Scratch", "Creatività", "Sviluppo di giochi", "Animazione"],
+    age: "8-10 anni",
+    level: "Principiante",
+    duration: "32 lezioni",
+    topics: [
+      "Crea i tuoi giochi in 2D",
+      "Crea i tuoi personaggi",
+      "Crea i tuoi progetti su Scratch",
+      "Conoscenza dei concetti di base di algoritmi e programmazione",
+      "Abilità di applicare variabili, loop e condizioni",
+      "Abilità di creare la fisica dei giochi: scrolling, gravità, cambio di velocità",
     ],
-    projects: [
-      "Platform game 2D",
-      "Runner game infinito",
-      "Puzzle game con fisica",
-      "Gioco di avventura 3D semplice",
-    ],
-    requirements: [
-      "Computer (PC o Mac con almeno 8GB RAM)",
-      "Connessione internet stabile",
-      "Esperienza base con il computer",
-      "Passione per i videogiochi",
+    projectExamples: [
+      { title: "Gioco 2D completo" },
+      { title: "Animazione interattiva" },
+      { title: "Storia animata" },
     ],
     modules: [
-      { title: "Settimana 1-4: Introduzione a Unity", description: "Ambiente di sviluppo, scene, oggetti e componenti." },
-      { title: "Settimana 5-8: C# per giochi", description: "Variabili, funzioni, input del giocatore." },
-      { title: "Settimana 9-12: Meccaniche avanzate", description: "Fisica, collisioni, nemici e punteggi." },
-      { title: "Settimana 13-16: Progetto finale", description: "Sviluppo completo di un gioco da pubblicare." },
-    ],
-    faqs: [
-      { question: "Serve sapere già programmare?", answer: "No, partiamo dalle basi. Tuttavia è consigliato aver completato un corso introduttivo o avere familiarità con la logica base." },
-      { question: "Che tipo di computer serve?", answer: "Unity funziona su PC e Mac. Consigliamo almeno 8GB di RAM e una scheda grafica dedicata per una migliore esperienza." },
+      {
+        title: "М1: I primi progetti con Scratch",
+        lessons: [
+          "L1: Basi di Scratch. Il primo progetto.",
+          "L2: Movimento degli Sprite su Scratch.",
+          "L3: Editor grafico magico. Crea il tuo assistente magico personale!",
+          "L4: Il Debugging dei progetti. Cos'è un bug?",
+          "L5: Koddich - una competizione di programmazione per i veri maghi!",
+        ],
+        result: "Il primissimo progetto Scratch alla Scuola di Magia Kodewarts.",
+      },
+      {
+        title: "М2: Animazioni e Suoni in Kodewarts",
+        lessons: [
+          "L1: Scratch-eventi.",
+          "L2: Principi di animazione.",
+          "L3: Sfondi e musica.",
+          "L4: Crea il tuo gruppo musicale personale!",
+        ],
+        result: "Un'eccezionale app musicale animata.",
+      },
+      {
+        title: "М3: La magia di creare i giochi",
+        lessons: [
+          "L1: Cos'è un gioco?",
+          "L2: Giochi per Principianti.",
+          "L3: Segnare il punteggio: imparare a lavorare con le variabili.",
+          "L4: Interazione nei giochi.",
+          "L5: Livelli Bonus. Imparare a rendere i giochi più difficili.",
+          "L6: Creare un gioco puzzle con Scratch!",
+          "L7: La seconda stagione di Koddich!",
+        ],
+        result: "Un gioco completo contenente meccaniche di gameplay base.",
+      },
+      {
+        title: "М4: Il ruolo della narrazione nel processo di sviluppo del gioco",
+        lessons: [
+          "L1: Meccaniche di gameplay - gli ingredienti per un gran gioco!",
+          "L2: Dialoghi e testi nei giochi.",
+          "L3: Blocchi personalizzati: perché ci servono e come crearli.",
+          "L4: Lo sviluppo dello scenario del gioco.",
+          "L5: Imparare come creare personaggi e scene dirette.",
+          "L6: Cercando bug!",
+          "L7: Koddich: Finale.",
+        ],
+        result: "Giochi basati su una storia con Scratch.",
+      },
+      {
+        title: "М5: Scratch avanzato",
+        lessons: [
+          "L1: Estensioni di Scratch.",
+          "L2: Imparare come riconoscere i video!",
+          "L3: Creare cloni.",
+          "L4: Sviluppo del design del programma.",
+          "L5: Un'altra sessione di debug!",
+        ],
+        result: "Progetti Scratch con fantastiche possibilità.",
+      },
+      {
+        title: "М6: Hackathon. Creare un progetto per il diploma!",
+        lessons: [
+          "L1: Come la pianificazione attenta può aiutarti a creare i migliori progetti!",
+          "L2: Sviluppare il nostro miglior progetto in assoluto!",
+          "L3: Perché i test e i feedback sono così importanti?",
+          "L4: I segreti dietro una dimostrazione di successo!",
+        ],
+        result: "Un progetto unico che ha passato tutte le fasi di sviluppo.",
+      },
     ],
   },
-  "roblox-studio": {
-    title: "Roblox Studio",
-    description: "Progetta e pubblica mondi Roblox, impara Lua scripting.",
-    longDescription: "Trasforma la passione per Roblox in competenze reali! Impara a creare i tuoi giochi su Roblox Studio, programma in Lua e scopri come pubblicare e condividere le tue creazioni con milioni di giocatori.",
-    age: "9-14 anni",
-    level: "Beginner",
-    duration: "12 settimane",
+  "roblox-base": {
+    title: "Sviluppo giochi con Roblox",
     emoji: "🏗️",
-    learnings: [
-      "Roblox Studio e i suoi strumenti",
-      "Costruzione di mondi 3D",
-      "Scripting base in Lua",
-      "Game design per Roblox",
-      "Pubblicazione sulla piattaforma",
+    description: "Crea giochi con Roblox Studio: progetta mondi e personaggi, imposta le tue regole e pubblica il tuo primo videogame online.",
+    longDescription: "Il corso si concentra sull'apprendimento del linguaggio di programmazione LUA così come sulla modellazione in 3D degli scenari. Il corso insegna le basi della programmazione, utili come punto di partenza per gli studenti che intendono diventare programmatori professionisti. Il corso sviluppa il pensiero creativo e spaziale attraverso la modellazione di diversi oggetti in 3D. Gli studenti creeranno i loro giochi e svilupperanno il pensiero progettuale (design thinking).",
+    tags: ["Roblox", "LUA", "Programmazione", "Game design"],
+    age: "8+ anni",
+    level: "Principiante",
+    duration: "32 lezioni",
+    topics: [
+      "Conoscenza di base del linguaggio LUA",
+      "Creazione di giochi su Roblox Studio",
+      "Modellazione 3D",
+      "Progettazione su livelli",
+      "Fondamenti di animazione, effetti sonori e visivi",
     ],
-    projects: [
-      "Obby (percorso a ostacoli)",
-      "Tycoon semplice",
-      "Gioco di simulazione",
-      "Mondo esplorabile",
-    ],
-    requirements: [
-      "Computer (PC o Mac)",
-      "Account Roblox (gratuito)",
-      "Connessione internet stabile",
+    projectExamples: [
+      { title: "Torre nell'Inferno" },
+      { title: "Gioco di corse" },
+      { title: "Gioco d'avventura" },
     ],
     modules: [
-      { title: "Settimana 1-3: Roblox Studio basics", description: "Interfaccia, strumenti di costruzione, parti e modelli." },
-      { title: "Settimana 4-6: Costruzione avanzata", description: "Terreni, illuminazione, effetti speciali." },
-      { title: "Settimana 7-9: Lua scripting", description: "Prime linee di codice, eventi, interazioni." },
-      { title: "Settimana 10-12: Pubblicazione", description: "Game design, test e pubblicazione." },
+      {
+        title: "Modulo 1: Gioco 'Salva il mondo'!",
+        lessons: [
+          "М1L1 - Introduzione a Roblox! Le basi della creazione di giochi. Interfaccia di base di Roblox Studio.",
+          "М1L2 - Strumenti avanzati di modifica del terreno. Esecuzione di una mappa già pronta.",
+          "М1L3 - Creare modelli 3D utilizzando blocchi e altri oggetti di base. Modificare colori e materiali.",
+          "М1L4 - Nozioni di base di programmazione. Impariamo a conoscere le variabili e a modificarne i valori.",
+        ],
+        result: "Abbiamo imparato a creare un gioco in Roblox Studio partendo da zero. Abbiamo studiato i concetti di base del game design, della modellazione 3D e della programmazione.",
+      },
+      {
+        title: "Modulo 2: Torre nell'Inferno",
+        lessons: [
+          "M2L1 - Iniziare lo sviluppo di un gioco famoso: 'Torre dell'Inferno'. Studio di strumenti avanzati di modellazione 3D.",
+          "M2L2 - Le basi della programmazione. Funzioni. Conoscere le funzioni nel linguaggio LUA.",
+          "M2L3 - Imparare la fisica in Roblox Studio. Uso dei motori e della fisica per creare ostacoli.",
+          "M2L4 - Le basi della programmazione. Operatore condizionale. Imparare a modificare la salute del giocatore.",
+        ],
+        result: "Abbiamo imparato a conoscere il sistema di fisica di Roblox Studio. Abbiamo imparato le basi della programmazione LUA.",
+      },
+      {
+        title: "Modulo 3: Torre nell'Inferno - Espandere le funzionalità",
+        lessons: [
+          "M3L1 - Le basi della programmazione. I cicli. Uso degli script per creare nuovi ostacoli.",
+          "M3L2 - Creare oggetti in movimento. Studio dell'animazione degli oggetti.",
+          "M3L3 - Implementare l'interazione con gli oggetti. Creazione di oggetti interattivi.",
+          "M3L4 - Creazione di checkpoint. Creazione di boost e di un percorso parkour a tempo limitato.",
+        ],
+        result: "Abbiamo continuato a imparare di più sulla programmazione. Abbiamo completato il progetto 'Torre dell'Inferno' e lo abbiamo pubblicato su Internet!",
+      },
+      {
+        title: "Modulo 4: Il gioco di corse",
+        lessons: [
+          "M4L1 - Introduzione alle basi del game design. Lavoro avanzato sulle ambientazioni. Creazione di piste da corsa personalizzate.",
+          "M4L2 - Le basi della scrittura di script nel linguaggio LUA. Apprendimento delle funzioni. Modellazione e impostazione del movimento dell'auto.",
+          "M4L3 - Imparare a creare effetti visivi. Lavorare con l'interfaccia utente e il linguaggio LUA.",
+          "M4L4 - Finalizzazione del progetto. Aggiunta di attività per i giocatori: una gara a tempo.",
+        ],
+        result: "Abbiamo approfondito la nostra conoscenza della programmazione LUA. Abbiamo creato il nostro gioco con una pista da corsa e lo abbiamo pubblicato online!",
+      },
+      {
+        title: "Modulo 5: Gioco d'avventura - Sviluppo di squadra. NPC",
+        lessons: [
+          "M5L1 - Imparare lo sviluppo in gruppo. Lavorare in gruppo per creare un nuovo mondo.",
+          "М5L2 - Personaggi non giocanti. Creazione e personalizzazione degli NPC.",
+          "M5L3 - Creazione di animazioni dei personaggi in Roblox Studio.",
+          "M5L4 - Dialoghi degli NPC. Creazione di una mini-quest. Testare il gioco.",
+        ],
+        result: "Abbiamo creato personaggi non giocanti e reso i nostri progetti più significativi aggiungendo una mini-quest.",
+      },
+      {
+        title: "Modulo 6: Gioco d'avventura - Creare un sistema di valuta di gioco",
+        lessons: [
+          "M6L1 - Creazione della valuta di gioco. Animare gli oggetti e creare una tabella di cambio valuta.",
+          "M6L2 - Implementazione dei minerali. Aggiunta di uno strumento di raccolta all'inventario.",
+          "M6L3 - Lavorare con il sistema GUI di Roblox. Creazione di un negozio in-game.",
+          "M6L4 - Lavorare sull'atmosfera. Creazione di un oggetto per lo scambio di valuta. Testare il progetto.",
+        ],
+        result: "Abbiamo imparato a creare una valuta di gioco e un mercato. Abbiamo familiarizzato con il sistema di interfaccia grafica di Roblox.",
+      },
+      {
+        title: "Modulo 7: Gioco d'avventura - Monetizzazione",
+        lessons: [
+          "M7L1 - Distintivi. Implementazione di badge speciali che consentono ai giocatori di ottenere risultati.",
+          "M7L2 - Implementazione di pass di gioco speciale che i giocatori possono acquistare. Creazione di un animale domestico.",
+          "M7L3 - Apprendere le basi della monetizzazione di Roblox Studio. Creazione di oggetti in vendita.",
+          "M7L4 - Finalizzazione del progetto. Studio delle impostazioni del gioco. Implementazione di server privati.",
+        ],
+        result: "Abbiamo imparato le basi del sistema di monetizzazione di Roblox e come implementarlo nei nostri progetti.",
+      },
+      {
+        title: "Modulo 8: Sviluppare il nostro progetto",
+        lessons: [
+          "M8L1 - Fondamenti di game design. Sviluppo di un'idea per il gioco.",
+          "M8L2 - Sviluppare il proprio progetto. Imparare a creare meccaniche di gioco.",
+          "M8L3 - Test finale del proprio progetto. Completamento del progetto del diploma.",
+          "M8L4 - Presentazione del progetto. Diploma.",
+        ],
+        result: "Gli studenti hanno sviluppato i propri giochi originali. Hanno combinato diverse meccaniche e scenari di gioco.",
+      },
     ],
-    faqs: [
-      { question: "Serve già giocare a Roblox?", answer: "No, ma aiuta ad avere familiarità con la piattaforma. Insegniamo tutto da zero." },
-      { question: "I giochi creati si possono pubblicare?", answer: "Assolutamente sì! Alla fine del corso pubblicherai il tuo gioco sulla piattaforma Roblox." },
+  },
+  "roblox-avanzato": {
+    title: "Roblox Avanzato",
+    emoji: "🚀",
+    description: "Un corso pensato per chi usa già Roblox Studio: affina le tue abilità e crea giochi più complessi, originali e coinvolgenti.",
+    longDescription: "Il corso si concentra sull'apprendimento avanzato del linguaggio di programmazione LUA così come sulla modellazione in 3D degli scenari. Il corso sviluppa il pensiero creativo e spaziale attraverso la modellazione di diversi oggetti in 3D. Gli studenti creeranno i loro giochi complessi e svilupperanno il pensiero progettuale (design thinking).",
+    tags: ["Script complessi", "Programmazione avanzata", "Meccaniche di gioco"],
+    age: "10-14 anni",
+    level: "Avanzato",
+    duration: "32 lezioni",
+    topics: [
+      "Game design avanzato con modellazione 3D, creatività e programmazione",
+      "Creare giochi propri in Roblox Studio partendo dai tipi più popolari",
+      "Sviluppare il potenziale creativo dello studente",
+      "Sviluppare le competenze di programmazione avanzate",
+      "Trasformare un gruppo di studenti in un team di sviluppatori competente",
+    ],
+    projectExamples: [
+      { title: "Teamwork Puzzle" },
+      { title: "Tower Defence" },
+      { title: "Pet Simulator" },
+    ],
+    modules: [
+      {
+        title: "Modulo 1. Fondamenti di programmazione in LUA",
+        lessons: [
+          "Lezione 1: Ripasso del lavoro con le variabili. Avvio dello sviluppo di un nuovo progetto.",
+          "Lezione 2: Lavoro con le funzioni LUA. Apprendimento del debug del codice.",
+          "Lezione 3: Studio dei cicli. Configurazione del teletrasporto e utilizzo del codice per cercare oggetti.",
+          "Lezione 4: Consolidamento degli argomenti appresi tramite esercizi pratici.",
+        ],
+        result: "Consolidamento delle basi di programmazione LUA e sviluppo di script autonomi.",
+      },
+      {
+        title: "Modulo 2. Gioco 'Teamwork Puzzle'",
+        lessons: [
+          "Lezione 1: Inizio sviluppo di un nuovo progetto: nuova versione del popolare gioco Teamwork Puzzle.",
+          "Lezione 2: Studio del ciclo for. Come ottimizzare il codice.",
+          "Lezione 3: Continuiamo lo studio dei cicli. Applicazione del ciclo while nella pratica.",
+          "Lezione 4: Completamento del progetto personale e pubblicazione su Roblox.",
+        ],
+        result: "Creazione di un gioco puzzle collaborativo completo.",
+      },
+      {
+        title: "Modulo 3. Gioco 'Tower Defence'",
+        lessons: [
+          "Lezione 1: Iniziamo a sviluppare un nuovo progetto nel popolare genere Tower Defence.",
+          "Lezione 2: Lavoriamo con le impostazioni della telecamera in Roblox.",
+          "Lezione 3: Lavoriamo con la GUI e gli eventi su LUA. Scambio di messaggi tra server e client.",
+          "Lezione 4: Consolidamento e pubblicazione su Roblox.",
+        ],
+        result: "Creazione di un Tower Defence completo con gestione telecamera e GUI.",
+      },
+      {
+        title: "Modulo 4. Gioco 'Color Block'",
+        lessons: [
+          "Lezione 1: Introduzione al progetto Colour Block. Panoramica delle meccaniche base del gioco.",
+          "Lezione 2: Programmazione della logica base del gioco con operatori condizionali.",
+          "Lezione 3: Lavoro con colori e materiali in Roblox Studio.",
+          "Lezione 4: Creazione di elementi interattivi con eventi e funzioni.",
+        ],
+        result: "Sviluppo della scena di gioco e degli elementi base.",
+      },
+      {
+        title: "Modulo 5. Gioco 'Color Block' - Estensione delle funzionalità",
+        lessons: [
+          "Lezione 1: Sviluppo dell'interfaccia utente (GUI). Creazione e stile degli elementi.",
+          "Lezione 2: Aggiunta di effetti sonori e musica. Gestione audio in Roblox Studio.",
+          "Lezione 3: Script di meccaniche di gioco complesse con tecniche avanzate.",
+          "Lezione 4: Rifiniture finali e pubblicazione del gioco su Roblox.",
+        ],
+        result: "Completamento del gioco Color Block con audio e meccaniche avanzate.",
+      },
+      {
+        title: "Modulo 6. Gioco 'Pet Simulator' - Programmazione avanzata",
+        lessons: [
+          "Lezione 1: Introduzione al progetto Pet Simulator. Concept base e pianificazione.",
+          "Lezione 2: Creazione di modelli base di animali. Modellazione e animazione.",
+          "Lezione 3: Programmazione delle meccaniche di interazione con gli animali.",
+          "Lezione 4: Sviluppo dell'economia di gioco: monete, ricompense e bonus.",
+        ],
+        result: "Creazione delle basi di un Pet Simulator funzionante.",
+      },
+      {
+        title: "Modulo 7. Gioco 'Pet Simulator' - Nuove funzionalità",
+        lessons: [
+          "Lezione 1: Introduzione alla monetizzazione: acquisti in-game e contenuti premium.",
+          "Lezione 2: Creazione di sfide e obiettivi per mantenere l'interesse dei giocatori.",
+          "Lezione 3: Integrazione di elementi social: amici e condivisione degli animali.",
+          "Lezione 4: Rifiniture finali e pubblicazione del gioco su Roblox.",
+        ],
+        result: "Pet Simulator completo con monetizzazione ed elementi social.",
+      },
+      {
+        title: "Modulo 8. Sviluppo del proprio progetto - Studio dell'IA",
+        lessons: [
+          "Lezione 1: Fondamenti di game design. Sviluppo dell'idea per un progetto personale.",
+          "Lezione 2: Sviluppo del progetto personale. Introduzione di un assistente AI.",
+          "Lezione 3: Sviluppo del progetto personale. Implementazione delle meccaniche di gioco.",
+          "Lezione 4: Presentazione del progetto. Conclusione del corso.",
+        ],
+        result: "Progetto personale originale con meccaniche creative e supporto AI.",
+      },
     ],
   },
   "web-development": {
     title: "Web Development",
-    description: "HTML, CSS e JavaScript per creare siti web interattivi.",
-    longDescription: "Impara a costruire siti web professionali da zero. Questo corso copre HTML, CSS e JavaScript, le tre tecnologie fondamentali del web, attraverso progetti pratici e creativi.",
-    age: "12-16 anni",
-    level: "Intermediate",
-    duration: "20 settimane",
     emoji: "🌐",
-    learnings: [
-      "HTML5 semantico e accessibile",
-      "CSS3 e design responsive",
-      "JavaScript moderno",
-      "Interattività e animazioni",
-      "Hosting e pubblicazione",
+    description: "Immergiti nel mondo dello sviluppo web: impara linguaggi e stili di markup, collega siti a database, crea design e costruisci il tuo sito web.",
+    longDescription: "Web Development: questa è un'immersione nel mondo dello sviluppo web. I ragazzi impareranno linguaggi e stili di markup, impareranno a collegare il sito a database, creeranno design e costruiranno il proprio sito web. Il corso copre HTML, CSS, JavaScript, PHP e WordPress.",
+    tags: ["HTML", "CSS", "Sviluppo web", "Programmazione"],
+    age: "13+ anni",
+    level: "Principiante",
+    duration: "32 lezioni",
+    topics: [
+      "Creare layout in Figma",
+      "Database e motori di siti",
+      "Sviluppo di siti web responsive",
+      "Imparare HTML per creare markup di siti",
+      "Imparare CSS per applicare stili",
+      "Lavorare con le animazioni del sito web",
+      "Creazione di database per lavorare con gli utenti",
     ],
-    projects: [
-      "Portfolio personale",
-      "Landing page professionale",
-      "Web app interattiva",
-      "Clone di un sito famoso",
-    ],
-    requirements: [
-      "Computer (PC o Mac)",
-      "Connessione internet stabile",
-      "Editor di codice (fornito gratuitamente)",
+    projectExamples: [
+      { title: "Portfolio personale" },
+      { title: "Landing page professionale" },
+      { title: "Sito web completo con WordPress" },
     ],
     modules: [
-      { title: "Settimana 1-5: HTML fondamentali", description: "Struttura, tag, form, media." },
-      { title: "Settimana 6-10: CSS e design", description: "Styling, layout, responsive design." },
-      { title: "Settimana 11-16: JavaScript", description: "Variabili, funzioni, DOM, eventi." },
-      { title: "Settimana 17-20: Progetto finale", description: "Sito web completo da pubblicare online." },
-    ],
-    faqs: [
-      { question: "Potrò creare siti veri?", answer: "Sì! Alla fine del corso avrai tutti gli strumenti per creare siti web professionali e pubblicarli online." },
+      {
+        title: "Modulo 1. Introduzione a HTML",
+        lessons: [
+          "Lezione 1: Gli studenti impareranno cos'è una pagina HTML e proveranno a creare il loro primo layout usando le etiquette più semplici.",
+          "Lezione 2: Multimedia ed embedding. Gli studenti impareranno a usare etiquette multimedia: img, video, audio.",
+          "Lezione 3: Frame e markup di pagina, apprendimento dell'etiquetta iframe e embedding di elementi.",
+          "Lezione 4: Introduzione a CSS. I ragazzi impareranno le basi di CSS e applicheranno i loro primi stili.",
+        ],
+        result: "Nel primo modulo, gli studenti creeranno pagine web integrando contenuti multimedia e apprenderanno le basi della stilizzazione degli elementi.",
+      },
+      {
+        title: "Modulo 2. Concetti base di CSS",
+        lessons: [
+          "Lezione 5: Selettori CSS. Gli studenti impareranno cosa sono i selettori e come impostare stili per elementi specifici.",
+          "Lezione 6: Il modello a blocchi di CSS. Elementi del modello a blocchi e inline, display e proprietà dei blocchi.",
+          "Lezione 7: Link e proprietà di sfondo. Etiquetta <a>, link interni ed esterni, configurazione dello sfondo.",
+          "Lezione 8: Posizionamento. Flusso del documento e posizioni degli elementi, proprietà position.",
+        ],
+        result: "Nel secondo modulo, gli studenti padroneggeranno temi fondamentali per ottenere un web design professionale.",
+      },
+      {
+        title: "Modulo 3. Prototipazione e basi di UX/UI",
+        lessons: [
+          "Lezione 9: Introduzione al design. Cos'è il design UX e UI, qual è la loro differenza?",
+          "Lezione 10: Analisi dei motori di ricerca. Studio dei motori di ricerca e del funzionamento di Internet.",
+          "Lezione 11: Mock-up del progetto finale: introduzione a Figma, basi della prototipazione.",
+          "Lezione 12: Flexbox. I ragazzi impareranno la proprietà più importante di CSS: i Flexbox.",
+        ],
+        result: "Gli studenti apprenderanno le basi del design di siti web e svilupperanno il design del loro futuro progetto.",
+      },
+      {
+        title: "Modulo 4. Design",
+        lessons: [
+          "Lezione 13: Design del sito web, lavoro con VSC. Conoscenza dell'editor e lavoro sul primo progetto.",
+          "Lezione 14: Completamento del progetto. Finalizzazione e completamento del progetto.",
+          "Lezione 15: Pubblicazione di un progetto. Cos'è GitHub e come pubblicare il tuo sito?",
+          "Lezione 16: Presentazione dei progetti. Riepilogo di quanto fatto nei quattro moduli.",
+        ],
+        result: "Gli studenti creeranno il loro primo sito web, lo pubblicheranno online e raccoglieranno feedback dagli utenti.",
+      },
+      {
+        title: "Modulo 5. CSS Avanzato",
+        lessons: [
+          "Lezione 17: Pseudo-classi e pseudo-elementi. Studio di pseudo-classi e pseudo-elementi importanti.",
+          "Lezione 18: Trasformazioni. Esplorazione delle trasformazioni, rendere il sito interattivo.",
+          "Lezione 19: Animazioni. La proprietà animation e come funzionano le animazioni in CSS.",
+          "Lezione 20: Modello a blocchi PRO. Differenza tra margin e padding, applicazione al progetto.",
+        ],
+        result: "Gli studenti padroneggeranno CSS avanzato e miglioreranno il loro progetto.",
+      },
+      {
+        title: "Modulo 6. Layout adattivo, grid e form",
+        lessons: [
+          "Lezione 21: Layout Grid. La seconda proprietà importante di CSS. Differenza con i flex.",
+          "Lezione 22: Variabili in CSS. La variabile root che cambierà molto il nostro sito!",
+          "Lezione 23: Design adattivo e responsive. Come rendere un sito adattabile?",
+          "Lezione 24: Interazione con le informazioni dell'utente. Form, come inviare informazioni al server.",
+        ],
+        result: "Gli studenti impareranno grid più comode, risolveranno casi reali e apprenderanno a fare adattamenti.",
+      },
+      {
+        title: "Modulo 7. Motori di siti e basi di PHP",
+        lessons: [
+          "Lezione 25: Server locale e introduzione a PHP. Apprendimento di PHP per il sito, interazione con HTML.",
+          "Lezione 26: Immersione in PHP. Apprendimento di cicli e array, come costruire il proprio sito PHP.",
+          "Lezione 27: WordPress. Motori di siti e WordPress, come creare un sito da blocchi PHP.",
+          "Lezione 28: Motore del sito ed estensione del progetto sul motore.",
+        ],
+        result: "Gli studenti apprenderanno hosting e PHP, e come trasferire il loro progetto sul server.",
+      },
+      {
+        title: "Modulo 8. Elaborazione del progetto finale",
+        lessons: [
+          "Lezione 29: Elaborazione del progetto finale.",
+          "Lezione 30: Perfezionamento del progetto, lavoro con form, codice pronto per verificare la correttezza dell'input.",
+          "Lezione 31: Perfezionamento del progetto, menu hamburger, carousel, chips JS. Completamento del progetto.",
+          "Lezione 32: Presentazione dei progetti.",
+        ],
+        result: "Per tutti i moduli, gli studenti lavoreranno al miglioramento del loro progetto, creando un buon prodotto finale.",
+      },
     ],
   },
-  "python-ai": {
-    title: "Python & AI per Teen",
-    description: "Programmazione avanzata con Python e introduzione all'intelligenza artificiale.",
-    longDescription: "Un percorso avanzato per teenager appassionati di tecnologia. Impara Python, il linguaggio più richiesto nel mondo del lavoro, e scopri le basi dell'intelligenza artificiale e del machine learning.",
-    age: "14-18 anni",
-    level: "Advanced",
-    duration: "24 settimane",
-    emoji: "🤖",
-    learnings: [
-      "Python avanzato",
-      "Strutture dati e algoritmi",
-      "Librerie per data science",
-      "Machine learning base",
-      "Progetti AI pratici",
+  "unity": {
+    title: "Sviluppo giochi con Unity",
+    emoji: "🎮",
+    description: "Dai vita alle tue idee con Unity: impara a creare ambienti 3D, progettare logiche di gioco e costruire esperienze interattive come un vero sviluppatore.",
+    longDescription: "Durante questo corso, gli studenti (dai 13 ai 17 anni) impareranno Unity, uno dei motori più popolari nel settore dei giochi. Gli studenti padroneggeranno il motore in grado di consentire loro di creare giochi, animazioni e progetti software unici e coinvolgenti. Durante il corso, gli studenti impareranno C#, il linguaggio di programmazione che consentirà loro di creare funzioni complesse. Alla fine del corso, gli studenti creeranno i propri giochi 3D che potranno essere giocati sia su PC che su browser web.",
+    tags: ["Programmazione", "3D", "C#", "Game Engines", "Sviluppo di giochi"],
+    age: "13+ anni",
+    level: "Principiante",
+    duration: "32 lezioni",
+    topics: [
+      "Introduzione al linguaggio C#",
+      "Fondamenti di sviluppo di giochi sparatutto e fondamenti di intelligenza artificiale",
+      "Fondamenti di sviluppo di giochi multiplayer",
+      "Utilizzo di GitHub",
+      "Sviluppo del tuo primo Unity FPS (sparatutto in prima persona)",
+      "Progettazione e implementazione giochi multiplayer",
     ],
-    projects: [
-      "Chatbot intelligente",
-      "Sistema di raccomandazione",
-      "Analisi dati reali",
-      "Riconoscimento immagini",
-    ],
-    requirements: [
-      "Computer (PC o Mac con almeno 8GB RAM)",
-      "Connessione internet stabile",
-      "Esperienza base di programmazione consigliata",
+    projectExamples: [
+      { title: "Runner Game" },
+      { title: "Sparatutto FPS" },
+      { title: "Gioco Multiplayer" },
     ],
     modules: [
-      { title: "Settimana 1-6: Python solido", description: "Sintassi avanzata, OOP, librerie standard." },
-      { title: "Settimana 7-12: Data Science", description: "NumPy, Pandas, visualizzazione dati." },
-      { title: "Settimana 13-18: Machine Learning", description: "Scikit-learn, modelli base, training." },
-      { title: "Settimana 19-24: Progetto AI", description: "Sviluppo completo di un progetto di AI." },
+      {
+        title: "M1. Sviluppare un gioco Runner - Introduzione a Unity e C#",
+        lessons: [
+          "L1: Finestre di Unity. Creazione di personaggi e luoghi.",
+          "L2: Introduzione alla programmazione in C#. Configura la fisica del movimento per il giocatore.",
+          "L3: Imparare l'istruzione condizionale if/else. Insegnare al nostro personaggio a saltare.",
+          "L4: Scoprire di più sulla telecamera del gioco. Animare il movimento del personaggio.",
+        ],
+        result: "Gli studenti hanno iniziato a sviluppare il loro primo gioco Unity creando personaggi e luoghi. Hanno imparato le basi del linguaggio C#.",
+      },
+      {
+        title: "M2. Sviluppare un gioco Runner - Creazione di livelli e basi dell'UI",
+        lessons: [
+          "L1: Conoscere gli elenchi C# e la funzione Istance. Costruire un generatore di livelli base.",
+          "L2: Conoscere il ciclo for C#. Implementare il livellamento continuo.",
+          "L3: Apprendimento delle basi dell'UI (User Interface). Aggiungi oggetti da collezione e lost status.",
+          "L4: Unificazione delle basi di C#. Familiarizzare con effetti e suoni. Aggiungi bonus.",
+        ],
+        result: "Gli studenti hanno completato il loro primo gioco di corsa e lo hanno pubblicato su Kodland HUB.",
+      },
+      {
+        title: "M3. Sviluppare uno sparatutto - Fondamenti FPS e IA",
+        lessons: [
+          "L1: Creazione di un nuovo progetto. Implementazione dei controlli dei personaggi in prima persona.",
+          "L2: Creare modelli e animazioni per i nemici. Implementazione di un'intelligenza artificiale primitiva.",
+          "L3: Aggiunta di armi e meccaniche di tiro di base. Implementazione del conteggio delle munizioni.",
+          "L4: Fondamenti di game design. Implementazione di checkpoint e respawn.",
+        ],
+        result: "Gli studenti hanno iniziato a sviluppare il loro primo Unity FPS con nemici e IA semplice.",
+      },
+      {
+        title: "M4. Sviluppare uno sparatutto - Introduzione alla OOP",
+        lessons: [
+          "L1: Introduzione all'OOP (programmazione orientata agli oggetti). Principi base, classi e oggetti.",
+          "L2: OOP avanzato. Utilizzo del polimorfismo per sovrascrivere i metodi della superclasse.",
+          "L3: Utilizzo dei concetti OOP per implementare diverse classi di personaggi con abilità uniche.",
+          "L4: Completare il gioco sparatutto. Aggiunta di suoni ed effetti visivi, lavoro sul menu.",
+        ],
+        result: "Gli studenti hanno imparato le basi dell'OOP e pubblicato i loro progetti su Itch.io.",
+      },
+      {
+        title: "M5. Sviluppo di uno sparatutto multiplayer - Fondamenti multiplayer",
+        lessons: [
+          "L1: Introduzione allo sviluppo di giochi multiplayer. Introduzione a Photon.",
+          "L2: Connessione al servizio Photon. Crea e unisciti a stanze virtuali.",
+          "L3: Utilizzo delle funzioni Photon per sincronizzare le azioni e gli stati dei giocatori.",
+          "L4: Apprendimento delle funzionalità avanzate di Photon per migliorare la sincronizzazione.",
+        ],
+        result: "Gli studenti hanno strutturato i loro progetti per la funzionalità multiplayer con Photon.",
+      },
+      {
+        title: "M6. Sviluppo di uno sparatutto multiplayer - Funzionalità avanzate",
+        lessons: [
+          "L1: Realizzazione di varie funzionalità di gioco in ambiente multiplayer: IA nemica, bonus, punteggio.",
+          "L2: Ottimizzare il gioco. Ottimizzazione dei suoni, dell'interfaccia e delle prestazioni.",
+          "L3: Implementare funzionalità multiplayer avanzate: matchmaking, lobby e gestione dati runtime.",
+          "L4: Guardare il gioco in streaming e giocare insieme.",
+        ],
+        result: "Gli studenti hanno completato il loro gioco sparatutto multiplayer e lo hanno pubblicato su Itch.io.",
+      },
+      {
+        title: "M7. Inizio del lavoro per il progetto finale",
+        lessons: [
+          "L1: Fondamenti di game design. Progettare un documento concettuale per un gioco.",
+          "L2: Comprendere il controllo della versione. Imparare GitHub.",
+          "L3: Progettazione dei livelli. Lavoro sulla grafica dei propri giochi.",
+          "L4: Pubblicazione e test delle versioni beta dei propri giochi.",
+        ],
+        result: "Gli studenti hanno iniziato a progettare i loro progetti finali e imparato a lavorare con GitHub.",
+      },
+      {
+        title: "M8. Completamento del progetto finale - Diploma",
+        lessons: [
+          "L1: Insegnare al giocatore. Sviluppo di un'interfaccia user-friendly.",
+          "L2: Pubblicare progetti su Itch.io.",
+          "L3: Percorso evolutivo: dare gli ultimi ritocchi prima della presentazione.",
+          "L4: Presentazione dei progetti. Diploma di fine corso.",
+        ],
+        result: "Gli studenti hanno creato i propri giochi con design e storie originali e li hanno pubblicati su Itch.io.",
+      },
     ],
-    faqs: [
-      { question: "Serve sapere già Python?", answer: "Consigliamo di avere basi di programmazione. Se parti da zero, suggeriamo prima il corso Python Base." },
-      { question: "Questo corso prepara per l'università?", answer: "Sì! I contenuti sono allineati con i primi corsi universitari di informatica e AI." },
+  },
+  "python-base": {
+    title: "Python Base",
+    emoji: "🐍",
+    description: "Impara Python, il linguaggio scelto dagli sviluppatori di tutto il mondo, e crea giochi, app e siti web trasformando le tue idee in progetti reali.",
+    longDescription: "In questo corso per adolescenti imparerai le basi di Python, uno dei linguaggi di programmazione più versatili e richiesti nel mondo del lavoro. Creerai applicazioni come chatbot e programmi interattivi. Acquisirai esperienza pratica con strumenti e tecniche standard, imparando anche a sviluppare e pubblicare i tuoi progetti.",
+    tags: ["Python", "Programmazione", "Logica", "Progetti pratici"],
+    age: "13+ anni",
+    level: "Principiante",
+    duration: "32 lezioni",
+    topics: [
+      "Fondamenti del linguaggio Python",
+      "Variabili, funzioni e strutture dati",
+      "Programmazione orientata agli oggetti",
+      "Creazione di progetti interattivi",
+      "Introduzione al debugging e testing",
+    ],
+    projectExamples: [
+      { title: "Chatbot Discord" },
+      { title: "Applicazione interattiva" },
+      { title: "Gioco testuale" },
+    ],
+    modules: [
+      {
+        title: "Modulo 1: Introduzione a Python",
+        lessons: [
+          "Lezione 1: Installazione e configurazione dell'ambiente di sviluppo.",
+          "Lezione 2: Primi passi: variabili e tipi di dati.",
+          "Lezione 3: Input/Output e interazione con l'utente.",
+          "Lezione 4: Operatori e espressioni.",
+        ],
+        result: "Comprensione delle basi di Python e creazione dei primi programmi.",
+      },
+      {
+        title: "Modulo 2: Strutture di controllo",
+        lessons: [
+          "Lezione 5: Istruzioni condizionali if/else.",
+          "Lezione 6: Cicli for e iterazione.",
+          "Lezione 7: Cicli while e controllo del flusso.",
+          "Lezione 8: Esercitazione pratica con problemi logici.",
+        ],
+        result: "Padronanza delle strutture di controllo fondamentali.",
+      },
+      {
+        title: "Modulo 3: Funzioni e modularità",
+        lessons: [
+          "Lezione 9: Definizione e chiamata di funzioni.",
+          "Lezione 10: Parametri e valori di ritorno.",
+          "Lezione 11: Scope delle variabili e best practices.",
+          "Lezione 12: Creazione di un mini-progetto con funzioni.",
+        ],
+        result: "Capacità di organizzare il codice in modo modulare.",
+      },
+      {
+        title: "Modulo 4: Strutture dati",
+        lessons: [
+          "Lezione 13: Liste e operazioni su liste.",
+          "Lezione 14: Dizionari e tuple.",
+          "Lezione 15: Comprensione delle liste.",
+          "Lezione 16: Progetto con strutture dati.",
+        ],
+        result: "Utilizzo efficace delle strutture dati Python.",
+      },
+      {
+        title: "Modulo 5: File e gestione degli errori",
+        lessons: [
+          "Lezione 17: Lettura e scrittura di file.",
+          "Lezione 18: Gestione delle eccezioni.",
+          "Lezione 19: Debugging e risoluzione problemi.",
+          "Lezione 20: Progetto con persistenza dati.",
+        ],
+        result: "Gestione professionale di file ed errori.",
+      },
+      {
+        title: "Modulo 6: Introduzione alla OOP",
+        lessons: [
+          "Lezione 21: Classi e oggetti.",
+          "Lezione 22: Metodi e attributi.",
+          "Lezione 23: Ereditarietà base.",
+          "Lezione 24: Progetto con classi.",
+        ],
+        result: "Comprensione dei fondamenti della programmazione orientata agli oggetti.",
+      },
+      {
+        title: "Modulo 7: Librerie e moduli",
+        lessons: [
+          "Lezione 25: Importazione e utilizzo di moduli.",
+          "Lezione 26: Librerie standard utili.",
+          "Lezione 27: Installazione di pacchetti esterni.",
+          "Lezione 28: Creazione di un progetto con librerie.",
+        ],
+        result: "Utilizzo dell'ecosistema Python per estendere le funzionalità.",
+      },
+      {
+        title: "Modulo 8: Progetto finale",
+        lessons: [
+          "Lezione 29: Pianificazione del progetto finale.",
+          "Lezione 30: Sviluppo del progetto.",
+          "Lezione 31: Testing e debugging finale.",
+          "Lezione 32: Presentazione del progetto.",
+        ],
+        result: "Completamento di un progetto Python completo e funzionante.",
+      },
+    ],
+  },
+  "python-pro-ai": {
+    title: "Python PRO & AI",
+    emoji: "🤖",
+    description: "Un percorso avanzato per creare bot, siti web e progetti con IA. Con Python PRO lavori su progetti reali e partecipi a un hackathon sul clima.",
+    longDescription: "In questo corso per adolescenti libererai la tua creatività e scoprirai le potenzialità avanzate del linguaggio Python! Creerai applicazioni avanzate come chatbot, siti web e programmi basati sull'intelligenza artificiale. Acquisirai non solo esperienza pratica con strumenti e tecniche standard, ma imparerai anche a sviluppare e pubblicare i tuoi progetti open source. Le competenze acquisite ti permetteranno di fare un passo importante nel mondo della tecnologia!",
+    tags: ["API", "HTML", "Estrazione dati", "Intelligenza artificiale"],
+    age: "13+ anni",
+    level: "Avanzato",
+    duration: "32 lezioni",
+    topics: [
+      "Programmazione back-end",
+      "Introduzione allo sviluppo web",
+      "Padronanza dell'intelligenza artificiale",
+      "Integrazione dell'AI in applicazioni già pronte",
+      "Funzioni avanzate di Python come lambda, gestione file ed eccezioni",
+      "Sviluppo di bot, siti e AI usando Python, API, framework web e librerie ML",
+    ],
+    projectExamples: [
+      { title: "Bot Discord avanzato" },
+      { title: "Sito web con Flask" },
+      { title: "Progetto AI con Machine Learning" },
+    ],
+    modules: [
+      {
+        title: "Modulo 1: Un bot Discord che non si ferma mai",
+        lessons: [
+          "Lezione 1: Strumenti per veri programmatori. Configurare l'IDE e correggere la sintassi Python.",
+          "Lezione 2: Introduzione al sistema di controllo versione git. Creazione account GitHub.",
+          "Lezione 3: Discord.py e API. Installazione della prima libreria e connessione con il mondo esterno.",
+          "Lezione 4: I bot rispondono già alle richieste! Apprendimento di nuovi concetti OOP.",
+          "Lezione 5: Deployment e hosting. Scopriremo a cosa servono i server.",
+          "Lezione 6: Consolidamento delle conoscenze tramite pratica.",
+        ],
+        result: "Creazione di un bot Discord funzionante e sempre attivo.",
+      },
+      {
+        title: "Modulo 2: Siti web e cloud - Sviluppo back-end",
+        lessons: [
+          "Lezione 7: Introduzione alla creazione di siti web. Studio di HTML e CSS.",
+          "Lezione 8: Flask. Configurazione dell'ambiente.",
+          "Lezione 9: Template, form e user experience.",
+          "Lezione 10: Motori template e siti web multi-pagina.",
+          "Lezione 11: Studio dei percorsi web e come non perdere pagine web.",
+          "Lezione 12: Autenticazione, crittografia, validazione e sicurezza.",
+          "Lezione 13: Deployment di un sito portfolio su server cloud.",
+          "Lezione 14: Analisi del target e pianificazione progetti.",
+          "Lezione 15: Comprendere il processo di sviluppo pianificato.",
+          "Lezione 16: Testare, fare debug, deploy e raccogliere feedback.",
+        ],
+        result: "Creazione e deployment di un sito web portfolio completo.",
+      },
+      {
+        title: "Modulo 3: Padroneggiare l'intelligenza artificiale!",
+        lessons: [
+          "Lezione 17: Comprendere l'intelligenza artificiale e il machine learning. Introduzione a Google Colab.",
+          "Lezione 18: I dati sono la chiave del successo. Estrazione dati da fonti aperte, apprendimento del parsing.",
+          "Lezione 19: Esplorazione dati. Pulizia dati, analisi e visualizzazione.",
+          "Lezione 20: Visione artificiale. Apprendimento dei modelli via interfaccia web.",
+          "Lezione 21: Esplorazione di librerie e utilizzo di modelli pre-addestrati con codice.",
+          "Lezione 22: Identificazione del problema, analisi, raccolta informazioni e pianificazione.",
+          "Lezione 23: Addestramento dell'intelligenza artificiale.",
+          "Lezione 24: Battaglia AI! Organizziamo una gara.",
+        ],
+        result: "Creazione e addestramento di modelli di intelligenza artificiale.",
+      },
+      {
+        title: "Modulo 4: L'AI è ovunque! Integrazione dell'AI",
+        lessons: [
+          "Lezione 25: Configurazione dell'ambiente di progetto. Collegamento di nuove librerie.",
+          "Lezione 26: Selezione del modello adatto al compito e addestramento AI.",
+          "Lezione 27: Inserire il modello nel progetto senza rompere nulla.",
+          "Lezione 28: Test, progettazione della pagina del progetto open source.",
+        ],
+        result: "Integrazione di AI in applicazioni esistenti.",
+      },
+      {
+        title: "Modulo 5: Hackathon - Riscaldamento globale",
+        lessons: [
+          "Lezione 29: Analisi, pianificazione e progettazione.",
+          "Lezione 30: Sviluppo di soluzioni.",
+          "Lezione 31: Test e debug.",
+          "Lezione 32: Dimostrazione delle soluzioni.",
+        ],
+        result: "Partecipazione a un hackathon sul clima con progetto finale completo.",
+      },
     ],
   },
 };
 
 const levelColors: Record<string, string> = {
-  Beginner: "bg-tech-green/10 text-tech-green border-tech-green/20",
-  Intermediate: "bg-tech-teal/10 text-tech-teal border-tech-teal/20",
-  Advanced: "bg-tech-cyan/10 text-tech-cyan border-tech-cyan/20",
+  Principiante: "bg-tech-green/10 text-tech-green border-tech-green/20",
+  Avanzato: "bg-tech-cyan/10 text-tech-cyan border-tech-cyan/20",
 };
+
+const howItWorksSteps = [
+  {
+    icon: GraduationCap,
+    title: "Primo Incontro",
+    description: "Lo studente si connette alla piattaforma in accordo con le istruzioni fornite, fa conoscenza con l'insegnante e i compagni e le compagne di classe.",
+  },
+  {
+    icon: BookOpen,
+    title: "Approccio pratico",
+    description: "Ad ogni lezione, lo studente apprenderà un nuovo argomento, che consoliderà praticando, e poi facendo i suoi compiti per casa.",
+  },
+  {
+    icon: Code2,
+    title: "Creazione del Progetto",
+    description: "A metà corso, lo studente deciderà l'argomento per il suo progetto e inizierà a lavorare per esso.",
+  },
+  {
+    icon: Presentation,
+    title: "Presentazione del Progetto",
+    description: "Lo studente pubblica il suo progetto online e lo presenta all'esame finale del corso.",
+  },
+];
+
+// Form schema for trial booking
+const trialFormSchema = z.object({
+  name: z.string().trim().min(2, "Il nome deve avere almeno 2 caratteri").max(100, "Nome troppo lungo"),
+  email: z.string().trim().email("Inserisci un'email valida").max(255, "Email troppo lunga"),
+  phone: z.string().trim().min(5, "Inserisci un numero di telefono valido").max(20, "Numero troppo lungo"),
+  consent: z.boolean().refine(val => val === true, "Devi accettare i termini per procedere"),
+});
+
+type TrialFormData = z.infer<typeof trialFormSchema>;
 
 export default function CorsoDettaglio() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const course = id ? coursesData[id] : null;
+
+  const form = useForm<TrialFormData>({
+    resolver: zodResolver(trialFormSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      consent: false,
+    },
+  });
+
+  const onSubmit = async (data: TrialFormData) => {
+    if (!course) return;
+    setIsSubmitting(true);
+
+    try {
+      const { data: bookingResult, error: bookingError } = await supabase.functions.invoke("submit-booking", {
+        body: {
+          parentName: data.name,
+          email: data.email,
+          phone: data.phone,
+          childAge: 10, // Default age
+          interest: course.title,
+          availability: "qualsiasi",
+          message: `Richiesta da pagina corso: ${course.title}`,
+          adminEmail: "info@techland.it",
+        },
+      });
+
+      if (bookingError) {
+        throw new Error("Errore nell'invio della richiesta");
+      }
+
+      if (!bookingResult?.success) {
+        throw new Error(bookingResult?.error || "Errore nell'invio della richiesta");
+      }
+
+      toast({
+        title: "Richiesta inviata!",
+        description: "Ti contatteremo entro 24 ore per confermare la lezione.",
+      });
+
+      form.reset();
+    } catch (error: any) {
+      toast({
+        title: "Errore",
+        description: error.message || "Si è verificato un errore. Riprova più tardi.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (!course) {
     return (
@@ -248,7 +962,7 @@ export default function CorsoDettaglio() {
   return (
     <Layout>
       {/* Hero */}
-      <section className="tech-section bg-gradient-to-b from-tech-green-light to-background">
+      <section className="py-16 md:py-24 bg-gradient-to-b from-primary/10 via-tech-green-light to-background">
         <div className="tech-container">
           <Link 
             to="/corsi" 
@@ -258,102 +972,127 @@ export default function CorsoDettaglio() {
             Torna ai corsi
           </Link>
 
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-3xl">
-                  {course.emoji}
-                </div>
-                <div className="flex gap-2">
-                  <Badge variant="outline" className={levelColors[course.level]}>
-                    {course.level}
-                  </Badge>
-                  <Badge variant="secondary">{course.age}</Badge>
-                </div>
+          <div className="tech-card p-8 md:p-12">
+            <div className="flex items-start gap-4 mb-6">
+              <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center text-4xl">
+                {course.emoji}
               </div>
-
-              <h1 className="text-4xl md:text-5xl font-bold mb-4">{course.title}</h1>
-              <p className="text-lg text-muted-foreground mb-6">{course.longDescription}</p>
-
-              <div className="flex flex-wrap gap-4 mb-8">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Clock className="w-5 h-5" />
-                  <span>{course.duration}</span>
-                </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Users className="w-5 h-5" />
-                  <span>Max 6 studenti per classe</span>
-                </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Calendar className="w-5 h-5" />
-                  <span>1 lezione/settimana</span>
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button variant="hero" size="xl" asChild>
-                  <Link to="/prenota">Prenota lezione gratuita</Link>
-                </Button>
-                <Button variant="outline" size="lg">
-                  Scarica programma PDF
-                </Button>
+              <div>
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-2">{course.title}</h1>
+                <p className="text-lg text-muted-foreground">{course.description}</p>
               </div>
             </div>
 
-            {/* Side card */}
-            <div className="tech-card p-8">
-              <h3 className="text-xl font-semibold mb-6">Cosa imparerà</h3>
-              <ul className="space-y-3">
-                {course.learnings.map((item, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-tech-green flex-shrink-0 mt-0.5" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
+            {/* Tags */}
+            <div className="flex flex-wrap gap-2 mb-6">
+              {course.tags.map((tag) => (
+                <Badge key={tag} variant="secondary">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+
+            {/* Course info */}
+            <div className="flex flex-wrap gap-6 text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                <span>Età: {course.age}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className={levelColors[course.level]}>
+                  {course.level}
+                </Badge>
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock className="w-5 h-5" />
+                <span>{course.duration}</span>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Projects */}
+      {/* Long description */}
+      <section className="tech-section">
+        <div className="tech-container">
+          <div className="max-w-4xl">
+            <h2 className="text-2xl md:text-3xl font-bold mb-6">Informazioni sul corso</h2>
+            <p className="text-lg text-muted-foreground leading-relaxed">
+              {course.longDescription}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Topics */}
       <section className="tech-section bg-muted/30">
         <div className="tech-container">
           <div className="flex items-center gap-3 mb-8">
-            <Rocket className="w-8 h-8 text-secondary" />
-            <h2 className="text-3xl font-bold">Progetti che realizzerà</h2>
+            <CheckCircle2 className="w-8 h-8 text-tech-green" />
+            <h2 className="text-2xl md:text-3xl font-bold">Argomenti trattati</h2>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {course.projects.map((project, i) => (
-              <div key={i} className="tech-card p-6 text-center">
-                <div className="w-12 h-12 mx-auto mb-4 rounded-2xl bg-secondary/10 flex items-center justify-center">
-                  <Target className="w-6 h-6 text-secondary" />
-                </div>
-                <p className="font-medium">{project}</p>
+          <div className="grid md:grid-cols-2 gap-4">
+            {course.topics.map((topic, i) => (
+              <div key={i} className="flex items-start gap-3 tech-card p-4">
+                <CheckCircle2 className="w-5 h-5 text-tech-green flex-shrink-0 mt-0.5" />
+                <span>{topic}</span>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Syllabus */}
+      {/* Project examples */}
       <section className="tech-section">
         <div className="tech-container">
           <div className="flex items-center gap-3 mb-8">
-            <BookOpen className="w-8 h-8 text-primary" />
-            <h2 className="text-3xl font-bold">Programma del corso</h2>
+            <Rocket className="w-8 h-8 text-secondary" />
+            <h2 className="text-2xl md:text-3xl font-bold">Esempi di progetto</h2>
           </div>
-          <div className="grid md:grid-cols-2 gap-6">
+          <p className="text-muted-foreground mb-8">
+            Durante il corso, gli studenti realizzeranno progetti pratici come questi:
+          </p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {course.projectExamples.map((project, i) => (
+              <div key={i} className="tech-card p-6 text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-secondary/10 flex items-center justify-center">
+                  <Target className="w-8 h-8 text-secondary" />
+                </div>
+                <p className="font-medium">{project.title}</p>
+                <p className="text-sm text-muted-foreground mt-2">Esempio di progetto del corso</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Curriculum */}
+      <section className="tech-section bg-muted/30">
+        <div className="tech-container">
+          <div className="flex items-center gap-3 mb-8">
+            <BookOpen className="w-8 h-8 text-primary" />
+            <h2 className="text-2xl md:text-3xl font-bold">Curriculum del corso</h2>
+          </div>
+          <div className="space-y-6">
             {course.modules.map((module, i) => (
               <div key={i} className="tech-card p-6">
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-4 mb-4">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <span className="font-bold text-primary">{i + 1}</span>
                   </div>
-                  <div>
-                    <h4 className="font-semibold mb-2">{module.title}</h4>
-                    <p className="text-muted-foreground text-sm">{module.description}</p>
-                  </div>
+                  <h3 className="text-xl font-semibold">{module.title}</h3>
+                </div>
+                <ul className="space-y-2 ml-14 mb-4">
+                  {module.lessons.map((lesson, j) => (
+                    <li key={j} className="text-muted-foreground text-sm">
+                      • {lesson}
+                    </li>
+                  ))}
+                </ul>
+                <div className="ml-14 p-4 bg-tech-green/5 rounded-lg border border-tech-green/20">
+                  <p className="text-sm">
+                    <strong className="text-tech-green">Risultato:</strong> {module.result}
+                  </p>
                 </div>
               </div>
             ))}
@@ -361,60 +1100,140 @@ export default function CorsoDettaglio() {
         </div>
       </section>
 
-      {/* Requirements */}
-      <section className="tech-section bg-muted/30">
+      {/* How it works */}
+      <section className="tech-section">
         <div className="tech-container">
-          <div className="grid md:grid-cols-2 gap-12">
-            <div>
-              <div className="flex items-center gap-3 mb-6">
-                <Monitor className="w-8 h-8 text-tech-cyan" />
-                <h2 className="text-2xl font-bold">Requisiti tecnici</h2>
+          <div className="flex items-center gap-3 mb-8">
+            <Lightbulb className="w-8 h-8 text-tech-teal" />
+            <h2 className="text-2xl md:text-3xl font-bold">Come funzionano le lezioni con Techland</h2>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {howItWorksSteps.map((step, i) => (
+              <div key={i} className="tech-card p-6 text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-tech-teal/10 flex items-center justify-center">
+                  <step.icon className="w-8 h-8 text-tech-teal" />
+                </div>
+                <div className="w-8 h-8 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="font-bold text-primary text-sm">{i + 1}</span>
+                </div>
+                <h3 className="font-semibold mb-2">{step.title}</h3>
+                <p className="text-sm text-muted-foreground">{step.description}</p>
               </div>
-              <ul className="space-y-3">
-                {course.requirements.map((req, i) => (
-                  <li key={i} className="flex items-center gap-3">
-                    <Wifi className="w-5 h-5 text-tech-cyan" />
-                    <span>{req}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <h2 className="text-2xl font-bold mb-6">FAQ del corso</h2>
-              <Accordion type="single" collapsible className="space-y-3">
-                {course.faqs.map((faq, i) => (
-                  <AccordionItem
-                    key={i}
-                    value={`faq-${i}`}
-                    className="bg-card rounded-xl border border-border/50 px-4"
-                  >
-                    <AccordionTrigger className="text-left text-sm font-medium hover:no-underline">
-                      {faq.question}
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground text-sm">
-                      {faq.answer}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="tech-section bg-gradient-hero">
-        <div className="tech-container text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
-            Pronto a iniziare?
-          </h2>
-          <p className="text-lg text-primary-foreground/80 mb-8 max-w-xl mx-auto">
-            Prenota una lezione di prova gratuita per {course.title} e scopri se è il corso giusto per il tuo bambino.
-          </p>
-          <Button variant="secondary" size="xl" asChild>
-            <Link to="/prenota">Prenota lezione gratuita</Link>
-          </Button>
+      {/* CTA with Form */}
+      <section className="py-20 md:py-32 bg-gradient-hero">
+        <div className="tech-container">
+          <div className="max-w-2xl mx-auto text-center mb-12">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-primary-foreground mb-4">
+              Prenota una lezione di prova gratuita!
+            </h2>
+            <p className="text-lg text-primary-foreground/80">
+              Inizia il tuo viaggio nel mondo del coding con {course.title}. Compila il form e ti contatteremo entro 24 ore.
+            </p>
+          </div>
+
+          <div className="max-w-xl mx-auto">
+            <div className="bg-card rounded-2xl p-8 shadow-xl">
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nome *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Il tuo nome" 
+                            className="h-12"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="email" 
+                            placeholder="La tua email" 
+                            className="h-12"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Telefono *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="tel" 
+                            placeholder="+39 333 1234567" 
+                            className="h-12"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="consent"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel className="text-sm font-normal">
+                            Confermo che userò un computer con connessione internet stabile per la lezione d'introduzione. Acconsento alla trasmissione dei miei dati a Techland, che li tratterà in conformità alla propria{" "}
+                            <Link to="/privacy" className="text-primary hover:underline">
+                              informativa sulla privacy
+                            </Link>
+                            .
+                          </FormLabel>
+                          <FormMessage />
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+
+                  <Button 
+                    type="submit" 
+                    variant="hero" 
+                    size="xl" 
+                    className="w-full"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Invio in corso..." : "Prenota lezione gratuita"}
+                  </Button>
+                </form>
+              </Form>
+            </div>
+          </div>
         </div>
       </section>
     </Layout>

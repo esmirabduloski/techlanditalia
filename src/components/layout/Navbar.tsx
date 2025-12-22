@@ -6,11 +6,11 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useHasEnrollments } from "@/hooks/useHasEnrollments";
 const navLinks = [
-  { href: "/", label: "Home" },
   { href: "/corsi", label: "Corsi" },
   { href: "/chi-siamo", label: "Chi siamo" },
   { href: "/faq", label: "FAQ" },
   { href: "/blog", label: "Blog" },
+  { href: "/contatti", label: "Contatti" },
 ];
 
 export function Navbar() {

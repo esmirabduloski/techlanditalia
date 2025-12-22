@@ -22,7 +22,7 @@ async function sendEmail(to: string[], subject: string, html: string, replyTo?: 
       Authorization: `Bearer ${RESEND_API_KEY}`,
     },
     body: JSON.stringify({
-      from: "TechLand Italia <onboarding@resend.dev>",
+      from: "TechLand Italia <info@techlanditalia.it>",
       to,
       subject,
       html,

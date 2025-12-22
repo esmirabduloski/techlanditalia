@@ -14,7 +14,13 @@ interface ContactEmailRequest {
   messaggio: string;
 }
 
-async function sendEmail(to: string[], subject: string, html: string, replyTo?: string) {
+async function sendEmail(
+  to: string[],
+  subject: string,
+  html: string,
+  replyTo?: string,
+  text?: string
+) {
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -26,6 +32,8 @@ async function sendEmail(to: string[], subject: string, html: string, replyTo?: 
       to,
       subject,
       html,
+      // Plain-text fallback improves deliverability (some inboxes penalize HTML-only emails)
+      ...(text ? { text } : {}),
       reply_to: replyTo,
     }),
   });
@@ -90,7 +98,8 @@ const handler = async (req: Request): Promise<Response> => {
           </p>
         </div>
       `,
-      email
+      email,
+      `Nuovo messaggio dal form contatti\n\nNome: ${nome}\nEmail: ${email}\nOggetto: ${oggetto}\n\nMessaggio:\n${messaggio}`
     );
 
     console.log("Admin email sent:", adminEmailResponse);
@@ -114,7 +123,9 @@ const handler = async (req: Request): Promise<Response> => {
             TechLand Italia - Corsi di programmazione per bambini e ragazzi
           </p>
         </div>
-      `
+      `,
+      undefined,
+      `Grazie per averci contattato, ${nome}!\n\nAbbiamo ricevuto il tuo messaggio e ti risponderemo il prima possibile.\n\nOggetto: ${oggetto}\n\nMessaggio:\n${messaggio}\n\nWhatsApp: https://wa.me/393512508851` 
     );
 
     console.log("User confirmation email sent:", userEmailResponse);

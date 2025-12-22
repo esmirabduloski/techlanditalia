@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Mail, MessageCircle, MapPin, Clock } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const contactInfo = [
   {
@@ -51,12 +52,26 @@ export default function Contatti() {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    toast.success("Messaggio inviato con successo! Ti risponderemo presto.");
-    setFormData({ nome: "", email: "", oggetto: "", messaggio: "" });
-    setIsSubmitting(false);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-contact-email', {
+        body: formData
+      });
+
+      if (error) {
+        console.error("Error sending contact email:", error);
+        toast.error("Errore nell'invio del messaggio. Riprova più tardi.");
+        return;
+      }
+
+      console.log("Contact email sent successfully:", data);
+      toast.success("Messaggio inviato con successo! Ti risponderemo presto.");
+      setFormData({ nome: "", email: "", oggetto: "", messaggio: "" });
+    } catch (error) {
+      console.error("Error sending contact email:", error);
+      toast.error("Errore nell'invio del messaggio. Riprova più tardi.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

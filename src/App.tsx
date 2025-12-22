@@ -14,6 +14,9 @@ import Prenota from "./pages/Prenota";
 import FAQ from "./pages/FAQ";
 import Privacy from "./pages/Privacy";
 import Termini from "./pages/Termini";
+import Cookie from "./pages/Cookie";
+import Contatti from "./pages/Contatti";
+import LavoraConNoi from "./pages/LavoraConNoi";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -44,6 +47,9 @@ const App = () => (
             <Route path="/faq" element={<FAQ />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/termini" element={<Termini />} />
+            <Route path="/cookie" element={<Cookie />} />
+            <Route path="/contatti" element={<Contatti />} />
+            <Route path="/lavora-con-noi" element={<LavoraConNoi />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/area-riservata" element={<AreaRiservataDashboard />} />
             <Route path="/area-riservata/profilo" element={<AreaRiservataProfile />} />

@@ -15,7 +15,8 @@ import {
   FileText,
   Loader2,
   BookOpen,
-  Mail
+  Mail,
+  User
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -125,6 +126,12 @@ export default function AdminDashboard() {
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground hidden sm:block">{user?.email}</span>
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/area-riservata">
+                <User className="w-4 h-4 mr-2" />
+                Area Riservata
+              </Link>
+            </Button>
             <Button variant="outline" size="sm" onClick={handleSignOut}>
               <LogOut className="w-4 h-4 mr-2" />
               Esci

@@ -10,10 +10,10 @@ import { AvatarDisplay } from '@/components/gamification/AvatarSelector';
 import { LevelBadge, PointsDisplay, getLevelFromPoints } from '@/components/gamification/LevelBadge';
 import { HomeworkSection } from '@/components/dashboard/HomeworkSection';
 import { ParentFeedbackSection } from '@/components/dashboard/ParentFeedbackSection';
-import { Loader2, BookOpen, Trophy, Target, Settings, LogOut, Rocket } from 'lucide-react';
+import { Loader2, BookOpen, Trophy, Target, Settings, LogOut, Rocket, Shield } from 'lucide-react';
 
 export default function Dashboard() {
-  const { user, isLoading: authLoading, signOut } = useAuth();
+  const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const { profile, enrollments, lessonProgress, isLoading: dataLoading } = useStudentProgress();
   const navigate = useNavigate();
 
@@ -33,8 +33,41 @@ export default function Dashboard() {
     );
   }
 
-  if (!user || !profile) {
+  if (!user) {
     return null;
+  }
+
+  // Handle missing profile case
+  if (!profile) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <Card className="max-w-md w-full">
+            <CardHeader>
+              <CardTitle>Profilo non trovato</CardTitle>
+              <CardDescription>
+                Il tuo profilo utente non è stato trovato. Questo può accadere se il tuo account è stato creato prima del sistema di profili.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Contatta l'assistenza per risolvere il problema.
+              </p>
+              <div className="flex gap-2">
+                {isAdmin && (
+                  <Button asChild>
+                    <Link to="/admin">Vai al Pannello Admin</Link>
+                  </Button>
+                )}
+                <Button variant="outline" onClick={() => signOut()}>
+                  Esci
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </Layout>
+    );
   }
 
   const level = getLevelFromPoints(profile.total_points);
@@ -67,6 +100,14 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {isAdmin && (
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/admin">
+                    <Shield className="w-4 h-4 mr-2" />
+                    Admin
+                  </Link>
+                </Button>
+              )}
               <Button variant="outline" size="sm" asChild>
                 <Link to="/area-riservata/profilo">
                   <Settings className="w-4 h-4 mr-2" />

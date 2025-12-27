@@ -10,6 +10,18 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// HTML escape function to prevent XSS
+function escapeHtml(text: string): string {
+  const htmlEntities: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  };
+  return text.replace(/[&<>"']/g, (char) => htmlEntities[char] || char);
+}
+
 interface ContactEmailRequest {
   nome: string;
   email: string;
@@ -70,6 +82,32 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Validate input lengths to prevent abuse
+    if (nome.length > 100) {
+      return new Response(
+        JSON.stringify({ error: "Il nome non può superare i 100 caratteri" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+    if (oggetto.length > 200) {
+      return new Response(
+        JSON.stringify({ error: "L'oggetto non può superare i 200 caratteri" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+    if (messaggio.length > 5000) {
+      return new Response(
+        JSON.stringify({ error: "Il messaggio non può superare i 5000 caratteri" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+    if (email.length > 254) {
+      return new Response(
+        JSON.stringify({ error: "L'email non può superare i 254 caratteri" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
@@ -80,52 +118,58 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Sanitize user inputs for safe HTML embedding
+    const safeNome = escapeHtml(nome.trim());
+    const safeEmail = escapeHtml(email.trim());
+    const safeOggetto = escapeHtml(oggetto.trim());
+    const safeMessaggio = escapeHtml(messaggio.trim());
+
     console.log("Sending contact email from:", email, "Subject:", oggetto);
 
     let emailSent = false;
     let errorMessage: string | null = null;
 
     try {
-      // Send notification to admin
+      // Send notification to admin (using sanitized values in HTML)
       const adminEmailResponse = await sendEmail(
         ["info@techlanditalia.it"],
-        `[Contatto] ${oggetto}`,
+        `[Contatto] ${oggetto.substring(0, 100)}`,
         `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #0ea5e9;">Nuovo messaggio dal form contatti</h2>
             <div style="background: #f4f4f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <p><strong>Nome:</strong> ${nome}</p>
-              <p><strong>Email:</strong> ${email}</p>
-              <p><strong>Oggetto:</strong> ${oggetto}</p>
+              <p><strong>Nome:</strong> ${safeNome}</p>
+              <p><strong>Email:</strong> ${safeEmail}</p>
+              <p><strong>Oggetto:</strong> ${safeOggetto}</p>
             </div>
             <h3>Messaggio:</h3>
             <div style="background: #ffffff; padding: 20px; border: 1px solid #e4e4e7; border-radius: 8px;">
-              <p style="white-space: pre-wrap;">${messaggio}</p>
+              <p style="white-space: pre-wrap;">${safeMessaggio}</p>
             </div>
             <hr style="margin: 30px 0; border: none; border-top: 1px solid #e4e4e7;">
             <p style="color: #71717a; font-size: 12px;">
-              Puoi rispondere direttamente a questa email per contattare ${nome}.
+              Puoi rispondere direttamente a questa email per contattare ${safeNome}.
             </p>
           </div>
         `,
-        email,
-        `Nuovo messaggio dal form contatti\n\nNome: ${nome}\nEmail: ${email}\nOggetto: ${oggetto}\n\nMessaggio:\n${messaggio}`
+        email.trim(),
+        `Nuovo messaggio dal form contatti\n\nNome: ${nome.trim()}\nEmail: ${email.trim()}\nOggetto: ${oggetto.trim()}\n\nMessaggio:\n${messaggio.trim()}`
       );
 
       console.log("Admin email sent:", adminEmailResponse);
 
-      // Send confirmation to user
+      // Send confirmation to user (using sanitized values in HTML)
       const userEmailResponse = await sendEmail(
-        [email],
+        [email.trim()],
         "Abbiamo ricevuto il tuo messaggio!",
         `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #0ea5e9;">Grazie per averci contattato, ${nome}!</h2>
+            <h2 style="color: #0ea5e9;">Grazie per averci contattato, ${safeNome}!</h2>
             <p>Abbiamo ricevuto il tuo messaggio e ti risponderemo il prima possibile.</p>
             <div style="background: #f4f4f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <p><strong>Oggetto:</strong> ${oggetto}</p>
+              <p><strong>Oggetto:</strong> ${safeOggetto}</p>
               <p><strong>Messaggio:</strong></p>
-              <p style="white-space: pre-wrap;">${messaggio}</p>
+              <p style="white-space: pre-wrap;">${safeMessaggio}</p>
             </div>
             <p>Nel frattempo, puoi anche contattarci su <a href="https://wa.me/393512508851" style="color: #0ea5e9;">WhatsApp</a> per una risposta più rapida.</p>
             <hr style="margin: 30px 0; border: none; border-top: 1px solid #e4e4e7;">
@@ -135,7 +179,7 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
         `,
         undefined,
-        `Grazie per averci contattato, ${nome}!\n\nAbbiamo ricevuto il tuo messaggio e ti risponderemo il prima possibile.\n\nOggetto: ${oggetto}\n\nMessaggio:\n${messaggio}\n\nWhatsApp: https://wa.me/393512508851` 
+        `Grazie per averci contattato, ${nome.trim()}!\n\nAbbiamo ricevuto il tuo messaggio e ti risponderemo il prima possibile.\n\nOggetto: ${oggetto.trim()}\n\nMessaggio:\n${messaggio.trim()}\n\nWhatsApp: https://wa.me/393512508851` 
       );
 
       console.log("User confirmation email sent:", userEmailResponse);

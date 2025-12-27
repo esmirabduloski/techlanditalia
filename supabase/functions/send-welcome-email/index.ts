@@ -9,6 +9,18 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+// HTML escape function to prevent XSS
+function escapeHtml(text: string): string {
+  const htmlEntities: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  };
+  return text.replace(/[&<>"']/g, (char) => htmlEntities[char] || char);
+}
+
 interface WelcomeEmailRequest {
   email: string;
   fullName: string;
@@ -174,10 +186,13 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Sending welcome email to ${email} (${role})`);
 
+    // Sanitize user input for safe HTML embedding
+    const safeFullName = escapeHtml(fullName || '');
+
     const isStudent = role === "student";
     const htmlContent = isStudent 
-      ? getStudentEmailTemplate(fullName)
-      : getParentEmailTemplate(fullName);
+      ? getStudentEmailTemplate(safeFullName)
+      : getParentEmailTemplate(safeFullName);
 
     const subject = isStudent
       ? "🚀 Benvenuto in TECHLAND! La tua avventura inizia ora"

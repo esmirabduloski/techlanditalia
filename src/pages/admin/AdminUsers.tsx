@@ -155,37 +155,57 @@ export default function AdminUsers() {
   };
 
   // Filter profiles based on search and role filter
-  const filteredProfiles = profiles.filter(p => {
-    const matchesSearch = searchQuery === '' || 
-      p.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (p.username && p.username.toLowerCase().includes(searchQuery.toLowerCase()));
-    
-    const matchesRole = filterRole === 'all' || p.role === filterRole;
-    
-    return matchesSearch && matchesRole;
-  });
+  const matchesSearchQuery = (p: Profile) => {
+    if (searchQuery === '') return true;
+    const query = searchQuery.toLowerCase();
+    return p.full_name.toLowerCase().includes(query) ||
+      (p.username && p.username.toLowerCase().includes(query));
+  };
 
   const groupedUsers = () => {
-    const parents = filteredProfiles.filter(p => p.role === 'parent');
-    const students = filteredProfiles.filter(p => p.role === 'student');
-    
     const groups: { parent: Profile | null; children: Profile[] }[] = [];
     
-    parents.forEach(parent => {
-      // Get all children for this parent (from full profiles list to show all children)
-      const children = profiles.filter(s => s.role === 'student' && s.parent_id === parent.id);
-      // Filter children based on search if needed
-      const filteredChildren = children.filter(c => 
-        searchQuery === '' || 
-        c.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (c.username && c.username.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
-      groups.push({ parent, children: filteredChildren });
+    // Get all parents
+    const allParents = profiles.filter(p => p.role === 'parent');
+    // Get all students
+    const allStudents = profiles.filter(p => p.role === 'student');
+    
+    // For each parent, get their children
+    allParents.forEach(parent => {
+      const children = allStudents.filter(s => s.parent_id === parent.id);
+      
+      // Check if parent matches filter
+      const parentMatchesSearch = matchesSearchQuery(parent);
+      const parentMatchesRole = filterRole === 'all' || filterRole === 'parent';
+      
+      // Check if any child matches filter
+      const matchingChildren = children.filter(c => {
+        const childMatchesSearch = matchesSearchQuery(c);
+        const childMatchesRole = filterRole === 'all' || filterRole === 'student';
+        return childMatchesSearch && childMatchesRole;
+      });
+      
+      // Include parent if:
+      // 1. Parent matches search and role filter, OR
+      // 2. Any child matches search and we're not filtering only parents
+      const shouldIncludeParent = (parentMatchesSearch && parentMatchesRole) || 
+        (matchingChildren.length > 0 && filterRole !== 'parent');
+      
+      if (shouldIncludeParent) {
+        // If searching, only show matching children. Otherwise show all children.
+        const childrenToShow = searchQuery === '' && filterRole === 'all' 
+          ? children 
+          : matchingChildren.length > 0 ? matchingChildren : (parentMatchesSearch ? children : []);
+        groups.push({ parent, children: childrenToShow });
+      }
     });
     
-    // Only show orphan students when viewing all or students
+    // Orphan students (no parent)
     if (filterRole !== 'parent') {
-      const orphanStudents = students.filter(s => !s.parent_id);
+      const orphanStudents = allStudents.filter(s => {
+        if (s.parent_id) return false;
+        return matchesSearchQuery(s);
+      });
       if (orphanStudents.length > 0) {
         groups.push({ parent: null, children: orphanStudents });
       }
@@ -608,12 +628,9 @@ export default function AdminUsers() {
                                   <Edit2 className="w-4 h-4 mr-1" />
                                   Modifica
                                 </Button>
-                                <Button variant="outline" size="sm" onClick={() => openCourseDialog(child.id, child.full_name)}>
+                              <Button variant="outline" size="sm" onClick={() => openCourseDialog(child.id, child.full_name)}>
                                   <Plus className="w-4 h-4 mr-1" />
                                   Corsi
-                                </Button>
-                                <Button variant="outline" size="sm" onClick={() => openLinkStudentDialog(child)} title="Associa a un altro genitore">
-                                  <Link2 className="w-4 h-4" />
                                 </Button>
                               </div>
                             </div>
@@ -698,9 +715,6 @@ export default function AdminUsers() {
                               <Button variant="outline" size="sm" onClick={() => openCourseDialog(child.id, child.full_name)}>
                                 <Plus className="w-4 h-4 mr-1" />
                                 Corsi
-                              </Button>
-                              <Button variant="outline" size="sm" onClick={() => openLinkStudentDialog(child)} title="Associa a un genitore">
-                                <Link2 className="w-4 h-4" />
                               </Button>
                             </div>
                           </div>

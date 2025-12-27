@@ -23,6 +23,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminBookings from "./pages/admin/AdminBookings";
 import BlogEditor from "./pages/admin/BlogEditor";
 import AdminContatti from "./pages/admin/AdminContatti";
+import AdminUsers from "./pages/admin/AdminUsers";
 import AuthPage from "./pages/auth/AuthPage";
 import AreaRiservataDashboard from "./pages/area-riservata/Dashboard";
 import AreaRiservataProfile from "./pages/area-riservata/Profile";
@@ -61,6 +62,7 @@ const App = () => (
             <Route path="/admin/contatti" element={<AdminContatti />} />
             <Route path="/admin/blog/nuovo" element={<BlogEditor />} />
             <Route path="/admin/blog/:id/modifica" element={<BlogEditor />} />
+            <Route path="/admin/utenti" element={<AdminUsers />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

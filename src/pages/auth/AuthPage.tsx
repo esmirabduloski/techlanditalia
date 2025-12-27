@@ -185,36 +185,7 @@ export default function AuthPage() {
 
     try {
       if (loginMode === 'student') {
-        // Student login with username - find email from profile
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('id, plain_password')
-          .eq('username', loginUsername.trim())
-          .eq('role', 'student')
-          .maybeSingle();
-
-        if (profileError || !profile) {
-          toast({
-            variant: 'destructive',
-            title: 'Errore di accesso',
-            description: 'Nome utente non trovato',
-          });
-          setIsLoading(false);
-          return;
-        }
-
-        // Check plain password
-        if (profile.plain_password !== password) {
-          toast({
-            variant: 'destructive',
-            title: 'Errore di accesso',
-            description: 'Password non corretta',
-          });
-          setIsLoading(false);
-          return;
-        }
-
-        // Get email from auth users table via edge function
+        // Student login via edge function (bypasses RLS)
         const { data: loginData, error: loginError } = await supabase.functions.invoke('student-login', {
           body: { username: loginUsername.trim(), password }
         });

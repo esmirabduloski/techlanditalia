@@ -25,81 +25,17 @@ interface WelcomeEmailRequest {
   email: string;
   fullName: string;
   role: "student" | "parent";
+  childName?: string;
+  childUsername?: string;
+  childPassword?: string;
 }
 
-const getStudentEmailTemplate = (fullName: string) => `
-<!DOCTYPE html>
-<html lang="it">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4;">
-  <table role="presentation" style="width: 100%; border-collapse: collapse;">
-    <tr>
-      <td align="center" style="padding: 40px 0;">
-        <table role="presentation" style="width: 600px; max-width: 100%; border-collapse: collapse; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-          <!-- Header -->
-          <tr>
-            <td style="background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%); padding: 40px 30px; text-align: center;">
-              <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">🚀 Benvenuto in TECHLAND!</h1>
-            </td>
-          </tr>
-          
-          <!-- Content -->
-          <tr>
-            <td style="padding: 40px 30px;">
-              <h2 style="color: #1f2937; margin: 0 0 20px; font-size: 22px;">Ciao ${fullName}! 👋</h2>
-              
-              <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">
-                Siamo super felici di averti con noi! La tua avventura nel mondo del coding sta per iniziare! 🎮
-              </p>
-              
-              <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">
-                Preparati a creare videogiochi, app e progetti incredibili insieme ai nostri tutor!
-              </p>
-              
-              <div style="background-color: #f0fdf4; border-radius: 12px; padding: 20px; margin: 30px 0;">
-                <h3 style="color: #10b981; margin: 0 0 15px; font-size: 18px;">🎯 Cosa puoi fare ora:</h3>
-                <ul style="color: #4b5563; font-size: 15px; line-height: 1.8; margin: 0; padding-left: 20px;">
-                  <li>Accedi alla tua Area Riservata</li>
-                  <li>Esplora i corsi disponibili</li>
-                  <li>Inizia a guadagnare punti e badge!</li>
-                </ul>
-              </div>
-              
-              <div style="text-align: center; margin: 30px 0;">
-                <a href="https://techlanditalia.it/area-riservata" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: bold; font-size: 16px;">
-                  Vai all'Area Riservata →
-                </a>
-              </div>
-              
-              <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0;">
-                Ci vediamo online! 🖥️
-              </p>
-            </td>
-          </tr>
-          
-          <!-- Footer -->
-          <tr>
-            <td style="background-color: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb;">
-              <p style="color: #9ca3af; font-size: 14px; margin: 0 0 10px;">
-                Il Team TECHLAND 💚
-              </p>
-              <p style="color: #9ca3af; font-size: 12px; margin: 0;">
-                Corsi di coding per giovani esploratori digitali
-              </p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-`;
-
-const getParentEmailTemplate = (fullName: string) => `
+const getParentEmailTemplate = (
+  fullName: string, 
+  childName: string, 
+  childUsername: string, 
+  childPassword: string
+) => `
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -124,16 +60,46 @@ const getParentEmailTemplate = (fullName: string) => `
               <h2 style="color: #1f2937; margin: 0 0 20px; font-size: 22px;">Gentile ${fullName},</h2>
               
               <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">
-                La ringraziamo per aver scelto TECHLAND per l'educazione tecnologica del suo bambino.
+                La ringraziamo per aver scelto TECHLAND per l'educazione tecnologica di ${childName}.
               </p>
               
               <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">
-                Il suo account è stato creato con successo. Dalla sua Area Riservata potrà:
+                Il suo account e quello di ${childName} sono stati creati con successo.
               </p>
               
-              <div style="background-color: #f0fdf4; border-radius: 12px; padding: 20px; margin: 30px 0;">
+              <!-- Child Credentials Box -->
+              <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfeff 100%); border-radius: 12px; padding: 24px; margin: 30px 0; border: 2px solid #10b981;">
+                <h3 style="color: #059669; margin: 0 0 15px; font-size: 18px;">🔐 Credenziali di ${childName} per accedere:</h3>
+                <table style="width: 100%;">
+                  <tr>
+                    <td style="color: #4b5563; font-size: 15px; padding: 8px 0;">
+                      <strong>Nome utente:</strong>
+                    </td>
+                    <td style="color: #1f2937; font-size: 16px; font-weight: bold; padding: 8px 0;">
+                      ${childUsername}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="color: #4b5563; font-size: 15px; padding: 8px 0;">
+                      <strong>Password:</strong>
+                    </td>
+                    <td style="color: #1f2937; font-size: 16px; font-weight: bold; padding: 8px 0;">
+                      ${childPassword}
+                    </td>
+                  </tr>
+                </table>
+                <p style="color: #6b7280; font-size: 13px; margin: 15px 0 0; font-style: italic;">
+                  Conservi queste credenziali in un luogo sicuro. ${childName} le userà per accedere alla sua area personale.
+                </p>
+              </div>
+              
+              <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">
+                Dalla sua Area Riservata potrà:
+              </p>
+              
+              <div style="background-color: #f9fafb; border-radius: 12px; padding: 20px; margin: 20px 0;">
                 <ul style="color: #4b5563; font-size: 15px; line-height: 1.8; margin: 0; padding-left: 20px;">
-                  <li>Monitorare i progressi di suo figlio/a</li>
+                  <li>Monitorare i progressi di ${childName}</li>
                   <li>Visualizzare i compiti e i feedback degli insegnanti</li>
                   <li>Comunicare direttamente con il team TECHLAND</li>
                   <li>Consultare i materiali dei corsi</li>
@@ -176,27 +142,23 @@ const getParentEmailTemplate = (fullName: string) => `
 `;
 
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { email, fullName, role }: WelcomeEmailRequest = await req.json();
+    const { email, fullName, role, childName, childUsername, childPassword }: WelcomeEmailRequest = await req.json();
 
     console.log(`Sending welcome email to ${email} (${role})`);
 
-    // Sanitize user input for safe HTML embedding
+    // Sanitize user input
     const safeFullName = escapeHtml(fullName || '');
+    const safeChildName = escapeHtml(childName || '');
+    const safeChildUsername = escapeHtml(childUsername || '');
+    const safeChildPassword = escapeHtml(childPassword || '');
 
-    const isStudent = role === "student";
-    const htmlContent = isStudent 
-      ? getStudentEmailTemplate(safeFullName)
-      : getParentEmailTemplate(safeFullName);
-
-    const subject = isStudent
-      ? "🚀 Benvenuto in TECHLAND! La tua avventura inizia ora"
-      : "Benvenuto in TECHLAND - Account creato con successo";
+    const htmlContent = getParentEmailTemplate(safeFullName, safeChildName, safeChildUsername, safeChildPassword);
+    const subject = "Benvenuto in TECHLAND - Account creato con successo";
 
     const emailResponse = await resend.emails.send({
       from: "TECHLAND <info@techlanditalia.it>",

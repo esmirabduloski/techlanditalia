@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { 
   LogOut,
@@ -20,7 +21,10 @@ import {
   GraduationCap,
   Key,
   Plus,
-  Home
+  Home,
+  Eye,
+  EyeOff,
+  Edit2
 } from 'lucide-react';
 import {
   Select,
@@ -53,6 +57,8 @@ interface Profile {
   created_at: string;
   email?: string;
   isAdmin?: boolean;
+  username?: string | null;
+  plain_password?: string | null;
 }
 
 interface Course {
@@ -79,6 +85,8 @@ export default function AdminUsers() {
   const [courseDialog, setCourseDialog] = useState<{ open: boolean; userId: string; userName: string }>({ open: false, userId: '', userName: '' });
   const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [showPasswords, setShowPasswords] = useState<Set<string>>(new Set());
+  const [editingChild, setEditingChild] = useState<{ id: string; username: string; password: string } | null>(null);
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -98,7 +106,6 @@ export default function AdminUsers() {
   const fetchData = async () => {
     setIsLoading(true);
     
-    // Fetch profiles
     const { data: profilesData, error: profilesError } = await supabase
       .from('profiles')
       .select('*')
@@ -110,7 +117,6 @@ export default function AdminUsers() {
       return;
     }
 
-    // Fetch admin roles
     const { data: rolesData } = await supabase
       .from('user_roles')
       .select('user_id, role')
@@ -118,17 +124,14 @@ export default function AdminUsers() {
 
     const adminIds = new Set(rolesData?.map(r => r.user_id) || []);
 
-    // Fetch courses
     const { data: coursesData } = await supabase
       .from('courses')
       .select('id, title, emoji');
 
-    // Fetch enrollments
     const { data: enrollmentsData } = await supabase
       .from('enrollments')
       .select('id, course_id, student_id, status');
 
-    // Map profiles with admin flag
     const enrichedProfiles = (profilesData || []).map(p => ({
       ...p,
       isAdmin: adminIds.has(p.id)
@@ -145,21 +148,17 @@ export default function AdminUsers() {
     navigate('/admin/login');
   };
 
-  // Group users: parents with their children
   const groupedUsers = () => {
     const parents = profiles.filter(p => p.role === 'parent');
     const students = profiles.filter(p => p.role === 'student');
-    const studentsWithParent = new Set(students.filter(s => s.parent_id).map(s => s.id));
     
     const groups: { parent: Profile | null; children: Profile[] }[] = [];
     
-    // Parents with their children
     parents.forEach(parent => {
       const children = students.filter(s => s.parent_id === parent.id);
       groups.push({ parent, children });
     });
     
-    // Students without parents (orphans)
     const orphanStudents = students.filter(s => !s.parent_id);
     if (orphanStudents.length > 0) {
       groups.push({ parent: null, children: orphanStudents });
@@ -176,6 +175,16 @@ export default function AdminUsers() {
       newExpanded.add(parentId);
     }
     setExpandedFamilies(newExpanded);
+  };
+
+  const togglePasswordVisibility = (userId: string) => {
+    const newShow = new Set(showPasswords);
+    if (newShow.has(userId)) {
+      newShow.delete(userId);
+    } else {
+      newShow.add(userId);
+    }
+    setShowPasswords(newShow);
   };
 
   const openPasswordDialog = (userId: string, userName: string) => {
@@ -218,12 +227,9 @@ export default function AdminUsers() {
       const currentEnrollments = enrollments.filter(e => e.student_id === courseDialog.userId);
       const currentCourseIds = currentEnrollments.map(e => e.course_id);
       
-      // Courses to add
       const toAdd = selectedCourses.filter(c => !currentCourseIds.includes(c));
-      // Courses to remove
       const toRemove = currentCourseIds.filter(c => !selectedCourses.includes(c));
 
-      // Remove enrollments
       if (toRemove.length > 0) {
         const { error } = await supabase
           .from('enrollments')
@@ -233,7 +239,6 @@ export default function AdminUsers() {
         if (error) throw error;
       }
 
-      // Add enrollments
       if (toAdd.length > 0) {
         const { error } = await supabase
           .from('enrollments')
@@ -272,7 +277,6 @@ export default function AdminUsers() {
   const toggleAdminRole = async (userId: string, currentlyAdmin: boolean) => {
     try {
       if (currentlyAdmin) {
-        // Remove admin role
         const { error } = await supabase
           .from('user_roles')
           .delete()
@@ -280,7 +284,6 @@ export default function AdminUsers() {
           .eq('role', 'admin');
         if (error) throw error;
       } else {
-        // We can't insert directly due to RLS, use edge function
         const { error } = await supabase.functions.invoke('admin-toggle-role', {
           body: { userId, action: 'add' }
         });
@@ -299,6 +302,47 @@ export default function AdminUsers() {
       .filter(e => e.student_id === userId)
       .map(e => courses.find(c => c.id === e.course_id))
       .filter(Boolean) as Course[];
+  };
+
+  const openEditChildDialog = (child: Profile) => {
+    setEditingChild({
+      id: child.id,
+      username: child.username || '',
+      password: child.plain_password || '',
+    });
+  };
+
+  const handleSaveChildCredentials = async () => {
+    if (!editingChild) return;
+    
+    setIsSaving(true);
+    try {
+      // Update profile with new username and password
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          username: editingChild.username,
+          plain_password: editingChild.password,
+        })
+        .eq('id', editingChild.id);
+
+      if (profileError) throw profileError;
+
+      // Also update the auth password
+      if (editingChild.password) {
+        await supabase.functions.invoke('admin-set-password', {
+          body: { userId: editingChild.id, newPassword: editingChild.password }
+        });
+      }
+
+      toast({ title: 'Successo', description: 'Credenziali aggiornate' });
+      setEditingChild(null);
+      fetchData();
+    } catch (error: any) {
+      toast({ title: 'Errore', description: error.message || 'Impossibile aggiornare le credenziali', variant: 'destructive' });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (authLoading || isLoading) {
@@ -430,16 +474,38 @@ export default function AdminUsers() {
                       {group.children.map(child => (
                         <div key={child.id} className="px-4 py-3 border-t bg-muted/20 ml-8">
                           <div className="flex items-center justify-between gap-4">
-                            <div className="flex items-center gap-3 min-w-0">
+                            <div className="flex items-center gap-3 min-w-0 flex-1">
                               <div className="w-8 h-8 rounded-full bg-tech-teal/20 flex items-center justify-center flex-shrink-0">
                                 <GraduationCap className="w-4 h-4 text-tech-teal" />
                               </div>
-                              <div className="min-w-0">
+                              <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <h4 className="font-medium truncate">{child.full_name}</h4>
                                   <Badge variant="outline" className="text-xs">Studente</Badge>
                                   <Badge variant="secondary" className="text-xs">{child.total_points} punti</Badge>
                                 </div>
+                                
+                                {/* Show username and password */}
+                                <div className="flex items-center gap-4 mt-1 text-sm">
+                                  {child.username && (
+                                    <span className="text-muted-foreground">
+                                      <span className="font-medium">Username:</span> {child.username}
+                                    </span>
+                                  )}
+                                  {child.plain_password && (
+                                    <span className="text-muted-foreground flex items-center gap-1">
+                                      <span className="font-medium">Password:</span>
+                                      {showPasswords.has(child.id) ? child.plain_password : '••••••'}
+                                      <button 
+                                        onClick={() => togglePasswordVisibility(child.id)}
+                                        className="p-1 hover:bg-muted rounded"
+                                      >
+                                        {showPasswords.has(child.id) ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                                      </button>
+                                    </span>
+                                  )}
+                                </div>
+                                
                                 <div className="flex items-center gap-1 flex-wrap mt-1">
                                   {getUserEnrollments(child.id).map(course => (
                                     <Badge key={course.id} variant="secondary" className="text-xs">
@@ -450,17 +516,23 @@ export default function AdminUsers() {
                               </div>
                             </div>
                             <div className="flex items-center gap-2 flex-shrink-0">
+                              <Button variant="outline" size="sm" onClick={() => openEditChildDialog(child)}>
+                                <Edit2 className="w-4 h-4 mr-1" />
+                                Modifica
+                              </Button>
                               <Button variant="outline" size="sm" onClick={() => openCourseDialog(child.id, child.full_name)}>
                                 <Plus className="w-4 h-4 mr-1" />
                                 Corsi
-                              </Button>
-                              <Button variant="outline" size="sm" onClick={() => openPasswordDialog(child.id, child.full_name)}>
-                                <Key className="w-4 h-4" />
                               </Button>
                             </div>
                           </div>
                         </div>
                       ))}
+                      {!hasChildren && (
+                        <div className="px-4 py-3 border-t bg-muted/20 ml-8 text-sm text-muted-foreground">
+                          Nessun figlio associato a questo genitore
+                        </div>
+                      )}
                     </CollapsibleContent>
                   </Collapsible>
                 ) : (
@@ -475,17 +547,39 @@ export default function AdminUsers() {
                     {group.children.map(child => (
                       <div key={child.id} className="px-4 py-3 border-t">
                         <div className="flex items-center justify-between gap-4">
-                          <div className="flex items-center gap-3 min-w-0">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
                             <div className="w-8 h-8 rounded-full bg-tech-teal/20 flex items-center justify-center flex-shrink-0">
                               <GraduationCap className="w-4 h-4 text-tech-teal" />
                             </div>
-                            <div className="min-w-0">
+                            <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2 flex-wrap">
                                 <h4 className="font-medium truncate">{child.full_name}</h4>
                                 <Badge variant="outline" className="text-xs">Studente</Badge>
                                 <Badge variant="secondary" className="text-xs">{child.total_points} punti</Badge>
                                 {child.isAdmin && <Badge className="bg-amber-500 text-xs">Admin</Badge>}
                               </div>
+                              
+                              {/* Show username and password */}
+                              <div className="flex items-center gap-4 mt-1 text-sm">
+                                {child.username && (
+                                  <span className="text-muted-foreground">
+                                    <span className="font-medium">Username:</span> {child.username}
+                                  </span>
+                                )}
+                                {child.plain_password && (
+                                  <span className="text-muted-foreground flex items-center gap-1">
+                                    <span className="font-medium">Password:</span>
+                                    {showPasswords.has(child.id) ? child.plain_password : '••••••'}
+                                    <button 
+                                      onClick={() => togglePasswordVisibility(child.id)}
+                                      className="p-1 hover:bg-muted rounded"
+                                    >
+                                      {showPasswords.has(child.id) ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                                    </button>
+                                  </span>
+                                )}
+                              </div>
+                              
                               <div className="flex items-center gap-1 flex-wrap mt-1">
                                 {getUserEnrollments(child.id).map(course => (
                                   <Badge key={course.id} variant="secondary" className="text-xs">
@@ -508,12 +602,12 @@ export default function AdminUsers() {
                                 <SelectItem value="parent">Genitore</SelectItem>
                               </SelectContent>
                             </Select>
+                            <Button variant="outline" size="sm" onClick={() => openEditChildDialog(child)}>
+                              <Edit2 className="w-4 h-4" />
+                            </Button>
                             <Button variant="outline" size="sm" onClick={() => openCourseDialog(child.id, child.full_name)}>
                               <Plus className="w-4 h-4 mr-1" />
                               Corsi
-                            </Button>
-                            <Button variant="outline" size="sm" onClick={() => openPasswordDialog(child.id, child.full_name)}>
-                              <Key className="w-4 h-4" />
                             </Button>
                           </div>
                         </div>
@@ -585,6 +679,45 @@ export default function AdminUsers() {
             </Button>
             <Button onClick={handleSaveCourses} disabled={isSaving}>
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salva Corsi'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Child Credentials Dialog */}
+      <Dialog open={!!editingChild} onOpenChange={(open) => !open && setEditingChild(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifica Credenziali Studente</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-username">Nome Utente</Label>
+              <Input
+                id="edit-username"
+                value={editingChild?.username || ''}
+                onChange={(e) => setEditingChild(prev => prev ? { ...prev, username: e.target.value } : null)}
+                placeholder="Username per il login"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-password">Password</Label>
+              <Input
+                id="edit-password"
+                type="text"
+                value={editingChild?.password || ''}
+                onChange={(e) => setEditingChild(prev => prev ? { ...prev, password: e.target.value } : null)}
+                placeholder="Password semplice"
+              />
+              <p className="text-xs text-muted-foreground">La password è visibile per facilitare la gestione</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingChild(null)}>
+              Annulla
+            </Button>
+            <Button onClick={handleSaveChildCredentials} disabled={isSaving}>
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salva'}
             </Button>
           </DialogFooter>
         </DialogContent>

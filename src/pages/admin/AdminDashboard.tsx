@@ -143,27 +143,34 @@ export default function AdminDashboard() {
       {/* Navigation */}
       <div className="border-b bg-background">
         <div className="max-w-7xl mx-auto px-4">
-          <nav className="flex gap-4">
+          <nav className="flex gap-4 overflow-x-auto">
             <Link 
               to="/admin" 
-              className="py-3 px-2 border-b-2 border-primary text-primary font-medium flex items-center gap-2"
+              className="py-3 px-2 border-b-2 border-primary text-primary font-medium flex items-center gap-2 whitespace-nowrap"
             >
               <FileText className="w-4 h-4" />
               Blog
             </Link>
             <Link 
               to="/admin/prenotazioni" 
-              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2"
+              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
             >
               <BookOpen className="w-4 h-4" />
               Prenotazioni
             </Link>
             <Link 
               to="/admin/contatti" 
-              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2"
+              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
             >
               <Mail className="w-4 h-4" />
               Contatti
+            </Link>
+            <Link 
+              to="/admin/utenti" 
+              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
+            >
+              <User className="w-4 h-4" />
+              Utenti
             </Link>
           </nav>
         </div>

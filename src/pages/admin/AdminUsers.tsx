@@ -24,7 +24,9 @@ import {
   Home,
   Eye,
   EyeOff,
-  Edit2
+  Edit2,
+  Search,
+  Link2
 } from 'lucide-react';
 import {
   Select,
@@ -87,6 +89,10 @@ export default function AdminUsers() {
   const [isSaving, setIsSaving] = useState(false);
   const [showPasswords, setShowPasswords] = useState<Set<string>>(new Set());
   const [editingChild, setEditingChild] = useState<{ id: string; username: string; password: string } | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterRole, setFilterRole] = useState<'all' | 'parent' | 'student'>('all');
+  const [linkStudentDialog, setLinkStudentDialog] = useState<{ open: boolean; studentId: string; studentName: string }>({ open: false, studentId: '', studentName: '' });
+  const [selectedParentId, setSelectedParentId] = useState<string>('');
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -148,20 +154,41 @@ export default function AdminUsers() {
     navigate('/admin/login');
   };
 
+  // Filter profiles based on search and role filter
+  const filteredProfiles = profiles.filter(p => {
+    const matchesSearch = searchQuery === '' || 
+      p.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (p.username && p.username.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    const matchesRole = filterRole === 'all' || p.role === filterRole;
+    
+    return matchesSearch && matchesRole;
+  });
+
   const groupedUsers = () => {
-    const parents = profiles.filter(p => p.role === 'parent');
-    const students = profiles.filter(p => p.role === 'student');
+    const parents = filteredProfiles.filter(p => p.role === 'parent');
+    const students = filteredProfiles.filter(p => p.role === 'student');
     
     const groups: { parent: Profile | null; children: Profile[] }[] = [];
     
     parents.forEach(parent => {
-      const children = students.filter(s => s.parent_id === parent.id);
-      groups.push({ parent, children });
+      // Get all children for this parent (from full profiles list to show all children)
+      const children = profiles.filter(s => s.role === 'student' && s.parent_id === parent.id);
+      // Filter children based on search if needed
+      const filteredChildren = children.filter(c => 
+        searchQuery === '' || 
+        c.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (c.username && c.username.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+      groups.push({ parent, children: filteredChildren });
     });
     
-    const orphanStudents = students.filter(s => !s.parent_id);
-    if (orphanStudents.length > 0) {
-      groups.push({ parent: null, children: orphanStudents });
+    // Only show orphan students when viewing all or students
+    if (filterRole !== 'parent') {
+      const orphanStudents = students.filter(s => !s.parent_id);
+      if (orphanStudents.length > 0) {
+        groups.push({ parent: null, children: orphanStudents });
+      }
     }
     
     return groups;
@@ -317,7 +344,6 @@ export default function AdminUsers() {
     
     setIsSaving(true);
     try {
-      // Update profile with new username and password
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
@@ -328,7 +354,6 @@ export default function AdminUsers() {
 
       if (profileError) throw profileError;
 
-      // Also update the auth password
       if (editingChild.password) {
         await supabase.functions.invoke('admin-set-password', {
           body: { userId: editingChild.id, newPassword: editingChild.password }
@@ -343,6 +368,40 @@ export default function AdminUsers() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const openLinkStudentDialog = (student: Profile) => {
+    setSelectedParentId('');
+    setLinkStudentDialog({ open: true, studentId: student.id, studentName: student.full_name });
+  };
+
+  const handleLinkStudent = async () => {
+    if (!selectedParentId) {
+      toast({ title: 'Errore', description: 'Seleziona un genitore', variant: 'destructive' });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ parent_id: selectedParentId })
+        .eq('id', linkStudentDialog.studentId);
+
+      if (error) throw error;
+
+      toast({ title: 'Successo', description: 'Studente associato al genitore' });
+      setLinkStudentDialog({ open: false, studentId: '', studentName: '' });
+      fetchData();
+    } catch (error: any) {
+      toast({ title: 'Errore', description: error.message || 'Impossibile associare lo studente', variant: 'destructive' });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const getParentsList = () => {
+    return profiles.filter(p => p.role === 'parent');
   };
 
   if (authLoading || isLoading) {
@@ -411,7 +470,7 @@ export default function AdminUsers() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold">Gestione Utenti</h1>
             <p className="text-muted-foreground mt-1">
@@ -420,59 +479,164 @@ export default function AdminUsers() {
           </div>
         </div>
 
+        {/* Search and Filter */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Cerca per nome o username..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Select value={filterRole} onValueChange={(v) => setFilterRole(v as 'all' | 'parent' | 'student')}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Filtra per ruolo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tutti</SelectItem>
+              <SelectItem value="parent">Genitori</SelectItem>
+              <SelectItem value="student">Studenti</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         {/* Users List */}
         <div className="space-y-4">
-          {groups.map((group, idx) => {
-            const familyId = group.parent?.id || `orphans-${idx}`;
-            const isExpanded = expandedFamilies.has(familyId);
-            const hasChildren = group.children.length > 0;
+          {groups.length === 0 ? (
+            <div className="tech-card p-12 text-center">
+              <Users className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Nessun utente trovato</h3>
+              <p className="text-muted-foreground">Prova a modificare i filtri di ricerca</p>
+            </div>
+          ) : (
+            groups.map((group, idx) => {
+              const familyId = group.parent?.id || `orphans-${idx}`;
+              const isExpanded = expandedFamilies.has(familyId);
+              const hasChildren = group.children.length > 0;
 
-            return (
-              <div key={familyId} className="tech-card overflow-hidden">
-                {/* Parent Row */}
-                {group.parent ? (
-                  <Collapsible open={isExpanded} onOpenChange={() => toggleFamily(familyId)}>
-                    <CollapsibleTrigger asChild>
-                      <div className="p-4 cursor-pointer hover:bg-muted/50 transition-colors">
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="flex items-center gap-3 min-w-0">
-                            {hasChildren ? (
-                              isExpanded ? <ChevronDown className="w-5 h-5 text-muted-foreground flex-shrink-0" /> : <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                            ) : (
-                              <div className="w-5" />
-                            )}
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                              <User className="w-5 h-5 text-primary" />
-                            </div>
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <h3 className="font-semibold truncate">{group.parent.full_name}</h3>
-                                <Badge variant="secondary">Genitore</Badge>
-                                {group.parent.isAdmin && <Badge className="bg-amber-500">Admin</Badge>}
+              return (
+                <div key={familyId} className="tech-card overflow-hidden">
+                  {/* Parent Row */}
+                  {group.parent ? (
+                    <Collapsible open={isExpanded} onOpenChange={() => toggleFamily(familyId)}>
+                      <CollapsibleTrigger asChild>
+                        <div className="p-4 cursor-pointer hover:bg-muted/50 transition-colors">
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-3 min-w-0">
+                              {hasChildren ? (
+                                isExpanded ? <ChevronDown className="w-5 h-5 text-muted-foreground flex-shrink-0" /> : <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                              ) : (
+                                <div className="w-5" />
+                              )}
+                              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                <User className="w-5 h-5 text-primary" />
                               </div>
-                              <p className="text-sm text-muted-foreground">
-                                {hasChildren ? `${group.children.length} ${group.children.length === 1 ? 'figlio' : 'figli'}` : 'Nessun figlio associato'}
-                              </p>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h3 className="font-semibold truncate">{group.parent.full_name}</h3>
+                                  <Badge variant="secondary">Genitore</Badge>
+                                  {group.parent.isAdmin && <Badge className="bg-amber-500">Admin</Badge>}
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                  {hasChildren ? `${group.children.length} ${group.children.length === 1 ? 'figlio' : 'figli'}` : 'Nessun figlio associato'}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openPasswordDialog(group.parent!.id, group.parent!.full_name); }}>
-                              <Key className="w-4 h-4" />
-                            </Button>
-                            <Button 
-                              variant={group.parent.isAdmin ? "destructive" : "outline"} 
-                              size="sm"
-                              onClick={(e) => { e.stopPropagation(); toggleAdminRole(group.parent!.id, group.parent!.isAdmin || false); }}
-                            >
-                              <Shield className="w-4 h-4" />
-                            </Button>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openPasswordDialog(group.parent!.id, group.parent!.full_name); }}>
+                                <Key className="w-4 h-4" />
+                              </Button>
+                              <Button 
+                                variant={group.parent.isAdmin ? "destructive" : "outline"} 
+                                size="sm"
+                                onClick={(e) => { e.stopPropagation(); toggleAdminRole(group.parent!.id, group.parent!.isAdmin || false); }}
+                              >
+                                <Shield className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        {group.children.map(child => (
+                          <div key={child.id} className="px-4 py-3 border-t bg-muted/20 ml-8">
+                            <div className="flex items-center justify-between gap-4">
+                              <div className="flex items-center gap-3 min-w-0 flex-1">
+                                <div className="w-8 h-8 rounded-full bg-tech-teal/20 flex items-center justify-center flex-shrink-0">
+                                  <GraduationCap className="w-4 h-4 text-tech-teal" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <h4 className="font-medium truncate">{child.full_name}</h4>
+                                    <Badge variant="outline" className="text-xs">Studente</Badge>
+                                    <Badge variant="secondary" className="text-xs">{child.total_points} punti</Badge>
+                                  </div>
+                                  
+                                  <div className="flex items-center gap-4 mt-1 text-sm">
+                                    {child.username && (
+                                      <span className="text-muted-foreground">
+                                        <span className="font-medium">Username:</span> {child.username}
+                                      </span>
+                                    )}
+                                    {child.plain_password && (
+                                      <span className="text-muted-foreground flex items-center gap-1">
+                                        <span className="font-medium">Password:</span>
+                                        {showPasswords.has(child.id) ? child.plain_password : '••••••'}
+                                        <button 
+                                          onClick={() => togglePasswordVisibility(child.id)}
+                                          className="p-1 hover:bg-muted rounded"
+                                        >
+                                          {showPasswords.has(child.id) ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                                        </button>
+                                      </span>
+                                    )}
+                                  </div>
+                                  
+                                  <div className="flex items-center gap-1 flex-wrap mt-1">
+                                    {getUserEnrollments(child.id).map(course => (
+                                      <Badge key={course.id} variant="secondary" className="text-xs">
+                                        {course.emoji} {course.title}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <Button variant="outline" size="sm" onClick={() => openEditChildDialog(child)}>
+                                  <Edit2 className="w-4 h-4 mr-1" />
+                                  Modifica
+                                </Button>
+                                <Button variant="outline" size="sm" onClick={() => openCourseDialog(child.id, child.full_name)}>
+                                  <Plus className="w-4 h-4 mr-1" />
+                                  Corsi
+                                </Button>
+                                <Button variant="outline" size="sm" onClick={() => openLinkStudentDialog(child)} title="Associa a un altro genitore">
+                                  <Link2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        {!hasChildren && (
+                          <div className="px-4 py-3 border-t bg-muted/20 ml-8 text-sm text-muted-foreground">
+                            Nessun figlio associato a questo genitore
+                          </div>
+                        )}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  ) : (
+                    // Orphan students
+                    <div>
+                      <div className="p-4 bg-yellow-50 dark:bg-yellow-950/20 border-b">
+                        <p className="text-sm text-muted-foreground flex items-center gap-2">
+                          <User className="w-4 h-4" />
+                          Studenti senza genitore associato
+                        </p>
                       </div>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
                       {group.children.map(child => (
-                        <div key={child.id} className="px-4 py-3 border-t bg-muted/20 ml-8">
+                        <div key={child.id} className="px-4 py-3 border-t">
                           <div className="flex items-center justify-between gap-4">
                             <div className="flex items-center gap-3 min-w-0 flex-1">
                               <div className="w-8 h-8 rounded-full bg-tech-teal/20 flex items-center justify-center flex-shrink-0">
@@ -483,9 +647,9 @@ export default function AdminUsers() {
                                   <h4 className="font-medium truncate">{child.full_name}</h4>
                                   <Badge variant="outline" className="text-xs">Studente</Badge>
                                   <Badge variant="secondary" className="text-xs">{child.total_points} punti</Badge>
+                                  {child.isAdmin && <Badge className="bg-amber-500 text-xs">Admin</Badge>}
                                 </div>
                                 
-                                {/* Show username and password */}
                                 <div className="flex items-center gap-4 mt-1 text-sm">
                                   {child.username && (
                                     <span className="text-muted-foreground">
@@ -516,108 +680,38 @@ export default function AdminUsers() {
                               </div>
                             </div>
                             <div className="flex items-center gap-2 flex-shrink-0">
+                              <Select 
+                                value={child.role} 
+                                onValueChange={(v) => updateProfileRole(child.id, v as 'student' | 'parent')}
+                              >
+                                <SelectTrigger className="w-28 h-8 text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="student">Studente</SelectItem>
+                                  <SelectItem value="parent">Genitore</SelectItem>
+                                </SelectContent>
+                              </Select>
                               <Button variant="outline" size="sm" onClick={() => openEditChildDialog(child)}>
-                                <Edit2 className="w-4 h-4 mr-1" />
-                                Modifica
+                                <Edit2 className="w-4 h-4" />
                               </Button>
                               <Button variant="outline" size="sm" onClick={() => openCourseDialog(child.id, child.full_name)}>
                                 <Plus className="w-4 h-4 mr-1" />
                                 Corsi
                               </Button>
+                              <Button variant="outline" size="sm" onClick={() => openLinkStudentDialog(child)} title="Associa a un genitore">
+                                <Link2 className="w-4 h-4" />
+                              </Button>
                             </div>
                           </div>
                         </div>
                       ))}
-                      {!hasChildren && (
-                        <div className="px-4 py-3 border-t bg-muted/20 ml-8 text-sm text-muted-foreground">
-                          Nessun figlio associato a questo genitore
-                        </div>
-                      )}
-                    </CollapsibleContent>
-                  </Collapsible>
-                ) : (
-                  // Orphan students
-                  <div>
-                    <div className="p-4 bg-yellow-50 dark:bg-yellow-950/20 border-b">
-                      <p className="text-sm text-muted-foreground flex items-center gap-2">
-                        <User className="w-4 h-4" />
-                        Studenti senza genitore associato
-                      </p>
                     </div>
-                    {group.children.map(child => (
-                      <div key={child.id} className="px-4 py-3 border-t">
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="flex items-center gap-3 min-w-0 flex-1">
-                            <div className="w-8 h-8 rounded-full bg-tech-teal/20 flex items-center justify-center flex-shrink-0">
-                              <GraduationCap className="w-4 h-4 text-tech-teal" />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <h4 className="font-medium truncate">{child.full_name}</h4>
-                                <Badge variant="outline" className="text-xs">Studente</Badge>
-                                <Badge variant="secondary" className="text-xs">{child.total_points} punti</Badge>
-                                {child.isAdmin && <Badge className="bg-amber-500 text-xs">Admin</Badge>}
-                              </div>
-                              
-                              {/* Show username and password */}
-                              <div className="flex items-center gap-4 mt-1 text-sm">
-                                {child.username && (
-                                  <span className="text-muted-foreground">
-                                    <span className="font-medium">Username:</span> {child.username}
-                                  </span>
-                                )}
-                                {child.plain_password && (
-                                  <span className="text-muted-foreground flex items-center gap-1">
-                                    <span className="font-medium">Password:</span>
-                                    {showPasswords.has(child.id) ? child.plain_password : '••••••'}
-                                    <button 
-                                      onClick={() => togglePasswordVisibility(child.id)}
-                                      className="p-1 hover:bg-muted rounded"
-                                    >
-                                      {showPasswords.has(child.id) ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                                    </button>
-                                  </span>
-                                )}
-                              </div>
-                              
-                              <div className="flex items-center gap-1 flex-wrap mt-1">
-                                {getUserEnrollments(child.id).map(course => (
-                                  <Badge key={course.id} variant="secondary" className="text-xs">
-                                    {course.emoji} {course.title}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            <Select 
-                              value={child.role} 
-                              onValueChange={(v) => updateProfileRole(child.id, v as 'student' | 'parent')}
-                            >
-                              <SelectTrigger className="w-28 h-8 text-xs">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="student">Studente</SelectItem>
-                                <SelectItem value="parent">Genitore</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <Button variant="outline" size="sm" onClick={() => openEditChildDialog(child)}>
-                              <Edit2 className="w-4 h-4" />
-                            </Button>
-                            <Button variant="outline" size="sm" onClick={() => openCourseDialog(child.id, child.full_name)}>
-                              <Plus className="w-4 h-4 mr-1" />
-                              Corsi
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                  )}
+                </div>
+              );
+            })
+          )}
         </div>
       </main>
 
@@ -718,6 +812,44 @@ export default function AdminUsers() {
             </Button>
             <Button onClick={handleSaveChildCredentials} disabled={isSaving}>
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salva'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Link Student to Parent Dialog */}
+      <Dialog open={linkStudentDialog.open} onOpenChange={(open) => !open && setLinkStudentDialog({ open: false, studentId: '', studentName: '' })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Associa Studente a Genitore</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Stai associando <span className="font-medium text-foreground">{linkStudentDialog.studentName}</span> a un genitore.
+              Questo permette a più genitori di vedere lo stesso studente.
+            </p>
+            <div className="space-y-2">
+              <Label>Seleziona Genitore</Label>
+              <Select value={selectedParentId} onValueChange={setSelectedParentId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Scegli un genitore..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {getParentsList().map(parent => (
+                    <SelectItem key={parent.id} value={parent.id}>
+                      {parent.full_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLinkStudentDialog({ open: false, studentId: '', studentName: '' })}>
+              Annulla
+            </Button>
+            <Button onClick={handleLinkStudent} disabled={isSaving || !selectedParentId}>
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Associa'}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -13,7 +13,9 @@ import {
   Mail,
   CheckCircle,
   XCircle,
-  Trash2
+  Trash2,
+  Users,
+  Home
 } from 'lucide-react';
 import {
   Table,
@@ -125,6 +127,12 @@ export default function AdminContatti() {
             <Badge variant="secondary">Admin</Badge>
           </div>
           <div className="flex items-center gap-4">
+            <Link to="/area-riservata">
+              <Button variant="outline" size="sm">
+                <Home className="w-4 h-4 mr-2" />
+                Area Riservata
+              </Button>
+            </Link>
             <span className="text-sm text-muted-foreground hidden sm:block">{user?.email}</span>
             <Button variant="outline" size="sm" onClick={handleSignOut}>
               <LogOut className="w-4 h-4 mr-2" />
@@ -137,27 +145,34 @@ export default function AdminContatti() {
       {/* Navigation */}
       <div className="border-b bg-background">
         <div className="max-w-7xl mx-auto px-4">
-          <nav className="flex gap-4">
+          <nav className="flex gap-4 overflow-x-auto">
             <Link 
               to="/admin" 
-              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2"
+              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
             >
               <FileText className="w-4 h-4" />
               Blog
             </Link>
             <Link 
               to="/admin/prenotazioni" 
-              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2"
+              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
             >
               <BookOpen className="w-4 h-4" />
               Prenotazioni
             </Link>
             <Link 
               to="/admin/contatti" 
-              className="py-3 px-2 border-b-2 border-primary text-primary font-medium flex items-center gap-2"
+              className="py-3 px-2 border-b-2 border-primary text-primary font-medium flex items-center gap-2 whitespace-nowrap"
             >
               <Mail className="w-4 h-4" />
               Contatti
+            </Link>
+            <Link 
+              to="/admin/utenti" 
+              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
+            >
+              <Users className="w-4 h-4" />
+              Utenti
             </Link>
           </nav>
         </div>

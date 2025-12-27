@@ -115,6 +115,39 @@ export type Database = {
           },
         ]
       }
+      contact_submissions: {
+        Row: {
+          created_at: string
+          email: string
+          email_sent: boolean
+          error_message: string | null
+          id: string
+          messaggio: string
+          nome: string
+          oggetto: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          email_sent?: boolean
+          error_message?: string | null
+          id?: string
+          messaggio: string
+          nome: string
+          oggetto: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          email_sent?: boolean
+          error_message?: string | null
+          id?: string
+          messaggio?: string
+          nome?: string
+          oggetto?: string
+        }
+        Relationships: []
+      }
       courses: {
         Row: {
           age_range: string | null

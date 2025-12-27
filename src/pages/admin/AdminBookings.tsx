@@ -198,6 +198,13 @@ export default function AdminBookings() {
                 <Badge variant="destructive" className="ml-1">{pendingCount}</Badge>
               )}
             </Link>
+            <Link 
+              to="/admin/contatti" 
+              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2"
+            >
+              <Mail className="w-4 h-4" />
+              Contatti
+            </Link>
           </nav>
         </div>
       </div>

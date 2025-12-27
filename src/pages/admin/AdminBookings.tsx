@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { 
   LogOut,
@@ -16,7 +17,12 @@ import {
   MessageSquare,
   ChevronDown,
   FileText,
-  BookOpen
+  BookOpen,
+  Users,
+  Plus,
+  Trash2,
+  Edit,
+  Home
 } from 'lucide-react';
 import {
   Select,
@@ -30,6 +36,23 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 
 interface TrialBooking {
@@ -71,12 +94,52 @@ const availabilityLabels: Record<string, string> = {
   "qualsiasi": "Qualsiasi orario",
 };
 
+const weekDays = [
+  { value: "lunedi", label: "Lunedì" },
+  { value: "martedi", label: "Martedì" },
+  { value: "mercoledi", label: "Mercoledì" },
+  { value: "giovedi", label: "Giovedì" },
+  { value: "venerdi", label: "Venerdì" },
+  { value: "sabato", label: "Sabato" },
+  { value: "domenica", label: "Domenica" },
+];
+
+const timeSlots = Array.from({ length: 12 }, (_, i) => {
+  const hour = i + 9; // 9:00 to 20:00
+  return { value: `${hour}:00`, label: `${hour}:00` };
+});
+
+const interests = [
+  { value: "coding-base", label: "Coding Base (6-8 anni)" },
+  { value: "game-dev", label: "Game Development" },
+  { value: "roblox", label: "Roblox Studio" },
+  { value: "web", label: "Web Development" },
+  { value: "python-ai", label: "Python & AI" },
+  { value: "non-so", label: "Non sono sicuro" },
+];
+
 export default function AdminBookings() {
   const [bookings, setBookings] = useState<TrialBooking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editingNotes, setEditingNotes] = useState<string | null>(null);
   const [notesValue, setNotesValue] = useState("");
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<TrialBooking | null>(null);
+  const [formData, setFormData] = useState({
+    parent_name: '',
+    email: '',
+    phone: '',
+    child_age: '8',
+    interest: 'coding-base',
+    preferred_day: '',
+    preferred_time: '',
+    message: '',
+    status: 'pending' as TrialBooking['status'],
+  });
+  const [isSaving, setIsSaving] = useState(false);
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -107,7 +170,7 @@ export default function AdminBookings() {
     setIsLoading(false);
   };
 
-  const updateStatus = async (id: string, newStatus: 'pending' | 'contacted' | 'scheduled' | 'completed' | 'cancelled') => {
+  const updateStatus = async (id: string, newStatus: TrialBooking['status']) => {
     const { error } = await supabase
       .from('trial_bookings')
       .update({ status: newStatus })
@@ -116,9 +179,7 @@ export default function AdminBookings() {
     if (error) {
       toast({ title: 'Errore', description: 'Impossibile aggiornare lo stato', variant: 'destructive' });
     } else {
-      setBookings(bookings.map(b => 
-        b.id === id ? { ...b, status: newStatus as 'pending' | 'contacted' | 'scheduled' | 'completed' | 'cancelled' } : b
-      ));
+      setBookings(bookings.map(b => b.id === id ? { ...b, status: newStatus } : b));
       toast({ title: 'Successo', description: 'Stato aggiornato' });
     }
   };
@@ -143,6 +204,136 @@ export default function AdminBookings() {
     navigate('/admin/login');
   };
 
+  const resetForm = () => {
+    setFormData({
+      parent_name: '',
+      email: '',
+      phone: '',
+      child_age: '8',
+      interest: 'coding-base',
+      preferred_day: '',
+      preferred_time: '',
+      message: '',
+      status: 'pending',
+    });
+  };
+
+  const openCreateDialog = () => {
+    resetForm();
+    setShowCreateDialog(true);
+  };
+
+  const openEditDialog = (booking: TrialBooking) => {
+    setSelectedBooking(booking);
+    // Parse availability to get day and time
+    const availParts = booking.availability?.split(' - ') || [];
+    setFormData({
+      parent_name: booking.parent_name,
+      email: booking.email,
+      phone: booking.phone || '',
+      child_age: String(booking.child_age),
+      interest: booking.interest,
+      preferred_day: availParts[0] || '',
+      preferred_time: availParts[1] || '',
+      message: booking.message || '',
+      status: booking.status,
+    });
+    setShowEditDialog(true);
+  };
+
+  const openDeleteDialog = (booking: TrialBooking) => {
+    setSelectedBooking(booking);
+    setShowDeleteDialog(true);
+  };
+
+  const handleCreate = async () => {
+    if (!formData.parent_name || !formData.email) {
+      toast({ title: 'Errore', description: 'Nome e email sono obbligatori', variant: 'destructive' });
+      return;
+    }
+
+    setIsSaving(true);
+    const availability = formData.preferred_day && formData.preferred_time 
+      ? `${formData.preferred_day} - ${formData.preferred_time}`
+      : formData.preferred_day || formData.preferred_time || null;
+
+    const { error } = await supabase
+      .from('trial_bookings')
+      .insert({
+        parent_name: formData.parent_name,
+        email: formData.email,
+        phone: formData.phone || null,
+        child_age: parseInt(formData.child_age),
+        interest: formData.interest,
+        availability,
+        message: formData.message || null,
+        status: formData.status,
+      });
+
+    if (error) {
+      toast({ title: 'Errore', description: 'Impossibile creare la prenotazione', variant: 'destructive' });
+    } else {
+      toast({ title: 'Successo', description: 'Prenotazione creata' });
+      setShowCreateDialog(false);
+      fetchBookings();
+    }
+    setIsSaving(false);
+  };
+
+  const handleEdit = async () => {
+    if (!selectedBooking || !formData.parent_name || !formData.email) {
+      toast({ title: 'Errore', description: 'Nome e email sono obbligatori', variant: 'destructive' });
+      return;
+    }
+
+    setIsSaving(true);
+    const availability = formData.preferred_day && formData.preferred_time 
+      ? `${formData.preferred_day} - ${formData.preferred_time}`
+      : formData.preferred_day || formData.preferred_time || null;
+
+    const { error } = await supabase
+      .from('trial_bookings')
+      .update({
+        parent_name: formData.parent_name,
+        email: formData.email,
+        phone: formData.phone || null,
+        child_age: parseInt(formData.child_age),
+        interest: formData.interest,
+        availability,
+        message: formData.message || null,
+        status: formData.status,
+      })
+      .eq('id', selectedBooking.id);
+
+    if (error) {
+      toast({ title: 'Errore', description: 'Impossibile aggiornare la prenotazione', variant: 'destructive' });
+    } else {
+      toast({ title: 'Successo', description: 'Prenotazione aggiornata' });
+      setShowEditDialog(false);
+      fetchBookings();
+    }
+    setIsSaving(false);
+  };
+
+  const handleDelete = async () => {
+    if (!selectedBooking) return;
+
+    setIsSaving(true);
+    const { error } = await supabase
+      .from('trial_bookings')
+      .delete()
+      .eq('id', selectedBooking.id);
+
+    if (error) {
+      toast({ title: 'Errore', description: 'Impossibile eliminare la prenotazione', variant: 'destructive' });
+    } else {
+      toast({ title: 'Successo', description: 'Prenotazione eliminata' });
+      setShowDeleteDialog(false);
+      fetchBookings();
+    }
+    setIsSaving(false);
+  };
+
   const pendingCount = bookings.filter(b => b.status === 'pending').length;
 
   if (authLoading || isLoading) {
@@ -154,6 +345,118 @@ export default function AdminBookings() {
   }
 
   if (!isAdmin) return null;
+
+  const BookingFormFields = () => (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="text-sm font-medium mb-1 block">Nome genitore *</label>
+          <Input
+            value={formData.parent_name}
+            onChange={(e) => setFormData({ ...formData, parent_name: e.target.value })}
+            placeholder="Mario Rossi"
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium mb-1 block">Email *</label>
+          <Input
+            type="email"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            placeholder="mario@email.com"
+          />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="text-sm font-medium mb-1 block">Telefono</label>
+          <Input
+            value={formData.phone}
+            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            placeholder="+39 333 1234567"
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium mb-1 block">Età bambino</label>
+          <Select value={formData.child_age} onValueChange={(v) => setFormData({ ...formData, child_age: v })}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Array.from({ length: 13 }, (_, i) => i + 6).map((age) => (
+                <SelectItem key={age} value={String(age)}>{age} anni</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div>
+        <label className="text-sm font-medium mb-1 block">Interesse</label>
+        <Select value={formData.interest} onValueChange={(v) => setFormData({ ...formData, interest: v })}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {interests.map((i) => (
+              <SelectItem key={i.value} value={i.value}>{i.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="text-sm font-medium mb-1 block">Giorno preferito</label>
+          <Select value={formData.preferred_day} onValueChange={(v) => setFormData({ ...formData, preferred_day: v })}>
+            <SelectTrigger>
+              <SelectValue placeholder="Seleziona giorno" />
+            </SelectTrigger>
+            <SelectContent>
+              {weekDays.map((day) => (
+                <SelectItem key={day.value} value={day.value}>{day.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <label className="text-sm font-medium mb-1 block">Ora preferita</label>
+          <Select value={formData.preferred_time} onValueChange={(v) => setFormData({ ...formData, preferred_time: v })}>
+            <SelectTrigger>
+              <SelectValue placeholder="Seleziona ora" />
+            </SelectTrigger>
+            <SelectContent>
+              {timeSlots.map((slot) => (
+                <SelectItem key={slot.value} value={slot.value}>{slot.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div>
+        <label className="text-sm font-medium mb-1 block">Stato</label>
+        <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v as TrialBooking['status'] })}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="pending">In attesa</SelectItem>
+            <SelectItem value="contacted">Contattato</SelectItem>
+            <SelectItem value="scheduled">Programmato</SelectItem>
+            <SelectItem value="completed">Completato</SelectItem>
+            <SelectItem value="cancelled">Annullato</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <label className="text-sm font-medium mb-1 block">Messaggio</label>
+        <Textarea
+          value={formData.message}
+          onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+          placeholder="Note o richieste speciali..."
+          rows={3}
+        />
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -168,6 +471,12 @@ export default function AdminBookings() {
             <Badge variant="secondary">Admin</Badge>
           </div>
           <div className="flex items-center gap-4">
+            <Link to="/area-riservata">
+              <Button variant="outline" size="sm">
+                <Home className="w-4 h-4 mr-2" />
+                Area Riservata
+              </Button>
+            </Link>
             <span className="text-sm text-muted-foreground hidden sm:block">{user?.email}</span>
             <Button variant="outline" size="sm" onClick={handleSignOut}>
               <LogOut className="w-4 h-4 mr-2" />
@@ -180,30 +489,23 @@ export default function AdminBookings() {
       {/* Navigation */}
       <div className="border-b bg-background">
         <div className="max-w-7xl mx-auto px-4">
-          <nav className="flex gap-4">
-            <Link 
-              to="/admin" 
-              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2"
-            >
+          <nav className="flex gap-4 overflow-x-auto">
+            <Link to="/admin" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
               <FileText className="w-4 h-4" />
               Blog
             </Link>
-            <Link 
-              to="/admin/prenotazioni" 
-              className="py-3 px-2 border-b-2 border-primary text-primary font-medium flex items-center gap-2"
-            >
+            <Link to="/admin/prenotazioni" className="py-3 px-2 border-b-2 border-primary text-primary font-medium flex items-center gap-2 whitespace-nowrap">
               <BookOpen className="w-4 h-4" />
               Prenotazioni
-              {pendingCount > 0 && (
-                <Badge variant="destructive" className="ml-1">{pendingCount}</Badge>
-              )}
+              {pendingCount > 0 && <Badge variant="destructive" className="ml-1">{pendingCount}</Badge>}
             </Link>
-            <Link 
-              to="/admin/contatti" 
-              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2"
-            >
+            <Link to="/admin/contatti" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
               <Mail className="w-4 h-4" />
               Contatti
+            </Link>
+            <Link to="/admin/utenti" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
+              <Users className="w-4 h-4" />
+              Utenti
             </Link>
           </nav>
         </div>
@@ -218,6 +520,10 @@ export default function AdminBookings() {
               {bookings.length} prenotazioni totali • {pendingCount} in attesa
             </p>
           </div>
+          <Button onClick={openCreateDialog}>
+            <Plus className="w-4 h-4 mr-2" />
+            Nuova Prenotazione
+          </Button>
         </div>
 
         {/* Bookings List */}
@@ -379,6 +685,56 @@ export default function AdminBookings() {
           </div>
         )}
       </main>
+
+      {/* Create Dialog */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Nuova Prenotazione</DialogTitle>
+          </DialogHeader>
+          <BookingFormFields />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>Annulla</Button>
+            <Button onClick={handleCreate} disabled={isSaving}>
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Crea'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Modifica Prenotazione</DialogTitle>
+          </DialogHeader>
+          <BookingFormFields />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditDialog(false)}>Annulla</Button>
+            <Button onClick={handleEdit} disabled={isSaving}>
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salva'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Elimina prenotazione?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Questa azione non può essere annullata. La prenotazione di {selectedBooking?.parent_name} verrà eliminata.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Elimina'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

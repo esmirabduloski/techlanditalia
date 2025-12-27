@@ -34,6 +34,20 @@ const interests = [
   { value: "non-so", label: "Non sono sicuro, vorrei consigli" },
 ];
 
+const weekDays = [
+  { value: "lunedi", label: "Lunedì" },
+  { value: "martedi", label: "Martedì" },
+  { value: "mercoledi", label: "Mercoledì" },
+  { value: "giovedi", label: "Giovedì" },
+  { value: "venerdi", label: "Venerdì" },
+  { value: "sabato", label: "Sabato" },
+];
+
+const timeSlots = Array.from({ length: 12 }, (_, i) => {
+  const hour = i + 9;
+  return { value: `${hour}:00`, label: `${hour}:00` };
+});
+
 const benefits = [
   { icon: Calendar, text: "Ti contatteremo entro 24h" },
   { icon: Video, text: "Lezione 1:1 con un docente" },
@@ -47,7 +61,8 @@ const bookingSchema = z.object({
   phone: z.string().trim().max(20, "Numero troppo lungo").optional().or(z.literal("")),
   childAge: z.string().min(1, "Seleziona l'età del bambino"),
   interest: z.string().min(1, "Seleziona un'area di interesse"),
-  availability: z.string().optional(),
+  preferredDay: z.string().optional(),
+  preferredTime: z.string().optional(),
   message: z.string().trim().max(1000, "Messaggio troppo lungo").optional(),
 });
 

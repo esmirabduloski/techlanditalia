@@ -84,7 +84,8 @@ export default function Prenota() {
       phone: "",
       childAge: "",
       interest: "",
-      availability: "",
+      preferredDay: "",
+      preferredTime: "",
       message: "",
     },
   });
@@ -101,7 +102,9 @@ export default function Prenota() {
           phone: data.phone,
           childAge: parseInt(data.childAge),
           interest: data.interest,
-          availability: data.availability,
+          availability: data.preferredDay && data.preferredTime 
+            ? `${data.preferredDay} - ${data.preferredTime}` 
+            : data.preferredDay || data.preferredTime || null,
           message: data.message,
           adminEmail: ADMIN_EMAIL,
         },
@@ -335,30 +338,53 @@ export default function Prenota() {
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="availability"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Disponibilità preferita</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="h-12">
-                              <SelectValue placeholder="Quando preferisci essere contattato?" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="mattina">Mattina (9-12)</SelectItem>
-                            <SelectItem value="pomeriggio">Pomeriggio (14-18)</SelectItem>
-                            <SelectItem value="sera">Sera (18-20)</SelectItem>
-                            <SelectItem value="weekend">Weekend</SelectItem>
-                            <SelectItem value="qualsiasi">Qualsiasi orario</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="preferredDay"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Giorno preferito</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-12">
+                                <SelectValue placeholder="Seleziona giorno" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {weekDays.map((day) => (
+                                <SelectItem key={day.value} value={day.value}>{day.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="preferredTime"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Ora preferita</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-12">
+                                <SelectValue placeholder="Seleziona ora" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {timeSlots.map((slot) => (
+                                <SelectItem key={slot.value} value={slot.value}>{slot.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
                   <FormField
                     control={form.control}

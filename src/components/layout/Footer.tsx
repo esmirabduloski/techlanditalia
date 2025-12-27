@@ -13,7 +13,6 @@ const footerLinks = {
     { label: "Python PRO & AI", href: "/corsi/python-ai" },
   ],
   azienda: [
-    { label: "Chi siamo", href: "/chi-siamo" },
     { label: "Blog", href: "/blog" },
     { label: "Lavora con noi", href: "/lavora-con-noi" },
     { label: "Contatti", href: "/contatti" },

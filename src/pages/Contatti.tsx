@@ -7,6 +7,27 @@ import { Mail, MessageCircle, MapPin, Clock } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { z } from "zod";
+
+// Validation schema
+const contactSchema = z.object({
+  nome: z.string()
+    .trim()
+    .min(1, "Il nome è obbligatorio")
+    .max(100, "Il nome non può superare i 100 caratteri"),
+  email: z.string()
+    .trim()
+    .email("Formato email non valido")
+    .max(254, "L'email non può superare i 254 caratteri"),
+  oggetto: z.string()
+    .trim()
+    .min(1, "L'oggetto è obbligatorio")
+    .max(200, "L'oggetto non può superare i 200 caratteri"),
+  messaggio: z.string()
+    .trim()
+    .min(1, "Il messaggio è obbligatorio")
+    .max(5000, "Il messaggio non può superare i 5000 caratteri"),
+});
 
 const contactInfo = [
   {
@@ -46,15 +67,32 @@ export default function Contatti() {
     oggetto: "",
     messaggio: ""
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
+    
+    // Validate form data
+    const result = contactSchema.safeParse(formData);
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.errors.forEach((err) => {
+        if (err.path[0]) {
+          fieldErrors[err.path[0] as string] = err.message;
+        }
+      });
+      setErrors(fieldErrors);
+      toast.error("Correggi gli errori nel form");
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
       const { data, error } = await supabase.functions.invoke('send-contact-email', {
-        body: formData
+        body: result.data
       });
 
       if (error) {
@@ -63,7 +101,6 @@ export default function Contatti() {
         return;
       }
 
-      console.log("Contact email sent successfully:", data);
       toast.success("Messaggio inviato con successo! Ti risponderemo presto.");
       setFormData({ nome: "", email: "", oggetto: "", messaggio: "" });
     } catch (error) {
@@ -141,8 +178,11 @@ export default function Contatti() {
                     value={formData.nome}
                     onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                     required
+                    maxLength={100}
                     placeholder="Il tuo nome"
+                    className={errors.nome ? "border-destructive" : ""}
                   />
+                  {errors.nome && <p className="text-sm text-destructive">{errors.nome}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email *</Label>
@@ -152,8 +192,11 @@ export default function Contatti() {
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     required
+                    maxLength={254}
                     placeholder="la-tua@email.it"
+                    className={errors.email ? "border-destructive" : ""}
                   />
+                  {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                 </div>
               </div>
               
@@ -164,8 +207,11 @@ export default function Contatti() {
                   value={formData.oggetto}
                   onChange={(e) => setFormData({ ...formData, oggetto: e.target.value })}
                   required
+                  maxLength={200}
                   placeholder="Di cosa vuoi parlarci?"
+                  className={errors.oggetto ? "border-destructive" : ""}
                 />
+                {errors.oggetto && <p className="text-sm text-destructive">{errors.oggetto}</p>}
               </div>
               
               <div className="space-y-2">
@@ -175,9 +221,15 @@ export default function Contatti() {
                   value={formData.messaggio}
                   onChange={(e) => setFormData({ ...formData, messaggio: e.target.value })}
                   required
+                  maxLength={5000}
                   placeholder="Scrivi qui il tuo messaggio..."
                   rows={5}
+                  className={errors.messaggio ? "border-destructive" : ""}
                 />
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  {errors.messaggio && <p className="text-destructive">{errors.messaggio}</p>}
+                  <span className="ml-auto">{formData.messaggio.length}/5000</span>
+                </div>
               </div>
               
               <Button type="submit" variant="cta" className="w-full" disabled={isSubmitting}>

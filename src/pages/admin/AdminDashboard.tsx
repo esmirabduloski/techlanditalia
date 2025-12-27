@@ -14,7 +14,8 @@ import {
   LogOut,
   FileText,
   Loader2,
-  BookOpen
+  BookOpen,
+  Mail
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -149,6 +150,13 @@ export default function AdminDashboard() {
             >
               <BookOpen className="w-4 h-4" />
               Prenotazioni
+            </Link>
+            <Link 
+              to="/admin/contatti" 
+              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2"
+            >
+              <Mail className="w-4 h-4" />
+              Contatti
             </Link>
           </nav>
         </div>

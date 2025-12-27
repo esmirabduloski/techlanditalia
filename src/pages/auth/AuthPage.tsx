@@ -7,9 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Rocket, Users, GraduationCap, KeyRound } from 'lucide-react';
+import { Loader2, Rocket, Users, KeyRound, GraduationCap } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 
 export default function AuthPage() {
@@ -19,17 +19,37 @@ export default function AuthPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [role, setRole] = useState<'parent' | 'student'>('student');
+  
+  // Child registration fields
+  const [childName, setChildName] = useState('');
+  const [childUsername, setChildUsername] = useState('');
+  const [childPassword, setChildPassword] = useState('');
+  const [childCourse, setChildCourse] = useState('');
+  const [courses, setCourses] = useState<{ id: string; title: string; emoji: string }[]>([]);
+  
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [showNewPasswordForm, setShowNewPasswordForm] = useState(false);
+  
+  // Login mode: 'parent' (email) or 'student' (username)
+  const [loginMode, setLoginMode] = useState<'parent' | 'student'>('parent');
+  const [loginUsername, setLoginUsername] = useState('');
+  
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
 
+  // Fetch courses for registration
+  useEffect(() => {
+    const fetchCourses = async () => {
+      const { data } = await supabase.from('courses').select('id, title, emoji');
+      if (data) setCourses(data);
+    };
+    fetchCourses();
+  }, []);
+
   // Redirect authenticated users
   useEffect(() => {
     if (!authLoading && user && !showNewPasswordForm) {
-      // Admin users go to admin panel, others go to area riservata
       if (isAdmin) {
         navigate('/admin');
       } else {
@@ -37,40 +57,25 @@ export default function AuthPage() {
       }
     }
   }, [user, isAdmin, authLoading, showNewPasswordForm, navigate]);
+
   // Check if user came from password reset link
   useEffect(() => {
     const checkRecoverySession = async () => {
-      // Debug: log all URL parts
-      console.log('Recovery check - Full URL:', window.location.href);
-      console.log('Recovery check - Hash:', window.location.hash);
-      console.log('Recovery check - Search:', window.location.search);
-      
-      // Check URL hash for recovery token (Supabase format: #access_token=...&type=recovery)
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const accessToken = hashParams.get('access_token');
       const hashType = hashParams.get('type');
-      
-      // Also check query params (alternative format: ?type=recovery)
       const queryType = searchParams.get('type');
-      const resetParam = searchParams.get('reset');
-      
-      console.log('Recovery check - accessToken:', !!accessToken, 'hashType:', hashType, 'queryType:', queryType, 'resetParam:', resetParam);
       
       if ((hashType === 'recovery' && accessToken) || queryType === 'recovery') {
-        console.log('Recovery detected! Showing new password form');
         setShowNewPasswordForm(true);
-        // Clear the hash from URL for cleaner display
         window.history.replaceState(null, '', '/auth?reset=true');
       }
     };
     
     checkRecoverySession();
     
-    // Listen for PASSWORD_RECOVERY event from Supabase Auth
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state change:', event, session ? 'with session' : 'no session');
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
-        console.log('PASSWORD_RECOVERY event received!');
         setShowNewPasswordForm(true);
       }
     });
@@ -119,7 +124,7 @@ export default function AuthPage() {
         setConfirmPassword('');
         navigate('/area-riservata');
       }
-    } catch (error) {
+    } catch {
       toast({
         variant: 'destructive',
         title: 'Errore',
@@ -143,8 +148,7 @@ export default function AuthPage() {
     
     setIsLoading(true);
     try {
-      // Call our custom edge function to send branded email
-      const { data, error } = await supabase.functions.invoke('send-password-reset-email', {
+      const { error } = await supabase.functions.invoke('send-password-reset-email', {
         body: { 
           email: email.trim().toLowerCase(),
           redirectUrl: `${window.location.origin}/auth?reset=true`
@@ -152,7 +156,6 @@ export default function AuthPage() {
       });
 
       if (error) {
-        console.error('Reset password error:', error);
         toast({
           variant: 'destructive',
           title: 'Errore',
@@ -165,8 +168,7 @@ export default function AuthPage() {
         });
         setShowResetPassword(false);
       }
-    } catch (error) {
-      console.error('Reset password catch error:', error);
+    } catch {
       toast({
         variant: 'destructive',
         title: 'Errore',
@@ -182,27 +184,78 @@ export default function AuthPage() {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      if (loginMode === 'student') {
+        // Student login with username - find email from profile
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, plain_password')
+          .eq('username', loginUsername.trim())
+          .eq('role', 'student')
+          .maybeSingle();
 
-      if (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Errore di accesso',
-          description: error.message === 'Invalid login credentials' 
-            ? 'Email o password non corretti' 
-            : error.message,
+        if (profileError || !profile) {
+          toast({
+            variant: 'destructive',
+            title: 'Errore di accesso',
+            description: 'Nome utente non trovato',
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        // Check plain password
+        if (profile.plain_password !== password) {
+          toast({
+            variant: 'destructive',
+            title: 'Errore di accesso',
+            description: 'Password non corretta',
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        // Get email from auth users table via edge function
+        const { data: loginData, error: loginError } = await supabase.functions.invoke('student-login', {
+          body: { username: loginUsername.trim(), password }
         });
+
+        if (loginError || loginData?.error) {
+          toast({
+            variant: 'destructive',
+            title: 'Errore di accesso',
+            description: loginData?.error || 'Impossibile effettuare il login',
+          });
+        } else if (loginData?.session) {
+          // Set the session
+          await supabase.auth.setSession(loginData.session);
+          toast({
+            title: 'Benvenuto!',
+            description: 'Accesso effettuato con successo',
+          });
+        }
       } else {
-        toast({
-          title: 'Benvenuto!',
-          description: 'Accesso effettuato con successo',
+        // Parent login with email
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
         });
-        // Navigation is handled by useEffect based on isAdmin
+
+        if (error) {
+          toast({
+            variant: 'destructive',
+            title: 'Errore di accesso',
+            description: error.message === 'Invalid login credentials' 
+              ? 'Email o password non corretti' 
+              : error.message,
+          });
+        } else {
+          toast({
+            title: 'Benvenuto!',
+            description: 'Accesso effettuato con successo',
+          });
+        }
       }
-    } catch (error) {
+    } catch {
       toast({
         variant: 'destructive',
         title: 'Errore',
@@ -215,17 +268,45 @@ export default function AuthPage() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate child data
+    if (!childName.trim() || !childUsername.trim() || !childPassword.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Dati figlio obbligatori',
+        description: 'Inserisci tutti i dati del figlio: nome, username e password',
+      });
+      return;
+    }
+
+    // Check username uniqueness
+    const { data: existingUser } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('username', childUsername.trim())
+      .maybeSingle();
+
+    if (existingUser) {
+      toast({
+        variant: 'destructive',
+        title: 'Username già in uso',
+        description: 'Questo username è già utilizzato. Scegline un altro per tuo figlio.',
+      });
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.signUp({
+      // Register parent
+      const { data: authData, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/area-riservata`,
           data: {
             full_name: fullName,
-            role: role,
+            role: 'parent',
           },
         },
       });
@@ -244,10 +325,36 @@ export default function AuthPage() {
             description: error.message,
           });
         }
-      } else {
-        // Send welcome email in background (non-blocking)
+        setIsLoading(false);
+        return;
+      }
+
+      if (authData.user) {
+        // Create child profile via edge function (needs service role)
+        const { error: childError } = await supabase.functions.invoke('create-child-account', {
+          body: {
+            parentId: authData.user.id,
+            childName: childName.trim(),
+            childUsername: childUsername.trim(),
+            childPassword: childPassword,
+            courseId: childCourse || null,
+          }
+        });
+
+        if (childError) {
+          console.error('Error creating child account:', childError);
+        }
+
+        // Send welcome email with child credentials
         supabase.functions.invoke('send-welcome-email', {
-          body: { email, fullName, role }
+          body: { 
+            email, 
+            fullName, 
+            role: 'parent',
+            childName: childName.trim(),
+            childUsername: childUsername.trim(),
+            childPassword: childPassword,
+          }
         }).catch(err => console.error('Welcome email error:', err));
 
         toast({
@@ -256,7 +363,7 @@ export default function AuthPage() {
         });
         navigate('/area-riservata');
       }
-    } catch (error) {
+    } catch {
       toast({
         variant: 'destructive',
         title: 'Errore',
@@ -290,7 +397,7 @@ export default function AuthPage() {
             </p>
           </div>
 
-          {/* New Password Form - After clicking reset link */}
+          {/* New Password Form */}
           {showNewPasswordForm ? (
             <Card className="border-border/50 shadow-lg">
               <CardHeader>
@@ -396,18 +503,62 @@ export default function AuthPage() {
                 {/* Login Tab */}
                 <TabsContent value="login" className="mt-0">
                   <form onSubmit={handleLogin} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="login-email">Email</Label>
-                      <Input
-                        id="login-email"
-                        type="email"
-                        placeholder="mario@esempio.it"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        disabled={isLoading}
-                      />
+                    {/* Login Mode Toggle */}
+                    <div className="flex gap-2 p-1 bg-muted rounded-lg">
+                      <button
+                        type="button"
+                        onClick={() => setLoginMode('parent')}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${
+                          loginMode === 'parent' 
+                            ? 'bg-background shadow text-foreground' 
+                            : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        <Users className="w-4 h-4" />
+                        Genitore
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setLoginMode('student')}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${
+                          loginMode === 'student' 
+                            ? 'bg-background shadow text-foreground' 
+                            : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        <GraduationCap className="w-4 h-4" />
+                        Studente
+                      </button>
                     </div>
+
+                    {loginMode === 'parent' ? (
+                      <div className="space-y-2">
+                        <Label htmlFor="login-email">Email</Label>
+                        <Input
+                          id="login-email"
+                          type="email"
+                          placeholder="mario@esempio.it"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          required
+                          disabled={isLoading}
+                        />
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Label htmlFor="login-username">Nome Utente</Label>
+                        <Input
+                          id="login-username"
+                          type="text"
+                          placeholder="Il tuo nome utente"
+                          value={loginUsername}
+                          onChange={(e) => setLoginUsername(e.target.value)}
+                          required
+                          disabled={isLoading}
+                        />
+                      </div>
+                    )}
+                    
                     <div className="space-y-2">
                       <Label htmlFor="login-password">Password</Label>
                       <Input
@@ -418,7 +569,6 @@ export default function AuthPage() {
                         onChange={(e) => setPassword(e.target.value)}
                         required
                         disabled={isLoading}
-                        minLength={6}
                       />
                     </div>
                     <Button type="submit" className="w-full" disabled={isLoading}>
@@ -431,93 +581,132 @@ export default function AuthPage() {
                         'Accedi'
                       )}
                     </Button>
-                    <button
-                      type="button"
-                      onClick={() => setShowResetPassword(true)}
-                      className="w-full text-center text-sm text-primary hover:underline mt-2"
-                    >
-                      Password dimenticata?
-                    </button>
+                    {loginMode === 'parent' && (
+                      <button
+                        type="button"
+                        onClick={() => setShowResetPassword(true)}
+                        className="w-full text-center text-sm text-primary hover:underline mt-2"
+                      >
+                        Password dimenticata?
+                      </button>
+                    )}
                   </form>
                 </TabsContent>
 
-                {/* Signup Tab */}
+                {/* Signup Tab - Only for Parents */}
                 <TabsContent value="signup" className="mt-0">
                   <form onSubmit={handleSignup} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-name">Nome Completo</Label>
-                      <Input
-                        id="signup-name"
-                        type="text"
-                        placeholder="Mario Rossi"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        required
-                        disabled={isLoading}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-email">Email</Label>
-                      <Input
-                        id="signup-email"
-                        type="email"
-                        placeholder="mario@esempio.it"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        disabled={isLoading}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-password">Password</Label>
-                      <Input
-                        id="signup-password"
-                        type="password"
-                        placeholder="Minimo 6 caratteri"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        disabled={isLoading}
-                        minLength={6}
-                      />
+                    {/* Parent Info */}
+                    <div className="space-y-3 pb-4 border-b">
+                      <div className="flex items-center gap-2 text-sm font-medium text-primary">
+                        <Users className="w-4 h-4" />
+                        I tuoi dati (Genitore)
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-name">Nome Completo</Label>
+                        <Input
+                          id="signup-name"
+                          type="text"
+                          placeholder="Mario Rossi"
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
+                          required
+                          disabled={isLoading}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-email">Email</Label>
+                        <Input
+                          id="signup-email"
+                          type="email"
+                          placeholder="mario@esempio.it"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          required
+                          disabled={isLoading}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-password">Password</Label>
+                        <Input
+                          id="signup-password"
+                          type="password"
+                          placeholder="Minimo 6 caratteri"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          required
+                          disabled={isLoading}
+                          minLength={6}
+                        />
+                      </div>
                     </div>
 
-                    <div className="space-y-3">
-                      <Label>Chi sei?</Label>
-                      <RadioGroup
-                        value={role}
-                        onValueChange={(value) => setRole(value as 'parent' | 'student')}
-                        className="grid grid-cols-2 gap-4"
-                      >
-                        <div>
-                          <RadioGroupItem
-                            value="student"
-                            id="student"
-                            className="peer sr-only"
-                          />
-                          <Label
-                            htmlFor="student"
-                            className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-popover p-4 hover:bg-accent/10 hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10 cursor-pointer transition-all"
-                          >
-                            <GraduationCap className="mb-2 h-6 w-6" />
-                            <span className="text-sm font-medium">Studente</span>
-                          </Label>
-                        </div>
-                        <div>
-                          <RadioGroupItem
-                            value="parent"
-                            id="parent"
-                            className="peer sr-only"
-                          />
-                          <Label
-                            htmlFor="parent"
-                            className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-popover p-4 hover:bg-accent/10 hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10 cursor-pointer transition-all"
-                          >
-                            <Users className="mb-2 h-6 w-6" />
-                            <span className="text-sm font-medium">Genitore</span>
-                          </Label>
-                        </div>
-                      </RadioGroup>
+                    {/* Child Info */}
+                    <div className="space-y-3 pt-2">
+                      <div className="flex items-center gap-2 text-sm font-medium text-tech-teal">
+                        <GraduationCap className="w-4 h-4" />
+                        Dati del figlio/a (obbligatori)
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="child-name">Nome del figlio/a</Label>
+                        <Input
+                          id="child-name"
+                          type="text"
+                          placeholder="Luca"
+                          value={childName}
+                          onChange={(e) => setChildName(e.target.value)}
+                          required
+                          disabled={isLoading}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="child-username">Nome utente per il login</Label>
+                        <Input
+                          id="child-username"
+                          type="text"
+                          placeholder="luca123"
+                          value={childUsername}
+                          onChange={(e) => setChildUsername(e.target.value)}
+                          required
+                          disabled={isLoading}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Il figlio userà questo nome utente per accedere
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="child-password">Password semplice</Label>
+                        <Input
+                          id="child-password"
+                          type="text"
+                          placeholder="Es: ciao123"
+                          value={childPassword}
+                          onChange={(e) => setChildPassword(e.target.value)}
+                          required
+                          disabled={isLoading}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Scegli una password facile da ricordare per tuo figlio
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="child-course">Corso acquistato</Label>
+                        <Select value={childCourse} onValueChange={setChildCourse}>
+                          <SelectTrigger id="child-course">
+                            <SelectValue placeholder="Seleziona un corso (opzionale)" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Non ho ancora deciso</SelectItem>
+                            {courses.map(course => (
+                              <SelectItem key={course.id} value={course.id}>
+                                {course.emoji} {course.title}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
 
                     <Button type="submit" className="w-full" disabled={isLoading}>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,6 +13,7 @@ import { Loader2, Rocket, Users, GraduationCap, KeyRound } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 
 export default function AuthPage() {
+  const { user, isAdmin, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,6 +25,18 @@ export default function AuthPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
+
+  // Redirect authenticated users
+  useEffect(() => {
+    if (!authLoading && user && !showNewPasswordForm) {
+      // Admin users go to admin panel, others go to area riservata
+      if (isAdmin) {
+        navigate('/admin');
+      } else {
+        navigate('/area-riservata');
+      }
+    }
+  }, [user, isAdmin, authLoading, showNewPasswordForm, navigate]);
   // Check if user came from password reset link
   useEffect(() => {
     const checkRecoverySession = async () => {
@@ -186,7 +200,7 @@ export default function AuthPage() {
           title: 'Benvenuto!',
           description: 'Accesso effettuato con successo',
         });
-        navigate('/area-riservata');
+        // Navigation is handled by useEffect based on isAdmin
       }
     } catch (error) {
       toast({

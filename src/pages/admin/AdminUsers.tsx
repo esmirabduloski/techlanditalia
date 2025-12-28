@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -664,13 +665,16 @@ export default function AdminUsers() {
           <DialogHeader>
             <DialogTitle>Imposta Password - {passwordDialog.userName}</DialogTitle>
           </DialogHeader>
-          <div className="py-4">
-            <Input
-              type="password"
+          <div className="py-4 space-y-2">
+            <Label>Nuova Password</Label>
+            <PasswordInput
               placeholder="Nuova password (min. 6 caratteri)"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
             />
+            <p className="text-xs text-muted-foreground">
+              Questa password verrà applicata anche a tutti i figli associati a questo genitore.
+            </p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPasswordDialog({ open: false, userId: '', userName: '' })}>

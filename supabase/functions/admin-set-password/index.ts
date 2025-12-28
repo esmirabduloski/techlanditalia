@@ -67,6 +67,17 @@ serve(async (req) => {
       });
     }
 
+    // Also update plain_password in profiles table for display purposes
+    const { error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .update({ plain_password: newPassword })
+      .eq('id', userId);
+
+    if (profileError) {
+      console.error("Error updating plain_password in profiles:", profileError);
+      // Don't fail the request, password was already updated in auth
+    }
+
     console.log(`Password updated for user ${userId} by admin ${user.id}`);
 
     return new Response(JSON.stringify({ success: true }), {

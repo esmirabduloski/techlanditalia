@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Plus, 
@@ -16,7 +17,9 @@ import {
   Loader2,
   BookOpen,
   Mail,
-  User
+  User,
+  Users,
+  GraduationCap
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -39,8 +42,15 @@ interface BlogPost {
   created_at: string;
 }
 
+interface Stats {
+  parents: number;
+  students: number;
+  courses: number;
+}
+
 export default function AdminDashboard() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [stats, setStats] = useState<Stats>({ parents: 0, students: 0, courses: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
@@ -54,21 +64,36 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (user && isAdmin) {
-      fetchPosts();
+      fetchData();
     }
   }, [user, isAdmin]);
 
-  const fetchPosts = async () => {
-    const { data, error } = await supabase
+  const fetchData = async () => {
+    // Fetch posts
+    const { data: postsData, error: postsError } = await supabase
       .from('blog_posts')
       .select('id, title, slug, category, published, created_at')
       .order('created_at', { ascending: false });
 
-    if (error) {
+    if (postsError) {
       toast({ title: 'Errore', description: 'Impossibile caricare i post', variant: 'destructive' });
     } else {
-      setPosts(data || []);
+      setPosts(postsData || []);
     }
+
+    // Fetch stats
+    const [parentsRes, studentsRes, coursesRes] = await Promise.all([
+      supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'parent'),
+      supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'student'),
+      supabase.from('courses').select('id', { count: 'exact', head: true })
+    ]);
+
+    setStats({
+      parents: parentsRes.count || 0,
+      students: studentsRes.count || 0,
+      courses: coursesRes.count || 0
+    });
+
     setIsLoading(false);
   };
 
@@ -178,6 +203,49 @@ export default function AdminDashboard() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-full bg-primary/10">
+                  <Users className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Genitori</p>
+                  <p className="text-2xl font-bold">{stats.parents}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-full bg-tech-teal/10">
+                  <GraduationCap className="w-6 h-6 text-tech-teal" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Studenti</p>
+                  <p className="text-2xl font-bold">{stats.students}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-full bg-tech-purple/10">
+                  <BookOpen className="w-6 h-6 text-tech-purple" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Corsi Attivi</p>
+                  <p className="text-2xl font-bold">{stats.courses}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold">Gestione Blog</h1>

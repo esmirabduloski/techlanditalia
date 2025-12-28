@@ -27,14 +27,12 @@ interface WelcomeEmailRequest {
   role: "student" | "parent";
   childName?: string;
   childUsername?: string;
-  childPassword?: string;
 }
 
 const getParentEmailTemplate = (
   fullName: string, 
   childName: string, 
-  childUsername: string, 
-  childPassword: string
+  childUsername: string
 ) => `
 <!DOCTYPE html>
 <html lang="it">
@@ -69,7 +67,7 @@ const getParentEmailTemplate = (
               
               <!-- Child Credentials Box -->
               <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfeff 100%); border-radius: 12px; padding: 24px; margin: 30px 0; border: 2px solid #10b981;">
-                <h3 style="color: #059669; margin: 0 0 15px; font-size: 18px;">🔐 Credenziali di ${childName} per accedere:</h3>
+                <h3 style="color: #059669; margin: 0 0 15px; font-size: 18px;">🔐 Accesso di ${childName}:</h3>
                 <table style="width: 100%;">
                   <tr>
                     <td style="color: #4b5563; font-size: 15px; padding: 8px 0;">
@@ -80,16 +78,13 @@ const getParentEmailTemplate = (
                     </td>
                   </tr>
                   <tr>
-                    <td style="color: #4b5563; font-size: 15px; padding: 8px 0;">
-                      <strong>Password:</strong>
-                    </td>
-                    <td style="color: #1f2937; font-size: 16px; font-weight: bold; padding: 8px 0;">
-                      ${childPassword}
+                    <td style="color: #4b5563; font-size: 15px; padding: 8px 0;" colspan="2">
+                      <strong>Password:</strong> la stessa del genitore
                     </td>
                   </tr>
                 </table>
                 <p style="color: #6b7280; font-size: 13px; margin: 15px 0 0; font-style: italic;">
-                  Conservi queste credenziali in un luogo sicuro. ${childName} le userà per accedere alla sua area personale.
+                  ${childName} userà il nome utente indicato e la stessa password del genitore per accedere alla sua area personale.
                 </p>
               </div>
               
@@ -147,7 +142,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, fullName, role, childName, childUsername, childPassword }: WelcomeEmailRequest = await req.json();
+    const { email, fullName, role, childName, childUsername }: WelcomeEmailRequest = await req.json();
 
     console.log(`Sending welcome email to ${email} (${role})`);
 
@@ -155,9 +150,8 @@ const handler = async (req: Request): Promise<Response> => {
     const safeFullName = escapeHtml(fullName || '');
     const safeChildName = escapeHtml(childName || '');
     const safeChildUsername = escapeHtml(childUsername || '');
-    const safeChildPassword = escapeHtml(childPassword || '');
 
-    const htmlContent = getParentEmailTemplate(safeFullName, safeChildName, safeChildUsername, safeChildPassword);
+    const htmlContent = getParentEmailTemplate(safeFullName, safeChildName, safeChildUsername);
     const subject = "Benvenuto in TECHLAND - Account creato con successo";
 
     const emailResponse = await resend.emails.send({

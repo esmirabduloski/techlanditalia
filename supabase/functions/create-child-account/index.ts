@@ -19,6 +19,7 @@ serve(async (req) => {
     
     const { parentId, childName, childUsername, childPassword, courseId } = await req.json();
 
+    // childPassword is now the parent's password
     if (!parentId || !childName || !childUsername || !childPassword) {
       return new Response(JSON.stringify({ error: "Dati mancanti" }), {
         status: 400,
@@ -43,11 +44,12 @@ serve(async (req) => {
     }
 
     // Create a dummy auth user for the child with a random email
+    // The child uses the same password as the parent
     const childEmail = `${childUsername.toLowerCase().replace(/[^a-z0-9]/g, '')}_${Date.now()}@student.techland.local`;
     
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: childEmail,
-      password: childPassword,
+      password: childPassword, // Same as parent's password
       email_confirm: true,
       user_metadata: {
         full_name: childName,
@@ -63,12 +65,11 @@ serve(async (req) => {
       });
     }
 
-    // Update the profile with username, plain_password, and parent_id
+    // Update the profile with username and parent_id (no plain_password anymore)
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .update({
         username: childUsername,
-        plain_password: childPassword,
         parent_id: parentId,
       })
       .eq('id', authData.user.id);

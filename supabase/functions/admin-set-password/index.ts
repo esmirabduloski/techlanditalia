@@ -54,20 +54,52 @@ serve(async (req) => {
       });
     }
 
-    // Update ONLY plain_password in profiles table
-    // Student login uses plain_password for verification, not auth.users
-    // This avoids Supabase's weak password restrictions
-    const { error: profileError } = await supabaseAdmin
+    // Get user's profile to check if it's a parent
+    const { data: profile } = await supabaseAdmin
       .from('profiles')
-      .update({ plain_password: newPassword })
-      .eq('id', userId);
+      .select('role')
+      .eq('id', userId)
+      .single();
 
-    if (profileError) {
-      console.error("Error updating plain_password in profiles:", profileError);
-      return new Response(JSON.stringify({ error: "Impossibile salvare la password" }), {
+    if (!profile) {
+      return new Response(JSON.stringify({ error: "Utente non trovato" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Update password in auth.users for the parent
+    const { error: authUpdateError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+      password: newPassword,
+    });
+
+    if (authUpdateError) {
+      console.error("Error updating auth password:", authUpdateError);
+      return new Response(JSON.stringify({ error: "Impossibile aggiornare la password" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // If this is a parent, also update all children's passwords
+    if (profile.role === 'parent') {
+      const { data: children } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .eq('parent_id', userId)
+        .eq('role', 'student');
+
+      if (children && children.length > 0) {
+        for (const child of children) {
+          const { error: childUpdateError } = await supabaseAdmin.auth.admin.updateUserById(child.id, {
+            password: newPassword,
+          });
+          if (childUpdateError) {
+            console.error(`Error updating child ${child.id} password:`, childUpdateError);
+          }
+        }
+        console.log(`Updated password for ${children.length} children of parent ${userId}`);
+      }
     }
 
     console.log(`Password updated for user ${userId} by admin ${user.id}`);

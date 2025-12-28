@@ -22,7 +22,8 @@ import {
   Plus,
   Trash2,
   Edit,
-  Home
+  Home,
+  BarChart3
 } from 'lucide-react';
 import {
   Select,
@@ -506,6 +507,10 @@ export default function AdminBookings() {
             <Link to="/admin/utenti" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
               <Users className="w-4 h-4" />
               Utenti
+            </Link>
+            <Link to="/admin/statistiche" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
+              <BarChart3 className="w-4 h-4" />
+              Statistiche
             </Link>
           </nav>
         </div>

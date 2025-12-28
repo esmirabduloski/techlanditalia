@@ -245,7 +245,7 @@ export default function AdminUsers() {
 
     setIsSaving(true);
     try {
-      const { error } = await supabase.functions.invoke('admin-set-password', {
+      const { data, error } = await supabase.functions.invoke('admin-set-password', {
         body: { userId: passwordDialog.userId, newPassword }
       });
 
@@ -253,6 +253,7 @@ export default function AdminUsers() {
 
       toast({ title: 'Successo', description: 'Password aggiornata' });
       setPasswordDialog({ open: false, userId: '', userName: '' });
+      fetchData(); // Refresh to show updated password
     } catch (error: any) {
       toast({ title: 'Errore', description: error.message || 'Impossibile aggiornare la password', variant: 'destructive' });
     } finally {

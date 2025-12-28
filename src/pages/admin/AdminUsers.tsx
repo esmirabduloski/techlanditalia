@@ -25,8 +25,7 @@ import {
   Eye,
   EyeOff,
   Edit2,
-  Search,
-  Link2
+  Search
 } from 'lucide-react';
 import {
   Select,
@@ -91,8 +90,6 @@ export default function AdminUsers() {
   const [editingChild, setEditingChild] = useState<{ id: string; username: string; password: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterRole, setFilterRole] = useState<'all' | 'parent' | 'student'>('all');
-  const [linkStudentDialog, setLinkStudentDialog] = useState<{ open: boolean; studentId: string; studentName: string }>({ open: false, studentId: '', studentName: '' });
-  const [selectedParentId, setSelectedParentId] = useState<string>('');
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -388,40 +385,6 @@ export default function AdminUsers() {
     } finally {
       setIsSaving(false);
     }
-  };
-
-  const openLinkStudentDialog = (student: Profile) => {
-    setSelectedParentId('');
-    setLinkStudentDialog({ open: true, studentId: student.id, studentName: student.full_name });
-  };
-
-  const handleLinkStudent = async () => {
-    if (!selectedParentId) {
-      toast({ title: 'Errore', description: 'Seleziona un genitore', variant: 'destructive' });
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ parent_id: selectedParentId })
-        .eq('id', linkStudentDialog.studentId);
-
-      if (error) throw error;
-
-      toast({ title: 'Successo', description: 'Studente associato al genitore' });
-      setLinkStudentDialog({ open: false, studentId: '', studentName: '' });
-      fetchData();
-    } catch (error: any) {
-      toast({ title: 'Errore', description: error.message || 'Impossibile associare lo studente', variant: 'destructive' });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const getParentsList = () => {
-    return profiles.filter(p => p.role === 'parent');
   };
 
   if (authLoading || isLoading) {
@@ -831,43 +794,6 @@ export default function AdminUsers() {
         </DialogContent>
       </Dialog>
 
-      {/* Link Student to Parent Dialog */}
-      <Dialog open={linkStudentDialog.open} onOpenChange={(open) => !open && setLinkStudentDialog({ open: false, studentId: '', studentName: '' })}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Associa Studente a Genitore</DialogTitle>
-          </DialogHeader>
-          <div className="py-4 space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Stai associando <span className="font-medium text-foreground">{linkStudentDialog.studentName}</span> a un genitore.
-              Questo permette a più genitori di vedere lo stesso studente.
-            </p>
-            <div className="space-y-2">
-              <Label>Seleziona Genitore</Label>
-              <Select value={selectedParentId} onValueChange={setSelectedParentId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Scegli un genitore..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {getParentsList().map(parent => (
-                    <SelectItem key={parent.id} value={parent.id}>
-                      {parent.full_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setLinkStudentDialog({ open: false, studentId: '', studentName: '' })}>
-              Annulla
-            </Button>
-            <Button onClick={handleLinkStudent} disabled={isSaving || !selectedParentId}>
-              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Associa'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

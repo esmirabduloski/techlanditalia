@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -380,9 +381,8 @@ export default function AuthPage() {
                 <form onSubmit={handleUpdatePassword} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="new-password">Nuova Password</Label>
-                    <Input
+                    <PasswordInput
                       id="new-password"
-                      type="password"
                       placeholder="Minimo 6 caratteri"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -393,9 +393,8 @@ export default function AuthPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="confirm-password">Conferma Password</Label>
-                    <Input
+                    <PasswordInput
                       id="confirm-password"
-                      type="password"
                       placeholder="Ripeti la password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
@@ -531,9 +530,8 @@ export default function AuthPage() {
                     
                     <div className="space-y-2">
                       <Label htmlFor="login-password">Password</Label>
-                      <Input
+                      <PasswordInput
                         id="login-password"
-                        type="password"
                         placeholder="••••••••"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -599,9 +597,8 @@ export default function AuthPage() {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="signup-password">Password</Label>
-                        <Input
+                        <PasswordInput
                           id="signup-password"
-                          type="password"
                           placeholder="Minimo 6 caratteri"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}

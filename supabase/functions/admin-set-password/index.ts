@@ -48,26 +48,15 @@ serve(async (req) => {
     const { userId, newPassword } = await req.json();
 
     if (!userId || !newPassword || newPassword.length < 6) {
-      return new Response(JSON.stringify({ error: "Password non valida" }), {
+      return new Response(JSON.stringify({ error: "Password non valida (minimo 6 caratteri)" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Update user password using admin API
-    const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
-      password: newPassword,
-    });
-
-    if (error) {
-      console.error("Error updating password:", error);
-      return new Response(JSON.stringify({ error: "Impossibile aggiornare la password" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Also update plain_password in profiles table for display purposes
+    // Update ONLY plain_password in profiles table
+    // Student login uses plain_password for verification, not auth.users
+    // This avoids Supabase's weak password restrictions
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .update({ plain_password: newPassword })
@@ -75,7 +64,10 @@ serve(async (req) => {
 
     if (profileError) {
       console.error("Error updating plain_password in profiles:", profileError);
-      // Don't fail the request, password was already updated in auth
+      return new Response(JSON.stringify({ error: "Impossibile salvare la password" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     console.log(`Password updated for user ${userId} by admin ${user.id}`);

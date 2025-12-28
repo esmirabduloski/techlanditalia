@@ -23,7 +23,6 @@ export default function AuthPage() {
   // Child registration fields
   const [childName, setChildName] = useState('');
   const [childUsername, setChildUsername] = useState('');
-  const [childPassword, setChildPassword] = useState('');
   const [childCourse, setChildCourse] = useState('');
   const [courses, setCourses] = useState<{ id: string; title: string; emoji: string }[]>([]);
   
@@ -241,11 +240,11 @@ export default function AuthPage() {
     e.preventDefault();
     
     // Validate child data
-    if (!childName.trim() || !childUsername.trim() || !childPassword.trim()) {
+    if (!childName.trim() || !childUsername.trim()) {
       toast({
         variant: 'destructive',
         title: 'Dati figlio obbligatori',
-        description: 'Inserisci tutti i dati del figlio: nome, username e password',
+        description: 'Inserisci tutti i dati del figlio: nome e username',
       });
       return;
     }
@@ -302,12 +301,13 @@ export default function AuthPage() {
 
       if (authData.user) {
         // Create child profile via edge function (needs service role)
+        // Child uses same password as parent
         const { error: childError } = await supabase.functions.invoke('create-child-account', {
           body: {
             parentId: authData.user.id,
             childName: childName.trim(),
             childUsername: childUsername.trim(),
-            childPassword: childPassword,
+            childPassword: password, // Use parent's password
             courseId: childCourse || null,
           }
         });
@@ -316,7 +316,7 @@ export default function AuthPage() {
           console.error('Error creating child account:', childError);
         }
 
-        // Send welcome email with child credentials
+        // Send welcome email (no password, child uses parent's password)
         supabase.functions.invoke('send-welcome-email', {
           body: { 
             email, 
@@ -324,7 +324,6 @@ export default function AuthPage() {
             role: 'parent',
             childName: childName.trim(),
             childUsername: childUsername.trim(),
-            childPassword: childPassword,
           }
         }).catch(err => console.error('Welcome email error:', err));
 
@@ -647,21 +646,9 @@ export default function AuthPage() {
                           Il figlio userà questo nome utente per accedere
                         </p>
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="child-password">Password semplice</Label>
-                        <Input
-                          id="child-password"
-                          type="text"
-                          placeholder="Es: ciao123"
-                          value={childPassword}
-                          onChange={(e) => setChildPassword(e.target.value)}
-                          required
-                          disabled={isLoading}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Scegli una password facile da ricordare per tuo figlio
-                        </p>
-                      </div>
+                      <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
+                        Il figlio userà la stessa password del genitore per accedere
+                      </p>
                       <div className="space-y-2">
                         <Label htmlFor="child-course">Corso acquistato</Label>
                         <Select value={childCourse} onValueChange={setChildCourse}>

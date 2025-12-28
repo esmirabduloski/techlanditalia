@@ -22,8 +22,6 @@ import {
   Key,
   Plus,
   Home,
-  Eye,
-  EyeOff,
   Edit2,
   Search,
   BarChart3
@@ -60,7 +58,6 @@ interface Profile {
   email?: string;
   isAdmin?: boolean;
   username?: string | null;
-  plain_password?: string | null;
 }
 
 interface Course {
@@ -87,8 +84,7 @@ export default function AdminUsers() {
   const [courseDialog, setCourseDialog] = useState<{ open: boolean; userId: string; userName: string }>({ open: false, userId: '', userName: '' });
   const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
-  const [showPasswords, setShowPasswords] = useState<Set<string>>(new Set());
-  const [editingChild, setEditingChild] = useState<{ id: string; username: string; password: string } | null>(null);
+  const [editingChild, setEditingChild] = useState<{ id: string; username: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterRole, setFilterRole] = useState<'all' | 'parent' | 'student'>('all');
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
@@ -222,16 +218,6 @@ export default function AdminUsers() {
     setExpandedFamilies(newExpanded);
   };
 
-  const togglePasswordVisibility = (userId: string) => {
-    const newShow = new Set(showPasswords);
-    if (newShow.has(userId)) {
-      newShow.delete(userId);
-    } else {
-      newShow.add(userId);
-    }
-    setShowPasswords(newShow);
-  };
-
   const openPasswordDialog = (userId: string, userName: string) => {
     setNewPassword('');
     setPasswordDialog({ open: true, userId, userName });
@@ -354,7 +340,6 @@ export default function AdminUsers() {
     setEditingChild({
       id: child.id,
       username: child.username || '',
-      password: child.plain_password || '',
     });
   };
 
@@ -367,19 +352,12 @@ export default function AdminUsers() {
         .from('profiles')
         .update({
           username: editingChild.username,
-          plain_password: editingChild.password,
         })
         .eq('id', editingChild.id);
 
       if (profileError) throw profileError;
 
-      if (editingChild.password) {
-        await supabase.functions.invoke('admin-set-password', {
-          body: { userId: editingChild.id, newPassword: editingChild.password }
-        });
-      }
-
-      toast({ title: 'Successo', description: 'Credenziali aggiornate' });
+      toast({ title: 'Successo', description: 'Username aggiornato' });
       setEditingChild(null);
       fetchData();
     } catch (error: any) {
@@ -569,18 +547,9 @@ export default function AdminUsers() {
                                         <span className="font-medium">Username:</span> {child.username}
                                       </span>
                                     )}
-                                    {child.plain_password && (
-                                      <span className="text-muted-foreground flex items-center gap-1">
-                                        <span className="font-medium">Password:</span>
-                                        {showPasswords.has(child.id) ? child.plain_password : '••••••'}
-                                        <button 
-                                          onClick={() => togglePasswordVisibility(child.id)}
-                                          className="p-1 hover:bg-muted rounded"
-                                        >
-                                          {showPasswords.has(child.id) ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                                        </button>
-                                      </span>
-                                    )}
+                                    <span className="text-muted-foreground text-xs">
+                                      (usa la password del genitore)
+                                    </span>
                                   </div>
                                   
                                   <div className="flex items-center gap-1 flex-wrap mt-1">
@@ -642,18 +611,9 @@ export default function AdminUsers() {
                                       <span className="font-medium">Username:</span> {child.username}
                                     </span>
                                   )}
-                                  {child.plain_password && (
-                                    <span className="text-muted-foreground flex items-center gap-1">
-                                      <span className="font-medium">Password:</span>
-                                      {showPasswords.has(child.id) ? child.plain_password : '••••••'}
-                                      <button 
-                                        onClick={() => togglePasswordVisibility(child.id)}
-                                        className="p-1 hover:bg-muted rounded"
-                                      >
-                                        {showPasswords.has(child.id) ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                                      </button>
-                                    </span>
-                                  )}
+                                  <span className="text-muted-foreground text-xs">
+                                    (usa la password del genitore)
+                                  </span>
                                 </div>
                                 
                                 <div className="flex items-center gap-1 flex-wrap mt-1">
@@ -777,17 +737,9 @@ export default function AdminUsers() {
                 placeholder="Username per il login"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-password">Password</Label>
-              <Input
-                id="edit-password"
-                type="text"
-                value={editingChild?.password || ''}
-                onChange={(e) => setEditingChild(prev => prev ? { ...prev, password: e.target.value } : null)}
-                placeholder="Password semplice"
-              />
-              <p className="text-xs text-muted-foreground">La password è visibile per facilitare la gestione</p>
-            </div>
+            <p className="text-sm text-muted-foreground bg-muted/50 p-2 rounded">
+              Lo studente usa la stessa password del genitore. Per cambiare la password, usa il pulsante "Password" sul genitore.
+            </p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditingChild(null)}>

@@ -31,7 +31,7 @@ serve(async (req) => {
     // Find the student profile by username
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
-      .select('id, plain_password')
+      .select('id, parent_id')
       .eq('username', username.trim())
       .eq('role', 'student')
       .maybeSingle();
@@ -44,69 +44,81 @@ serve(async (req) => {
       });
     }
 
-    // Check plain password
-    if (profile.plain_password !== password) {
-      console.log("Invalid password for username:", username);
-      return new Response(JSON.stringify({ error: "Password non corretta" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    // Get the student's auth user to get their email
+    const { data: studentAuthUser, error: studentAuthError } = await supabaseAdmin.auth.admin.getUserById(profile.id);
 
-    // Get the auth user details
-    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(profile.id);
-
-    if (authError || !authUser.user) {
-      console.error("Error getting auth user:", authError);
+    if (studentAuthError || !studentAuthUser.user) {
+      console.error("Error getting student auth user:", studentAuthError);
       return new Response(JSON.stringify({ error: "Utente non trovato" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Sign in the user using the stored email and password
+    // Student uses the same password as parent, stored in auth.users
+    // Try to sign in the student directly with the provided password
     const { data: signInData, error: signInError } = await supabaseAdmin.auth.signInWithPassword({
-      email: authUser.user.email!,
+      email: studentAuthUser.user.email!,
       password: password,
     });
 
     if (signInError) {
-      console.error("Sign in error:", signInError);
-      // If the stored password doesn't match, update it
-      if (signInError.message.includes('Invalid login credentials')) {
-        // Update the auth password to match the plain password
-        const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(profile.id, {
-          password: password,
-        });
+      console.log("Direct student login failed, password may have changed. Checking parent...");
+      
+      // If direct login fails and student has a parent, maybe parent changed password
+      // We need to update student's password to match parent's
+      if (profile.parent_id) {
+        // Get parent's auth user
+        const { data: parentAuthUser, error: parentAuthError } = await supabaseAdmin.auth.admin.getUserById(profile.parent_id);
         
-        if (updateError) {
-          console.error("Error updating password:", updateError);
-          return new Response(JSON.stringify({ error: "Impossibile effettuare il login" }), {
-            status: 401,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+        if (!parentAuthError && parentAuthUser.user) {
+          // Try to verify the password using parent's account
+          const { error: parentSignInError } = await supabaseAdmin.auth.signInWithPassword({
+            email: parentAuthUser.user.email!,
+            password: password,
           });
+          
+          if (!parentSignInError) {
+            // Password is correct for parent, update student's password to match
+            console.log("Parent password verified, updating student password to match...");
+            
+            const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(profile.id, {
+              password: password,
+            });
+            
+            if (updateError) {
+              console.error("Error updating student password:", updateError);
+              return new Response(JSON.stringify({ error: "Impossibile effettuare il login" }), {
+                status: 401,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+              });
+            }
+            
+            // Now try to sign in the student again
+            const { data: retryData, error: retryError } = await supabaseAdmin.auth.signInWithPassword({
+              email: studentAuthUser.user.email!,
+              password: password,
+            });
+            
+            if (retryError) {
+              console.error("Retry sign in failed:", retryError);
+              return new Response(JSON.stringify({ error: "Impossibile effettuare il login" }), {
+                status: 401,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+              });
+            }
+            
+            console.log(`Student logged in successfully after password sync: ${username}`);
+            return new Response(JSON.stringify({ session: retryData.session }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
         }
-        
-        // Try signing in again
-        const { data: retryData, error: retryError } = await supabaseAdmin.auth.signInWithPassword({
-          email: authUser.user.email!,
-          password: password,
-        });
-        
-        if (retryError) {
-          return new Response(JSON.stringify({ error: "Impossibile effettuare il login" }), {
-            status: 401,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-        
-        console.log(`Student logged in successfully: ${username}`);
-        return new Response(JSON.stringify({ session: retryData.session }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
       }
       
-      return new Response(JSON.stringify({ error: "Impossibile effettuare il login" }), {
+      // If we get here, password is wrong
+      console.log("Invalid password for username:", username);
+      return new Response(JSON.stringify({ error: "Password non corretta" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

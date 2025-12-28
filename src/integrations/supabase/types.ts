@@ -423,7 +423,6 @@ export type Database = {
           full_name: string
           id: string
           parent_id: string | null
-          plain_password: string | null
           role: string
           total_points: number
           updated_at: string
@@ -435,7 +434,6 @@ export type Database = {
           full_name: string
           id: string
           parent_id?: string | null
-          plain_password?: string | null
           role: string
           total_points?: number
           updated_at?: string
@@ -447,7 +445,6 @@ export type Database = {
           full_name?: string
           id?: string
           parent_id?: string | null
-          plain_password?: string | null
           role?: string
           total_points?: number
           updated_at?: string

@@ -362,7 +362,6 @@ export default function AdminUsers() {
     
     setIsSaving(true);
     try {
-      // First update the profile
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
@@ -373,30 +372,17 @@ export default function AdminUsers() {
 
       if (profileError) throw profileError;
 
-      // Then update the auth password if provided
       if (editingChild.password) {
-        const { data, error } = await supabase.functions.invoke('admin-set-password', {
+        await supabase.functions.invoke('admin-set-password', {
           body: { userId: editingChild.id, newPassword: editingChild.password }
         });
-        
-        if (error) throw error;
-        
-        // Check if the function returned an error in the response
-        if (data?.error) {
-          throw new Error(data.error);
-        }
       }
 
-      toast({ title: 'Successo', description: 'Credenziali aggiornate. Email inviata al genitore.' });
+      toast({ title: 'Successo', description: 'Credenziali aggiornate' });
       setEditingChild(null);
       fetchData();
     } catch (error: any) {
-      console.error('Error updating credentials:', error);
-      toast({ 
-        title: 'Errore', 
-        description: error.message || 'Impossibile aggiornare le credenziali', 
-        variant: 'destructive' 
-      });
+      toast({ title: 'Errore', description: error.message || 'Impossibile aggiornare le credenziali', variant: 'destructive' });
     } finally {
       setIsSaving(false);
     }

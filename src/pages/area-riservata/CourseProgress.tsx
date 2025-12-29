@@ -10,9 +10,10 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { FileUpload } from '@/components/homework/FileUpload';
 import { 
   Loader2, ArrowLeft, CheckCircle2, Lock, PlayCircle, 
-  BookOpen, ClipboardList, Trophy, Zap 
+  BookOpen, ClipboardList, Trophy, Zap, ExternalLink, Upload
 } from 'lucide-react';
 
 interface Course {
@@ -52,6 +53,7 @@ export default function CourseProgress() {
   const [isLoading, setIsLoading] = useState(true);
   const [completingLesson, setCompletingLesson] = useState<string | null>(null);
   const [submittingHomework, setSubmittingHomework] = useState<string | null>(null);
+  const [uploadingHomeworkId, setUploadingHomeworkId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -145,10 +147,11 @@ export default function CourseProgress() {
     }
   };
 
-  const handleSubmitHomework = async (hw: Homework) => {
+  const handleSubmitHomework = async (hw: Homework, fileUrl?: string, fileName?: string, fileType?: string) => {
     setSubmittingHomework(hw.id);
-    const success = await submitHomework(hw.id);
+    const success = await submitHomework(hw.id, fileUrl, fileName, fileType);
     setSubmittingHomework(null);
+    setUploadingHomeworkId(null);
 
     if (success) {
       toast({
@@ -163,6 +166,10 @@ export default function CourseProgress() {
         description: 'Non è stato possibile consegnare il compito.',
       });
     }
+  };
+
+  const handleFileUploaded = (hw: Homework, fileUrl: string, fileName: string, fileType: string) => {
+    handleSubmitHomework(hw, fileUrl, fileName, fileType);
   };
 
   if (authLoading || isLoading) {
@@ -314,6 +321,16 @@ export default function CourseProgress() {
                               <span>{lesson.points_reward} pts</span>
                             </div>
 
+                            {/* Link per andare alla lezione */}
+                            {(completed || isNext) && (
+                              <Button variant="ghost" size="sm" asChild>
+                                <Link to={`/area-riservata/corsi/${courseId}/lezioni/${lesson.lesson_number}`}>
+                                  <ExternalLink className="w-4 h-4 mr-1" />
+                                  Vai
+                                </Link>
+                              </Button>
+                            )}
+
                             {completed ? (
                               <Badge variant="outline" className="text-primary border-primary">
                                 ✓ Completata
@@ -393,59 +410,92 @@ export default function CourseProgress() {
                             }`}
                           >
                             <CardContent className="py-4">
-                              <div className="flex items-center gap-4">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                                  submitted 
-                                    ? 'bg-primary text-primary-foreground' 
-                                    : 'bg-muted text-muted-foreground'
-                                }`}>
-                                  {submitted ? (
-                                    <CheckCircle2 className="w-4 h-4" />
-                                  ) : (
-                                    <ClipboardList className="w-4 h-4" />
-                                  )}
-                                </div>
-
-                                <div className="flex-1">
-                                  <h4 className="font-medium text-foreground">{hw.title}</h4>
-                                  {hw.description && (
-                                    <p className="text-sm text-muted-foreground">{hw.description}</p>
-                                  )}
-                                </div>
-
-                                <div className="flex items-center gap-3">
-                                  <div className="flex items-center gap-1 text-sm text-accent">
-                                    <Zap className="w-4 h-4" />
-                                    <span>{hw.points_reward} pts</span>
+                              <div className="flex flex-col gap-4">
+                                <div className="flex items-center gap-4">
+                                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                    submitted 
+                                      ? 'bg-primary text-primary-foreground' 
+                                      : 'bg-muted text-muted-foreground'
+                                  }`}>
+                                    {submitted ? (
+                                      <CheckCircle2 className="w-4 h-4" />
+                                    ) : (
+                                      <ClipboardList className="w-4 h-4" />
+                                    )}
                                   </div>
 
-                                  {submitted ? (
-                                    <Badge 
-                                      variant={status === 'approved' ? 'default' : 'secondary'}
-                                      className={status === 'approved' ? 'bg-primary' : ''}
-                                    >
-                                      {status === 'approved' ? '✓ Approvato' : status === 'reviewed' ? '👀 Revisionato' : '⏳ In attesa'}
-                                    </Badge>
-                                  ) : lessonCompleted ? (
-                                    <Button 
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => handleSubmitHomework(hw)}
-                                      disabled={submittingHomework === hw.id}
-                                    >
-                                      {submittingHomework === hw.id ? (
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                      ) : (
-                                        'Consegna'
-                                      )}
-                                    </Button>
-                                  ) : (
-                                    <Badge variant="secondary">
-                                      <Lock className="w-3 h-3 mr-1" />
-                                      Bloccato
-                                    </Badge>
-                                  )}
+                                  <div className="flex-1">
+                                    <h4 className="font-medium text-foreground">{hw.title}</h4>
+                                    {hw.description && (
+                                      <p className="text-sm text-muted-foreground">{hw.description}</p>
+                                    )}
+                                    {hw.instructions && (
+                                      <p className="text-xs text-muted-foreground mt-1 italic">{hw.instructions}</p>
+                                    )}
+                                  </div>
+
+                                  <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-1 text-sm text-accent">
+                                      <Zap className="w-4 h-4" />
+                                      <span>{hw.points_reward} pts</span>
+                                    </div>
+
+                                    {submitted ? (
+                                      <Badge 
+                                        variant={status === 'approved' ? 'default' : 'secondary'}
+                                        className={status === 'approved' ? 'bg-primary' : ''}
+                                      >
+                                        {status === 'approved' ? '✓ Approvato' : status === 'reviewed' ? '👀 Revisionato' : '⏳ In attesa'}
+                                      </Badge>
+                                    ) : !lessonCompleted ? (
+                                      <Badge variant="secondary">
+                                        <Lock className="w-3 h-3 mr-1" />
+                                        Bloccato
+                                      </Badge>
+                                    ) : uploadingHomeworkId === hw.id ? null : (
+                                      <Button 
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => setUploadingHomeworkId(hw.id)}
+                                      >
+                                        <Upload className="w-4 h-4 mr-1" />
+                                        Carica file
+                                      </Button>
+                                    )}
+                                  </div>
                                 </div>
+
+                                {/* File Upload Area */}
+                                {lessonCompleted && !submitted && uploadingHomeworkId === hw.id && (
+                                  <div className="ml-12 space-y-3">
+                                    <FileUpload
+                                      onFileUploaded={(fileUrl, fileName, fileType) => 
+                                        handleFileUploaded(hw, fileUrl, fileName, fileType)
+                                      }
+                                    />
+                                    <div className="flex gap-2">
+                                      <Button 
+                                        size="sm" 
+                                        variant="ghost"
+                                        onClick={() => setUploadingHomeworkId(null)}
+                                      >
+                                        Annulla
+                                      </Button>
+                                      <Button 
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => handleSubmitHomework(hw)}
+                                        disabled={submittingHomework === hw.id}
+                                      >
+                                        {submittingHomework === hw.id ? (
+                                          <Loader2 className="w-4 h-4 animate-spin" />
+                                        ) : (
+                                          'Consegna senza file'
+                                        )}
+                                      </Button>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             </CardContent>
                           </Card>

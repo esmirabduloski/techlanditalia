@@ -174,17 +174,28 @@ export function useStudentProgress() {
   };
 
   // Points are automatically calculated by database trigger - no client value accepted
-  const submitHomework = async (homeworkId: string) => {
+  const submitHomework = async (homeworkId: string, fileUrl?: string, fileName?: string, fileType?: string) => {
     if (!user) return false;
 
     try {
+      const insertData: {
+        student_id: string;
+        homework_id: string;
+        file_url?: string;
+        file_name?: string;
+        file_type?: string;
+      } = {
+        student_id: user.id,
+        homework_id: homeworkId,
+      };
+
+      if (fileUrl) insertData.file_url = fileUrl;
+      if (fileName) insertData.file_name = fileName;
+      if (fileType) insertData.file_type = fileType;
+
       const { error } = await supabase
         .from('homework_submissions')
-        .insert({
-          student_id: user.id,
-          homework_id: homeworkId,
-          // points_earned is set by database trigger from homework.points_reward
-        });
+        .insert(insertData);
 
       if (!error) {
         await fetchStudentData();

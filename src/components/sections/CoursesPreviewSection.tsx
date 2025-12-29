@@ -15,6 +15,16 @@ const courses = [
     color: "tech-purple",
   },
   {
+    id: "minecraft-education",
+    title: "Minecraft Education",
+    description: "Programmazione e automazione nell'amato mondo di Minecraft.",
+    age: "8-9 anni",
+    level: "Principiante",
+    duration: "40 lezioni",
+    emoji: "⛏️",
+    color: "tech-green",
+  },
+  {
     id: "abc-informatica",
     title: "L'ABC dell'informatica",
     description: "Introduzione alle componenti del computer, programmazione a blocchi e uso del PC.",

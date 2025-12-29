@@ -275,19 +275,7 @@ export default function CourseProgress() {
                   const isNext = !completed && lessons.slice(0, index).every(l => isLessonCompleted(l.id));
                   const isLocked = !completed && !isNext && index > 0;
 
-                  return (
-                    <Card 
-                      key={lesson.id}
-                      className={`transition-all ${
-                        completed 
-                          ? 'bg-primary/5 border-primary/30' 
-                          : isNext 
-                            ? 'border-accent/50 shadow-md' 
-                            : isLocked 
-                              ? 'opacity-60' 
-                              : ''
-                      }`}
-                    >
+                    const cardContent = (
                       <CardContent className="py-4">
                         <div className="flex items-center gap-4">
                           <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
@@ -321,16 +309,6 @@ export default function CourseProgress() {
                               <span>{lesson.points_reward} pts</span>
                             </div>
 
-                            {/* Link per andare alla lezione */}
-                            {(completed || isNext) && (
-                              <Button variant="ghost" size="sm" asChild>
-                                <Link to={`/area-riservata/corsi/${courseId}/lezioni/${lesson.lesson_number}`}>
-                                  <ExternalLink className="w-4 h-4 mr-1" />
-                                  Vai
-                                </Link>
-                              </Button>
-                            )}
-
                             {completed ? (
                               <Badge variant="outline" className="text-primary border-primary">
                                 ✓ Completata
@@ -338,7 +316,11 @@ export default function CourseProgress() {
                             ) : isNext ? (
                               <Button 
                                 size="sm"
-                                onClick={() => handleCompleteLesson(lesson)}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleCompleteLesson(lesson);
+                                }}
                                 disabled={completingLesson === lesson.id}
                               >
                                 {completingLesson === lesson.id ? (
@@ -359,8 +341,38 @@ export default function CourseProgress() {
                           </div>
                         </div>
                       </CardContent>
-                    </Card>
-                  );
+                    );
+
+                    // Se la lezione è accessibile, rendi l'intera card cliccabile
+                    if (completed || isNext) {
+                      return (
+                        <Link 
+                          key={lesson.id}
+                          to={`/area-riservata/corso/${courseId}/lezione/${lesson.lesson_number}`}
+                          className="block"
+                        >
+                          <Card 
+                            className={`transition-all cursor-pointer hover:shadow-lg ${
+                              completed 
+                                ? 'bg-primary/5 border-primary/30 hover:border-primary/50' 
+                                : 'border-accent/50 shadow-md hover:border-accent'
+                            }`}
+                          >
+                            {cardContent}
+                          </Card>
+                        </Link>
+                      );
+                    }
+
+                    // Lezione bloccata - non cliccabile
+                    return (
+                      <Card 
+                        key={lesson.id}
+                        className="transition-all opacity-60"
+                      >
+                        {cardContent}
+                      </Card>
+                    );
                 })
               )}
             </TabsContent>

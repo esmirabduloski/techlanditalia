@@ -10,9 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  LogOut, Loader2, ArrowLeft, Save, Plus, X, Image as ImageIcon 
-} from 'lucide-react';
+import { LogOut, Loader2, ArrowLeft, Save } from 'lucide-react';
 import RichTextEditor from '@/components/editor/RichTextEditor';
 
 interface Course {
@@ -40,7 +38,7 @@ export default function LessonEditor() {
   const [course, setCourse] = useState<Course | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [newImageUrl, setNewImageUrl] = useState('');
+  
   
   const [formData, setFormData] = useState<LessonData>({
     title: '',
@@ -175,22 +173,6 @@ export default function LessonEditor() {
     }
   };
 
-  const addImage = () => {
-    if (newImageUrl.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        images: [...prev.images, newImageUrl.trim()]
-      }));
-      setNewImageUrl('');
-    }
-  };
-
-  const removeImage = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index)
-    }));
-  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -309,7 +291,6 @@ export default function LessonEditor() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="text">Testo</SelectItem>
-                    <SelectItem value="video">Video</SelectItem>
                     <SelectItem value="slides">Presentazione</SelectItem>
                     <SelectItem value="mixed">Misto</SelectItem>
                   </SelectContent>
@@ -328,62 +309,21 @@ export default function LessonEditor() {
                 </p>
               </div>
 
-              {/* Video URL */}
-              <div className="space-y-2">
-                <Label htmlFor="video_url">URL Video (YouTube/Vimeo)</Label>
-                <Input
-                  id="video_url"
-                  value={formData.video_url}
-                  onChange={(e) => setFormData(prev => ({ ...prev, video_url: e.target.value }))}
-                  placeholder="https://www.youtube.com/watch?v=..."
-                />
-              </div>
-
-              {/* Slides URL */}
-              <div className="space-y-2">
-                <Label htmlFor="slides_url">URL Google Slides</Label>
-                <Input
-                  id="slides_url"
-                  value={formData.slides_url}
-                  onChange={(e) => setFormData(prev => ({ ...prev, slides_url: e.target.value }))}
-                  placeholder="https://docs.google.com/presentation/d/..."
-                />
-              </div>
-
-              {/* Images */}
-              <div className="space-y-2">
-                <Label>Immagini</Label>
-                <div className="flex gap-2">
+              {/* Slides URL - solo per tipo Presentazione */}
+              {formData.content_type === 'slides' && (
+                <div className="space-y-2">
+                  <Label htmlFor="slides_url">URL Google Slides</Label>
                   <Input
-                    value={newImageUrl}
-                    onChange={(e) => setNewImageUrl(e.target.value)}
-                    placeholder="https://esempio.com/immagine.jpg"
-                    className="flex-1"
+                    id="slides_url"
+                    value={formData.slides_url}
+                    onChange={(e) => setFormData(prev => ({ ...prev, slides_url: e.target.value }))}
+                    placeholder="https://docs.google.com/presentation/d/..."
                   />
-                  <Button type="button" variant="outline" onClick={addImage}>
-                    <Plus className="w-4 h-4" />
-                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    Incolla il link della presentazione Google Slides per incorporarla nella lezione.
+                  </p>
                 </div>
-                {formData.images.length > 0 && (
-                  <div className="grid gap-2 mt-3">
-                    {formData.images.map((url, index) => (
-                      <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded-lg">
-                        <ImageIcon className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm truncate flex-1">{url}</span>
-                        <Button 
-                          type="button" 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => removeImage(index)}
-                          className="text-destructive"
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              )}
             </CardContent>
           </Card>
 

@@ -23,7 +23,8 @@ import {
   Trash2,
   Edit,
   Home,
-  BarChart3
+  BarChart3,
+  GraduationCap
 } from 'lucide-react';
 import {
   Select,
@@ -494,6 +495,10 @@ export default function AdminBookings() {
             <Link to="/admin" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
               <FileText className="w-4 h-4" />
               Blog
+            </Link>
+            <Link to="/admin/corsi" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
+              <GraduationCap className="w-4 h-4" />
+              Corsi
             </Link>
             <Link to="/admin/prenotazioni" className="py-3 px-2 border-b-2 border-primary text-primary font-medium flex items-center gap-2 whitespace-nowrap">
               <BookOpen className="w-4 h-4" />

@@ -16,7 +16,8 @@ import {
   Trash2,
   Users,
   Home,
-  BarChart3
+  BarChart3,
+  GraduationCap
 } from 'lucide-react';
 import {
   Table,
@@ -153,6 +154,13 @@ export default function AdminContatti() {
             >
               <FileText className="w-4 h-4" />
               Blog
+            </Link>
+            <Link 
+              to="/admin/corsi" 
+              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
+            >
+              <GraduationCap className="w-4 h-4" />
+              Corsi
             </Link>
             <Link 
               to="/admin/prenotazioni" 

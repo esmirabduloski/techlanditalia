@@ -288,6 +288,9 @@ export type Database = {
       homework_submissions: {
         Row: {
           feedback_at: string | null
+          file_name: string | null
+          file_type: string | null
+          file_url: string | null
           homework_id: string
           id: string
           notes: string | null
@@ -299,6 +302,9 @@ export type Database = {
         }
         Insert: {
           feedback_at?: string | null
+          file_name?: string | null
+          file_type?: string | null
+          file_url?: string | null
           homework_id: string
           id?: string
           notes?: string | null
@@ -310,6 +316,9 @@ export type Database = {
         }
         Update: {
           feedback_at?: string | null
+          file_name?: string | null
+          file_type?: string | null
+          file_url?: string | null
           homework_id?: string
           id?: string
           notes?: string | null
@@ -378,33 +387,45 @@ export type Database = {
       lessons: {
         Row: {
           content: string | null
+          content_type: string | null
           course_id: string
           created_at: string
           description: string | null
           id: string
+          images: Json | null
           lesson_number: number
           points_reward: number
+          slides_url: string | null
           title: string
+          video_url: string | null
         }
         Insert: {
           content?: string | null
+          content_type?: string | null
           course_id: string
           created_at?: string
           description?: string | null
           id?: string
+          images?: Json | null
           lesson_number: number
           points_reward?: number
+          slides_url?: string | null
           title: string
+          video_url?: string | null
         }
         Update: {
           content?: string | null
+          content_type?: string | null
           course_id?: string
           created_at?: string
           description?: string | null
           id?: string
+          images?: Json | null
           lesson_number?: number
           points_reward?: number
+          slides_url?: string | null
           title?: string
+          video_url?: string | null
         }
         Relationships: [
           {

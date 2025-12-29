@@ -28,12 +28,15 @@ import AdminStats from "./pages/admin/AdminStats";
 import AdminCourses from "./pages/admin/AdminCourses";
 import AdminLessons from "./pages/admin/AdminLessons";
 import LessonEditor from "./pages/admin/LessonEditor";
+import AdminTasks from "./pages/admin/AdminTasks";
+import TaskEditor from "./pages/admin/TaskEditor";
 import AdminHomework from "./pages/admin/AdminHomework";
 import AuthPage from "./pages/auth/AuthPage";
 import AreaRiservataDashboard from "./pages/area-riservata/Dashboard";
 import AreaRiservataProfile from "./pages/area-riservata/Profile";
 import CourseProgress from "./pages/area-riservata/CourseProgress";
 import LessonView from "./pages/area-riservata/LessonView";
+import TaskView from "./pages/area-riservata/TaskView";
 
 const queryClient = new QueryClient();
 
@@ -63,12 +66,16 @@ const App = () => (
             <Route path="/area-riservata/profilo" element={<AreaRiservataProfile />} />
             <Route path="/area-riservata/corso/:courseId" element={<CourseProgress />} />
             <Route path="/area-riservata/corso/:courseId/lezione/:lessonNumber" element={<LessonView />} />
+            <Route path="/area-riservata/corso/:courseId/lezione/:lessonNumber/task/:taskNumber" element={<TaskView />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/corsi" element={<AdminCourses />} />
             <Route path="/admin/corsi/:courseId/lezioni" element={<AdminLessons />} />
             <Route path="/admin/corsi/:courseId/lezioni/nuova" element={<LessonEditor />} />
             <Route path="/admin/corsi/:courseId/lezioni/:lessonId/modifica" element={<LessonEditor />} />
+            <Route path="/admin/corsi/:courseId/lezioni/:lessonId/task" element={<AdminTasks />} />
+            <Route path="/admin/corsi/:courseId/lezioni/:lessonId/task/nuovo" element={<TaskEditor />} />
+            <Route path="/admin/corsi/:courseId/lezioni/:lessonId/task/:taskId/modifica" element={<TaskEditor />} />
             <Route path="/admin/corsi/:courseId/lezioni/:lessonId/compiti" element={<AdminHomework />} />
             <Route path="/admin/prenotazioni" element={<AdminBookings />} />
             <Route path="/admin/contatti" element={<AdminContatti />} />

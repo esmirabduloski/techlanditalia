@@ -17,20 +17,25 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { 
-  LogOut, Loader2, Plus, Edit, Trash2, ArrowLeft, BookOpen, 
-  FileText, Mail, User, BarChart3, GraduationCap, ClipboardList 
+  LogOut, Loader2, Plus, Edit, Trash2, ArrowLeft, ListChecks,
+  FileText, Mail, User, BarChart3, GraduationCap, BookOpen 
 } from 'lucide-react';
 
 interface Course {
   id: string;
   title: string;
   emoji: string;
-  total_lessons: number;
 }
 
 interface Lesson {
   id: string;
+  title: string;
   lesson_number: number;
+}
+
+interface Task {
+  id: string;
+  task_number: number;
   title: string;
   description: string | null;
   content_type: string | null;
@@ -38,10 +43,11 @@ interface Lesson {
   created_at: string;
 }
 
-export default function AdminLessons() {
-  const { courseId } = useParams<{ courseId: string }>();
+export default function AdminTasks() {
+  const { courseId, lessonId } = useParams<{ courseId: string; lessonId: string }>();
   const [course, setCourse] = useState<Course | null>(null);
-  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [lesson, setLesson] = useState<Lesson | null>(null);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
@@ -54,16 +60,16 @@ export default function AdminLessons() {
   }, [user, isAdmin, authLoading, navigate]);
 
   useEffect(() => {
-    if (user && isAdmin && courseId) {
+    if (user && isAdmin && courseId && lessonId) {
       fetchData();
     }
-  }, [user, isAdmin, courseId]);
+  }, [user, isAdmin, courseId, lessonId]);
 
   const fetchData = async () => {
     // Fetch course
     const { data: courseData } = await supabase
       .from('courses')
-      .select('id, title, emoji, total_lessons')
+      .select('id, title, emoji')
       .eq('id', courseId)
       .maybeSingle();
 
@@ -71,28 +77,39 @@ export default function AdminLessons() {
       setCourse(courseData);
     }
 
-    // Fetch lessons
-    const { data: lessonsData } = await supabase
+    // Fetch lesson
+    const { data: lessonData } = await supabase
       .from('lessons')
-      .select('*')
-      .eq('course_id', courseId)
-      .order('lesson_number');
+      .select('id, title, lesson_number')
+      .eq('id', lessonId)
+      .maybeSingle();
 
-    if (lessonsData) {
-      setLessons(lessonsData);
+    if (lessonData) {
+      setLesson(lessonData);
+    }
+
+    // Fetch tasks
+    const { data: tasksData } = await supabase
+      .from('lesson_tasks')
+      .select('*')
+      .eq('lesson_id', lessonId)
+      .order('task_number');
+
+    if (tasksData) {
+      setTasks(tasksData);
     }
 
     setIsLoading(false);
   };
 
-  const deleteLesson = async (id: string) => {
-    const { error } = await supabase.from('lessons').delete().eq('id', id);
+  const deleteTask = async (id: string) => {
+    const { error } = await supabase.from('lesson_tasks').delete().eq('id', id);
     
     if (error) {
-      toast({ title: 'Errore', description: 'Impossibile eliminare la lezione', variant: 'destructive' });
+      toast({ title: 'Errore', description: 'Impossibile eliminare il task', variant: 'destructive' });
     } else {
-      setLessons(lessons.filter(l => l.id !== id));
-      toast({ title: 'Successo', description: 'Lezione eliminata' });
+      setTasks(tasks.filter(t => t.id !== id));
+      toast({ title: 'Successo', description: 'Task eliminato' });
     }
   };
 
@@ -109,7 +126,7 @@ export default function AdminLessons() {
     );
   }
 
-  if (!isAdmin || !course) return null;
+  if (!isAdmin || !course || !lesson) return null;
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -186,7 +203,7 @@ export default function AdminLessons() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 mb-6">
+        <div className="flex items-center gap-2 mb-6 flex-wrap">
           <Button variant="ghost" size="sm" asChild>
             <Link to="/admin/corsi">
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -194,65 +211,66 @@ export default function AdminLessons() {
             </Link>
           </Button>
           <span className="text-muted-foreground">/</span>
-          <span className="font-medium">{course.emoji} {course.title}</span>
+          <Button variant="ghost" size="sm" asChild>
+            <Link to={`/admin/corsi/${courseId}/lezioni`}>
+              {course.emoji} {course.title}
+            </Link>
+          </Button>
+          <span className="text-muted-foreground">/</span>
+          <span className="font-medium">L{lesson.lesson_number}: {lesson.title}</span>
         </div>
 
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Lezioni</h1>
-            <p className="text-muted-foreground mt-1">{lessons.length} lezioni</p>
+            <h1 className="text-3xl font-bold">Task della Lezione</h1>
+            <p className="text-muted-foreground mt-1">{tasks.length} task</p>
           </div>
           <Button asChild>
-            <Link to={`/admin/corsi/${courseId}/lezioni/nuova`}>
+            <Link to={`/admin/corsi/${courseId}/lezioni/${lessonId}/task/nuovo`}>
               <Plus className="w-4 h-4 mr-2" />
-              Nuova Lezione
+              Nuovo Task
             </Link>
           </Button>
         </div>
 
-        {/* Lessons List */}
-        {lessons.length === 0 ? (
+        {/* Tasks List */}
+        {tasks.length === 0 ? (
           <div className="tech-card p-12 text-center">
-            <BookOpen className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Nessuna lezione</h3>
-            <p className="text-muted-foreground mb-6">Inizia creando la prima lezione del corso</p>
+            <ListChecks className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Nessun task</h3>
+            <p className="text-muted-foreground mb-6">Inizia creando il primo task della lezione</p>
             <Button asChild>
-              <Link to={`/admin/corsi/${courseId}/lezioni/nuova`}>
+              <Link to={`/admin/corsi/${courseId}/lezioni/${lessonId}/task/nuovo`}>
                 <Plus className="w-4 h-4 mr-2" />
-                Crea Lezione
+                Crea Task
               </Link>
             </Button>
           </div>
         ) : (
           <div className="space-y-3">
-            {lessons.map((lesson) => (
-              <div key={lesson.id} className="tech-card p-4 flex items-center justify-between gap-4">
+            {tasks.map((task) => (
+              <div key={task.id} className="tech-card p-4 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-                    {lesson.lesson_number}
+                    {task.task_number}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold truncate">{lesson.title}</h3>
-                      {lesson.content_type && lesson.content_type !== 'text' && (
-                        <Badge variant="outline">{lesson.content_type}</Badge>
+                      <h3 className="font-semibold truncate">{task.title}</h3>
+                      {task.content_type && task.content_type !== 'text' && (
+                        <Badge variant="outline">{task.content_type}</Badge>
                       )}
                     </div>
                     <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                      <span>{lesson.points_reward} punti</span>
+                      <span>{task.points_reward} punti</span>
                       <span>•</span>
-                      <span>{new Date(lesson.created_at).toLocaleDateString('it-IT')}</span>
+                      <span>{new Date(task.created_at).toLocaleDateString('it-IT')}</span>
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" asChild title="Task">
-                    <Link to={`/admin/corsi/${courseId}/lezioni/${lesson.id}/task`}>
-                      <ClipboardList className="w-4 h-4" />
-                    </Link>
-                  </Button>
-                  <Button variant="ghost" size="icon" asChild title="Modifica">
-                    <Link to={`/admin/corsi/${courseId}/lezioni/${lesson.id}/modifica`}>
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link to={`/admin/corsi/${courseId}/lezioni/${lessonId}/task/${task.id}/modifica`}>
                       <Edit className="w-4 h-4" />
                     </Link>
                   </Button>
@@ -264,15 +282,15 @@ export default function AdminLessons() {
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Elimina lezione</AlertDialogTitle>
+                        <AlertDialogTitle>Elimina task</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Sei sicuro di voler eliminare la lezione "{lesson.title}"? Questa azione non può essere annullata.
+                          Sei sicuro di voler eliminare il task "{task.title}"? Questa azione non può essere annullata.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Annulla</AlertDialogCancel>
                         <AlertDialogAction 
-                          onClick={() => deleteLesson(lesson.id)} 
+                          onClick={() => deleteTask(task.id)} 
                           className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >
                           Elimina

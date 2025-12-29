@@ -7,6 +7,17 @@ import { Clock, Users, ArrowRight, Filter } from "lucide-react";
 
 const allCourses = [
   {
+    id: "abc-creativita-digitale",
+    title: "L'ABC della creatività digitale",
+    description: "Un corso per bambini incentrato sulle basi del design digitale e dell'alfabetizzazione informatica con editor grafici, Canva e Google Docs.",
+    age: "5-7",
+    ageLabel: "5-7 anni",
+    level: "Principiante",
+    duration: "32 lezioni",
+    emoji: "🎨",
+    tags: ["Design digitale", "Creatività", "Google Docs", "Canva", "Animazione"],
+  },
+  {
     id: "abc-informatica",
     title: "L'ABC dell'informatica",
     description: "FunTech Explorers è un corso online interattivo che introduce i bambini alle componenti del computer, alle basi della programmazione a blocchi e all'uso del PC.",
@@ -16,6 +27,17 @@ const allCourses = [
     duration: "32 lezioni",
     emoji: "💻",
     tags: ["Programmazione", "Matematica", "Creazione", "Informatica di base", "Uso del computer"],
+  },
+  {
+    id: "minecraft-education",
+    title: "Minecraft Education",
+    description: "Impara le basi della logica, della programmazione e dell'automazione attraverso l'amato ambiente di gioco di Minecraft Education con MakeCode.",
+    age: "8-9",
+    ageLabel: "8-9 anni",
+    level: "Principiante",
+    duration: "40 lezioni",
+    emoji: "⛏️",
+    tags: ["Minecraft", "MakeCode", "Programmazione a blocchi", "Automazione", "Redstone"],
   },
   {
     id: "scratch",
@@ -96,7 +118,7 @@ const allCourses = [
   },
 ];
 
-const ageFilters = ["Tutti", "5-7", "8-10", "8-12", "10-14", "13-18"];
+const ageFilters = ["Tutti", "5-7", "8-9", "8-10", "8-12", "10-14", "13-18"];
 
 const levelColors: Record<string, string> = {
   Principiante: "bg-tech-green/10 text-tech-green",

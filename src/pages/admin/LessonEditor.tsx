@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   LogOut, Loader2, ArrowLeft, Save, Plus, X, Image as ImageIcon 
 } from 'lucide-react';
+import RichTextEditor from '@/components/editor/RichTextEditor';
 
 interface Course {
   id: string;
@@ -315,17 +316,16 @@ export default function LessonEditor() {
                 </Select>
               </div>
 
-              {/* Content */}
+              {/* Content - WYSIWYG Editor */}
               <div className="space-y-2">
-                <Label htmlFor="content">Contenuto (HTML/Markdown)</Label>
-                <Textarea
-                  id="content"
-                  value={formData.content}
-                  onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                  placeholder="<h2>Benvenuto!</h2><p>In questa lezione imparerai...</p>"
-                  rows={10}
-                  className="font-mono text-sm"
+                <Label>Contenuto</Label>
+                <RichTextEditor
+                  content={formData.content}
+                  onChange={(html) => setFormData(prev => ({ ...prev, content: html }))}
                 />
+                <p className="text-xs text-muted-foreground">
+                  Usa la toolbar per formattare il testo, inserire immagini e video YouTube.
+                </p>
               </div>
 
               {/* Video URL */}

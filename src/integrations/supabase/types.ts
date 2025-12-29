@@ -384,6 +384,53 @@ export type Database = {
           },
         ]
       }
+      lesson_tasks: {
+        Row: {
+          content: string | null
+          content_type: string | null
+          created_at: string
+          description: string | null
+          id: string
+          lesson_id: string
+          points_reward: number
+          slides_url: string | null
+          task_number: number
+          title: string
+        }
+        Insert: {
+          content?: string | null
+          content_type?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          lesson_id: string
+          points_reward?: number
+          slides_url?: string | null
+          task_number: number
+          title: string
+        }
+        Update: {
+          content?: string | null
+          content_type?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          lesson_id?: string
+          points_reward?: number
+          slides_url?: string | null
+          task_number?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_tasks_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lessons: {
         Row: {
           content: string | null

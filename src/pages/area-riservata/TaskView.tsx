@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Layout } from '@/components/layout/Layout';
 import { LessonContent } from '@/components/lesson/LessonContent';
-import { LessonNavigation } from '@/components/lesson/LessonNavigation';
+import { TaskNavigation } from '@/components/lesson/TaskNavigation';
 import { PythonCompiler } from '@/components/lesson/PythonCompiler';
 import { WebCompiler } from '@/components/lesson/WebCompiler';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
@@ -14,19 +14,22 @@ interface Course {
   id: string;
   slug: string;
   title: string;
-  total_lessons: number;
 }
 
 interface Lesson {
   id: string;
   lesson_number: number;
   title: string;
+}
+
+interface Task {
+  id: string;
+  task_number: number;
+  title: string;
   description: string | null;
   content: string | null;
   content_type: string | null;
-  video_url: string | null;
   slides_url: string | null;
-  images: string[] | null;
   points_reward: number;
 }
 
@@ -34,13 +37,15 @@ const PYTHON_COURSES = ['python-base', 'python-ai'];
 const WEB_COURSES = ['web-development'];
 const SPLIT_LAYOUT_COURSES = [...PYTHON_COURSES, ...WEB_COURSES];
 
-export default function LessonView() {
-  const { courseId, lessonNumber } = useParams<{ courseId: string; lessonNumber: string }>();
+export default function TaskView() {
+  const { courseId, lessonNumber, taskNumber } = useParams<{ courseId: string; lessonNumber: string; taskNumber: string }>();
   const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   
   const [course, setCourse] = useState<Course | null>(null);
   const [lesson, setLesson] = useState<Lesson | null>(null);
+  const [task, setTask] = useState<Task | null>(null);
+  const [totalTasks, setTotalTasks] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -50,19 +55,19 @@ export default function LessonView() {
   }, [user, authLoading, navigate]);
 
   useEffect(() => {
-    if (courseId && lessonNumber) {
+    if (courseId && lessonNumber && taskNumber) {
       fetchData();
     }
-  }, [courseId, lessonNumber]);
+  }, [courseId, lessonNumber, taskNumber]);
 
   const fetchData = async () => {
-    if (!courseId || !lessonNumber) return;
+    if (!courseId || !lessonNumber || !taskNumber) return;
 
     try {
       // Fetch course
       const { data: courseData } = await supabase
         .from('courses')
-        .select('id, slug, title, total_lessons')
+        .select('id, slug, title')
         .eq('id', courseId)
         .maybeSingle();
 
@@ -73,39 +78,43 @@ export default function LessonView() {
       // Fetch lesson by lesson_number
       const { data: lessonData } = await supabase
         .from('lessons')
-        .select('*')
+        .select('id, lesson_number, title')
         .eq('course_id', courseId)
         .eq('lesson_number', parseInt(lessonNumber))
         .maybeSingle();
 
       if (lessonData) {
-        // Check if lesson has tasks
+        setLesson(lessonData);
+
+        // Fetch total tasks count
         const { count } = await supabase
           .from('lesson_tasks')
           .select('*', { count: 'exact', head: true })
           .eq('lesson_id', lessonData.id);
 
-        // If lesson has tasks, redirect to first task
-        if (count && count > 0) {
-          navigate(`/area-riservata/corso/${courseId}/lezione/${lessonNumber}/task/1`, { replace: true });
-          return;
-        }
+        setTotalTasks(count || 0);
 
-        // Parse images from JSONB
-        const images = lessonData.images 
-          ? (Array.isArray(lessonData.images) ? lessonData.images : [])
-          : [];
-        setLesson({ ...lessonData, images } as Lesson);
+        // Fetch the specific task
+        const { data: taskData } = await supabase
+          .from('lesson_tasks')
+          .select('*')
+          .eq('lesson_id', lessonData.id)
+          .eq('task_number', parseInt(taskNumber))
+          .maybeSingle();
+
+        if (taskData) {
+          setTask(taskData);
+        }
       }
     } catch (error) {
-      console.error('Error fetching lesson:', error);
+      console.error('Error fetching task:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const navigateToLesson = (newLessonNumber: number) => {
-    navigate(`/area-riservata/corso/${courseId}/lezione/${newLessonNumber}`);
+  const navigateToTask = (newTaskNumber: number) => {
+    navigate(`/area-riservata/corso/${courseId}/lezione/${lessonNumber}/task/${newTaskNumber}`);
   };
 
   if (authLoading || isLoading) {
@@ -118,11 +127,11 @@ export default function LessonView() {
     );
   }
 
-  if (!user || !course || !lesson) {
+  if (!user || !course || !lesson || !task) {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
-          <p className="text-muted-foreground">Lezione non trovata</p>
+          <p className="text-muted-foreground">Task non trovato</p>
         </div>
       </Layout>
     );
@@ -137,25 +146,26 @@ export default function LessonView() {
     return (
       <div className="h-screen flex flex-col bg-background">
         <ResizablePanelGroup direction="horizontal" className="flex-1">
-          {/* Left Panel - Lesson Content */}
+          {/* Left Panel - Task Content */}
           <ResizablePanel defaultSize={50} minSize={30}>
             <div className="h-full overflow-y-auto">
               <LessonContent
-                title={lesson.title}
-                description={lesson.description}
-                content={lesson.content}
-                contentType={lesson.content_type || 'text'}
-                videoUrl={lesson.video_url}
-                slidesUrl={lesson.slides_url}
-                images={lesson.images || []}
+                title={task.title}
+                description={task.description}
+                content={task.content}
+                contentType={task.content_type || 'text'}
+                videoUrl={null}
+                slidesUrl={task.slides_url}
+                images={[]}
               />
               <div className="px-6 pb-6">
-                <LessonNavigation
+                <TaskNavigation
                   courseId={course.id}
-                  currentLessonNumber={lesson.lesson_number}
-                  totalLessons={course.total_lessons}
-                  onPrevious={lesson.lesson_number > 1 ? () => navigateToLesson(lesson.lesson_number - 1) : undefined}
-                  onNext={lesson.lesson_number < course.total_lessons ? () => navigateToLesson(lesson.lesson_number + 1) : undefined}
+                  lessonNumber={lesson.lesson_number}
+                  currentTaskNumber={task.task_number}
+                  totalTasks={totalTasks}
+                  onPrevious={task.task_number > 1 ? () => navigateToTask(task.task_number - 1) : undefined}
+                  onNext={task.task_number < totalTasks ? () => navigateToTask(task.task_number + 1) : undefined}
                 />
               </div>
             </div>
@@ -179,20 +189,21 @@ export default function LessonView() {
     <Layout>
       <div className="max-w-4xl mx-auto px-4 py-8">
         <LessonContent
-          title={lesson.title}
-          description={lesson.description}
-          content={lesson.content}
-          contentType={lesson.content_type || 'text'}
-          videoUrl={lesson.video_url}
-          slidesUrl={lesson.slides_url}
-          images={lesson.images || []}
+          title={task.title}
+          description={task.description}
+          content={task.content}
+          contentType={task.content_type || 'text'}
+          videoUrl={null}
+          slidesUrl={task.slides_url}
+          images={[]}
         />
-        <LessonNavigation
+        <TaskNavigation
           courseId={course.id}
-          currentLessonNumber={lesson.lesson_number}
-          totalLessons={course.total_lessons}
-          onPrevious={lesson.lesson_number > 1 ? () => navigateToLesson(lesson.lesson_number - 1) : undefined}
-          onNext={lesson.lesson_number < course.total_lessons ? () => navigateToLesson(lesson.lesson_number + 1) : undefined}
+          lessonNumber={lesson.lesson_number}
+          currentTaskNumber={task.task_number}
+          totalTasks={totalTasks}
+          onPrevious={task.task_number > 1 ? () => navigateToTask(task.task_number - 1) : undefined}
+          onNext={task.task_number < totalTasks ? () => navigateToTask(task.task_number + 1) : undefined}
         />
       </div>
     </Layout>

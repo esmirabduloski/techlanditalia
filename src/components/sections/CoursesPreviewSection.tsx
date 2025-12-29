@@ -5,6 +5,16 @@ import { ArrowRight, Clock, Users } from "lucide-react";
 
 const courses = [
   {
+    id: "abc-creativita-digitale",
+    title: "L'ABC della creatività digitale",
+    description: "Design digitale e alfabetizzazione informatica per i più piccoli.",
+    age: "5-7 anni",
+    level: "Principiante",
+    duration: "32 lezioni",
+    emoji: "🎨",
+    color: "tech-purple",
+  },
+  {
     id: "abc-informatica",
     title: "L'ABC dell'informatica",
     description: "Introduzione alle componenti del computer, programmazione a blocchi e uso del PC.",

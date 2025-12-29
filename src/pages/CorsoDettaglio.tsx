@@ -37,6 +37,110 @@ const coursesData: Record<string, {
   projectExamples: { title: string; image?: string }[];
   modules: { title: string; lessons: string[]; result: string }[];
 }> = {
+  "abc-creativita-digitale": {
+    title: "L'ABC della creatività digitale",
+    emoji: "🎨",
+    description: "Un corso online per bambini dai 5 ai 7 anni, incentrato sulle basi del design digitale e dell'alfabetizzazione informatica.",
+    longDescription: "FunTech Creators è un corso online per bambini dai 5 ai 7 anni, incentrato sulle basi del design digitale e dell'alfabetizzazione informatica. In esso, i bambini imparano a utilizzare editor grafici, creare biglietti di auguri, poster e semplici presentazioni. Acquisiscono padronanza di Google Docs e importanti competenze informatiche. Il corso è condotto in un formato ludico e sviluppa il pensiero creativo e logico.",
+    tags: ["Design digitale", "Creatività", "Google Docs", "Canva", "Animazione"],
+    age: "5-7 anni",
+    level: "Principiante",
+    duration: "32 lezioni",
+    topics: [
+      "Sviluppare il pensiero creativo e immaginativo degli studenti",
+      "Insegnare ad utilizzare gli strumenti di base del design digitale",
+      "Creare progetti interessanti in Canva",
+      "Imparare a lavorare con testo e immagini in Google Docs e Google Slides",
+      "Apprendere le basi dell'alfabetizzazione informatica e della sicurezza online",
+    ],
+    projectExamples: [
+      { title: "Biglietti di auguri digitali" },
+      { title: "Poster e presentazioni" },
+      { title: "Animazioni GIF e melodie" },
+    ],
+    modules: [
+      {
+        title: "Modulo 1. Scoprire il Mondo Digitale",
+        lessons: [
+          "Lezione 1: L'avventura dei tasti: conoscere il mouse e la tastiera",
+          "Lezione 2: I miei primi disegni: introduzione alla grafica computerizzata",
+          "Lezione 3: Imparare l'animazione: creare GIF",
+          "Lezione 4: Lo studio musicale: creare una melodia",
+        ],
+        result: "I bambini impareranno a conoscere il computer: useranno mouse e tastiera, creeranno i loro primi disegni digitali, animazioni GIF e melodie.",
+      },
+      {
+        title: "Modulo 2. Un'Avventura a Colorville",
+        lessons: [
+          "Lezione 1: Alla ricerca di una stella perduta",
+          "Lezione 2: Il festival delle forme magiche a Colorville",
+          "Lezione 3: Salvare la Galleria delle Meraviglie a Colorville",
+          "Lezione 4: Festeggiamenti a Colorville",
+        ],
+        result: "I bambini impareranno a utilizzare un editor grafico, a disegnare con linee e forme e a creare i loro primi disegni!",
+      },
+      {
+        title: "Modulo 3. Avventure nella valle dei dati",
+        lessons: [
+          "Lezione 1: Foto fantastiche nell'Art Studio!",
+          "Lezione 2: La magia del testo e i nostri fumetti!",
+          "Lezione 3: Masterclass di progettazione di poster",
+          "Lezione 4: Una cartolina dalla Valle dei Dati",
+        ],
+        result: "I bambini acquisiranno familiarità con la struttura dei file, impareranno cos'è Internet e creeranno fumetti, poster e cartoline digitali.",
+      },
+      {
+        title: "Modulo 4. Un'avventura nel mondo della conoscenza",
+        lessons: [
+          "Lezione 1: Il viaggio attraverso i mari di Internet",
+          "Lezione 2: La magia delle parole in Google Documenti",
+          "Lezione 3: Un artista del testo",
+          "Lezione 4: I cacciatori di conoscenza",
+        ],
+        result: "I bambini impareranno a creare e modificare documenti in Google Docs, con conoscenze sulla sicurezza in Internet.",
+      },
+      {
+        title: "Modulo 5. Laboratorio di immaginazione",
+        lessons: [
+          "Lezione 1: Stimola la tua creatività con i Droodles!",
+          "Lezione 2: La febbre degli adesivi a Canva",
+          "Lezione 3: La routine quotidiana in immagini",
+          "Lezione 4: I capolavori dei giovani maestri di Canva",
+        ],
+        result: "I bambini svilupperanno il pensiero creativo creando adesivi e progettando le loro routine in Canva!",
+      },
+      {
+        title: "Modulo 6. Cartoon Studio",
+        lessons: [
+          "Lezione 1: I primi passi nel Mondo dell'Animazione",
+          "Lezione 2: Disegni danzanti",
+          "Lezione 3: Andiamo a una festa danzante!",
+          "Lezione 4: Piccoli detective: risolvere enigmi",
+        ],
+        result: "I bambini impareranno a creare animazioni in Flipanim e a trasformarle in veri video!",
+      },
+      {
+        title: "Modulo 7. Cyber Creator",
+        lessons: [
+          "Lezione 1: Primi passi in Google Presentazioni",
+          "Lezione 2: Continuiamo a scrivere la nostra storia in Google Presentazioni",
+          "Lezione 3: Le diapositive prendono vita!",
+          "Lezione 4: Gara a squadre: Salvare TechnoTown",
+        ],
+        result: "I bambini impareranno a creare presentazioni colorate in Google Slides e rafforzeranno le conoscenze con progetti di gruppo.",
+      },
+      {
+        title: "Modulo 8. Attività creative e Modellazione 3D",
+        lessons: [
+          "Lezione 1: Il Potere della Creatività: creare storie e personaggi",
+          "Lezione 2: Odissea nello spazio: avventura nell'universo",
+          "Lezione 3: Dare vita a un giardino con la modellazione 3D",
+          "Lezione 4: Scoprire tesori in 3D",
+        ],
+        result: "I bambini impareranno a creare storie e a presentarle, con un'introduzione alla modellazione 3D!",
+      },
+    ],
+  },
   "abc-informatica": {
     title: "L'ABC dell'informatica",
     emoji: "💻",

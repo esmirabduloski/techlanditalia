@@ -488,6 +488,7 @@ export type Database = {
         Row: {
           avatar_id: number
           created_at: string
+          email: string | null
           full_name: string
           id: string
           parent_id: string | null
@@ -499,6 +500,7 @@ export type Database = {
         Insert: {
           avatar_id?: number
           created_at?: string
+          email?: string | null
           full_name: string
           id: string
           parent_id?: string | null
@@ -510,6 +512,7 @@ export type Database = {
         Update: {
           avatar_id?: number
           created_at?: string
+          email?: string | null
           full_name?: string
           id?: string
           parent_id?: string | null

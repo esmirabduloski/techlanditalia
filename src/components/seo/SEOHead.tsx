@@ -4,6 +4,7 @@ interface SEOHeadProps {
   title: string;
   description: string;
   canonical?: string;
+  keywords?: string;
   ogImage?: string;
   ogType?: "website" | "article";
   article?: {
@@ -14,6 +15,7 @@ interface SEOHeadProps {
   };
   noIndex?: boolean;
   structuredData?: object | object[];
+  schemaData?: object | object[];
 }
 
 const BASE_URL = "https://techlanditalia.it";
@@ -23,19 +25,24 @@ export function SEOHead({
   title,
   description,
   canonical,
+  keywords,
   ogImage = DEFAULT_OG_IMAGE,
   ogType = "website",
   article,
   noIndex = false,
   structuredData,
+  schemaData,
 }: SEOHeadProps) {
   const fullTitle = title.includes("TECHLAND") ? title : `${title} | TECHLAND`;
-  const canonicalUrl = canonical ? `${BASE_URL}${canonical}` : undefined;
+  const canonicalUrl = canonical?.startsWith("http") ? canonical : canonical ? `${BASE_URL}${canonical}` : undefined;
 
   // Ensure description is within limits
   const truncatedDescription = description.length > 160 
     ? description.substring(0, 157) + "..." 
     : description;
+  
+  // Combine schema data
+  const allSchemaData = schemaData || structuredData;
 
   return (
     <Helmet>
@@ -43,6 +50,7 @@ export function SEOHead({
       <title>{fullTitle}</title>
       <meta name="title" content={fullTitle} />
       <meta name="description" content={truncatedDescription} />
+      {keywords && <meta name="keywords" content={keywords} />}
       <meta name="robots" content={noIndex ? "noindex, nofollow" : "index, follow"} />
       
       {/* Canonical */}
@@ -79,9 +87,9 @@ export function SEOHead({
       )}
       
       {/* Structured Data */}
-      {structuredData && (
+      {allSchemaData && (
         <script type="application/ld+json">
-          {JSON.stringify(Array.isArray(structuredData) ? structuredData : [structuredData])}
+          {JSON.stringify(Array.isArray(allSchemaData) ? allSchemaData : [allSchemaData])}
         </script>
       )}
     </Helmet>

@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout/Layout";
+import { SEOHead } from "@/components/seo/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Users, Award, Target, Heart, Sparkles, GraduationCap } from "lucide-react";
@@ -35,15 +36,47 @@ const team = [
   { name: "Chiara Neri", role: "Head of Operations", avatar: "CN" },
 ];
 
+// Schema.org per Organization
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "EducationalOrganization",
+  "name": "TECHLAND",
+  "description": "Scuola di programmazione e coding per bambini e ragazzi dai 6 ai 18 anni. Corsi online di Roblox, Minecraft, Python, Scratch e sviluppo web.",
+  "url": "https://techlanditalia.it",
+  "logo": "https://techlanditalia.it/favicon.ico",
+  "foundingDate": "2019",
+  "numberOfEmployees": "50+",
+  "areaServed": "IT",
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "telephone": "+39-351-250-8851",
+    "contactType": "customer service",
+    "availableLanguage": "Italian"
+  },
+  "sameAs": [
+    "https://www.facebook.com/profile.php?id=61573749912297",
+    "https://www.instagram.com/techlanditalia/",
+    "https://www.linkedin.com/in/techlanditalia/"
+  ]
+};
+
 export default function ChiSiamo() {
   return (
     <Layout>
+      <SEOHead
+        title="Chi Siamo - Scuola di Coding per Bambini | TECHLAND"
+        description="Scopri TECHLAND: la scuola italiana leader nei corsi di programmazione per bambini e ragazzi 6-18 anni. 15.000+ studenti formati, 50+ docenti esperti. La nostra missione."
+        canonical="https://techlanditalia.it/chi-siamo"
+        keywords="chi siamo techland, scuola coding bambini italia, corsi programmazione ragazzi, insegnanti coding, formazione digitale giovani"
+        schemaData={organizationSchema}
+      />
+      
       {/* Hero */}
       <section className="tech-section bg-gradient-to-b from-tech-green-light to-background">
         <div className="tech-container">
           <div className="text-center max-w-3xl mx-auto">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-              Chi siamo
+              Chi Siamo: La Scuola di Coding per Bambini in Italia
             </h1>
             <p className="text-lg text-muted-foreground mb-8">
               TECHLAND nasce dalla passione per la tecnologia e l'educazione. Siamo un team di professionisti del tech e dell'insegnamento che crede nel potenziale di ogni bambino.

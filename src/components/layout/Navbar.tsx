@@ -8,10 +8,11 @@ import { useHasEnrollments } from "@/hooks/useHasEnrollments";
 import { useStudentRole } from "@/hooks/useStudentRole";
 
 const navLinks = [
-  { href: "/corsi", label: "Corsi" },
-  { href: "/faq", label: "FAQ" },
-  { href: "/blog", label: "Blog" },
-  { href: "/contatti", label: "Contatti" },
+  { href: "/corsi", label: "Corsi di Coding", title: "Corsi di programmazione per bambini e ragazzi" },
+  { href: "/chi-siamo", label: "Chi Siamo", title: "Scopri la scuola di coding TECHLAND" },
+  { href: "/faq", label: "FAQ", title: "Domande frequenti sui corsi di programmazione" },
+  { href: "/blog", label: "Blog", title: "Articoli e guide sul coding per bambini" },
+  { href: "/contatti", label: "Contatti", title: "Contattaci per informazioni sui corsi" },
 ];
 
 export function Navbar() {
@@ -41,11 +42,12 @@ export function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-8" aria-label="Navigazione principale">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 to={link.href}
+                title={link.title}
                 className={cn(
                   "text-sm font-medium transition-colors hover:text-primary",
                   location.pathname === link.href ? "text-primary" : "text-muted-foreground"
@@ -54,7 +56,7 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
-          </div>
+          </nav>
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-3">

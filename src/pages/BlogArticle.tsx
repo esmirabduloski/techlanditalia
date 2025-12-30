@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import DOMPurify from 'dompurify';
 import { Layout } from '@/components/layout/Layout';
+import { SEOHead } from '@/components/seo/SEOHead';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -101,19 +102,60 @@ export default function BlogArticle() {
     );
   }
 
+  // Schema.org per BlogPosting
+  const articleSchema = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": post.title,
+    "description": post.excerpt || `Articolo su ${post.category} - TECHLAND`,
+    "image": post.featured_image || "https://techlanditalia.it/og-image.jpg",
+    "datePublished": post.created_at,
+    "dateModified": post.created_at,
+    "author": {
+      "@type": "Organization",
+      "name": "TECHLAND"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "TECHLAND",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://techlanditalia.it/favicon.ico"
+      }
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": `https://techlanditalia.it/blog/${post.slug}`
+    },
+    "articleSection": post.category,
+    "inLanguage": "it-IT"
+  };
+
   return (
     <Layout>
+      <SEOHead
+        title={`${post.title} | Blog TECHLAND`}
+        description={post.excerpt || `Scopri di più su ${post.title}. Articoli e guide sulla programmazione per bambini e ragazzi.`}
+        canonical={`https://techlanditalia.it/blog/${post.slug}`}
+        keywords={`${post.category.toLowerCase()}, programmazione bambini, coding ragazzi, ${post.title.toLowerCase().split(' ').slice(0, 3).join(', ')}`}
+        ogImage={post.featured_image || undefined}
+        schemaData={articleSchema}
+      />
+      
       {/* Hero */}
       <section className="tech-section bg-gradient-to-b from-tech-green-light to-background">
         <div className="tech-container">
           <div className="max-w-3xl mx-auto">
-            <Link 
-              to="/blog" 
-              className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Torna al blog
-            </Link>
+            {/* Breadcrumb */}
+            <nav className="mb-6" aria-label="Breadcrumb">
+              <ol className="flex items-center gap-2 text-sm text-muted-foreground">
+                <li><Link to="/" className="hover:text-primary">Home</Link></li>
+                <li>/</li>
+                <li><Link to="/blog" className="hover:text-primary">Blog</Link></li>
+                <li>/</li>
+                <li className="text-foreground truncate max-w-[200px]">{post.title}</li>
+              </ol>
+            </nav>
             
             <div className="flex items-center gap-3 mb-4">
               <Badge className={categoryColors[post.category] || 'bg-muted'}>

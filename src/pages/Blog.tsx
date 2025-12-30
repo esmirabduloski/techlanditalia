@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
+import { SEOHead } from "@/components/seo/SEOHead";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Clock, Loader2 } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
@@ -56,17 +57,44 @@ export default function Blog() {
     });
   };
 
+  // Schema.org per Blog
+  const blogSchema = {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    "name": "Blog TECHLAND - Coding per Bambini",
+    "description": "Articoli, guide e consigli sulla programmazione per bambini e ragazzi. Scopri perché il coding è importante per il futuro dei tuoi figli.",
+    "url": "https://techlanditalia.it/blog",
+    "publisher": {
+      "@type": "Organization",
+      "name": "TECHLAND",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://techlanditalia.it/favicon.ico"
+      }
+    },
+    "inLanguage": "it-IT"
+  };
+
   return (
     <Layout>
+      <SEOHead
+        title="Blog Coding per Bambini: Guide e Consigli | TECHLAND"
+        description="Scopri articoli, guide e risorse sulla programmazione per bambini e ragazzi. Consigli per genitori su corsi di coding, robotica e tecnologia educativa."
+        canonical="https://techlanditalia.it/blog"
+        keywords="blog programmazione bambini, guide coding ragazzi, consigli genitori tecnologia, articoli educazione digitale, risorse coding bambini"
+        ogImage={posts[0]?.featured_image || defaultImage}
+        schemaData={blogSchema}
+      />
+      
       {/* Hero */}
       <section className="tech-section bg-gradient-to-b from-tech-green-light to-background">
         <div className="tech-container">
           <div className="text-center max-w-3xl mx-auto">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-              Blog & Risorse
+              Blog Programmazione per Bambini: Guide e Risorse
             </h1>
             <p className="text-lg text-muted-foreground">
-              Articoli, guide e consigli per genitori che vogliono accompagnare i figli nel mondo della tecnologia.
+              Articoli, guide e consigli per genitori che vogliono accompagnare i figli nel mondo della tecnologia e del coding.
             </p>
           </div>
         </div>

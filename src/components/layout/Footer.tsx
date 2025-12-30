@@ -3,25 +3,27 @@ import { Facebook, Instagram, Linkedin, Mail } from "lucide-react";
 
 const footerLinks = {
   corsi: [
-    { label: "L'ABC dell'informatica", href: "/corsi/abc-informatica" },
-    { label: "Programmazione visiva con Scratch", href: "/corsi/scratch" },
-    { label: "Sviluppo giochi con Roblox", href: "/corsi/roblox" },
-    { label: "Roblox Avanzato", href: "/corsi/roblox-avanzato" },
-    { label: "Web Development", href: "/corsi/web-development" },
-    { label: "Sviluppo giochi con Unity", href: "/corsi/unity" },
-    { label: "Python Base", href: "/corsi/python-base" },
-    { label: "Python PRO & AI", href: "/corsi/python-ai" },
+    { label: "L'ABC dell'informatica", href: "/corsi/abc-informatica", title: "Corso ABC informatica per bambini 6-8 anni" },
+    { label: "Programmazione Scratch", href: "/corsi/scratch", title: "Corso Scratch per bambini - programmazione visiva" },
+    { label: "Corso Roblox Bambini", href: "/corsi/roblox", title: "Corso Roblox per bambini - sviluppo giochi" },
+    { label: "Roblox Avanzato", href: "/corsi/roblox-avanzato", title: "Corso Roblox avanzato per ragazzi" },
+    { label: "Web Development", href: "/corsi/web-development", title: "Corso sviluppo web per ragazzi" },
+    { label: "Sviluppo Giochi Unity", href: "/corsi/unity", title: "Corso Unity sviluppo videogiochi" },
+    { label: "Python Base", href: "/corsi/python-base", title: "Corso Python base per ragazzi" },
+    { label: "Python PRO & AI", href: "/corsi/python-ai", title: "Corso Python avanzato e intelligenza artificiale" },
   ],
   azienda: [
-    { label: "Blog", href: "/blog" },
-    { label: "Lavora con noi", href: "/lavora-con-noi" },
-    { label: "Contatti", href: "/contatti" },
+    { label: "Chi Siamo", href: "/chi-siamo", title: "Scopri la scuola di coding TECHLAND" },
+    { label: "Blog Coding Bambini", href: "/blog", title: "Articoli e guide sulla programmazione per bambini" },
+    { label: "Lavora con noi", href: "/lavora-con-noi", title: "Lavora come insegnante di coding" },
+    { label: "Contattaci", href: "/contatti", title: "Contatta TECHLAND per informazioni" },
   ],
   supporto: [
-    { label: "FAQ", href: "/faq" },
-    { label: "Privacy Policy", href: "/privacy" },
-    { label: "Termini di Servizio", href: "/termini" },
-    { label: "Cookie Policy", href: "/cookie" },
+    { label: "FAQ Corsi Coding", href: "/faq", title: "Domande frequenti sui corsi di programmazione" },
+    { label: "Prenota Lezione Gratuita", href: "/prenota", title: "Prenota una lezione di prova gratuita" },
+    { label: "Privacy Policy", href: "/privacy", title: "Informativa sulla privacy" },
+    { label: "Termini di Servizio", href: "/termini", title: "Termini e condizioni" },
+    { label: "Cookie Policy", href: "/cookie", title: "Informativa sui cookie" },
   ],
 };
 
@@ -39,12 +41,12 @@ const WhatsAppIcon = () => (
 
 export function Footer() {
   return (
-    <footer className="bg-foreground text-background">
+    <footer className="bg-foreground text-background" role="contentinfo">
       <div className="tech-container py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
           {/* Brand */}
           <div className="lg:col-span-2">
-            <Link to="/" className="flex items-center gap-2 mb-6">
+            <Link to="/" className="flex items-center gap-2 mb-6" title="TECHLAND - Corsi di programmazione per bambini">
               <div className="w-10 h-10 rounded-xl bg-gradient-hero flex items-center justify-center">
                 <span className="text-primary-foreground font-bold text-xl">T</span>
               </div>
@@ -53,7 +55,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-background/70 mb-6 max-w-sm">
-              La piattaforma leader in Italia per l'insegnamento del coding a bambini e ragazzi dai 6 ai 18 anni. Trasformiamo la passione per la tecnologia in competenze per il futuro.
+              La scuola leader in Italia per i <strong>corsi di programmazione per bambini</strong> e ragazzi dai 6 ai 18 anni. Corsi di coding, Roblox, Minecraft, Python e sviluppo web.
             </p>
             <div className="flex gap-4">
               {socialLinks.map((social) => (
@@ -63,7 +65,8 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 rounded-xl bg-background/10 flex items-center justify-center hover:bg-background/20 transition-colors"
-                  aria-label={social.label}
+                  aria-label={`Seguici su ${social.label}`}
+                  title={`TECHLAND su ${social.label}`}
                 >
                   <social.icon className="w-5 h-5" />
                 </a>
@@ -72,13 +75,14 @@ export function Footer() {
           </div>
 
           {/* Corsi */}
-          <div>
-            <h4 className="font-semibold text-lg mb-4">Corsi</h4>
+          <nav aria-label="Corsi di programmazione">
+            <h4 className="font-semibold text-lg mb-4">Corsi Coding Bambini</h4>
             <ul className="space-y-3">
               {footerLinks.corsi.map((link) => (
                 <li key={link.href}>
                   <Link
                     to={link.href}
+                    title={link.title}
                     className="text-background/70 hover:text-background transition-colors text-sm"
                   >
                     {link.label}
@@ -86,16 +90,17 @@ export function Footer() {
                 </li>
               ))}
             </ul>
-          </div>
+          </nav>
 
           {/* Azienda */}
-          <div>
-            <h4 className="font-semibold text-lg mb-4">Azienda</h4>
+          <nav aria-label="Informazioni azienda">
+            <h4 className="font-semibold text-lg mb-4">TECHLAND</h4>
             <ul className="space-y-3">
               {footerLinks.azienda.map((link) => (
                 <li key={link.href}>
                   <Link
                     to={link.href}
+                    title={link.title}
                     className="text-background/70 hover:text-background transition-colors text-sm"
                   >
                     {link.label}
@@ -103,16 +108,17 @@ export function Footer() {
                 </li>
               ))}
             </ul>
-          </div>
+          </nav>
 
           {/* Supporto */}
-          <div>
+          <nav aria-label="Supporto e informazioni">
             <h4 className="font-semibold text-lg mb-4">Supporto</h4>
             <ul className="space-y-3">
               {footerLinks.supporto.map((link) => (
                 <li key={link.href}>
                   <Link
                     to={link.href}
+                    title={link.title}
                     className="text-background/70 hover:text-background transition-colors text-sm"
                   >
                     {link.label}
@@ -121,16 +127,26 @@ export function Footer() {
               ))}
             </ul>
             <div className="mt-6 space-y-2">
-              <a href="mailto:info@techlanditalia.it" className="flex items-center gap-2 text-background/70 hover:text-background text-sm">
+              <a 
+                href="mailto:info@techlanditalia.it" 
+                title="Invia email a TECHLAND"
+                className="flex items-center gap-2 text-background/70 hover:text-background text-sm"
+              >
                 <Mail className="w-4 h-4" />
                 info@techlanditalia.it
               </a>
-              <a href="https://wa.me/393512508851" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-background/70 hover:text-background text-sm">
+              <a 
+                href="https://wa.me/393512508851" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                title="Contattaci su WhatsApp"
+                className="flex items-center gap-2 text-background/70 hover:text-background text-sm"
+              >
                 <WhatsAppIcon />
                 +39 351 250 8851 (WhatsApp)
               </a>
             </div>
-          </div>
+          </nav>
         </div>
 
         {/* Bottom Bar */}

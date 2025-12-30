@@ -46,10 +46,11 @@ interface Homework {
 export default function CourseProgress() {
   const { courseId } = useParams<{ courseId: string }>();
   const { user, isLoading: authLoading } = useAuth();
-  const { lessonProgress, homeworkSubmissions, completeLesson, submitHomework, refetch } = useStudentProgress();
+  const { lessonProgress, homeworkSubmissions, taskProgress, completeLesson, submitHomework, refetch } = useStudentProgress();
   const [course, setCourse] = useState<Course | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [homework, setHomework] = useState<Homework[]>([]);
+  const [allTasks, setAllTasks] = useState<{ id: string; lesson_id: string }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [completingLesson, setCompletingLesson] = useState<string | null>(null);
   const [submittingHomework, setSubmittingHomework] = useState<string | null>(null);
@@ -94,9 +95,19 @@ export default function CourseProgress() {
       if (lessonsData) {
         setLessons(lessonsData);
 
-        // Fetch homework for these lessons
+        // Fetch all tasks for these lessons to calculate progress
         const lessonIds = lessonsData.map(l => l.id);
         if (lessonIds.length > 0) {
+          const { data: tasksData } = await supabase
+            .from('lesson_tasks')
+            .select('id, lesson_id')
+            .in('lesson_id', lessonIds);
+
+          if (tasksData) {
+            setAllTasks(tasksData);
+          }
+
+          // Fetch homework for these lessons
           const { data: homeworkData } = await supabase
             .from('homework')
             .select('*')
@@ -199,9 +210,13 @@ export default function CourseProgress() {
     );
   }
 
-  const completedLessons = lessons.filter(l => isLessonCompleted(l.id)).length;
-  const progressPercent = lessons.length > 0 
-    ? Math.round((completedLessons / lessons.length) * 100) 
+  // Calculate progress based on completed tasks
+  const completedTasksCount = allTasks.filter(t => 
+    taskProgress.some(p => p.task_id === t.id)
+  ).length;
+  const totalTasksCount = allTasks.length;
+  const progressPercent = totalTasksCount > 0 
+    ? Math.round((completedTasksCount / totalTasksCount) * 100) 
     : 0;
 
   return (
@@ -235,7 +250,7 @@ export default function CourseProgress() {
                   <span className="font-semibold">Avanzamento Corso</span>
                 </div>
                 <Badge variant={progressPercent === 100 ? 'default' : 'secondary'}>
-                  {completedLessons}/{lessons.length} lezioni
+                  {completedTasksCount}/{totalTasksCount} task
                 </Badge>
               </div>
               <Progress value={progressPercent} className="h-3" />

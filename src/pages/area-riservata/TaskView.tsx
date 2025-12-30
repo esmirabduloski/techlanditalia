@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useStudentProgress } from '@/hooks/useStudentProgress';
 import { supabase } from '@/integrations/supabase/client';
 import { Layout } from '@/components/layout/Layout';
 import { LessonContent } from '@/components/lesson/LessonContent';
@@ -8,7 +9,8 @@ import { TaskNavigation } from '@/components/lesson/TaskNavigation';
 import { PythonCompiler } from '@/components/lesson/PythonCompiler';
 import { WebCompiler } from '@/components/lesson/WebCompiler';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CheckCircle2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface Course {
   id: string;
@@ -40,6 +42,7 @@ const SPLIT_LAYOUT_COURSES = [...PYTHON_COURSES, ...WEB_COURSES];
 export default function TaskView() {
   const { courseId, lessonNumber, taskNumber } = useParams<{ courseId: string; lessonNumber: string; taskNumber: string }>();
   const { user, isLoading: authLoading } = useAuth();
+  const { isTaskCompleted, completeTask } = useStudentProgress();
   const navigate = useNavigate();
   
   const [course, setCourse] = useState<Course | null>(null);
@@ -113,9 +116,23 @@ export default function TaskView() {
     }
   };
 
-  const navigateToTask = (newTaskNumber: number) => {
+  const navigateToTask = async (newTaskNumber: number) => {
+    // Mark current task as completed when navigating to next
+    if (task && newTaskNumber > task.task_number) {
+      await completeTask(task.id);
+    }
     navigate(`/area-riservata/corso/${courseId}/lezione/${lessonNumber}/task/${newTaskNumber}`);
   };
+
+  const handleNavigateToCourse = async () => {
+    // Mark last task as completed when going back to course
+    if (task) {
+      await completeTask(task.id);
+    }
+    navigate(`/area-riservata/corso/${courseId}`);
+  };
+
+  const taskCompleted = task ? isTaskCompleted(task.id) : false;
 
   if (authLoading || isLoading) {
     return (
@@ -159,6 +176,12 @@ export default function TaskView() {
                 images={[]}
               />
               <div className="px-6 pb-6">
+                {taskCompleted && (
+                  <Badge variant="outline" className="mb-4 text-primary border-primary">
+                    <CheckCircle2 className="w-4 h-4 mr-1" />
+                    Task completato
+                  </Badge>
+                )}
                 <TaskNavigation
                   courseId={course.id}
                   lessonNumber={lesson.lesson_number}
@@ -166,6 +189,7 @@ export default function TaskView() {
                   totalTasks={totalTasks}
                   onPrevious={task.task_number > 1 ? () => navigateToTask(task.task_number - 1) : undefined}
                   onNext={task.task_number < totalTasks ? () => navigateToTask(task.task_number + 1) : undefined}
+                  onComplete={handleNavigateToCourse}
                 />
               </div>
             </div>
@@ -197,6 +221,12 @@ export default function TaskView() {
           slidesUrl={task.slides_url}
           images={[]}
         />
+        {taskCompleted && (
+          <Badge variant="outline" className="mb-4 text-primary border-primary">
+            <CheckCircle2 className="w-4 h-4 mr-1" />
+            Task completato
+          </Badge>
+        )}
         <TaskNavigation
           courseId={course.id}
           lessonNumber={lesson.lesson_number}
@@ -204,6 +234,7 @@ export default function TaskView() {
           totalTasks={totalTasks}
           onPrevious={task.task_number > 1 ? () => navigateToTask(task.task_number - 1) : undefined}
           onNext={task.task_number < totalTasks ? () => navigateToTask(task.task_number + 1) : undefined}
+          onComplete={handleNavigateToCourse}
         />
       </div>
     </Layout>

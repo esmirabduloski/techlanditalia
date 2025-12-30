@@ -79,6 +79,12 @@ export default function AdminCourses() {
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground hidden sm:block">{user?.email}</span>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/area-riservata">
+                <User className="w-4 h-4 mr-2" />
+                Dashboard
+              </Link>
+            </Button>
             <Button variant="outline" size="sm" onClick={handleSignOut}>
               <LogOut className="w-4 h-4 mr-2" />
               Esci

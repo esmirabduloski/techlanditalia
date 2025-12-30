@@ -528,6 +528,45 @@ export type Database = {
           },
         ]
       }
+      task_progress: {
+        Row: {
+          completed_at: string
+          id: string
+          points_earned: number
+          student_id: string
+          task_id: string
+        }
+        Insert: {
+          completed_at?: string
+          id?: string
+          points_earned?: number
+          student_id: string
+          task_id: string
+        }
+        Update: {
+          completed_at?: string
+          id?: string
+          points_earned?: number
+          student_id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_progress_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_progress_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trial_bookings: {
         Row: {
           admin_notes: string | null

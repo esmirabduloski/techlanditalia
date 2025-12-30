@@ -1,8 +1,13 @@
+# Robots.txt for TECHLAND
+# https://techlanditalia.it
+
 User-agent: Googlebot
 Allow: /
+Crawl-delay: 1
 
 User-agent: Bingbot
 Allow: /
+Crawl-delay: 1
 
 User-agent: Twitterbot
 Allow: /
@@ -10,5 +15,26 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
+User-agent: LinkedInBot
+Allow: /
+
 User-agent: *
 Allow: /
+
+# Sitemap
+Sitemap: https://techlanditalia.it/sitemap.xml
+
+# Disallow admin and private areas
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /area-riservata
+Disallow: /area-riservata/*
+Disallow: /auth
+
+# Allow important resources
+Allow: /corsi
+Allow: /blog
+Allow: /prenota
+Allow: /faq
+Allow: /chi-siamo
+Allow: /contatti

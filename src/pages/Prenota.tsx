@@ -24,6 +24,7 @@ import {
 import { CheckCircle2, Calendar, Video, Shield, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { SEOHead } from "@/components/seo/SEOHead";
 
 const interests = [
   { value: "coding-base", label: "Coding Base (6-8 anni)" },
@@ -195,17 +196,22 @@ export default function Prenota() {
 
   return (
     <Layout>
+      <SEOHead
+        title="Prenota Lezione di Prova Gratuita | Corsi Coding Bambini | TECHLAND"
+        description="Prenota una lezione di prova gratuita per il tuo bambino. Scopri i nostri corsi di programmazione per bambini e ragazzi 6-18 anni. Nessun impegno!"
+        canonical="/prenota"
+      />
       <section className="tech-section bg-gradient-to-b from-tech-green-light to-background">
         <div className="tech-container">
           <div className="grid lg:grid-cols-2 gap-12 items-start">
             {/* Info Column */}
             <div>
               <h1 className="text-4xl md:text-5xl font-bold mb-6">
-                Prenota una lezione{" "}
-                <span className="tech-gradient-text">gratuita</span>
+                Prenota una lezione di coding{" "}
+                <span className="tech-gradient-text">gratuita</span> per il tuo bambino
               </h1>
               <p className="text-lg text-muted-foreground mb-8">
-                Scopri TECHLAND con una lezione di prova senza impegno. Valuteremo insieme il percorso migliore per il tuo bambino.
+                Scopri TECHLAND con una lezione di prova senza impegno. Valuteremo insieme il percorso di programmazione migliore per il tuo bambino.
               </p>
 
               <div className="space-y-4 mb-8">

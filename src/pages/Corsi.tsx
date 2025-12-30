@@ -4,6 +4,7 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Users, ArrowRight, Filter } from "lucide-react";
+import { SEOHead, generateBreadcrumbSchema } from "@/components/seo/SEOHead";
 
 const allCourses = [
   {
@@ -133,17 +134,50 @@ export default function Corsi() {
     return true;
   });
 
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "Home", url: "/" },
+    { name: "Corsi di Programmazione per Bambini", url: "/corsi" }
+  ]);
+
+  const coursesListSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Corsi di Programmazione per Bambini e Ragazzi TECHLAND",
+    "description": "Tutti i corsi di coding e programmazione per bambini e ragazzi dai 6 ai 18 anni",
+    "itemListElement": allCourses.map((course, index) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "item": {
+        "@type": "Course",
+        "name": course.title,
+        "description": course.description,
+        "url": `https://techlanditalia.it/corsi/${course.id}`,
+        "provider": {
+          "@type": "EducationalOrganization",
+          "name": "TECHLAND"
+        }
+      }
+    }))
+  };
+
   return (
     <Layout>
+      <SEOHead
+        title="Corsi di Programmazione per Bambini e Ragazzi Online | TECHLAND"
+        description="Scopri tutti i corsi di coding per bambini e ragazzi 6-18 anni: Scratch, Roblox, Minecraft, Python, Unity, Web Development. Lezioni online in piccoli gruppi."
+        canonical="/corsi"
+        structuredData={[breadcrumbSchema, coursesListSchema]}
+      />
+      
       {/* Hero */}
       <section className="py-16 md:py-24 bg-gradient-to-b from-primary/10 via-tech-green-light to-background">
         <div className="tech-container">
           <div className="text-center max-w-3xl mx-auto">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-              I nostri <span className="tech-gradient-text">corsi</span>
+              Corsi di <span className="tech-gradient-text">programmazione per bambini</span> e ragazzi
             </h1>
             <p className="text-lg text-muted-foreground">
-              Percorsi studiati per ogni età e livello. Trova il corso perfetto per il tuo bambino e inizia il viaggio nel mondo del coding.
+              Percorsi di coding studiati per ogni età e livello: da Scratch a Python, da Roblox a Unity. Trova il corso perfetto per il tuo bambino e inizia il viaggio nel mondo della programmazione.
             </p>
           </div>
         </div>

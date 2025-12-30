@@ -8,6 +8,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { HelpCircle, ArrowRight } from "lucide-react";
+import { SEOHead, generateFAQSchema } from "@/components/seo/SEOHead";
 
 const faqCategories = [
   {
@@ -111,8 +112,19 @@ const faqCategories = [
 ];
 
 export default function FAQ() {
+  // Flatten all FAQs for schema
+  const allFaqs = faqCategories.flatMap(cat => cat.faqs);
+  const faqSchema = generateFAQSchema(allFaqs);
+
   return (
     <Layout>
+      <SEOHead
+        title="FAQ Corsi di Programmazione per Bambini | TECHLAND"
+        description="Domande frequenti sui corsi di coding per bambini e ragazzi TECHLAND. Prezzi, requisiti, lezioni di prova, certificati e molto altro."
+        canonical="/faq"
+        structuredData={faqSchema}
+      />
+      
       {/* Hero Section */}
       <section className="relative py-20 bg-gradient-to-br from-tech-purple/10 via-tech-cyan/5 to-background overflow-hidden">
         <div className="absolute inset-0 bg-grid-pattern opacity-5" />
@@ -123,7 +135,7 @@ export default function FAQ() {
               <span className="text-sm font-medium">Centro assistenza</span>
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-              Hai bisogno di <span className="text-gradient">aiuto</span>?
+              Domande frequenti sui <span className="text-gradient">corsi di coding per bambini</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground">
               Trova le risposte alle domande più frequenti sui nostri corsi di programmazione per bambini e ragazzi.

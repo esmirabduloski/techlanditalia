@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { SEOHead } from "@/components/seo/SEOHead";
+import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Clock, Loader2 } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
@@ -89,6 +90,10 @@ export default function Blog() {
       {/* Hero */}
       <section className="tech-section bg-gradient-to-b from-tech-green-light to-background">
         <div className="tech-container">
+          <SEOBreadcrumb 
+            items={[{ label: "Blog Coding Bambini" }]} 
+            className="mb-8 justify-center"
+          />
           <div className="text-center max-w-3xl mx-auto">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
               Blog Programmazione per Bambini: Guide e Risorse

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Users, ArrowRight, Filter } from "lucide-react";
 import { SEOHead, generateBreadcrumbSchema } from "@/components/seo/SEOHead";
+import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
 
 const allCourses = [
   {
@@ -172,6 +173,10 @@ export default function Corsi() {
       {/* Hero */}
       <section className="py-16 md:py-24 bg-gradient-to-b from-primary/10 via-tech-green-light to-background">
         <div className="tech-container">
+          <SEOBreadcrumb 
+            items={[{ label: "Corsi di Programmazione per Bambini" }]} 
+            className="mb-8 justify-center"
+          />
           <div className="text-center max-w-3xl mx-auto">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
               Corsi di <span className="tech-gradient-text">programmazione per bambini</span> e ragazzi

@@ -1,12 +1,24 @@
 import { Layout } from "@/components/layout/Layout";
+import { SEOHead } from "@/components/seo/SEOHead";
+import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
 import { Link } from "react-router-dom";
 
 export default function Termini() {
   return (
     <Layout>
+      <SEOHead
+        title="Termini e Condizioni | TECHLAND"
+        description="Leggi i termini e condizioni dei servizi TECHLAND. Condizioni di utilizzo, pagamenti, rimborsi e proprietà intellettuale."
+        canonical="/termini"
+      />
+      
       <section className="tech-section">
         <div className="tech-container">
           <div className="max-w-3xl mx-auto">
+            <SEOBreadcrumb 
+              items={[{ label: "Termini e Condizioni" }]} 
+              className="mb-8"
+            />
             <h1 className="text-4xl font-bold mb-8">Termini e Condizioni</h1>
             <p className="text-muted-foreground mb-8">
               Ultimo aggiornamento: {new Date().toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })}

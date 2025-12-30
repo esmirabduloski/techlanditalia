@@ -1,4 +1,6 @@
 import { Layout } from "@/components/layout/Layout";
+import { SEOHead } from "@/components/seo/SEOHead";
+import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -77,9 +79,20 @@ export default function LavoraConNoi() {
 
   return (
     <Layout>
+      <SEOHead
+        title="Lavora Con Noi - Insegnanti Coding per Bambini | TECHLAND"
+        description="Unisciti al team TECHLAND! Cerchiamo insegnanti di programmazione per bambini e ragazzi. Lavoro remoto, orari flessibili, formazione continua."
+        canonical="/lavora-con-noi"
+        keywords="lavora con noi techland, insegnante coding bambini, lavoro insegnante programmazione, docente scratch python roblox"
+      />
+      
       {/* Hero Section */}
       <section className="pt-32 pb-16 bg-gradient-to-br from-primary/10 via-tech-cyan/5 to-background">
         <div className="tech-container">
+          <SEOBreadcrumb 
+            items={[{ label: "Lavora Con Noi" }]} 
+            className="mb-8 justify-center"
+          />
           <div className="text-center max-w-3xl mx-auto">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
               <Briefcase className="w-4 h-4" />

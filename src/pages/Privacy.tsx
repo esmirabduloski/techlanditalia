@@ -1,11 +1,23 @@
 import { Layout } from "@/components/layout/Layout";
+import { SEOHead } from "@/components/seo/SEOHead";
+import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
 
 export default function Privacy() {
   return (
     <Layout>
+      <SEOHead
+        title="Privacy Policy | TECHLAND"
+        description="Informativa sulla privacy di TECHLAND. Scopri come trattiamo e proteggiamo i tuoi dati personali secondo il GDPR."
+        canonical="/privacy"
+      />
+      
       <section className="tech-section">
         <div className="tech-container">
           <div className="max-w-3xl mx-auto">
+            <SEOBreadcrumb 
+              items={[{ label: "Privacy Policy" }]} 
+              className="mb-8"
+            />
             <h1 className="text-4xl font-bold mb-8">Privacy Policy</h1>
             <p className="text-muted-foreground mb-8">
               Ultimo aggiornamento: {new Date().toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })}

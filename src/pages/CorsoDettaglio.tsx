@@ -23,6 +23,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SEOHead, generateCourseSchema, generateBreadcrumbSchema } from "@/components/seo/SEOHead";
+import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
 
 // Course data based on Kodland content
 const coursesData: Record<string, {
@@ -1218,16 +1219,13 @@ export default function CorsoDettaglio() {
       {/* Hero */}
       <section className="py-16 md:py-24 bg-gradient-to-b from-primary/10 via-tech-green-light to-background">
         <div className="tech-container">
-          {/* Breadcrumb */}
-          <nav aria-label="Breadcrumb" className="mb-8">
-            <ol className="flex items-center gap-2 text-sm text-muted-foreground">
-              <li><Link to="/" className="hover:text-foreground transition-colors">Home</Link></li>
-              <li>/</li>
-              <li><Link to="/corsi" className="hover:text-foreground transition-colors">Corsi</Link></li>
-              <li>/</li>
-              <li className="text-foreground font-medium">{course.title}</li>
-            </ol>
-          </nav>
+          <SEOBreadcrumb 
+            items={[
+              { label: "Corsi", href: "/corsi" },
+              { label: course.title }
+            ]} 
+            className="mb-8"
+          />
 
           <div className="tech-card p-8 md:p-12">
             <div className="flex items-start gap-4 mb-6">

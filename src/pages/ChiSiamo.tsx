@@ -1,5 +1,6 @@
 import { Layout } from "@/components/layout/Layout";
 import { SEOHead } from "@/components/seo/SEOHead";
+import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Users, Award, Target, Heart, Sparkles, GraduationCap } from "lucide-react";
@@ -74,6 +75,10 @@ export default function ChiSiamo() {
       {/* Hero */}
       <section className="tech-section bg-gradient-to-b from-tech-green-light to-background">
         <div className="tech-container">
+          <SEOBreadcrumb 
+            items={[{ label: "Chi Siamo" }]} 
+            className="mb-8 justify-center"
+          />
           <div className="text-center max-w-3xl mx-auto">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
               Chi Siamo: La Scuola di Coding per Bambini in Italia

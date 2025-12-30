@@ -1,4 +1,6 @@
 import { Layout } from "@/components/layout/Layout";
+import { SEOHead } from "@/components/seo/SEOHead";
+import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -113,9 +115,20 @@ export default function Contatti() {
 
   return (
     <Layout>
+      <SEOHead
+        title="Contattaci - Corsi Coding per Bambini | TECHLAND"
+        description="Hai domande sui nostri corsi di programmazione per bambini? Contattaci via email, WhatsApp o compila il form. Ti rispondiamo entro 24 ore!"
+        canonical="/contatti"
+        keywords="contatti techland, info corsi coding bambini, assistenza corsi programmazione"
+      />
+      
       {/* Hero Section */}
       <section className="pt-32 pb-16 bg-gradient-to-br from-tech-cyan/10 via-primary/5 to-background">
         <div className="tech-container">
+          <SEOBreadcrumb 
+            items={[{ label: "Contatti" }]} 
+            className="mb-8 justify-center"
+          />
           <div className="text-center max-w-3xl mx-auto">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-tech-cyan/10 text-tech-cyan text-sm font-medium mb-6">
               <MessageCircle className="w-4 h-4" />

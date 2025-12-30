@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useStudentProgress } from '@/hooks/useStudentProgress';
@@ -11,17 +11,79 @@ import { LevelBadge, PointsDisplay, getLevelFromPoints } from '@/components/gami
 import { HomeworkSection } from '@/components/dashboard/HomeworkSection';
 import { ParentFeedbackSection } from '@/components/dashboard/ParentFeedbackSection';
 import { Loader2, BookOpen, Trophy, Target, Settings, LogOut, Rocket, Shield } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+
+interface CourseProgress {
+  courseId: string;
+  totalTasks: number;
+  completedTasks: number;
+}
 
 export default function Dashboard() {
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
-  const { profile, enrollments, lessonProgress, isLoading: dataLoading } = useStudentProgress();
+  const { profile, enrollments, lessonProgress, taskProgress, isLoading: dataLoading } = useStudentProgress();
   const navigate = useNavigate();
+  const [courseProgressMap, setCourseProgressMap] = useState<CourseProgress[]>([]);
 
   useEffect(() => {
     if (!authLoading && !user) {
       navigate('/auth');
     }
   }, [user, authLoading, navigate]);
+
+  // Fetch task counts and completed tasks for all enrolled courses
+  useEffect(() => {
+    const fetchCourseProgress = async () => {
+      if (enrollments.length === 0) return;
+
+      const progressList: CourseProgress[] = [];
+      const completedTaskIds = taskProgress.map(tp => tp.task_id);
+      
+      for (const enrollment of enrollments) {
+        // Get all lessons for this course
+        const { data: lessons } = await supabase
+          .from('lessons')
+          .select('id')
+          .eq('course_id', enrollment.course.id);
+
+        if (lessons && lessons.length > 0) {
+          const lessonIds = lessons.map(l => l.id);
+          
+          // Get all tasks for all lessons in this course
+          const { data: tasks } = await supabase
+            .from('lesson_tasks')
+            .select('id')
+            .in('lesson_id', lessonIds);
+
+          const totalTasks = tasks?.length || 0;
+          const completedTasks = tasks?.filter(t => completedTaskIds.includes(t.id)).length || 0;
+
+          progressList.push({
+            courseId: enrollment.course.id,
+            totalTasks,
+            completedTasks
+          });
+        } else {
+          progressList.push({
+            courseId: enrollment.course.id,
+            totalTasks: 0,
+            completedTasks: 0
+          });
+        }
+      }
+
+      setCourseProgressMap(progressList);
+    };
+
+    fetchCourseProgress();
+  }, [enrollments, taskProgress]);
+
+  // Helper function to get course progress percentage
+  const getCourseProgressPercent = (courseId: string) => {
+    const progress = courseProgressMap.find(c => c.courseId === courseId);
+    if (!progress || progress.totalTasks === 0) return 0;
+    return Math.round((progress.completedTasks / progress.totalTasks) * 100);
+  };
 
   if (authLoading || dataLoading) {
     return (
@@ -186,8 +248,7 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {enrollments.map((enrollment) => {
                   const course = enrollment.course;
-                  // For now, show a placeholder progress
-                  const progressPercent = Math.floor(Math.random() * 60) + 10; // Placeholder
+                  const progressPercent = getCourseProgressPercent(course.id);
                   
                   return (
                     <Link 

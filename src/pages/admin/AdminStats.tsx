@@ -70,6 +70,14 @@ export default function AdminStats() {
   }, [user, isAdmin]);
 
   const fetchStats = async () => {
+    // First, get all admin user IDs to exclude them from counts
+    const { data: adminRoles } = await supabase
+      .from('user_roles')
+      .select('user_id')
+      .eq('role', 'admin');
+    
+    const adminIds = adminRoles?.map(r => r.user_id) || [];
+
     // Fetch all stats in parallel
     const [
       parentsRes,
@@ -80,29 +88,38 @@ export default function AdminStats() {
       enrollmentsRes,
       enrollmentTrendsRes
     ] = await Promise.all([
-      supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'parent'),
+      // Parents: exclude admins
+      supabase.from('profiles').select('id').eq('role', 'parent'),
       supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'student'),
       supabase.from('courses').select('id', { count: 'exact', head: true }),
       supabase.from('trial_bookings').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
       supabase.from('contact_submissions').select('id', { count: 'exact', head: true }),
-      supabase.from('enrollments').select('id', { count: 'exact', head: true }),
-      supabase.from('enrollments').select('enrolled_at').order('enrolled_at', { ascending: true })
+      // Enrollments: exclude admin enrollments
+      supabase.from('enrollments').select('id, student_id'),
+      supabase.from('enrollments').select('enrolled_at, student_id').order('enrolled_at', { ascending: true })
     ]);
 
+    // Filter out admins from parent count
+    const nonAdminParents = parentsRes.data?.filter(p => !adminIds.includes(p.id)) || [];
+    
+    // Filter out admin enrollments
+    const nonAdminEnrollments = enrollmentsRes.data?.filter(e => !adminIds.includes(e.student_id)) || [];
+
     setStats({
-      parents: parentsRes.count || 0,
+      parents: nonAdminParents.length,
       students: studentsRes.count || 0,
       courses: coursesRes.count || 0,
       pendingBookings: pendingBookingsRes.count || 0,
       unreadContacts: contactsRes.count || 0,
-      totalEnrollments: enrollmentsRes.count || 0
+      totalEnrollments: nonAdminEnrollments.length
     });
 
-    // Process enrollment trends by month
+    // Process enrollment trends by month (excluding admins)
     if (enrollmentTrendsRes.data) {
+      const nonAdminEnrollmentTrends = enrollmentTrendsRes.data.filter(e => !adminIds.includes(e.student_id));
       const monthlyData: Record<string, number> = {};
       
-      enrollmentTrendsRes.data.forEach((enrollment) => {
+      nonAdminEnrollmentTrends.forEach((enrollment) => {
         const date = new Date(enrollment.enrolled_at);
         const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         monthlyData[monthKey] = (monthlyData[monthKey] || 0) + 1;
@@ -146,7 +163,7 @@ export default function AdminStats() {
     { label: 'Genitori', value: stats.parents, icon: Users, color: 'bg-primary/10', iconColor: 'text-primary' },
     { label: 'Studenti', value: stats.students, icon: GraduationCap, color: 'bg-tech-teal/10', iconColor: 'text-tech-teal' },
     { label: 'Corsi Attivi', value: stats.courses, icon: BookOpen, color: 'bg-tech-purple/10', iconColor: 'text-tech-purple' },
-    { label: 'Iscrizioni Totali', value: stats.totalEnrollments, icon: TrendingUp, color: 'bg-green-500/10', iconColor: 'text-green-500' },
+    { label: 'Corsi Acquistati', value: stats.totalEnrollments, icon: TrendingUp, color: 'bg-green-500/10', iconColor: 'text-green-500' },
     { label: 'Prenotazioni in Attesa', value: stats.pendingBookings, icon: Calendar, color: 'bg-amber-500/10', iconColor: 'text-amber-500' },
     { label: 'Contatti Ricevuti', value: stats.unreadContacts, icon: MessageSquare, color: 'bg-blue-500/10', iconColor: 'text-blue-500' },
   ];

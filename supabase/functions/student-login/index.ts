@@ -38,7 +38,7 @@ serve(async (req) => {
 
     if (profileError || !profile) {
       console.log("Profile not found for username:", username);
-      return new Response(JSON.stringify({ error: "Nome utente non trovato" }), {
+      return new Response(JSON.stringify({ error: "Nome utente o password non corretti" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -49,7 +49,7 @@ serve(async (req) => {
 
     if (studentAuthError || !studentAuthUser.user) {
       console.error("Error getting student auth user:", studentAuthError);
-      return new Response(JSON.stringify({ error: "Utente non trovato" }), {
+      return new Response(JSON.stringify({ error: "Nome utente o password non corretti" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -118,7 +118,7 @@ serve(async (req) => {
       
       // If we get here, password is wrong
       console.log("Invalid password for username:", username);
-      return new Response(JSON.stringify({ error: "Password non corretta" }), {
+      return new Response(JSON.stringify({ error: "Nome utente o password non corretti" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

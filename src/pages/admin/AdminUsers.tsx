@@ -511,9 +511,15 @@ export default function AdminUsers() {
                                   <Badge variant="secondary">Genitore</Badge>
                                   {group.parent.isAdmin && <Badge className="bg-amber-500">Admin</Badge>}
                                 </div>
-                                <p className="text-sm text-muted-foreground">
-                                  {hasChildren ? `${group.children.length} ${group.children.length === 1 ? 'figlio' : 'figli'}` : 'Nessun figlio associato'}
-                                </p>
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+                                  <span>{hasChildren ? `${group.children.length} ${group.children.length === 1 ? 'figlio' : 'figli'}` : 'Nessun figlio associato'}</span>
+                                  {group.parent.email && (
+                                    <>
+                                      <span className="hidden sm:inline">•</span>
+                                      <span className="text-xs">{group.parent.email}</span>
+                                    </>
+                                  )}
+                                </div>
                               </div>
                             </div>
                             <div className="flex items-center gap-2 flex-shrink-0">

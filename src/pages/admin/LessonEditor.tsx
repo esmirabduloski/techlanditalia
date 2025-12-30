@@ -8,10 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { LogOut, Loader2, ArrowLeft, Save } from 'lucide-react';
-import RichTextEditor from '@/components/editor/RichTextEditor';
+import { LogOut, Loader2, ArrowLeft, Save, User } from 'lucide-react';
 
 interface Course {
   id: string;
@@ -202,6 +200,12 @@ export default function LessonEditor() {
             <Badge variant="secondary">Admin</Badge>
           </div>
           <div className="flex items-center gap-4">
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/area-riservata">
+                <User className="w-4 h-4 mr-2" />
+                Dashboard
+              </Link>
+            </Button>
             <Button variant="outline" size="sm" onClick={handleSignOut}>
               <LogOut className="w-4 h-4 mr-2" />
               Esci
@@ -279,51 +283,9 @@ export default function LessonEditor() {
                 />
               </div>
 
-              {/* Content Type */}
-              <div className="space-y-2">
-                <Label>Tipo Contenuto</Label>
-                <Select
-                  value={formData.content_type}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, content_type: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="text">Testo</SelectItem>
-                    <SelectItem value="slides">Presentazione</SelectItem>
-                    <SelectItem value="mixed">Misto</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Content - WYSIWYG Editor */}
-              <div className="space-y-2">
-                <Label>Contenuto</Label>
-                <RichTextEditor
-                  content={formData.content}
-                  onChange={(html) => setFormData(prev => ({ ...prev, content: html }))}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Usa la toolbar per formattare il testo, inserire immagini e video YouTube.
-                </p>
-              </div>
-
-              {/* Slides URL - solo per tipo Presentazione */}
-              {formData.content_type === 'slides' && (
-                <div className="space-y-2">
-                  <Label htmlFor="slides_url">URL Google Slides</Label>
-                  <Input
-                    id="slides_url"
-                    value={formData.slides_url}
-                    onChange={(e) => setFormData(prev => ({ ...prev, slides_url: e.target.value }))}
-                    placeholder="https://docs.google.com/presentation/d/..."
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Incolla il link della presentazione Google Slides per incorporarla nella lezione.
-                  </p>
-                </div>
-              )}
+              <p className="text-sm text-muted-foreground bg-muted/50 p-4 rounded-lg">
+                💡 Il contenuto della lezione viene gestito tramite i Task. Dopo aver creato la lezione, potrai aggiungere i Task dalla pagina delle lezioni.
+              </p>
             </CardContent>
           </Card>
 

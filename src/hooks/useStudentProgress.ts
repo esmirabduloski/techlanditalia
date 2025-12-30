@@ -42,12 +42,20 @@ interface HomeworkSubmission {
   points_earned: number;
 }
 
+interface TaskProgress {
+  id: string;
+  task_id: string;
+  completed_at: string;
+  points_earned: number;
+}
+
 export function useStudentProgress() {
   const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [lessonProgress, setLessonProgress] = useState<LessonProgress[]>([]);
   const [homeworkSubmissions, setHomeworkSubmissions] = useState<HomeworkSubmission[]>([]);
+  const [taskProgress, setTaskProgress] = useState<TaskProgress[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -123,6 +131,16 @@ export function useStudentProgress() {
 
       if (submissionsData) {
         setHomeworkSubmissions(submissionsData as HomeworkSubmission[]);
+      }
+
+      // Fetch task progress
+      const { data: taskProgressData } = await supabase
+        .from('task_progress')
+        .select('*')
+        .eq('student_id', user.id);
+
+      if (taskProgressData) {
+        setTaskProgress(taskProgressData as TaskProgress[]);
       }
     } catch (error) {
       console.error('Error fetching student data:', error);
@@ -207,17 +225,34 @@ export function useStudentProgress() {
     }
   };
 
-  const getCourseProgress = (courseId: string, totalLessons: number) => {
-    const completedCount = lessonProgress.filter(p => {
-      // This is a simplified check - in production you'd want to join with lessons table
-      return true; // Will be refined when we fetch lessons for specific course
-    }).length;
+  const completeTask = async (taskId: string) => {
+    if (!user) return false;
 
-    return {
-      completed: completedCount,
-      total: totalLessons,
-      percentage: totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0,
-    };
+    // Check if already completed
+    if (taskProgress.some(p => p.task_id === taskId)) {
+      return true;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('task_progress')
+        .insert({
+          student_id: user.id,
+          task_id: taskId,
+        });
+
+      if (!error) {
+        await fetchStudentData();
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  };
+
+  const isTaskCompleted = (taskId: string) => {
+    return taskProgress.some(p => p.task_id === taskId);
   };
 
   return {
@@ -225,11 +260,13 @@ export function useStudentProgress() {
     enrollments,
     lessonProgress,
     homeworkSubmissions,
+    taskProgress,
     isLoading,
     updateAvatar,
     completeLesson,
     submitHomework,
-    getCourseProgress,
+    completeTask,
+    isTaskCompleted,
     refetch: fetchStudentData,
   };
 }

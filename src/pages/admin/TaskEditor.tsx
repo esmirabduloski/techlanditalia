@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { LogOut, Loader2, ArrowLeft, Save } from 'lucide-react';
+import { LogOut, Loader2, ArrowLeft, Save, User } from 'lucide-react';
 import RichTextEditor from '@/components/editor/RichTextEditor';
 
 interface Course {
@@ -210,6 +210,12 @@ export default function TaskEditor() {
             <Badge variant="secondary">Admin</Badge>
           </div>
           <div className="flex items-center gap-4">
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/area-riservata">
+                <User className="w-4 h-4 mr-2" />
+                Dashboard
+              </Link>
+            </Button>
             <Button variant="outline" size="sm" onClick={handleSignOut}>
               <LogOut className="w-4 h-4 mr-2" />
               Esci

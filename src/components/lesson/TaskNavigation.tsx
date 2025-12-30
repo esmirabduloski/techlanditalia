@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 
@@ -9,6 +9,7 @@ interface TaskNavigationProps {
   totalTasks: number;
   onPrevious?: () => void;
   onNext?: () => void;
+  onComplete?: () => void;
 }
 
 export function TaskNavigation({
@@ -18,9 +19,11 @@ export function TaskNavigation({
   totalTasks,
   onPrevious,
   onNext,
+  onComplete,
 }: TaskNavigationProps) {
   const hasPrevious = currentTaskNumber > 1;
   const hasNext = currentTaskNumber < totalTasks;
+  const isLastTask = currentTaskNumber === totalTasks;
 
   return (
     <div className="flex items-center justify-between py-4 border-t border-border">
@@ -71,10 +74,9 @@ export function TaskNavigation({
             )}
           </Button>
         ) : (
-          <Button variant="outline" asChild>
-            <Link to={`/area-riservata/corso/${courseId}`}>
-              Torna al corso
-            </Link>
+          <Button onClick={onComplete}>
+            <CheckCircle2 className="w-4 h-4 mr-2" />
+            Completa lezione
           </Button>
         )}
       </div>

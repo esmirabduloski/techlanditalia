@@ -69,6 +69,30 @@ p {
     iframeRef.current.src = URL.createObjectURL(blob);
   };
 
+  // Allowed image types for web compiler (must match server-side)
+  const ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
+  const ALLOWED_IMAGE_MIME_TYPES = [
+    'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'
+  ];
+
+  const getFileExtension = (fileName: string): string => {
+    const parts = fileName.toLowerCase().split('.');
+    return parts.length > 1 ? parts[parts.length - 1] : '';
+  };
+
+  const readFileBytes = async (file: File, numBytes: number = 8): Promise<number[]> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const arrayBuffer = reader.result as ArrayBuffer;
+        const bytes = new Uint8Array(arrayBuffer);
+        resolve(Array.from(bytes.slice(0, numBytes)));
+      };
+      reader.onerror = () => resolve([]);
+      reader.readAsArrayBuffer(file.slice(0, numBytes));
+    });
+  };
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0 || !user) return;
@@ -77,7 +101,63 @@ p {
 
     try {
       for (const file of Array.from(files)) {
-        const fileExt = file.name.split('.').pop();
+        // Client-side validation first
+        const extension = getFileExtension(file.name);
+        if (!ALLOWED_IMAGE_EXTENSIONS.includes(extension)) {
+          toast({
+            variant: 'destructive',
+            title: 'Tipo di file non consentito',
+            description: `Solo immagini sono consentite. .${extension} non è supportato`,
+          });
+          continue;
+        }
+
+        if (!ALLOWED_IMAGE_MIME_TYPES.includes(file.type)) {
+          toast({
+            variant: 'destructive',
+            title: 'Tipo di file non consentito',
+            description: 'Solo immagini sono consentite',
+          });
+          continue;
+        }
+
+        // Max 10MB
+        if (file.size > 10 * 1024 * 1024) {
+          toast({
+            variant: 'destructive',
+            title: 'File troppo grande',
+            description: `${file.name} supera il limite di 10MB`,
+          });
+          continue;
+        }
+
+        // Read magic bytes for server-side validation
+        const fileBytes = await readFileBytes(file);
+
+        // Server-side validation
+        const { data: validationResult, error: validationError } = await supabase.functions.invoke(
+          'validate-file-upload',
+          {
+            body: {
+              fileName: file.name,
+              fileSize: file.size,
+              mimeType: file.type,
+              fileBytes,
+              bucket: 'web-compiler-assets'
+            }
+          }
+        );
+
+        if (validationError || !validationResult.valid) {
+          console.error('Validation error:', validationError || validationResult.error);
+          toast({
+            variant: 'destructive',
+            title: 'File non valido',
+            description: validationResult?.error || 'Impossibile validare il file',
+          });
+          continue;
+        }
+
         const fileName = `${user.id}/${Date.now()}-${file.name}`;
 
         const { data, error } = await supabase.storage

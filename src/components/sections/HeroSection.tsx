@@ -22,12 +22,12 @@ export function HeroSection() {
             </div>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-              Coding per bambini e ragazzi,{" "}
-              <span className="tech-gradient-text">divertente e sicuro</span>
+              Corsi di programmazione per bambini e ragazzi,{" "}
+              <span className="tech-gradient-text">online e divertenti</span>
             </h1>
 
             <p className="text-lg md:text-xl text-muted-foreground max-w-xl">
-              Insegniamo ai giovani dai 6 ai 18 anni le competenze digitali del futuro attraverso progetti creativi: giochi, app, siti web e molto altro.
+              Scopri i nostri corsi di coding per bambini e ragazzi dai 6 ai 18 anni: Scratch, Roblox, Minecraft, Python, Unity e molto altro. Lezioni online in piccoli gruppi con docenti esperti.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
@@ -77,8 +77,9 @@ export function HeroSection() {
                 <div className="w-full h-full rounded-3xl bg-card flex items-center justify-center overflow-hidden">
                   <img 
                     src="https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=800&q=80" 
-                    alt="Bambini che imparano a programmare"
+                    alt="Bambini che imparano a programmare durante un corso di coding online"
                     className="w-full h-full object-cover"
+                    loading="eager"
                   />
                 </div>
               </div>

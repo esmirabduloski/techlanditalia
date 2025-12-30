@@ -7,10 +7,17 @@ import { ParentsSection } from "@/components/sections/ParentsSection";
 import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
 import { FAQSection } from "@/components/sections/FAQSection";
 import { CTASection } from "@/components/sections/CTASection";
+import { SEOHead, organizationSchema, websiteSchema } from "@/components/seo/SEOHead";
 
 const Index = () => {
   return (
     <Layout>
+      <SEOHead
+        title="Corsi di Programmazione per Bambini e Ragazzi Online | TECHLAND"
+        description="Corsi di coding e programmazione per bambini e ragazzi 6-18 anni. Scratch, Roblox, Minecraft, Python, Unity. Lezioni online in piccoli gruppi. Prima lezione gratis!"
+        canonical="/"
+        structuredData={[organizationSchema, websiteSchema]}
+      />
       <HeroSection />
       <WhyTechlandSection />
       <CoursesPreviewSection />

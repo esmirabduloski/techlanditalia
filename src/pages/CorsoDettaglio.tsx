@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { SEOHead, generateCourseSchema, generateBreadcrumbSchema } from "@/components/seo/SEOHead";
 
 // Course data based on Kodland content
 const coursesData: Record<string, {
@@ -1157,26 +1158,84 @@ export default function CorsoDettaglio() {
     );
   }
 
+  // SEO meta data generation
+  const getSEOTitle = () => {
+    const titleMap: Record<string, string> = {
+      "minecraft-education": "Corso Minecraft Education per Bambini (8-9 anni)",
+      "abc-creativita-digitale": "Corso Creatività Digitale per Bambini (5-7 anni)",
+      "abc-informatica": "Corso Informatica Base per Bambini (5-7 anni)",
+      "scratch": "Corso Scratch per Bambini - Programmazione Visiva (8-10 anni)",
+      "roblox-base": "Corso Roblox per Bambini - Sviluppo Giochi (8-12 anni)",
+      "roblox-avanzato": "Corso Roblox Avanzato per Ragazzi (10-14 anni)",
+      "web-development": "Corso Web Development per Ragazzi (13-18 anni)",
+      "unity": "Corso Unity per Ragazzi - Sviluppo Giochi 3D (13-18 anni)",
+      "python-base": "Corso Python Base per Ragazzi (13-18 anni)",
+      "python-pro-ai": "Corso Python PRO & Intelligenza Artificiale (13-18 anni)"
+    };
+    return titleMap[id!] || `Corso ${course?.title}`;
+  };
+
+  const getSEODescription = () => {
+    const descMap: Record<string, string> = {
+      "minecraft-education": "Corso di programmazione con Minecraft Education per bambini 8-9 anni. Impara coding, automazione e logica con MakeCode. Lezione di prova gratuita!",
+      "abc-creativita-digitale": "Corso di creatività digitale per bambini 5-7 anni. Canva, animazioni e design. Sviluppa il pensiero creativo. Prima lezione gratis!",
+      "abc-informatica": "Corso di informatica base per bambini 5-7 anni. Programmazione a blocchi, Scratch Junior e uso del PC. Lezione di prova gratuita!",
+      "scratch": "Corso Scratch per bambini 8-10 anni. Crea giochi e animazioni con la programmazione visiva. Docenti esperti. Prima lezione gratis!",
+      "roblox-base": "Corso Roblox Studio per bambini 8-12 anni. Crea e pubblica i tuoi giochi. Impara LUA e game design. Lezione di prova gratuita!",
+      "roblox-avanzato": "Corso Roblox avanzato per ragazzi 10-14 anni. Script complessi e meccaniche avanzate. Diventa un pro developer!",
+      "web-development": "Corso Web Development per ragazzi 13-18 anni. HTML, CSS, JavaScript. Crea il tuo sito web. Prima lezione gratuita!",
+      "unity": "Corso Unity per ragazzi 13-18 anni. Sviluppo giochi 3D con C#. Crea esperienze interattive. Lezione di prova gratis!",
+      "python-base": "Corso Python base per ragazzi 13-18 anni. Il linguaggio più richiesto. Progetti pratici. Prima lezione gratuita!",
+      "python-pro-ai": "Corso Python avanzato e AI per ragazzi 13-18 anni. Machine learning, bot e automazione. Lezione di prova gratis!"
+    };
+    return descMap[id!] || course?.description || "";
+  };
+
+  const courseSchema = course ? generateCourseSchema({
+    title: getSEOTitle(),
+    description: getSEODescription(),
+    age: course.age,
+    level: course.level,
+    duration: course.duration,
+    slug: id!
+  }) : null;
+
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "Home", url: "/" },
+    { name: "Corsi di Programmazione", url: "/corsi" },
+    { name: course?.title || "", url: `/corsi/${id}` }
+  ]);
+
   return (
     <Layout>
+      <SEOHead
+        title={getSEOTitle()}
+        description={getSEODescription()}
+        canonical={`/corsi/${id}`}
+        structuredData={courseSchema ? [courseSchema, breadcrumbSchema] : [breadcrumbSchema]}
+      />
+      
       {/* Hero */}
       <section className="py-16 md:py-24 bg-gradient-to-b from-primary/10 via-tech-green-light to-background">
         <div className="tech-container">
-          <Link 
-            to="/corsi" 
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Torna ai corsi
-          </Link>
+          {/* Breadcrumb */}
+          <nav aria-label="Breadcrumb" className="mb-8">
+            <ol className="flex items-center gap-2 text-sm text-muted-foreground">
+              <li><Link to="/" className="hover:text-foreground transition-colors">Home</Link></li>
+              <li>/</li>
+              <li><Link to="/corsi" className="hover:text-foreground transition-colors">Corsi</Link></li>
+              <li>/</li>
+              <li className="text-foreground font-medium">{course.title}</li>
+            </ol>
+          </nav>
 
           <div className="tech-card p-8 md:p-12">
             <div className="flex items-start gap-4 mb-6">
-              <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center text-4xl">
+              <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center text-4xl" aria-hidden="true">
                 {course.emoji}
               </div>
               <div>
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-2">{course.title}</h1>
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-2">{getSEOTitle().replace(" | TECHLAND", "")}</h1>
                 <p className="text-lg text-muted-foreground">{course.description}</p>
               </div>
             </div>

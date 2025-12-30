@@ -25,6 +25,7 @@ import { CheckCircle2, Calendar, Video, Shield, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SEOHead } from "@/components/seo/SEOHead";
+import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
 
 const interests = [
   { value: "coding-base", label: "Coding Base (6-8 anni)" },
@@ -203,6 +204,10 @@ export default function Prenota() {
       />
       <section className="tech-section bg-gradient-to-b from-tech-green-light to-background">
         <div className="tech-container">
+          <SEOBreadcrumb 
+            items={[{ label: "Prenota Lezione Gratuita" }]} 
+            className="mb-8"
+          />
           <div className="grid lg:grid-cols-2 gap-12 items-start">
             {/* Info Column */}
             <div>

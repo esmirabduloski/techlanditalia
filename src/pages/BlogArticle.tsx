@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import DOMPurify from 'dompurify';
 import { Layout } from '@/components/layout/Layout';
 import { SEOHead } from '@/components/seo/SEOHead';
+import { SEOBreadcrumb } from '@/components/seo/SEOBreadcrumb';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -146,16 +147,13 @@ export default function BlogArticle() {
       <section className="tech-section bg-gradient-to-b from-tech-green-light to-background">
         <div className="tech-container">
           <div className="max-w-3xl mx-auto">
-            {/* Breadcrumb */}
-            <nav className="mb-6" aria-label="Breadcrumb">
-              <ol className="flex items-center gap-2 text-sm text-muted-foreground">
-                <li><Link to="/" className="hover:text-primary">Home</Link></li>
-                <li>/</li>
-                <li><Link to="/blog" className="hover:text-primary">Blog</Link></li>
-                <li>/</li>
-                <li className="text-foreground truncate max-w-[200px]">{post.title}</li>
-              </ol>
-            </nav>
+            <SEOBreadcrumb 
+              items={[
+                { label: "Blog", href: "/blog" },
+                { label: post.title }
+              ]} 
+              className="mb-6"
+            />
             
             <div className="flex items-center gap-3 mb-4">
               <Badge className={categoryColors[post.category] || 'bg-muted'}>

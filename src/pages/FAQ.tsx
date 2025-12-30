@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/accordion";
 import { HelpCircle, ArrowRight } from "lucide-react";
 import { SEOHead, generateFAQSchema } from "@/components/seo/SEOHead";
+import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
 
 const faqCategories = [
   {
@@ -129,6 +130,10 @@ export default function FAQ() {
       <section className="relative py-20 bg-gradient-to-br from-tech-purple/10 via-tech-cyan/5 to-background overflow-hidden">
         <div className="absolute inset-0 bg-grid-pattern opacity-5" />
         <div className="tech-container relative">
+          <SEOBreadcrumb 
+            items={[{ label: "FAQ" }]} 
+            className="mb-8 justify-center"
+          />
           <div className="text-center max-w-3xl mx-auto">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary mb-6">
               <HelpCircle className="w-5 h-5" />

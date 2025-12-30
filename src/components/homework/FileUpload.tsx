@@ -1,14 +1,15 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Upload, X, File, Image, FileText, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { useSignedUrl } from '@/hooks/useSignedUrl';
 
 interface FileUploadProps {
   onFileUploaded: (fileUrl: string, fileName: string, fileType: string) => void;
   existingFile?: {
-    url: string;
+    url: string; // Can be a full URL (legacy) or a path (new format)
     name: string;
     type: string;
   } | null;
@@ -54,11 +55,16 @@ export function FileUpload({ onFileUploaded, existingFile, onRemoveFile }: FileU
 
       if (error) throw error;
 
-      const { data: urlData } = supabase.storage
+      // Use signed URL since bucket is now private for security
+      const { data: signedUrlData, error: signedUrlError } = await supabase.storage
         .from('homework-files')
-        .getPublicUrl(fileName);
+        .createSignedUrl(fileName, 60 * 60 * 24 * 365); // 1 year validity
 
-      onFileUploaded(urlData.publicUrl, file.name, file.type);
+      if (signedUrlError) throw signedUrlError;
+
+      // Store the file path (without signed token) for future signed URL generation
+      // The actual URL will be regenerated when viewing
+      onFileUploaded(fileName, file.name, file.type);
 
       toast({
         title: 'File caricato',
@@ -107,6 +113,13 @@ export function FileUpload({ onFileUploaded, existingFile, onRemoveFile }: FileU
     return <File className="w-5 h-5" />;
   };
 
+  // Generate signed URL for existing file (handles both legacy URLs and new paths)
+  const { signedUrl, isLoading: isLoadingUrl } = useSignedUrl(
+    'homework-files',
+    existingFile?.url || null,
+    3600 // 1 hour validity
+  );
+
   if (existingFile) {
     return (
       <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg border border-border">
@@ -115,14 +128,20 @@ export function FileUpload({ onFileUploaded, existingFile, onRemoveFile }: FileU
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium truncate">{existingFile.name}</p>
-          <a 
-            href={existingFile.url} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-xs text-primary hover:underline"
-          >
-            Visualizza file
-          </a>
+          {isLoadingUrl ? (
+            <span className="text-xs text-muted-foreground">Caricamento...</span>
+          ) : signedUrl ? (
+            <a 
+              href={signedUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-xs text-primary hover:underline"
+            >
+              Visualizza file
+            </a>
+          ) : (
+            <span className="text-xs text-muted-foreground">File non disponibile</span>
+          )}
         </div>
         {onRemoveFile && (
           <Button

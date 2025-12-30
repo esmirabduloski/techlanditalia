@@ -23,12 +23,59 @@ export function FileUpload({ onFileUploaded, existingFile, onRemoveFile }: FileU
   const { toast } = useToast();
   const { user } = useAuth();
 
+  // Allowed file types (must match server-side validation)
+  const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'txt', 'doc', 'docx', 'zip'];
+  const ALLOWED_MIME_TYPES = [
+    'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+    'application/pdf', 'text/plain',
+    'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/zip', 'application/x-zip-compressed'
+  ];
+
+  const getFileExtension = (fileName: string): string => {
+    const parts = fileName.toLowerCase().split('.');
+    return parts.length > 1 ? parts[parts.length - 1] : '';
+  };
+
+  const readFileBytes = async (file: File, numBytes: number = 8): Promise<number[]> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const arrayBuffer = reader.result as ArrayBuffer;
+        const bytes = new Uint8Array(arrayBuffer);
+        resolve(Array.from(bytes.slice(0, numBytes)));
+      };
+      reader.onerror = () => resolve([]);
+      reader.readAsArrayBuffer(file.slice(0, numBytes));
+    });
+  };
+
   const handleFile = async (file: File) => {
     if (!user) {
       toast({
         variant: 'destructive',
         title: 'Errore',
         description: 'Devi essere loggato per caricare file',
+      });
+      return;
+    }
+
+    // Client-side validation first (fast feedback)
+    const extension = getFileExtension(file.name);
+    if (!ALLOWED_EXTENSIONS.includes(extension)) {
+      toast({
+        variant: 'destructive',
+        title: 'Tipo di file non consentito',
+        description: `I file .${extension} non sono supportati`,
+      });
+      return;
+    }
+
+    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+      toast({
+        variant: 'destructive',
+        title: 'Tipo di file non consentito',
+        description: 'Formato file non supportato',
       });
       return;
     }
@@ -46,7 +93,31 @@ export function FileUpload({ onFileUploaded, existingFile, onRemoveFile }: FileU
     setIsUploading(true);
 
     try {
-      const fileExt = file.name.split('.').pop();
+      // Read magic bytes for server-side validation
+      const fileBytes = await readFileBytes(file);
+
+      // Server-side validation
+      const { data: validationResult, error: validationError } = await supabase.functions.invoke(
+        'validate-file-upload',
+        {
+          body: {
+            fileName: file.name,
+            fileSize: file.size,
+            mimeType: file.type,
+            fileBytes,
+            bucket: 'homework-files'
+          }
+        }
+      );
+
+      if (validationError) {
+        throw new Error('Errore durante la validazione del file');
+      }
+
+      if (!validationResult.valid) {
+        throw new Error(validationResult.error || 'File non valido');
+      }
+
       const fileName = `${user.id}/${Date.now()}-${file.name}`;
 
       const { data, error } = await supabase.storage
@@ -63,7 +134,6 @@ export function FileUpload({ onFileUploaded, existingFile, onRemoveFile }: FileU
       if (signedUrlError) throw signedUrlError;
 
       // Store the file path (without signed token) for future signed URL generation
-      // The actual URL will be regenerated when viewing
       onFileUploaded(fileName, file.name, file.type);
 
       toast({

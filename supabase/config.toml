@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.send-contact-email]
 verify_jwt = false
+
+[functions.validate-file-upload]
+verify_jwt = true

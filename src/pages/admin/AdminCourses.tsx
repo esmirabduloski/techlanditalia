@@ -18,6 +18,16 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -26,7 +36,7 @@ import {
 } from '@/components/ui/select';
 import { 
   LogOut, Loader2, BookOpen, FileText, Mail, User, BarChart3, 
-  GraduationCap, ChevronRight, Plus, Sparkles
+  GraduationCap, ChevronRight, Plus, Sparkles, Pencil, Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -42,6 +52,15 @@ interface Course {
   duration: string | null;
 }
 
+interface CourseFormData {
+  title: string;
+  emoji: string;
+  level: string;
+  description: string;
+  age_range: string;
+  duration: string;
+}
+
 const EMOJI_OPTIONS = [
   '💻', '🐍', '🎮', '🤖', '🚀', '⚡', '🎨', '🔧', '📱', '🌐',
   '🎯', '💡', '🔥', '⭐', '🏆', '📚', '🎓', '🧩', '🔮', '🌈',
@@ -54,23 +73,27 @@ const LEVEL_OPTIONS = [
   { value: 'avanzato', label: 'Avanzato' },
 ];
 
+const initialFormState: CourseFormData = {
+  title: '',
+  emoji: '💻',
+  level: 'base',
+  description: '',
+  age_range: '',
+  duration: '',
+};
+
 export default function AdminCourses() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isCreating, setIsCreating] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
+  const [formData, setFormData] = useState<CourseFormData>(initialFormState);
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
-
-  // Form state
-  const [newCourse, setNewCourse] = useState({
-    title: '',
-    emoji: '💻',
-    level: 'base',
-    description: '',
-    age_range: '',
-    duration: '',
-  });
 
   useEffect(() => {
     if (!authLoading && (!user || !isAdmin)) {
@@ -105,26 +128,54 @@ export default function AdminCourses() {
       .trim();
   };
 
+  const resetForm = () => {
+    setFormData(initialFormState);
+    setEditingCourse(null);
+  };
+
+  const openCreateDialog = () => {
+    resetForm();
+    setIsCreateDialogOpen(true);
+  };
+
+  const openEditDialog = (course: Course) => {
+    setEditingCourse(course);
+    setFormData({
+      title: course.title,
+      emoji: course.emoji,
+      level: course.level,
+      description: course.description || '',
+      age_range: course.age_range || '',
+      duration: course.duration || '',
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const openDeleteDialog = (course: Course) => {
+    setEditingCourse(course);
+    setIsDeleteDialogOpen(true);
+  };
+
   const handleCreateCourse = async () => {
-    if (!newCourse.title.trim()) {
+    if (!formData.title.trim()) {
       toast.error('Inserisci un titolo per il corso');
       return;
     }
 
-    setIsCreating(true);
+    setIsSaving(true);
 
-    const slug = generateSlug(newCourse.title);
+    const slug = generateSlug(formData.title);
 
     const { data, error } = await supabase
       .from('courses')
       .insert({
-        title: newCourse.title.trim(),
+        title: formData.title.trim(),
         slug,
-        emoji: newCourse.emoji,
-        level: newCourse.level,
-        description: newCourse.description.trim() || null,
-        age_range: newCourse.age_range.trim() || null,
-        duration: newCourse.duration.trim() || null,
+        emoji: formData.emoji,
+        level: formData.level,
+        description: formData.description.trim() || null,
+        age_range: formData.age_range.trim() || null,
+        duration: formData.duration.trim() || null,
         total_lessons: 0,
       })
       .select()
@@ -140,24 +191,188 @@ export default function AdminCourses() {
     } else {
       toast.success('Corso creato con successo!');
       setCourses([...courses, data]);
-      setNewCourse({
-        title: '',
-        emoji: '💻',
-        level: 'base',
-        description: '',
-        age_range: '',
-        duration: '',
-      });
-      setIsDialogOpen(false);
+      resetForm();
+      setIsCreateDialogOpen(false);
     }
 
-    setIsCreating(false);
+    setIsSaving(false);
+  };
+
+  const handleUpdateCourse = async () => {
+    if (!editingCourse || !formData.title.trim()) {
+      toast.error('Inserisci un titolo per il corso');
+      return;
+    }
+
+    setIsSaving(true);
+
+    const slug = generateSlug(formData.title);
+
+    const { error } = await supabase
+      .from('courses')
+      .update({
+        title: formData.title.trim(),
+        slug,
+        emoji: formData.emoji,
+        level: formData.level,
+        description: formData.description.trim() || null,
+        age_range: formData.age_range.trim() || null,
+        duration: formData.duration.trim() || null,
+      })
+      .eq('id', editingCourse.id);
+
+    if (error) {
+      console.error('Error updating course:', error);
+      if (error.code === '23505') {
+        toast.error('Esiste già un corso con questo slug');
+      } else {
+        toast.error('Errore durante la modifica del corso');
+      }
+    } else {
+      toast.success('Corso modificato con successo!');
+      setCourses(courses.map(c => 
+        c.id === editingCourse.id 
+          ? { 
+              ...c, 
+              title: formData.title.trim(),
+              slug,
+              emoji: formData.emoji,
+              level: formData.level,
+              description: formData.description.trim() || null,
+              age_range: formData.age_range.trim() || null,
+              duration: formData.duration.trim() || null,
+            } 
+          : c
+      ));
+      resetForm();
+      setIsEditDialogOpen(false);
+    }
+
+    setIsSaving(false);
+  };
+
+  const handleDeleteCourse = async () => {
+    if (!editingCourse) return;
+
+    setIsDeleting(true);
+
+    const { error } = await supabase
+      .from('courses')
+      .delete()
+      .eq('id', editingCourse.id);
+
+    if (error) {
+      console.error('Error deleting course:', error);
+      toast.error('Errore durante l\'eliminazione del corso. Assicurati che non ci siano lezioni o iscrizioni associate.');
+    } else {
+      toast.success('Corso eliminato con successo!');
+      setCourses(courses.filter(c => c.id !== editingCourse.id));
+      setIsDeleteDialogOpen(false);
+      resetForm();
+    }
+
+    setIsDeleting(false);
   };
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/admin/login');
   };
+
+  const CourseFormFields = () => (
+    <div className="grid gap-4 py-4">
+      {/* Emoji Selection */}
+      <div className="space-y-2">
+        <Label>Emoji del corso</Label>
+        <div className="grid grid-cols-10 gap-2 p-3 border rounded-lg bg-muted/30">
+          {EMOJI_OPTIONS.map((emoji) => (
+            <button
+              key={emoji}
+              type="button"
+              onClick={() => setFormData({ ...formData, emoji })}
+              className={`text-2xl p-1 rounded-lg transition-all hover:bg-primary/10 ${
+                formData.emoji === emoji 
+                  ? 'bg-primary/20 ring-2 ring-primary ring-offset-2' 
+                  : ''
+              }`}
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Title */}
+      <div className="space-y-2">
+        <Label htmlFor="title">Titolo *</Label>
+        <Input
+          id="title"
+          placeholder="es. Corso Python per Principianti"
+          value={formData.title}
+          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+        />
+        {formData.title && (
+          <p className="text-xs text-muted-foreground">
+            Slug: {generateSlug(formData.title)}
+          </p>
+        )}
+      </div>
+
+      {/* Level */}
+      <div className="space-y-2">
+        <Label htmlFor="level">Livello</Label>
+        <Select
+          value={formData.level}
+          onValueChange={(value) => setFormData({ ...formData, level: value })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Seleziona livello" />
+          </SelectTrigger>
+          <SelectContent>
+            {LEVEL_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Age Range & Duration */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="age_range">Fascia d'età</Label>
+          <Input
+            id="age_range"
+            placeholder="es. 8-12 anni"
+            value={formData.age_range}
+            onChange={(e) => setFormData({ ...formData, age_range: e.target.value })}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="duration">Durata</Label>
+          <Input
+            id="duration"
+            placeholder="es. 3 mesi"
+            value={formData.duration}
+            onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+          />
+        </div>
+      </div>
+
+      {/* Description */}
+      <div className="space-y-2">
+        <Label htmlFor="description">Descrizione</Label>
+        <Textarea
+          id="description"
+          placeholder="Descrivi brevemente il corso..."
+          rows={3}
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+        />
+      </div>
+    </div>
+  );
 
   if (authLoading || isLoading) {
     return (
@@ -255,150 +470,147 @@ export default function AdminCourses() {
             <p className="text-muted-foreground mt-1">{courses.length} corsi totali</p>
           </div>
           
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2">
-                <Plus className="w-4 h-4" />
-                Crea Corso
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-primary" />
-                  Crea Nuovo Corso
-                </DialogTitle>
-                <DialogDescription>
-                  Inserisci le informazioni per creare un nuovo corso.
-                </DialogDescription>
-              </DialogHeader>
-              
-              <div className="grid gap-4 py-4">
-                {/* Emoji Selection */}
-                <div className="space-y-2">
-                  <Label>Emoji del corso</Label>
-                  <div className="grid grid-cols-10 gap-2 p-3 border rounded-lg bg-muted/30">
-                    {EMOJI_OPTIONS.map((emoji) => (
-                      <button
-                        key={emoji}
-                        type="button"
-                        onClick={() => setNewCourse({ ...newCourse, emoji })}
-                        className={`text-2xl p-1 rounded-lg transition-all hover:bg-primary/10 ${
-                          newCourse.emoji === emoji 
-                            ? 'bg-primary/20 ring-2 ring-primary ring-offset-2' 
-                            : ''
-                        }`}
-                      >
-                        {emoji}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Title */}
-                <div className="space-y-2">
-                  <Label htmlFor="title">Titolo *</Label>
-                  <Input
-                    id="title"
-                    placeholder="es. Corso Python per Principianti"
-                    value={newCourse.title}
-                    onChange={(e) => setNewCourse({ ...newCourse, title: e.target.value })}
-                  />
-                  {newCourse.title && (
-                    <p className="text-xs text-muted-foreground">
-                      Slug: {generateSlug(newCourse.title)}
-                    </p>
-                  )}
-                </div>
-
-                {/* Level */}
-                <div className="space-y-2">
-                  <Label htmlFor="level">Livello</Label>
-                  <Select
-                    value={newCourse.level}
-                    onValueChange={(value) => setNewCourse({ ...newCourse, level: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleziona livello" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LEVEL_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Age Range & Duration */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="age_range">Fascia d'età</Label>
-                    <Input
-                      id="age_range"
-                      placeholder="es. 8-12 anni"
-                      value={newCourse.age_range}
-                      onChange={(e) => setNewCourse({ ...newCourse, age_range: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="duration">Durata</Label>
-                    <Input
-                      id="duration"
-                      placeholder="es. 3 mesi"
-                      value={newCourse.duration}
-                      onChange={(e) => setNewCourse({ ...newCourse, duration: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                {/* Description */}
-                <div className="space-y-2">
-                  <Label htmlFor="description">Descrizione</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Descrivi brevemente il corso..."
-                    rows={3}
-                    value={newCourse.description}
-                    onChange={(e) => setNewCourse({ ...newCourse, description: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <DialogFooter>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsDialogOpen(false)}
-                  disabled={isCreating}
-                >
-                  Annulla
-                </Button>
-                <Button 
-                  onClick={handleCreateCourse}
-                  disabled={isCreating || !newCourse.title.trim()}
-                >
-                  {isCreating ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Creazione...
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Crea Corso
-                    </>
-                  )}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <Button className="gap-2" onClick={openCreateDialog}>
+            <Plus className="w-4 h-4" />
+            Crea Corso
+          </Button>
         </div>
+
+        {/* Create Dialog */}
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary" />
+                Crea Nuovo Corso
+              </DialogTitle>
+              <DialogDescription>
+                Inserisci le informazioni per creare un nuovo corso.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <CourseFormFields />
+
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsCreateDialogOpen(false)}
+                disabled={isSaving}
+              >
+                Annulla
+              </Button>
+              <Button 
+                onClick={handleCreateCourse}
+                disabled={isSaving || !formData.title.trim()}
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creazione...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Crea Corso
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Pencil className="w-5 h-5 text-primary" />
+                Modifica Corso
+              </DialogTitle>
+              <DialogDescription>
+                Modifica le informazioni del corso.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <CourseFormFields />
+
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button 
+                variant="destructive" 
+                onClick={() => {
+                  setIsEditDialogOpen(false);
+                  openDeleteDialog(editingCourse!);
+                }}
+                disabled={isSaving}
+                className="sm:mr-auto"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Elimina
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsEditDialogOpen(false)}
+                disabled={isSaving}
+              >
+                Annulla
+              </Button>
+              <Button 
+                onClick={handleUpdateCourse}
+                disabled={isSaving || !formData.title.trim()}
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Salvataggio...
+                  </>
+                ) : (
+                  'Salva Modifiche'
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <Trash2 className="w-5 h-5 text-destructive" />
+                Elimina Corso
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Sei sicuro di voler eliminare il corso "{editingCourse?.title}"? 
+                Questa azione non può essere annullata e rimuoverà tutte le lezioni associate.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeleting}>Annulla</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteCourse}
+                disabled={isDeleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Eliminazione...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Elimina Corso
+                  </>
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Courses Grid */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {courses.map((course) => (
-            <Card key={course.id} className="hover:shadow-md transition-shadow">
+            <Card key={course.id} className="hover:shadow-md transition-shadow group">
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-3">
                   <span className="text-3xl">{course.emoji}</span>
@@ -406,6 +618,14 @@ export default function AdminCourses() {
                     <CardTitle className="text-lg truncate">{course.title}</CardTitle>
                     <CardDescription className="truncate">{course.slug}</CardDescription>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => openEditDialog(course)}
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Button>
                 </div>
               </CardHeader>
               <CardContent>
@@ -439,7 +659,7 @@ export default function AdminCourses() {
             <GraduationCap className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
             <h3 className="text-lg font-medium mb-2">Nessun corso trovato</h3>
             <p className="text-muted-foreground mb-6">Inizia creando il tuo primo corso!</p>
-            <Button onClick={() => setIsDialogOpen(true)}>
+            <Button onClick={openCreateDialog}>
               <Plus className="w-4 h-4 mr-2" />
               Crea il tuo primo corso
             </Button>

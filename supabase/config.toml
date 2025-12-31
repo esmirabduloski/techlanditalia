@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.newsletter-unsubscribe]
 verify_jwt = false
+
+[functions.newsletter-send]
+verify_jwt = true

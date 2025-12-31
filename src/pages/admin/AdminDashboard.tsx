@@ -175,6 +175,13 @@ export default function AdminDashboard() {
               Contatti
             </Link>
             <Link 
+              to="/admin/newsletter" 
+              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
+            >
+              <Mail className="w-4 h-4" />
+              Newsletter
+            </Link>
+            <Link 
               to="/admin/utenti" 
               className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
             >

@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      badges: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          emoji: string
+          id: string
+          name: string
+          points_reward: number
+          requirement_course_id: string | null
+          requirement_type: string
+          requirement_value: number
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description: string
+          emoji?: string
+          id?: string
+          name: string
+          points_reward?: number
+          requirement_course_id?: string | null
+          requirement_type: string
+          requirement_value: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          emoji?: string
+          id?: string
+          name?: string
+          points_reward?: number
+          requirement_course_id?: string | null
+          requirement_type?: string
+          requirement_value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "badges_requirement_course_id_fkey"
+            columns: ["requirement_course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blog_posts: {
         Row: {
           author_id: string | null
@@ -291,6 +338,7 @@ export type Database = {
           file_name: string | null
           file_type: string | null
           file_url: string | null
+          grade: number | null
           homework_id: string
           id: string
           notes: string | null
@@ -305,6 +353,7 @@ export type Database = {
           file_name?: string | null
           file_type?: string | null
           file_url?: string | null
+          grade?: number | null
           homework_id: string
           id?: string
           notes?: string | null
@@ -319,6 +368,7 @@ export type Database = {
           file_name?: string | null
           file_type?: string | null
           file_url?: string | null
+          grade?: number | null
           homework_id?: string
           id?: string
           notes?: string | null
@@ -564,6 +614,51 @@ export type Database = {
           },
         ]
       }
+      student_comments: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          id: string
+          student_id: string
+          updated_at: string
+          visibility: string[]
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          id?: string
+          student_id: string
+          updated_at?: string
+          visibility?: string[]
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          student_id?: string
+          updated_at?: string
+          visibility?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_comments_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_comments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_progress: {
         Row: {
           completed_at: string
@@ -647,6 +742,42 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      user_achievements: {
+        Row: {
+          badge_id: string
+          earned_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          badge_id: string
+          earned_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          badge_id?: string
+          earned_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "badges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_achievements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

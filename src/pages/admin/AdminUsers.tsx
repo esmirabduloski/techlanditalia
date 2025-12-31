@@ -27,7 +27,8 @@ import {
   Search,
   BarChart3,
   MessageCircle,
-  Award
+  Award,
+  Eye
 } from 'lucide-react';
 import {
   Select,
@@ -438,10 +439,6 @@ export default function AdminUsers() {
               <Users className="w-4 h-4" />
               Utenti
             </Link>
-            <Link to="/admin/commenti" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
-              <MessageCircle className="w-4 h-4" />
-              Commenti
-            </Link>
             <Link to="/admin/valutazioni" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
               <Award className="w-4 h-4" />
               Valutazioni
@@ -449,6 +446,10 @@ export default function AdminUsers() {
             <Link to="/admin/statistiche" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
               <BarChart3 className="w-4 h-4" />
               Statistiche
+            </Link>
+            <Link to="/admin/simulatore" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
+              <Eye className="w-4 h-4" />
+              Simulatore
             </Link>
           </nav>
         </div>
@@ -537,6 +538,17 @@ export default function AdminUsers() {
                               </div>
                             </div>
                             <div className="flex items-center gap-2 flex-shrink-0">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={(e) => { 
+                                  e.stopPropagation(); 
+                                  navigate(`/admin/commenti?parent_id=${group.parent!.id}&visibility=parent_only`); 
+                                }}
+                                title="Aggiungi commento (visibile solo al genitore)"
+                              >
+                                <MessageCircle className="w-4 h-4" />
+                              </Button>
                               <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openPasswordDialog(group.parent!.id, group.parent!.full_name); }}>
                                 <Key className="w-4 h-4" />
                               </Button>
@@ -587,6 +599,14 @@ export default function AdminUsers() {
                                 </div>
                               </div>
                               <div className="flex items-center gap-2 flex-shrink-0">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={() => navigate(`/admin/commenti?student_id=${child.id}`)}
+                                  title="Aggiungi commento"
+                                >
+                                  <MessageCircle className="w-4 h-4" />
+                                </Button>
                                 <Button variant="outline" size="sm" onClick={() => openEditChildDialog(child)}>
                                   <Edit2 className="w-4 h-4 mr-1" />
                                   Modifica
@@ -651,6 +671,14 @@ export default function AdminUsers() {
                               </div>
                             </div>
                             <div className="flex items-center gap-2 flex-shrink-0">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => navigate(`/admin/commenti?student_id=${child.id}`)}
+                                title="Aggiungi commento"
+                              >
+                                <MessageCircle className="w-4 h-4" />
+                              </Button>
                               <Select 
                                 value={child.role} 
                                 onValueChange={(v) => updateProfileRole(child.id, v as 'student' | 'parent')}

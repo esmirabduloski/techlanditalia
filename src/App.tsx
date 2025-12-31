@@ -35,6 +35,7 @@ import AdminHomework from "./pages/admin/AdminHomework";
 import AdminNewsletter from "./pages/admin/AdminNewsletter";
 import AdminStudentComments from "./pages/admin/AdminStudentComments";
 import AdminGrading from "./pages/admin/AdminGrading";
+import AdminSimulator from "./pages/admin/AdminSimulator";
 import AuthPage from "./pages/auth/AuthPage";
 import AreaRiservataDashboard from "./pages/area-riservata/Dashboard";
 import AreaRiservataProfile from "./pages/area-riservata/Profile";
@@ -91,6 +92,7 @@ const App = () => (
             <Route path="/admin/valutazioni" element={<AdminGrading />} />
             <Route path="/admin/statistiche" element={<AdminStats />} />
             <Route path="/admin/newsletter" element={<AdminNewsletter />} />
+            <Route path="/admin/simulatore" element={<AdminSimulator />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

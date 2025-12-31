@@ -5,7 +5,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AdminViewSimulator } from '@/components/admin/AdminViewSimulator';
 import { 
   LogOut,
   FileText,
@@ -20,7 +19,8 @@ import {
   BarChart3,
   TrendingUp,
   Award,
-  MessageCircle
+  Eye,
+  Home
 } from 'lucide-react';
 import {
   AreaChart,
@@ -187,7 +187,7 @@ export default function AdminStats() {
             <span className="text-sm text-muted-foreground hidden sm:block">{user?.email}</span>
             <Button variant="outline" size="sm" asChild>
               <Link to="/area-riservata">
-                <User className="w-4 h-4 mr-2" />
+                <Home className="w-4 h-4 mr-2" />
                 Area Riservata
               </Link>
             </Button>
@@ -246,13 +246,6 @@ export default function AdminStats() {
               Utenti
             </Link>
             <Link 
-              to="/admin/commenti" 
-              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
-            >
-              <MessageCircle className="w-4 h-4" />
-              Commenti
-            </Link>
-            <Link 
               to="/admin/valutazioni" 
               className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
             >
@@ -265,6 +258,13 @@ export default function AdminStats() {
             >
               <BarChart3 className="w-4 h-4" />
               Statistiche
+            </Link>
+            <Link 
+              to="/admin/simulatore" 
+              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
+            >
+              <Eye className="w-4 h-4" />
+              Simulatore
             </Link>
           </nav>
         </div>
@@ -347,10 +347,6 @@ export default function AdminStats() {
           </CardContent>
         </Card>
 
-        {/* Admin View Simulator */}
-        <div className="mt-8">
-          <AdminViewSimulator />
-        </div>
       </main>
     </div>
   );

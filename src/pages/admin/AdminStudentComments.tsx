@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -33,7 +32,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { 
   LogOut, Loader2, Plus, Edit, Trash2, MessageCircle, User, Calendar, Eye, Save,
-  FileText, BookOpen, Mail, BarChart3, GraduationCap, Award
+  FileText, BookOpen, Mail, BarChart3, GraduationCap, Award, Home
 } from 'lucide-react';
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -42,6 +41,7 @@ interface Student {
   id: string;
   full_name: string;
   email: string | null;
+  parent_id: string | null;
 }
 
 interface Comment {
@@ -57,6 +57,7 @@ interface Comment {
 }
 
 export default function AdminStudentComments() {
+  const [searchParams] = useSearchParams();
   const [students, setStudents] = useState<Student[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -75,6 +76,11 @@ export default function AdminStudentComments() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Read URL params
+  const studentIdParam = searchParams.get('student_id');
+  const parentIdParam = searchParams.get('parent_id');
+  const visibilityParam = searchParams.get('visibility');
+
   useEffect(() => {
     if (!authLoading && (!user || !isAdmin)) {
       navigate('/admin/login');
@@ -87,11 +93,48 @@ export default function AdminStudentComments() {
     }
   }, [user, isAdmin]);
 
+  // Handle URL params after data is loaded
+  useEffect(() => {
+    if (!isLoading && students.length > 0) {
+      // If student_id param is present, open dialog with pre-selected student
+      if (studentIdParam) {
+        const student = students.find(s => s.id === studentIdParam);
+        if (student) {
+          setFormData({
+            student_id: studentIdParam,
+            content: '',
+            visibility: ['parent', 'teacher', 'student'], // All can see for student comments
+          });
+          setEditingComment(null);
+          setDialogOpen(true);
+        }
+        // Clear the URL params after handling
+        navigate('/admin/commenti', { replace: true });
+      }
+      // If parent_id param is present, open dialog with children of that parent
+      else if (parentIdParam) {
+        const childrenOfParent = students.filter(s => s.parent_id === parentIdParam);
+        
+        if (childrenOfParent.length > 0) {
+          setFormData({
+            student_id: childrenOfParent.length === 1 ? childrenOfParent[0].id : '',
+            content: '',
+            visibility: visibilityParam === 'parent_only' ? ['parent', 'teacher'] : ['parent', 'teacher', 'student'],
+          });
+          setEditingComment(null);
+          setDialogOpen(true);
+        }
+        // Clear the URL params after handling
+        navigate('/admin/commenti', { replace: true });
+      }
+    }
+  }, [isLoading, students, studentIdParam, parentIdParam, visibilityParam, navigate]);
+
   const fetchData = async () => {
-    // Fetch students
+    // Fetch students with parent_id
     const { data: studentsData } = await supabase
       .from('profiles')
-      .select('id, full_name, email')
+      .select('id, full_name, email, parent_id')
       .eq('role', 'student')
       .order('full_name');
 
@@ -105,7 +148,7 @@ export default function AdminStudentComments() {
         content,
         visibility,
         created_at,
-        student:student_id (id, full_name, email),
+        student:student_id (id, full_name, email, parent_id),
         author:author_id (full_name, role)
       `)
       .order('created_at', { ascending: false });
@@ -240,6 +283,14 @@ export default function AdminStudentComments() {
     ? comments 
     : comments.filter(c => c.student.id === selectedStudentFilter);
 
+  // Get children of a specific parent for filtering in dialog
+  const getStudentsForDialog = () => {
+    if (parentIdParam) {
+      return students.filter(s => s.parent_id === parentIdParam);
+    }
+    return students;
+  };
+
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -265,7 +316,7 @@ export default function AdminStudentComments() {
           <div className="flex items-center gap-4">
             <Button variant="outline" size="sm" asChild>
               <Link to="/area-riservata">
-                <User className="w-4 h-4 mr-2" />
+                <Home className="w-4 h-4 mr-2" />
                 Area Riservata
               </Link>
             </Button>
@@ -305,10 +356,6 @@ export default function AdminStudentComments() {
               <User className="w-4 h-4" />
               Utenti
             </Link>
-            <Link to="/admin/commenti" className="py-3 px-2 border-b-2 border-primary text-primary font-medium flex items-center gap-2 whitespace-nowrap">
-              <MessageCircle className="w-4 h-4" />
-              Commenti
-            </Link>
             <Link to="/admin/valutazioni" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
               <Award className="w-4 h-4" />
               Valutazioni
@@ -316,6 +363,10 @@ export default function AdminStudentComments() {
             <Link to="/admin/statistiche" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
               <BarChart3 className="w-4 h-4" />
               Statistiche
+            </Link>
+            <Link to="/admin/simulatore" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
+              <Eye className="w-4 h-4" />
+              Simulatore
             </Link>
           </nav>
         </div>
@@ -471,23 +522,20 @@ export default function AdminStudentComments() {
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                            <Trash2 className="w-4 h-4" />
+                          <Button variant="ghost" size="icon">
+                            <Trash2 className="w-4 h-4 text-destructive" />
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Elimina commento</AlertDialogTitle>
+                            <AlertDialogTitle>Eliminare il commento?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Sei sicuro di voler eliminare questo commento? Questa azione non può essere annullata.
+                              Questa azione non può essere annullata.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Annulla</AlertDialogCancel>
-                            <AlertDialogAction 
-                              onClick={() => deleteComment(comment.id)}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
+                            <AlertDialogAction onClick={() => deleteComment(comment.id)}>
                               Elimina
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -497,13 +545,11 @@ export default function AdminStudentComments() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="bg-muted/50 rounded-lg p-3 mb-2">
-                    <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
-                  </div>
-                  <div className="flex items-center text-xs text-muted-foreground">
-                    <Calendar className="w-3 h-3 mr-1" />
+                  <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
+                  <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
                     {format(new Date(comment.created_at), "d MMMM yyyy 'alle' HH:mm", { locale: it })}
-                  </div>
+                  </p>
                 </CardContent>
               </Card>
             ))}

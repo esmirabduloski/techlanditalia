@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useStudentStreaks } from "@/hooks/useStudentStreaks";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,6 +9,8 @@ import { Loader2, Trophy, Users, MessageCircle, Award, Calendar } from "lucide-r
 import { BadgesDisplay } from "@/components/gamification/BadgesDisplay";
 import { LevelBadge, PointsDisplay, getLevelFromPoints } from "@/components/gamification/LevelBadge";
 import { AvatarDisplay } from "@/components/gamification/AvatarSelector";
+import { StreakDisplay } from "@/components/dashboard/StreakDisplay";
+import { AttendanceHistory } from "@/components/dashboard/AttendanceHistory";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 
@@ -155,6 +158,7 @@ export function ParentChildrenSection() {
 
 function ChildDashboard({ child, comments }: { child: Child; comments: Comment[] }) {
   const level = getLevelFromPoints(child.total_points);
+  const { streaks, attendance, stats, loading: streaksLoading } = useStudentStreaks(child.id);
 
   return (
     <div className="space-y-6">
@@ -197,6 +201,24 @@ function ChildDashboard({ child, comments }: { child: Child; comments: Comment[]
           </CardContent>
         </Card>
       </div>
+
+      {/* Streaks Section */}
+      {streaks && !streaksLoading && (
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            🔥 Streak di {child.full_name}
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <StreakDisplay
+              homeworkStreak={streaks.homework_streak}
+              attendanceStreak={streaks.attendance_streak}
+              bestHomeworkStreak={streaks.best_homework_streak}
+              bestAttendanceStreak={streaks.best_attendance_streak}
+            />
+            <AttendanceHistory attendance={attendance} stats={stats} />
+          </div>
+        </div>
+      )}
 
       {/* Badges */}
       <BadgesDisplay userId={child.id} showAll={true} title={`🏆 Badge di ${child.full_name}`} />

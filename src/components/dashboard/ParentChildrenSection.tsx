@@ -11,6 +11,7 @@ import { LevelBadge, PointsDisplay, getLevelFromPoints } from "@/components/gami
 import { AvatarDisplay } from "@/components/gamification/AvatarSelector";
 import { StreakDisplay } from "@/components/dashboard/StreakDisplay";
 import { AttendanceHistory } from "@/components/dashboard/AttendanceHistory";
+import { StreakBonusesDisplay } from "@/components/dashboard/StreakBonusesDisplay";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 
@@ -158,7 +159,7 @@ export function ParentChildrenSection() {
 
 function ChildDashboard({ child, comments }: { child: Child; comments: Comment[] }) {
   const level = getLevelFromPoints(child.total_points);
-  const { streaks, attendance, stats, loading: streaksLoading } = useStudentStreaks(child.id);
+  const { streaks, attendance, stats, bonuses, loading: streaksLoading } = useStudentStreaks(child.id);
 
   return (
     <div className="space-y-6">
@@ -208,13 +209,18 @@ function ChildDashboard({ child, comments }: { child: Child; comments: Comment[]
           <h3 className="text-lg font-semibold flex items-center gap-2">
             🔥 Streak di {child.full_name}
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <StreakDisplay
-              homeworkStreak={streaks.homework_streak}
-              attendanceStreak={streaks.attendance_streak}
-              bestHomeworkStreak={streaks.best_homework_streak}
-              bestAttendanceStreak={streaks.best_attendance_streak}
-            />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="space-y-4">
+              <StreakDisplay
+                homeworkStreak={streaks.homework_streak}
+                attendanceStreak={streaks.attendance_streak}
+                bestHomeworkStreak={streaks.best_homework_streak}
+                bestAttendanceStreak={streaks.best_attendance_streak}
+              />
+              {bonuses.length > 0 && (
+                <StreakBonusesDisplay bonuses={bonuses} />
+              )}
+            </div>
             <AttendanceHistory attendance={attendance} stats={stats} />
           </div>
         </div>

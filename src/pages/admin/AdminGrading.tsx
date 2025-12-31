@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { 
   LogOut, Loader2, Award, User, Calendar, FileText, BookOpen, Mail, 
-  BarChart3, GraduationCap, MessageCircle, Save, ExternalLink, Download
+  BarChart3, GraduationCap, Save, ExternalLink, Download, Eye
 } from 'lucide-react';
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -268,10 +268,6 @@ export default function AdminGrading() {
               <User className="w-4 h-4" />
               Utenti
             </Link>
-            <Link to="/admin/commenti" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
-              <MessageCircle className="w-4 h-4" />
-              Commenti
-            </Link>
             <Link to="/admin/valutazioni" className="py-3 px-2 border-b-2 border-primary text-primary font-medium flex items-center gap-2 whitespace-nowrap">
               <Award className="w-4 h-4" />
               Valutazioni
@@ -279,6 +275,10 @@ export default function AdminGrading() {
             <Link to="/admin/statistiche" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
               <BarChart3 className="w-4 h-4" />
               Statistiche
+            </Link>
+            <Link to="/admin/simulatore" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
+              <Eye className="w-4 h-4" />
+              Simulatore
             </Link>
           </nav>
         </div>

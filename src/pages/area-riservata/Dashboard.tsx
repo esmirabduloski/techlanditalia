@@ -8,8 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { AvatarDisplay } from '@/components/gamification/AvatarSelector';
 import { LevelBadge, PointsDisplay, getLevelFromPoints } from '@/components/gamification/LevelBadge';
+import { BadgesDisplay } from '@/components/gamification/BadgesDisplay';
 import { HomeworkSection } from '@/components/dashboard/HomeworkSection';
 import { ParentFeedbackSection } from '@/components/dashboard/ParentFeedbackSection';
+import { StudentCommentsSection } from '@/components/dashboard/StudentCommentsSection';
 import { Loader2, BookOpen, Trophy, Target, Settings, LogOut, Rocket, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -285,10 +287,24 @@ export default function Dashboard() {
             )}
           </div>
 
+          {/* Badges Section */}
+          {user && (
+            <div className="mb-8">
+              <BadgesDisplay userId={user.id} showAll={true} />
+            </div>
+          )}
+
           {/* Homework Section for Students */}
           <div className="mb-8">
             <HomeworkSection />
           </div>
+
+          {/* Student Comments Section */}
+          {user && (
+            <div className="mb-8">
+              <StudentCommentsSection />
+            </div>
+          )}
 
           {/* Parent Feedback Section - only visible for parents */}
           <div className="mb-8">

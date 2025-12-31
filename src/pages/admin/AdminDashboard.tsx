@@ -204,6 +204,20 @@ export default function AdminDashboard() {
               Statistiche
             </Link>
             <Link 
+              to="/admin/lezioni-programmate" 
+              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
+            >
+              <BookOpen className="w-4 h-4" />
+              Calendario
+            </Link>
+            <Link 
+              to="/admin/presenze" 
+              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
+            >
+              <GraduationCap className="w-4 h-4" />
+              Presenze
+            </Link>
+            <Link 
               to="/admin/simulatore" 
               className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
             >

@@ -23,8 +23,8 @@ import {
   Clock,
   Users,
   Newspaper,
-  MessageCircle,
-  Award
+  Award,
+  Eye
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -254,13 +254,6 @@ export default function AdminNewsletter() {
               Utenti
             </Link>
             <Link 
-              to="/admin/commenti" 
-              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
-            >
-              <MessageCircle className="w-4 h-4" />
-              Commenti
-            </Link>
-            <Link 
               to="/admin/valutazioni" 
               className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
             >
@@ -273,6 +266,13 @@ export default function AdminNewsletter() {
             >
               <BarChart3 className="w-4 h-4" />
               Statistiche
+            </Link>
+            <Link 
+              to="/admin/simulatore" 
+              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
+            >
+              <Eye className="w-4 h-4" />
+              Simulatore
             </Link>
           </nav>
         </div>

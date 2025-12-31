@@ -25,8 +25,8 @@ import {
   Home,
   BarChart3,
   GraduationCap,
-  MessageCircle,
-  Award
+  Award,
+  Eye
 } from 'lucide-react';
 import {
   Select,
@@ -519,10 +519,6 @@ export default function AdminBookings() {
               <Users className="w-4 h-4" />
               Utenti
             </Link>
-            <Link to="/admin/commenti" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
-              <MessageCircle className="w-4 h-4" />
-              Commenti
-            </Link>
             <Link to="/admin/valutazioni" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
               <Award className="w-4 h-4" />
               Valutazioni
@@ -530,6 +526,10 @@ export default function AdminBookings() {
             <Link to="/admin/statistiche" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
               <BarChart3 className="w-4 h-4" />
               Statistiche
+            </Link>
+            <Link to="/admin/simulatore" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
+              <Eye className="w-4 h-4" />
+              Simulatore
             </Link>
           </nav>
         </div>

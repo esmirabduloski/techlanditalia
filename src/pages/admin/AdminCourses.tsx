@@ -37,7 +37,7 @@ import {
 import { 
   LogOut, Loader2, BookOpen, FileText, Mail, User, BarChart3, 
   GraduationCap, ChevronRight, Plus, Sparkles, Pencil, Trash2,
-  MessageCircle, Award
+  Award, Eye
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -460,13 +460,6 @@ export default function AdminCourses() {
               Utenti
             </Link>
             <Link 
-              to="/admin/commenti" 
-              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
-            >
-              <MessageCircle className="w-4 h-4" />
-              Commenti
-            </Link>
-            <Link 
               to="/admin/valutazioni" 
               className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
             >
@@ -479,6 +472,13 @@ export default function AdminCourses() {
             >
               <BarChart3 className="w-4 h-4" />
               Statistiche
+            </Link>
+            <Link 
+              to="/admin/simulatore" 
+              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
+            >
+              <Eye className="w-4 h-4" />
+              Simulatore
             </Link>
           </nav>
         </div>

@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      attendance: {
+        Row: {
+          id: string
+          marked_at: string | null
+          marked_by: string | null
+          notes: string | null
+          scheduled_lesson_id: string
+          status: string
+          student_id: string
+        }
+        Insert: {
+          id?: string
+          marked_at?: string | null
+          marked_by?: string | null
+          notes?: string | null
+          scheduled_lesson_id: string
+          status: string
+          student_id: string
+        }
+        Update: {
+          id?: string
+          marked_at?: string | null
+          marked_by?: string | null
+          notes?: string | null
+          scheduled_lesson_id?: string
+          status?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_scheduled_lesson_id_fkey"
+            columns: ["scheduled_lesson_id"]
+            isOneToOne: false
+            referencedRelation: "scheduled_lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       badges: {
         Row: {
           category: string
@@ -614,6 +659,44 @@ export type Database = {
           },
         ]
       }
+      scheduled_lessons: {
+        Row: {
+          course_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          lesson_date: string
+          title: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          lesson_date: string
+          title: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          lesson_date?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_lessons_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_comments: {
         Row: {
           author_id: string
@@ -654,6 +737,50 @@ export type Database = {
             foreignKeyName: "student_comments_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_streaks: {
+        Row: {
+          attendance_streak: number | null
+          best_attendance_streak: number | null
+          best_homework_streak: number | null
+          homework_streak: number | null
+          id: string
+          last_attendance_date: string | null
+          last_homework_date: string | null
+          student_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          attendance_streak?: number | null
+          best_attendance_streak?: number | null
+          best_homework_streak?: number | null
+          homework_streak?: number | null
+          id?: string
+          last_attendance_date?: string | null
+          last_homework_date?: string | null
+          student_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          attendance_streak?: number | null
+          best_attendance_streak?: number | null
+          best_homework_streak?: number | null
+          homework_streak?: number | null
+          id?: string
+          last_attendance_date?: string | null
+          last_homework_date?: string | null
+          student_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_streaks_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },

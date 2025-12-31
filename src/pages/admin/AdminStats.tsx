@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AdminViewSimulator } from '@/components/admin/AdminViewSimulator';
 import { 
   LogOut,
   FileText,
@@ -17,7 +18,9 @@ import {
   Calendar,
   MessageSquare,
   BarChart3,
-  TrendingUp
+  TrendingUp,
+  Award,
+  MessageCircle
 } from 'lucide-react';
 import {
   AreaChart,
@@ -229,11 +232,32 @@ export default function AdminStats() {
               Contatti
             </Link>
             <Link 
+              to="/admin/newsletter" 
+              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
+            >
+              <Mail className="w-4 h-4" />
+              Newsletter
+            </Link>
+            <Link 
               to="/admin/utenti" 
               className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
             >
               <User className="w-4 h-4" />
               Utenti
+            </Link>
+            <Link 
+              to="/admin/commenti" 
+              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
+            >
+              <MessageCircle className="w-4 h-4" />
+              Commenti
+            </Link>
+            <Link 
+              to="/admin/valutazioni" 
+              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
+            >
+              <Award className="w-4 h-4" />
+              Valutazioni
             </Link>
             <Link 
               to="/admin/statistiche" 
@@ -322,6 +346,11 @@ export default function AdminStats() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Admin View Simulator */}
+        <div className="mt-8">
+          <AdminViewSimulator />
+        </div>
       </main>
     </div>
   );

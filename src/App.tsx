@@ -33,6 +33,8 @@ import AdminTasks from "./pages/admin/AdminTasks";
 import TaskEditor from "./pages/admin/TaskEditor";
 import AdminHomework from "./pages/admin/AdminHomework";
 import AdminNewsletter from "./pages/admin/AdminNewsletter";
+import AdminStudentComments from "./pages/admin/AdminStudentComments";
+import AdminGrading from "./pages/admin/AdminGrading";
 import AuthPage from "./pages/auth/AuthPage";
 import AreaRiservataDashboard from "./pages/area-riservata/Dashboard";
 import AreaRiservataProfile from "./pages/area-riservata/Profile";
@@ -85,6 +87,8 @@ const App = () => (
             <Route path="/admin/blog/nuovo" element={<BlogEditor />} />
             <Route path="/admin/blog/:id/modifica" element={<BlogEditor />} />
             <Route path="/admin/utenti" element={<AdminUsers />} />
+            <Route path="/admin/commenti" element={<AdminStudentComments />} />
+            <Route path="/admin/valutazioni" element={<AdminGrading />} />
             <Route path="/admin/statistiche" element={<AdminStats />} />
             <Route path="/admin/newsletter" element={<AdminNewsletter />} />
             <Route path="*" element={<NotFound />} />

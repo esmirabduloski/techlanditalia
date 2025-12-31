@@ -16,6 +16,7 @@ import { StudentCommentsSection } from '@/components/dashboard/StudentCommentsSe
 import { ParentChildrenSection } from '@/components/dashboard/ParentChildrenSection';
 import { StreakDisplay } from '@/components/dashboard/StreakDisplay';
 import { AttendanceHistory } from '@/components/dashboard/AttendanceHistory';
+import { StreakBonusesDisplay } from '@/components/dashboard/StreakBonusesDisplay';
 import { Loader2, BookOpen, Trophy, Target, Settings, LogOut, Rocket, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -28,7 +29,7 @@ interface CourseProgress {
 export default function Dashboard() {
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const { profile, enrollments, lessonProgress, taskProgress, isLoading: dataLoading } = useStudentProgress();
-  const { streaks, attendance, stats, loading: streaksLoading } = useStudentStreaks(user?.id);
+  const { streaks, attendance, stats, bonuses, loading: streaksLoading } = useStudentStreaks(user?.id);
   const navigate = useNavigate();
   const [courseProgressMap, setCourseProgressMap] = useState<CourseProgress[]>([]);
 
@@ -235,13 +236,18 @@ export default function Dashboard() {
               <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                 🔥 Le Tue Streak
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <StreakDisplay
-                  homeworkStreak={streaks.homework_streak}
-                  attendanceStreak={streaks.attendance_streak}
-                  bestHomeworkStreak={streaks.best_homework_streak}
-                  bestAttendanceStreak={streaks.best_attendance_streak}
-                />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <StreakDisplay
+                    homeworkStreak={streaks.homework_streak}
+                    attendanceStreak={streaks.attendance_streak}
+                    bestHomeworkStreak={streaks.best_homework_streak}
+                    bestAttendanceStreak={streaks.best_attendance_streak}
+                  />
+                  {bonuses.length > 0 && (
+                    <StreakBonusesDisplay bonuses={bonuses} />
+                  )}
+                </div>
                 <AttendanceHistory attendance={attendance} stats={stats} />
               </div>
             </div>

@@ -697,6 +697,41 @@ export type Database = {
           },
         ]
       }
+      streak_bonuses: {
+        Row: {
+          awarded_at: string | null
+          id: string
+          milestone: number
+          points_awarded: number
+          streak_type: string
+          student_id: string
+        }
+        Insert: {
+          awarded_at?: string | null
+          id?: string
+          milestone: number
+          points_awarded: number
+          streak_type: string
+          student_id: string
+        }
+        Update: {
+          awarded_at?: string | null
+          id?: string
+          milestone?: number
+          points_awarded?: number
+          streak_type?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "streak_bonuses_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_comments: {
         Row: {
           author_id: string

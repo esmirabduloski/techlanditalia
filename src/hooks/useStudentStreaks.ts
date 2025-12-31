@@ -34,10 +34,19 @@ interface AttendanceStats {
   percentage: number;
 }
 
+interface StreakBonus {
+  id: string;
+  streak_type: 'homework' | 'attendance';
+  milestone: number;
+  points_awarded: number;
+  awarded_at: string;
+}
+
 export function useStudentStreaks(studentId?: string) {
   const [streaks, setStreaks] = useState<StudentStreaks | null>(null);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [stats, setStats] = useState<AttendanceStats>({ total: 0, present: 0, absent_unexcused: 0, absent_excused: 0, percentage: 0 });
+  const [bonuses, setBonuses] = useState<StreakBonus[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -107,11 +116,28 @@ export function useStudentStreaks(studentId?: string) {
         setStats({ total, present, absent_unexcused, absent_excused, percentage });
       }
 
+      // Fetch streak bonuses
+      const { data: bonusesData } = await supabase
+        .from('streak_bonuses')
+        .select('*')
+        .eq('student_id', studentId)
+        .order('awarded_at', { ascending: false });
+
+      if (bonusesData) {
+        setBonuses(bonusesData.map(b => ({
+          id: b.id,
+          streak_type: b.streak_type as 'homework' | 'attendance',
+          milestone: b.milestone,
+          points_awarded: b.points_awarded,
+          awarded_at: b.awarded_at
+        })));
+      }
+
       setLoading(false);
     };
 
     fetchData();
   }, [studentId]);
 
-  return { streaks, attendance, stats, loading };
+  return { streaks, attendance, stats, bonuses, loading };
 }

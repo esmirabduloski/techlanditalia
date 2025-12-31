@@ -1,6 +1,7 @@
-import { Flame, BookOpen, CalendarCheck } from 'lucide-react';
+import { Flame, BookOpen, CalendarCheck, Gift } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { NextMilestoneProgress } from './StreakBonusesDisplay';
 
 interface StreakDisplayProps {
   homeworkStreak: number;
@@ -8,6 +9,7 @@ interface StreakDisplayProps {
   bestHomeworkStreak: number;
   bestAttendanceStreak: number;
   compact?: boolean;
+  showMilestoneProgress?: boolean;
 }
 
 export function StreakDisplay({
@@ -16,6 +18,7 @@ export function StreakDisplay({
   bestHomeworkStreak,
   bestAttendanceStreak,
   compact = false,
+  showMilestoneProgress = true,
 }: StreakDisplayProps) {
   if (compact) {
     return (
@@ -39,9 +42,9 @@ export function StreakDisplay({
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Card className="bg-gradient-to-br from-orange-500/10 to-red-500/10 border-orange-500/20">
-        <CardContent className="p-4">
+        <CardContent className="p-4 space-y-3">
           <div className="flex items-center gap-3">
             <div className={cn(
               "p-2 rounded-full",
@@ -61,15 +64,18 @@ export function StreakDisplay({
             </div>
           </div>
           {bestHomeworkStreak > 0 && (
-            <p className="text-xs text-muted-foreground mt-2">
+            <p className="text-xs text-muted-foreground">
               Record: {bestHomeworkStreak} giorni 🏆
             </p>
+          )}
+          {showMilestoneProgress && homeworkStreak > 0 && (
+            <NextMilestoneProgress currentStreak={homeworkStreak} streakType="homework" />
           )}
         </CardContent>
       </Card>
 
       <Card className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20">
-        <CardContent className="p-4">
+        <CardContent className="p-4 space-y-3">
           <div className="flex items-center gap-3">
             <div className={cn(
               "p-2 rounded-full",
@@ -89,9 +95,12 @@ export function StreakDisplay({
             </div>
           </div>
           {bestAttendanceStreak > 0 && (
-            <p className="text-xs text-muted-foreground mt-2">
+            <p className="text-xs text-muted-foreground">
               Record: {bestAttendanceStreak} lezioni 🏆
             </p>
+          )}
+          {showMilestoneProgress && attendanceStreak > 0 && (
+            <NextMilestoneProgress currentStreak={attendanceStreak} streakType="attendance" />
           )}
         </CardContent>
       </Card>

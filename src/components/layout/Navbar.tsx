@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useHasEnrollments } from "@/hooks/useHasEnrollments";
 import { useStudentRole } from "@/hooks/useStudentRole";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const navLinks = [
   { href: "/corsi", label: "Corsi di Coding", title: "Corsi di programmazione per bambini e ragazzi" },
@@ -60,6 +61,7 @@ export function Navbar() {
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-3">
+            <ThemeToggle />
             {!user ? (
               <Button variant="ghost" asChild>
                 <Link to="/auth">Accedi</Link>
@@ -108,6 +110,10 @@ export function Navbar() {
                 </Link>
               ))}
               <div className="flex flex-col gap-2 mt-4 px-4">
+                <div className="flex items-center justify-between py-2">
+                  <span className="text-sm text-muted-foreground">Tema</span>
+                  <ThemeToggle />
+                </div>
                 {!user ? (
                   <Button variant="outline" asChild>
                     <Link to="/auth" onClick={() => setIsOpen(false)}>Accedi</Link>

@@ -22,7 +22,9 @@ import {
   CheckCircle,
   Clock,
   Users,
-  Newspaper
+  Newspaper,
+  MessageCircle,
+  Award
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -250,6 +252,20 @@ export default function AdminNewsletter() {
             >
               <User className="w-4 h-4" />
               Utenti
+            </Link>
+            <Link 
+              to="/admin/commenti" 
+              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
+            >
+              <MessageCircle className="w-4 h-4" />
+              Commenti
+            </Link>
+            <Link 
+              to="/admin/valutazioni" 
+              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
+            >
+              <Award className="w-4 h-4" />
+              Valutazioni
             </Link>
             <Link 
               to="/admin/statistiche" 

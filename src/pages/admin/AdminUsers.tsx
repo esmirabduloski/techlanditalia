@@ -25,7 +25,9 @@ import {
   Home,
   Edit2,
   Search,
-  BarChart3
+  BarChart3,
+  MessageCircle,
+  Award
 } from 'lucide-react';
 import {
   Select,
@@ -428,9 +430,21 @@ export default function AdminUsers() {
               <Mail className="w-4 h-4" />
               Contatti
             </Link>
+            <Link to="/admin/newsletter" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
+              <Mail className="w-4 h-4" />
+              Newsletter
+            </Link>
             <Link to="/admin/utenti" className="py-3 px-2 border-b-2 border-primary text-primary font-medium flex items-center gap-2 whitespace-nowrap">
               <Users className="w-4 h-4" />
               Utenti
+            </Link>
+            <Link to="/admin/commenti" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
+              <MessageCircle className="w-4 h-4" />
+              Commenti
+            </Link>
+            <Link to="/admin/valutazioni" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
+              <Award className="w-4 h-4" />
+              Valutazioni
             </Link>
             <Link to="/admin/statistiche" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
               <BarChart3 className="w-4 h-4" />

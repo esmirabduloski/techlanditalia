@@ -12,6 +12,7 @@ import { BadgesDisplay } from '@/components/gamification/BadgesDisplay';
 import { HomeworkSection } from '@/components/dashboard/HomeworkSection';
 import { ParentFeedbackSection } from '@/components/dashboard/ParentFeedbackSection';
 import { StudentCommentsSection } from '@/components/dashboard/StudentCommentsSection';
+import { ParentChildrenSection } from '@/components/dashboard/ParentChildrenSection';
 import { Loader2, BookOpen, Trophy, Target, Settings, LogOut, Rocket, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -305,6 +306,11 @@ export default function Dashboard() {
               <StudentCommentsSection />
             </div>
           )}
+
+          {/* Parent Children Section - shows badges and progress for children */}
+          <div className="mb-8">
+            <ParentChildrenSection />
+          </div>
 
           {/* Parent Feedback Section - only visible for parents */}
           <div className="mb-8">

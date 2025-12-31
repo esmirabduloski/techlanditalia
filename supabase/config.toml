@@ -20,3 +20,12 @@ verify_jwt = false
 
 [functions.validate-file-upload]
 verify_jwt = true
+
+[functions.newsletter-subscribe]
+verify_jwt = false
+
+[functions.newsletter-confirm]
+verify_jwt = false
+
+[functions.newsletter-unsubscribe]
+verify_jwt = false

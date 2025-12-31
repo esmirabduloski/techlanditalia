@@ -4,8 +4,9 @@ import { Layout } from "@/components/layout/Layout";
 import { SEOHead } from "@/components/seo/SEOHead";
 import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Clock, Loader2 } from "lucide-react";
+import { ArrowRight, Clock, Loader2, Mail, CheckCircle } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from "sonner";
 
 interface BlogPost {
   id: string;
@@ -34,6 +35,9 @@ const defaultImage = "https://images.unsplash.com/photo-1503676260728-1c00da094a
 export default function Blog() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [email, setEmail] = useState('');
+  const [isSubscribing, setIsSubscribing] = useState(false);
+  const [subscribed, setSubscribed] = useState(false);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -49,6 +53,46 @@ export default function Blog() {
 
     fetchPosts();
   }, []);
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email.trim()) {
+      toast.error("Inserisci un'email valida");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      toast.error("Formato email non valido");
+      return;
+    }
+
+    setIsSubscribing(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('newsletter-subscribe', {
+        body: { email: email.trim() }
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        setSubscribed(true);
+        toast.success(data.message);
+        setEmail('');
+      } else if (data.message) {
+        toast.info(data.message);
+      } else if (data.error) {
+        toast.error(data.error);
+      }
+    } catch (error: any) {
+      console.error('Newsletter subscribe error:', error);
+      toast.error("Errore durante l'iscrizione. Riprova più tardi.");
+    } finally {
+      setIsSubscribing(false);
+    }
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('it-IT', {
@@ -219,25 +263,48 @@ export default function Blog() {
       <section className="tech-section bg-muted/30">
         <div className="tech-container">
           <div className="tech-card p-8 md:p-12 text-center max-w-2xl mx-auto">
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              {subscribed ? (
+                <CheckCircle className="w-8 h-8 text-primary" />
+              ) : (
+                <Mail className="w-8 h-8 text-primary" />
+              )}
+            </div>
             <h2 className="text-2xl md:text-3xl font-bold mb-4">
-              Resta aggiornato
+              {subscribed ? "Grazie per l'iscrizione!" : "Resta aggiornato"}
             </h2>
             <p className="text-muted-foreground mb-6">
-              Iscriviti alla newsletter per ricevere articoli, guide e consigli direttamente nella tua inbox.
+              {subscribed 
+                ? "Controlla la tua email per confermare l'iscrizione e iniziare a ricevere i nostri aggiornamenti."
+                : "Iscriviti alla newsletter per ricevere articoli, guide e consigli direttamente nella tua inbox."
+              }
             </p>
-            <form className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-              <input
-                type="email"
-                placeholder="La tua email"
-                className="flex-1 h-12 px-4 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-              <button
-                type="submit"
-                className="h-12 px-6 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors"
-              >
-                Iscriviti
-              </button>
-            </form>
+            {!subscribed && (
+              <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="La tua email"
+                  disabled={isSubscribing}
+                  className="flex-1 h-12 px-4 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                />
+                <button
+                  type="submit"
+                  disabled={isSubscribing}
+                  className="h-12 px-6 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isSubscribing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Invio...
+                    </>
+                  ) : (
+                    "Iscriviti"
+                  )}
+                </button>
+              </form>
+            )}
           </div>
         </div>
       </section>

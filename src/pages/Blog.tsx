@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { Layout } from "@/components/layout/Layout";
 import { SEOHead } from "@/components/seo/SEOHead";
 import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
@@ -8,6 +9,75 @@ import { Input } from "@/components/ui/input";
 import { ArrowRight, Clock, Loader2, Mail, CheckCircle, Search, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
+
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const cardVariants = {
+  hidden: { 
+    opacity: 0, 
+    y: 20,
+    scale: 0.95
+  },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    scale: 1,
+    transition: {
+      type: "spring" as const,
+      stiffness: 100,
+      damping: 15
+    }
+  },
+  exit: {
+    opacity: 0,
+    y: -20,
+    scale: 0.95,
+    transition: {
+      duration: 0.2
+    }
+  }
+};
+
+const sectionVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: {
+      duration: 0.4,
+      ease: "easeOut" as const
+    }
+  },
+  exit: {
+    opacity: 0,
+    y: -30,
+    transition: {
+      duration: 0.3
+    }
+  }
+};
+
+const filterVariants = {
+  hidden: { opacity: 0, scale: 0.9 },
+  visible: { 
+    opacity: 1, 
+    scale: 1,
+    transition: {
+      type: "spring" as const,
+      stiffness: 200,
+      damping: 20
+    }
+  }
+};
 import {
   Pagination,
   PaginationContent,
@@ -323,7 +393,13 @@ export default function Blog() {
     const hasMore = categoryPosts.length > 4;
 
     return (
-      <section className="mb-16">
+      <motion.section 
+        className="mb-16"
+        variants={sectionVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-50px" }}
+      >
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <span className="text-3xl">{config.icon}</span>
@@ -333,21 +409,30 @@ export default function Blog() {
             </div>
           </div>
           {hasMore && (
-            <button
+            <motion.button
               onClick={() => setSelectedCategory(category)}
               className="text-primary font-medium flex items-center gap-1 hover:gap-2 transition-all"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               Vedi tutti ({categoryPosts.length})
               <ArrowRight className="w-4 h-4" />
-            </button>
+            </motion.button>
           )}
         </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {displayPosts.map((post) => (
-            <BlogCard key={post.id} post={post} />
+        <motion.div 
+          className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          {displayPosts.map((post, index) => (
+            <motion.div key={post.id} variants={cardVariants} custom={index}>
+              <BlogCard post={post} />
+            </motion.div>
           ))}
-        </div>
-      </section>
+        </motion.div>
+      </motion.section>
     );
   };
 
@@ -497,7 +582,12 @@ export default function Blog() {
 
       {/* Featured Article (only when no filters) */}
       {!isLoading && posts.length > 0 && !isFiltering && (
-        <section className="tech-section pt-8">
+        <motion.section 
+          className="tech-section pt-8"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
           <div className="tech-container">
             <div className="mb-8">
               <h2 className="text-2xl font-bold flex items-center gap-2">
@@ -505,9 +595,15 @@ export default function Blog() {
                 In Evidenza
               </h2>
             </div>
-            <BlogCard post={posts[0]} featured />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4, delay: 0.2 }}
+            >
+              <BlogCard post={posts[0]} featured />
+            </motion.div>
           </div>
-        </section>
+        </motion.section>
       )}
 
       {/* Category Sections (when no filters) */}
@@ -517,7 +613,7 @@ export default function Blog() {
             {Object.entries(postsByCategory)
               .filter(([_, categoryPosts]) => categoryPosts.length > 0)
               .sort((a, b) => b[1].length - a[1].length)
-              .slice(0, 6) // Show top 6 categories
+              .slice(0, 6)
               .map(([category, categoryPosts]) => (
                 <CategorySection key={category} category={category} posts={categoryPosts} />
               ))}
@@ -526,68 +622,97 @@ export default function Blog() {
       )}
 
       {/* Filtered/Paginated Grid */}
-      {!isLoading && filteredPosts.length > 0 && isFiltering && (
-        <section className="tech-section">
-          <div className="tech-container">
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {paginatedPosts.map((post) => (
-                <BlogCard key={post.id} post={post} />
-              ))}
-            </div>
+      <AnimatePresence mode="wait">
+        {!isLoading && filteredPosts.length > 0 && isFiltering && (
+          <motion.section 
+            className="tech-section"
+            key={`${selectedCategory}-${currentPage}`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="tech-container">
+              <motion.div 
+                className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                {paginatedPosts.map((post, index) => (
+                  <motion.div 
+                    key={post.id} 
+                    variants={cardVariants}
+                    layout
+                  >
+                    <BlogCard post={post} />
+                  </motion.div>
+                ))}
+              </motion.div>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="mt-12">
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious 
-                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                        className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                      />
-                    </PaginationItem>
-                    
-                    {Array.from({ length: totalPages }, (_, i) => i + 1)
-                      .filter(page => {
-                        if (totalPages <= 5) return true;
-                        if (page === 1 || page === totalPages) return true;
-                        if (Math.abs(page - currentPage) <= 1) return true;
-                        return false;
-                      })
-                      .map((page, index, array) => (
-                        <>
-                          {index > 0 && array[index - 1] !== page - 1 && (
-                            <PaginationItem key={`ellipsis-${page}`}>
-                              <span className="px-3 py-2">...</span>
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <motion.div 
+                  className="mt-12"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious 
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                        />
+                      </PaginationItem>
+                      
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter(page => {
+                          if (totalPages <= 5) return true;
+                          if (page === 1 || page === totalPages) return true;
+                          if (Math.abs(page - currentPage) <= 1) return true;
+                          return false;
+                        })
+                        .map((page, index, array) => (
+                          <>
+                            {index > 0 && array[index - 1] !== page - 1 && (
+                              <PaginationItem key={`ellipsis-${page}`}>
+                                <span className="px-3 py-2">...</span>
+                              </PaginationItem>
+                            )}
+                            <PaginationItem key={page}>
+                              <motion.div
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                              >
+                                <PaginationLink
+                                  onClick={() => setCurrentPage(page)}
+                                  isActive={currentPage === page}
+                                  className="cursor-pointer"
+                                >
+                                  {page}
+                                </PaginationLink>
+                              </motion.div>
                             </PaginationItem>
-                          )}
-                          <PaginationItem key={page}>
-                            <PaginationLink
-                              onClick={() => setCurrentPage(page)}
-                              isActive={currentPage === page}
-                              className="cursor-pointer"
-                            >
-                              {page}
-                            </PaginationLink>
-                          </PaginationItem>
-                        </>
-                      ))}
-                    
-                    <PaginationItem>
-                      <PaginationNext 
-                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                        className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              </div>
-            )}
-          </div>
-        </section>
-      )}
+                          </>
+                        ))}
 
-      {/* Newsletter */}
+                      <PaginationItem>
+                        <PaginationNext 
+                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                          className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </motion.div>
+              )}
+            </div>
+          </motion.section>
+        )}
+      </AnimatePresence>
+
       <section className="tech-section bg-muted/30">
         <div className="tech-container">
           <div className="tech-card p-8 md:p-12 text-center max-w-2xl mx-auto">

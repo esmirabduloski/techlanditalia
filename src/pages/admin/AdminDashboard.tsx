@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { AdminNav } from '@/components/admin/AdminNav';
 import { 
   Plus, 
   Edit, 
@@ -14,12 +15,7 @@ import {
   LogOut,
   FileText,
   Loader2,
-  BookOpen,
-  Mail,
-  User,
-  BarChart3,
-  GraduationCap,
-  Award
+  User
 } from 'lucide-react';
 import {
   AlertDialog,

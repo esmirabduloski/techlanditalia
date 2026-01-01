@@ -8,12 +8,10 @@ import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { AdminNav } from '@/components/admin/AdminNav';
 import { 
   LogOut,
   Loader2,
-  Mail,
-  FileText,
-  BookOpen,
   Users,
   ChevronDown,
   ChevronRight,
@@ -25,10 +23,7 @@ import {
   Home,
   Edit2,
   Search,
-  BarChart3,
-  MessageCircle,
-  Award,
-  Eye
+  MessageCircle
 } from 'lucide-react';
 import {
   Select,
@@ -412,48 +407,7 @@ export default function AdminUsers() {
       </header>
 
       {/* Navigation */}
-      <div className="border-b bg-background">
-        <div className="max-w-7xl mx-auto px-4">
-          <nav className="flex gap-4 overflow-x-auto">
-            <Link to="/admin" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
-              <FileText className="w-4 h-4" />
-              Blog
-            </Link>
-            <Link to="/admin/corsi" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
-              <GraduationCap className="w-4 h-4" />
-              Corsi
-            </Link>
-            <Link to="/admin/prenotazioni" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
-              <BookOpen className="w-4 h-4" />
-              Prenotazioni
-            </Link>
-            <Link to="/admin/contatti" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
-              <Mail className="w-4 h-4" />
-              Contatti
-            </Link>
-            <Link to="/admin/newsletter" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
-              <Mail className="w-4 h-4" />
-              Newsletter
-            </Link>
-            <Link to="/admin/utenti" className="py-3 px-2 border-b-2 border-primary text-primary font-medium flex items-center gap-2 whitespace-nowrap">
-              <Users className="w-4 h-4" />
-              Utenti
-            </Link>
-            <Link to="/admin/valutazioni" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
-              <Award className="w-4 h-4" />
-              Valutazioni
-            </Link>
-            <Link to="/admin/statistiche" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
-              <BarChart3 className="w-4 h-4" />
-              Statistiche
-            </Link>
-            <Link to="/admin/simulatore" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
-              <Eye className="w-4 h-4" />
-              Simulatore
-            </Link>
-          </nav>
-        </div>
-      </div>
+      <AdminNav />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">

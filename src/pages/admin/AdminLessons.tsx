@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { AdminNav } from '@/components/admin/AdminNav';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,8 +18,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { 
-  LogOut, Loader2, Plus, Edit, Trash2, ArrowLeft, BookOpen, 
-  FileText, Mail, User, BarChart3, GraduationCap, ClipboardList 
+  LogOut, Loader2, Plus, Edit, Trash2, ArrowLeft, BookOpen, ClipboardList 
 } from 'lucide-react';
 
 interface Course {
@@ -134,54 +134,7 @@ export default function AdminLessons() {
       </header>
 
       {/* Navigation */}
-      <div className="border-b bg-background">
-        <div className="max-w-7xl mx-auto px-4">
-          <nav className="flex gap-4 overflow-x-auto">
-            <Link 
-              to="/admin" 
-              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
-            >
-              <FileText className="w-4 h-4" />
-              Blog
-            </Link>
-            <Link 
-              to="/admin/corsi" 
-              className="py-3 px-2 border-b-2 border-primary text-primary font-medium flex items-center gap-2 whitespace-nowrap"
-            >
-              <GraduationCap className="w-4 h-4" />
-              Corsi
-            </Link>
-            <Link 
-              to="/admin/prenotazioni" 
-              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
-            >
-              <BookOpen className="w-4 h-4" />
-              Prenotazioni
-            </Link>
-            <Link 
-              to="/admin/contatti" 
-              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
-            >
-              <Mail className="w-4 h-4" />
-              Contatti
-            </Link>
-            <Link 
-              to="/admin/utenti" 
-              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
-            >
-              <User className="w-4 h-4" />
-              Utenti
-            </Link>
-            <Link 
-              to="/admin/statistiche" 
-              className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap"
-            >
-              <BarChart3 className="w-4 h-4" />
-              Statistiche
-            </Link>
-          </nav>
-        </div>
-      </div>
+      <AdminNav />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">

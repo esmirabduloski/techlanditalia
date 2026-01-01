@@ -1,18 +1,19 @@
 import { useState, useEffect, useRef } from 'react';
+import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Play, Upload, Trash2, Copy, FolderOpen, X, Loader2 } from 'lucide-react';
+import { Play, Upload, Trash2, Copy, FolderOpen, X, Loader2, Save, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { useCodeDraft } from '@/hooks/useCodeDraft';
 
 interface UploadedFile {
   name: string;
   url: string;
 }
 
-export function WebCompiler() {
-  const [htmlCode, setHtmlCode] = useState<string>(`<!DOCTYPE html>
+const DEFAULT_HTML = `<!DOCTYPE html>
 <html>
 <head>
   <link rel="stylesheet" href="style.css">
@@ -21,8 +22,9 @@ export function WebCompiler() {
   <h1>Ciao, Mondo!</h1>
   <p>Modifica questo codice per vedere i cambiamenti.</p>
 </body>
-</html>`);
-  const [cssCode, setCssCode] = useState<string>(`body {
+</html>`;
+
+const DEFAULT_CSS = `body {
   font-family: Arial, sans-serif;
   padding: 20px;
   background-color: #f0f0f0;
@@ -34,8 +36,14 @@ h1 {
 
 p {
   color: #666;
-}`);
-  const [jsCode, setJsCode] = useState<string>('// JavaScript opzionale\nconsole.log("Hello from JavaScript!");');
+}`;
+
+const DEFAULT_JS = '// JavaScript opzionale\nconsole.log("Hello from JavaScript!");';
+
+export function WebCompiler() {
+  const { courseId, lessonNumber, taskNumber } = useParams();
+  const [lessonId, setLessonId] = useState<string | null>(null);
+  const [taskId, setTaskId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('html');
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isUploading, setIsUploading] = useState<boolean>(false);
@@ -45,9 +53,64 @@ p {
   const { toast } = useToast();
   const { user } = useAuth();
 
+  // Fetch lesson/task IDs
+  useEffect(() => {
+    const fetchIds = async () => {
+      if (!courseId || !lessonNumber) return;
+
+      const { data: lessonData } = await supabase
+        .from('lessons')
+        .select('id')
+        .eq('course_id', courseId)
+        .eq('lesson_number', parseInt(lessonNumber))
+        .maybeSingle();
+
+      if (lessonData) {
+        if (taskNumber) {
+          const { data: taskData } = await supabase
+            .from('lesson_tasks')
+            .select('id')
+            .eq('lesson_id', lessonData.id)
+            .eq('task_number', parseInt(taskNumber))
+            .maybeSingle();
+          
+          if (taskData) {
+            setTaskId(taskData.id);
+          }
+        } else {
+          setLessonId(lessonData.id);
+        }
+      }
+    };
+
+    fetchIds();
+  }, [courseId, lessonNumber, taskNumber]);
+
+  // Use code drafts for each file type
+  const htmlDraft = useCodeDraft({
+    lessonId: lessonId || undefined,
+    taskId: taskId || undefined,
+    codeType: 'html',
+    defaultCode: DEFAULT_HTML,
+  });
+
+  const cssDraft = useCodeDraft({
+    lessonId: lessonId || undefined,
+    taskId: taskId || undefined,
+    codeType: 'css',
+    defaultCode: DEFAULT_CSS,
+  });
+
+  const jsDraft = useCodeDraft({
+    lessonId: lessonId || undefined,
+    taskId: taskId || undefined,
+    codeType: 'js',
+    defaultCode: DEFAULT_JS,
+  });
+
   useEffect(() => {
     updatePreview();
-  }, [htmlCode, cssCode, jsCode]);
+  }, [htmlDraft.code, cssDraft.code, jsDraft.code]);
 
   const updatePreview = () => {
     if (!iframeRef.current) return;
@@ -56,11 +119,11 @@ p {
       <!DOCTYPE html>
       <html>
       <head>
-        <style>${cssCode}</style>
+        <style>${cssDraft.code}</style>
       </head>
       <body>
-        ${htmlCode.replace(/<!DOCTYPE html>|<\/?html>|<\/?head>|<\/?body>|<link[^>]*>/gi, '')}
-        <script>${jsCode}</script>
+        ${htmlDraft.code.replace(/<!DOCTYPE html>|<\/?html>|<\/?head>|<\/?body>|<link[^>]*>/gi, '')}
+        <script>${jsDraft.code}</script>
       </body>
       </html>
     `;
@@ -69,7 +132,7 @@ p {
     iframeRef.current.src = URL.createObjectURL(blob);
   };
 
-  // Allowed image types for web compiler (must match server-side)
+  // Allowed image types for web compiler
   const ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
   const ALLOWED_IMAGE_MIME_TYPES = [
     'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'
@@ -101,7 +164,6 @@ p {
 
     try {
       for (const file of Array.from(files)) {
-        // Client-side validation first
         const extension = getFileExtension(file.name);
         if (!ALLOWED_IMAGE_EXTENSIONS.includes(extension)) {
           toast({
@@ -121,7 +183,6 @@ p {
           continue;
         }
 
-        // Max 10MB
         if (file.size > 10 * 1024 * 1024) {
           toast({
             variant: 'destructive',
@@ -131,10 +192,8 @@ p {
           continue;
         }
 
-        // Read magic bytes for server-side validation
         const fileBytes = await readFileBytes(file);
 
-        // Server-side validation
         const { data: validationResult, error: validationError } = await supabase.functions.invoke(
           'validate-file-upload',
           {
@@ -234,14 +293,59 @@ p {
     }
   };
 
+  const saveAllDrafts = async () => {
+    await Promise.all([
+      htmlDraft.saveDraft(),
+      cssDraft.saveDraft(),
+      jsDraft.saveDraft(),
+    ]);
+  };
+
+  const resetAllCode = () => {
+    htmlDraft.resetCode();
+    cssDraft.resetCode();
+    jsDraft.resetCode();
+  };
+
+  const isSaving = htmlDraft.isSaving || cssDraft.isSaving || jsDraft.isSaving;
+  const isLoading = htmlDraft.isLoading || cssDraft.isLoading || jsDraft.isLoading;
+
+  const formatLastSaved = () => {
+    const dates = [htmlDraft.lastSaved, cssDraft.lastSaved, jsDraft.lastSaved].filter(Boolean) as Date[];
+    if (dates.length === 0) return null;
+    const latest = new Date(Math.max(...dates.map(d => d.getTime())));
+    return latest.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+  };
+
   return (
     <div className="flex flex-col h-full bg-card border-l border-border">
       {/* Toolbar */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/50">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-foreground">🌐 Web Editor</span>
+          {isSaving && (
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              Salvataggio...
+            </span>
+          )}
+          {!isSaving && formatLastSaved() && (
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <Check className="w-3 h-3 text-green-500" />
+              Salvato {formatLastSaved()}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={saveAllDrafts}
+            disabled={isSaving}
+            title="Salva tutto"
+          >
+            <Save className="w-4 h-4" />
+          </Button>
           <Button
             variant="ghost"
             size="sm"
@@ -339,44 +443,50 @@ p {
 
       {/* Code Editor Tabs */}
       <div className="flex-1 overflow-hidden flex flex-col">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-          <TabsList className="w-full justify-start rounded-none border-b border-border bg-muted/30">
-            <TabsTrigger value="html" className="data-[state=active]:bg-background">
-              HTML
-            </TabsTrigger>
-            <TabsTrigger value="css" className="data-[state=active]:bg-background">
-              CSS
-            </TabsTrigger>
-            <TabsTrigger value="js" className="data-[state=active]:bg-background">
-              JavaScript
-            </TabsTrigger>
-          </TabsList>
+        {isLoading ? (
+          <div className="flex-1 flex items-center justify-center">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          </div>
+        ) : (
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+            <TabsList className="w-full justify-start rounded-none border-b border-border bg-muted/30">
+              <TabsTrigger value="html" className="data-[state=active]:bg-background">
+                HTML
+              </TabsTrigger>
+              <TabsTrigger value="css" className="data-[state=active]:bg-background">
+                CSS
+              </TabsTrigger>
+              <TabsTrigger value="js" className="data-[state=active]:bg-background">
+                JavaScript
+              </TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="html" className="flex-1 m-0 overflow-hidden">
-            <textarea
-              value={htmlCode}
-              onChange={(e) => setHtmlCode(e.target.value)}
-              className="w-full h-full p-4 font-mono text-sm bg-background text-foreground resize-none focus:outline-none"
-              spellCheck={false}
-            />
-          </TabsContent>
-          <TabsContent value="css" className="flex-1 m-0 overflow-hidden">
-            <textarea
-              value={cssCode}
-              onChange={(e) => setCssCode(e.target.value)}
-              className="w-full h-full p-4 font-mono text-sm bg-background text-foreground resize-none focus:outline-none"
-              spellCheck={false}
-            />
-          </TabsContent>
-          <TabsContent value="js" className="flex-1 m-0 overflow-hidden">
-            <textarea
-              value={jsCode}
-              onChange={(e) => setJsCode(e.target.value)}
-              className="w-full h-full p-4 font-mono text-sm bg-background text-foreground resize-none focus:outline-none"
-              spellCheck={false}
-            />
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="html" className="flex-1 m-0 overflow-hidden">
+              <textarea
+                value={htmlDraft.code}
+                onChange={(e) => htmlDraft.setCode(e.target.value)}
+                className="w-full h-full p-4 font-mono text-sm bg-background text-foreground resize-none focus:outline-none"
+                spellCheck={false}
+              />
+            </TabsContent>
+            <TabsContent value="css" className="flex-1 m-0 overflow-hidden">
+              <textarea
+                value={cssDraft.code}
+                onChange={(e) => cssDraft.setCode(e.target.value)}
+                className="w-full h-full p-4 font-mono text-sm bg-background text-foreground resize-none focus:outline-none"
+                spellCheck={false}
+              />
+            </TabsContent>
+            <TabsContent value="js" className="flex-1 m-0 overflow-hidden">
+              <textarea
+                value={jsDraft.code}
+                onChange={(e) => jsDraft.setCode(e.target.value)}
+                className="w-full h-full p-4 font-mono text-sm bg-background text-foreground resize-none focus:outline-none"
+                spellCheck={false}
+              />
+            </TabsContent>
+          </Tabs>
+        )}
 
         {/* Preview */}
         <div className="h-1/3 min-h-[150px] border-t border-border">

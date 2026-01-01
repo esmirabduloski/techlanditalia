@@ -32,7 +32,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { 
-  LogOut, Loader2, ArrowLeft, Plus, Edit, Trash2, ClipboardList, Save, Upload, FileText, X, Paperclip 
+  LogOut, Loader2, ArrowLeft, Plus, Edit, Trash2, ClipboardList, Save, Upload, FileText, X, Paperclip, Calendar 
 } from 'lucide-react';
 
 interface Lesson {
@@ -56,6 +56,7 @@ interface Homework {
   instructions: string | null;
   points_reward: number;
   attachments: Attachment[];
+  due_date: string | null;
   created_at: string;
 }
 
@@ -65,6 +66,7 @@ interface HomeworkFormData {
   instructions: string;
   points_reward: number;
   attachments: Attachment[];
+  due_date: string;
 }
 
 export default function AdminHomework() {
@@ -84,6 +86,7 @@ export default function AdminHomework() {
     instructions: '',
     points_reward: 25,
     attachments: [],
+    due_date: '',
   });
 
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
@@ -141,6 +144,7 @@ export default function AdminHomework() {
       instructions: '',
       points_reward: 25,
       attachments: [],
+      due_date: '',
     });
     setDialogOpen(true);
   };
@@ -153,6 +157,7 @@ export default function AdminHomework() {
       instructions: hw.instructions || '',
       points_reward: hw.points_reward,
       attachments: hw.attachments || [],
+      due_date: hw.due_date ? hw.due_date.split('T')[0] : '',
     });
     setDialogOpen(true);
   };
@@ -236,6 +241,7 @@ export default function AdminHomework() {
       instructions: formData.instructions || null,
       points_reward: formData.points_reward,
       attachments: formData.attachments as unknown as Json,
+      due_date: formData.due_date ? new Date(formData.due_date).toISOString() : null,
     };
 
     try {
@@ -391,6 +397,23 @@ export default function AdminHomework() {
                     value={formData.points_reward}
                     onChange={(e) => setFormData(prev => ({ ...prev, points_reward: parseInt(e.target.value) || 0 }))}
                   />
+                </div>
+
+                {/* Due Date */}
+                <div className="space-y-2">
+                  <Label htmlFor="hw-due-date" className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
+                    Scadenza (opzionale)
+                  </Label>
+                  <Input
+                    id="hw-due-date"
+                    type="date"
+                    value={formData.due_date}
+                    onChange={(e) => setFormData(prev => ({ ...prev, due_date: e.target.value }))}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Gli studenti vedranno un avviso quando la scadenza si avvicina
+                  </p>
                 </div>
 
                 {/* Attachments Section */}

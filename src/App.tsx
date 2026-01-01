@@ -44,6 +44,7 @@ import AreaRiservataProfile from "./pages/area-riservata/Profile";
 import CourseProgress from "./pages/area-riservata/CourseProgress";
 import LessonView from "./pages/area-riservata/LessonView";
 import TaskView from "./pages/area-riservata/TaskView";
+import HomeworkDetail from "./pages/area-riservata/HomeworkDetail";
 
 const queryClient = new QueryClient();
 
@@ -75,6 +76,7 @@ const App = () => (
             <Route path="/area-riservata/corso/:courseId" element={<CourseProgress />} />
             <Route path="/area-riservata/corso/:courseId/lezione/:lessonNumber" element={<LessonView />} />
             <Route path="/area-riservata/corso/:courseId/lezione/:lessonNumber/task/:taskNumber" element={<TaskView />} />
+            <Route path="/area-riservata/compito/:homeworkId" element={<HomeworkDetail />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/corsi" element={<AdminCourses />} />

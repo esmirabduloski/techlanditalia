@@ -315,11 +315,18 @@ export function HomeworkSection() {
                       <span className="text-xs text-muted-foreground">
                         🏆 {hw.points_reward} punti
                       </span>
-                      <Button size="sm" variant="default" asChild>
-                        <Link to={`/area-riservata/corso/${hw.course_id}`}>
-                          Vai al corso
-                        </Link>
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" asChild>
+                          <Link to={`/area-riservata/compito/${hw.id}`}>
+                            Dettagli
+                          </Link>
+                        </Button>
+                        <Button size="sm" variant="default" asChild>
+                          <Link to={`/area-riservata/corso/${hw.course_id}`}>
+                            Vai al corso
+                          </Link>
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

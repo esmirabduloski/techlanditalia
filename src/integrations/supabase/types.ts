@@ -344,6 +344,7 @@ export type Database = {
           attachments: Json | null
           created_at: string
           description: string | null
+          due_date: string | null
           id: string
           instructions: string | null
           lesson_id: string
@@ -354,6 +355,7 @@ export type Database = {
           attachments?: Json | null
           created_at?: string
           description?: string | null
+          due_date?: string | null
           id?: string
           instructions?: string | null
           lesson_id: string
@@ -364,6 +366,7 @@ export type Database = {
           attachments?: Json | null
           created_at?: string
           description?: string | null
+          due_date?: string | null
           id?: string
           instructions?: string | null
           lesson_id?: string
@@ -731,6 +734,61 @@ export type Database = {
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_code_drafts: {
+        Row: {
+          code_type: string
+          content: string
+          created_at: string
+          id: string
+          lesson_id: string | null
+          student_id: string
+          task_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          code_type: string
+          content?: string
+          created_at?: string
+          id?: string
+          lesson_id?: string | null
+          student_id: string
+          task_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          code_type?: string
+          content?: string
+          created_at?: string
+          id?: string
+          lesson_id?: string | null
+          student_id?: string
+          task_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_code_drafts_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_code_drafts_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_code_drafts_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_tasks"
             referencedColumns: ["id"]
           },
         ]

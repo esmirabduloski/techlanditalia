@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
+import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Play, Loader2, Trash2, RotateCcw } from 'lucide-react';
+import { Play, Loader2, Trash2, RotateCcw, Save, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useCodeDraft } from '@/hooks/useCodeDraft';
+import { supabase } from '@/integrations/supabase/client';
 
 declare global {
   interface Window {
@@ -9,13 +12,57 @@ declare global {
   }
 }
 
+const DEFAULT_CODE = '# Scrivi il tuo codice Python qui\nprint("Ciao, mondo!")\n';
+
 export function PythonCompiler() {
-  const [code, setCode] = useState<string>('# Scrivi il tuo codice Python qui\nprint("Ciao, mondo!")\n');
+  const { courseId, lessonNumber, taskNumber } = useParams();
+  const [lessonId, setLessonId] = useState<string | null>(null);
+  const [taskId, setTaskId] = useState<string | null>(null);
   const [output, setOutput] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoadingPyodide, setIsLoadingPyodide] = useState<boolean>(true);
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const pyodideRef = useRef<any>(null);
   const { toast } = useToast();
+
+  // Fetch lesson/task IDs
+  useEffect(() => {
+    const fetchIds = async () => {
+      if (!courseId || !lessonNumber) return;
+
+      const { data: lessonData } = await supabase
+        .from('lessons')
+        .select('id')
+        .eq('course_id', courseId)
+        .eq('lesson_number', parseInt(lessonNumber))
+        .maybeSingle();
+
+      if (lessonData) {
+        if (taskNumber) {
+          const { data: taskData } = await supabase
+            .from('lesson_tasks')
+            .select('id')
+            .eq('lesson_id', lessonData.id)
+            .eq('task_number', parseInt(taskNumber))
+            .maybeSingle();
+          
+          if (taskData) {
+            setTaskId(taskData.id);
+          }
+        } else {
+          setLessonId(lessonData.id);
+        }
+      }
+    };
+
+    fetchIds();
+  }, [courseId, lessonNumber, taskNumber]);
+
+  const { code, setCode, isLoading: isLoadingDraft, isSaving, lastSaved, resetCode, saveDraft } = useCodeDraft({
+    lessonId: lessonId || undefined,
+    taskId: taskId || undefined,
+    codeType: 'python',
+    defaultCode: DEFAULT_CODE,
+  });
 
   useEffect(() => {
     loadPyodide();
@@ -23,7 +70,6 @@ export function PythonCompiler() {
 
   const loadPyodide = async () => {
     try {
-      // Load Pyodide script if not already loaded
       if (!window.loadPyodide) {
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js';
@@ -36,12 +82,11 @@ export function PythonCompiler() {
         });
       }
 
-      // Initialize Pyodide
       pyodideRef.current = await window.loadPyodide({
         indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.24.1/full/'
       });
 
-      setIsLoading(false);
+      setIsLoadingPyodide(false);
       setOutput('Python pronto! Clicca "Esegui" per eseguire il codice.');
     } catch (error) {
       console.error('Error loading Pyodide:', error);
@@ -61,7 +106,6 @@ export function PythonCompiler() {
     setOutput('Esecuzione in corso...');
 
     try {
-      // Redirect stdout to capture print statements
       pyodideRef.current.runPython(`
 import sys
 from io import StringIO
@@ -69,10 +113,8 @@ sys.stdout = StringIO()
 sys.stderr = StringIO()
       `);
 
-      // Run user code
       await pyodideRef.current.runPythonAsync(code);
 
-      // Get stdout output
       const stdout = pyodideRef.current.runPython('sys.stdout.getvalue()');
       const stderr = pyodideRef.current.runPython('sys.stderr.getvalue()');
 
@@ -92,9 +134,9 @@ sys.stderr = StringIO()
     setOutput('');
   };
 
-  const resetCode = () => {
-    setCode('# Scrivi il tuo codice Python qui\nprint("Ciao, mondo!")\n');
-    setOutput('');
+  const formatLastSaved = () => {
+    if (!lastSaved) return null;
+    return lastSaved.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
   };
 
   return (
@@ -103,14 +145,35 @@ sys.stderr = StringIO()
       <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/50">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-foreground">🐍 Python</span>
-          {isLoading && (
+          {isLoadingPyodide && (
             <span className="text-xs text-muted-foreground flex items-center gap-1">
               <Loader2 className="w-3 h-3 animate-spin" />
               Caricamento...
             </span>
           )}
+          {isSaving && (
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              Salvataggio...
+            </span>
+          )}
+          {!isSaving && lastSaved && (
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <Check className="w-3 h-3 text-green-500" />
+              Salvato {formatLastSaved()}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={saveDraft}
+            disabled={isSaving}
+            title="Salva codice"
+          >
+            <Save className="w-4 h-4" />
+          </Button>
           <Button
             variant="ghost"
             size="sm"
@@ -130,7 +193,7 @@ sys.stderr = StringIO()
           <Button
             size="sm"
             onClick={runCode}
-            disabled={isLoading || isRunning}
+            disabled={isLoadingPyodide || isRunning}
           >
             {isRunning ? (
               <Loader2 className="w-4 h-4 animate-spin mr-1" />
@@ -145,13 +208,19 @@ sys.stderr = StringIO()
       {/* Code Editor */}
       <div className="flex-1 overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0">
-          <textarea
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            className="w-full h-full p-4 font-mono text-sm bg-background text-foreground resize-none focus:outline-none"
-            placeholder="Scrivi il tuo codice Python..."
-            spellCheck={false}
-          />
+          {isLoadingDraft ? (
+            <div className="w-full h-full flex items-center justify-center">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            </div>
+          ) : (
+            <textarea
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              className="w-full h-full p-4 font-mono text-sm bg-background text-foreground resize-none focus:outline-none"
+              placeholder="Scrivi il tuo codice Python..."
+              spellCheck={false}
+            />
+          )}
         </div>
 
         {/* Output */}

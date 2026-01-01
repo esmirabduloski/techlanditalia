@@ -23,13 +23,22 @@ export function FileUpload({ onFileUploaded, existingFile, onRemoveFile }: FileU
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Allowed file types (must match server-side validation)
-  const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'txt', 'doc', 'docx', 'zip'];
+  // Allowed file types - expanded for course-specific files
+  const ALLOWED_EXTENSIONS = [
+    'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg',
+    'pdf', 'txt', 'doc', 'docx', 'zip',
+    'py', 'html', 'htm', 'css', 'js', 'json', 'md', 'lua',
+    'rbxl', 'rbxlx', 'rbxm', 'rbxmx',
+    'mp4', 'webm', 'mp3', 'wav'
+  ];
   const ALLOWED_MIME_TYPES = [
-    'image/jpeg', 'image/png', 'image/gif', 'image/webp',
-    'application/pdf', 'text/plain',
+    'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
+    'application/pdf', 'text/plain', 'text/html', 'text/css', 'text/javascript',
+    'application/javascript', 'text/x-python', 'application/x-python', 'application/json',
+    'text/markdown', 'text/x-lua',
     'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/zip', 'application/x-zip-compressed'
+    'application/zip', 'application/x-zip-compressed', 'application/octet-stream',
+    'video/mp4', 'video/webm', 'audio/mpeg', 'audio/wav'
   ];
 
   const getFileExtension = (fileName: string): string => {
@@ -71,7 +80,11 @@ export function FileUpload({ onFileUploaded, existingFile, onRemoveFile }: FileU
       return;
     }
 
-    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+    // MIME type check - be more permissive for code files
+    const isCodeFile = ['py', 'html', 'htm', 'css', 'js', 'json', 'md', 'lua'].includes(extension);
+    const isRobloxFile = ['rbxl', 'rbxlx', 'rbxm', 'rbxmx'].includes(extension);
+    
+    if (!ALLOWED_MIME_TYPES.includes(file.type) && !isCodeFile && !isRobloxFile) {
       toast({
         variant: 'destructive',
         title: 'Tipo di file non consentito',
@@ -80,12 +93,12 @@ export function FileUpload({ onFileUploaded, existingFile, onRemoveFile }: FileU
       return;
     }
 
-    // Max 10MB
-    if (file.size > 10 * 1024 * 1024) {
+    // Max 20MB
+    if (file.size > 20 * 1024 * 1024) {
       toast({
         variant: 'destructive',
         title: 'File troppo grande',
-        description: 'Il file non può superare i 10MB',
+        description: 'Il file non può superare i 20MB',
       });
       return;
     }
@@ -244,7 +257,7 @@ export function FileUpload({ onFileUploaded, existingFile, onRemoveFile }: FileU
         type="file"
         onChange={handleChange}
         className="hidden"
-        accept="image/*,.pdf,.doc,.docx,.txt,.zip"
+        accept="image/*,.pdf,.doc,.docx,.txt,.zip,.py,.html,.htm,.css,.js,.json,.md,.lua,.rbxl,.rbxlx,.rbxm,.rbxmx,.mp4,.webm,.mp3,.wav"
       />
 
       {isUploading ? (
@@ -269,7 +282,7 @@ export function FileUpload({ onFileUploaded, existingFile, onRemoveFile }: FileU
               </button>
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Immagini, PDF, documenti (max 10MB)
+              Immagini, PDF, codice (.py, .html, .css), file Roblox, video (max 20MB)
             </p>
           </div>
         </div>

@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ClipboardList, CheckCircle2, Clock, AlertCircle, Loader2, Paperclip, Download } from "lucide-react";
+import { ClipboardList, CheckCircle2, Clock, AlertCircle, Loader2, Paperclip, Download, AlertTriangle, CalendarClock } from "lucide-react";
 
 interface Attachment {
   name: string;
@@ -21,6 +21,7 @@ interface HomeworkWithDetails {
   instructions: string | null;
   points_reward: number;
   attachments: Attachment[];
+  due_date: string | null;
   lesson_title: string;
   course_title: string;
   course_emoji: string;
@@ -108,6 +109,7 @@ export function HomeworkSection() {
           instructions: h.instructions,
           points_reward: h.points_reward,
           attachments,
+          due_date: h.due_date,
           lesson_title: lesson?.title || "Lezione",
           course_title: course?.title || "Corso",
           course_emoji: course?.emoji || "📚",
@@ -131,6 +133,53 @@ export function HomeworkSection() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const getDeadlineBadge = (hw: HomeworkWithDetails) => {
+    if (!hw.due_date || hw.is_submitted) return null;
+    
+    const now = new Date();
+    const dueDate = new Date(hw.due_date);
+    const hoursUntilDue = (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+    
+    if (hoursUntilDue < 0) {
+      return (
+        <Badge variant="destructive" className="text-xs animate-pulse">
+          <AlertTriangle className="w-3 h-3 mr-1" />
+          Scaduto
+        </Badge>
+      );
+    }
+    
+    if (hoursUntilDue <= 24) {
+      return (
+        <Badge className="bg-red-500 text-white text-xs">
+          <AlertTriangle className="w-3 h-3 mr-1" />
+          Scade oggi!
+        </Badge>
+      );
+    }
+    
+    if (hoursUntilDue <= 48) {
+      return (
+        <Badge className="bg-orange-500 text-white text-xs">
+          <CalendarClock className="w-3 h-3 mr-1" />
+          Scade domani
+        </Badge>
+      );
+    }
+    
+    return null;
+  };
+
+  const formatDueDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('it-IT', { 
+      day: 'numeric', 
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   const getStatusBadge = (hw: HomeworkWithDetails) => {
@@ -202,16 +251,33 @@ export function HomeworkSection() {
               <h3 className="text-sm font-medium text-muted-foreground">
                 Da completare ({pendingHomework.length})
               </h3>
-              {pendingHomework.map((hw) => (
-                <Card key={hw.id} className="border-amber-200/50 bg-gradient-to-r from-card to-amber-50/30">
+              {pendingHomework.map((hw) => {
+                const deadlineBadge = getDeadlineBadge(hw);
+                const isUrgent = hw.due_date && (new Date(hw.due_date).getTime() - new Date().getTime()) / (1000 * 60 * 60) <= 48;
+                
+                return (
+                <Card 
+                  key={hw.id} 
+                  className={`border-amber-200/50 bg-gradient-to-r from-card ${
+                    isUrgent ? 'to-red-50/50 border-red-300/50' : 'to-amber-50/30'
+                  }`}
+                >
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <span className="text-2xl">{hw.course_emoji}</span>
                         <div>
-                          <CardTitle className="text-base">{hw.title}</CardTitle>
+                          <CardTitle className="text-base flex items-center gap-2">
+                            {hw.title}
+                            {deadlineBadge}
+                          </CardTitle>
                           <CardDescription className="text-xs">
                             {hw.course_title} · {hw.lesson_title}
+                            {hw.due_date && (
+                              <span className="ml-2 text-muted-foreground">
+                                📅 Scadenza: {formatDueDate(hw.due_date)}
+                              </span>
+                            )}
                           </CardDescription>
                         </div>
                       </div>
@@ -257,7 +323,8 @@ export function HomeworkSection() {
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+                );
+              })}
             </div>
           )}
 

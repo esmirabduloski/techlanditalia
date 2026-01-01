@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
 import { AdminNav } from '@/components/admin/AdminNav';
+import { CodeViewer } from '@/components/admin/CodeViewer';
 import {
   Dialog,
   DialogContent,
@@ -20,7 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { 
-  LogOut, Loader2, Award, User, Calendar, Save, Download
+  LogOut, Loader2, Award, User, Calendar, Save, Download, Code
 } from 'lucide-react';
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -31,6 +32,7 @@ interface Submission {
   homework_id: string;
   file_url: string | null;
   file_name: string | null;
+  file_type: string | null;
   notes: string | null;
   status: string;
   grade: number | null;
@@ -63,6 +65,8 @@ export default function AdminGrading() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('pending');
+  const [codeContent, setCodeContent] = useState<string | null>(null);
+  const [isLoadingCode, setIsLoadingCode] = useState(false);
 
   const [formData, setFormData] = useState({
     grade: 100,
@@ -94,6 +98,7 @@ export default function AdminGrading() {
         homework_id,
         file_url,
         file_name,
+        file_type,
         notes,
         status,
         grade,
@@ -141,13 +146,43 @@ export default function AdminGrading() {
     setIsLoading(false);
   };
 
-  const openGradeDialog = (submission: Submission) => {
+  const isCodeFile = (fileName: string | null): boolean => {
+    if (!fileName) return false;
+    const codeExtensions = ['.py', '.html', '.css', '.js', '.ts', '.tsx', '.json', '.lua', '.md'];
+    return codeExtensions.some(ext => fileName.toLowerCase().endsWith(ext));
+  };
+
+  const loadCodeContent = async (fileUrl: string) => {
+    setIsLoadingCode(true);
+    try {
+      const response = await fetch(fileUrl);
+      if (response.ok) {
+        const text = await response.text();
+        setCodeContent(text);
+      } else {
+        setCodeContent(null);
+      }
+    } catch (error) {
+      console.error('Error loading code:', error);
+      setCodeContent(null);
+    } finally {
+      setIsLoadingCode(false);
+    }
+  };
+
+  const openGradeDialog = async (submission: Submission) => {
     setSelectedSubmission(submission);
     setFormData({
       grade: submission.grade ?? 100,
       teacher_feedback: submission.teacher_feedback || '',
     });
+    setCodeContent(null);
     setDialogOpen(true);
+
+    // Load code content if it's a code file
+    if (submission.file_url && isCodeFile(submission.file_name)) {
+      await loadCodeContent(submission.file_url);
+    }
   };
 
   const handleSubmit = async () => {
@@ -313,6 +348,12 @@ export default function AdminGrading() {
                       )}
                     </div>
                     <div className="flex items-center gap-2">
+                      {submission.file_url && isCodeFile(submission.file_name) && (
+                        <Badge variant="outline" className="gap-1">
+                          <Code className="w-3 h-3" />
+                          Codice
+                        </Badge>
+                      )}
                       {submission.file_url && (
                         <Button variant="outline" size="sm" asChild>
                           <a href={submission.file_url} target="_blank" rel="noopener noreferrer">
@@ -335,7 +376,7 @@ export default function AdminGrading() {
 
         {/* Grade Dialog */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Valuta Compito</DialogTitle>
               <DialogDescription>
@@ -347,6 +388,46 @@ export default function AdminGrading() {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-6 py-4">
+              {/* Code Preview Section */}
+              {selectedSubmission?.file_url && isCodeFile(selectedSubmission.file_name) && (
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Code className="w-4 h-4" />
+                    Codice inviato
+                  </Label>
+                  {isLoadingCode ? (
+                    <div className="flex items-center justify-center py-8 bg-muted/30 rounded-lg">
+                      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : codeContent ? (
+                    <CodeViewer code={codeContent} fileName={selectedSubmission.file_name || undefined} />
+                  ) : (
+                    <div className="text-sm text-muted-foreground bg-muted/30 rounded-lg p-4 text-center">
+                      Impossibile caricare il codice. 
+                      <a 
+                        href={selectedSubmission.file_url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-primary underline ml-1"
+                      >
+                        Scarica il file
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Notes Section */}
+              {selectedSubmission?.notes && (
+                <div className="space-y-2">
+                  <Label>Note dello studente</Label>
+                  <div className="bg-muted/30 rounded-lg p-3 text-sm">
+                    {selectedSubmission.notes}
+                  </div>
+                </div>
+              )}
+
+              {/* Grading Section */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <Label>Voto</Label>

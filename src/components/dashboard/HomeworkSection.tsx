@@ -5,7 +5,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ClipboardList, CheckCircle2, Clock, AlertCircle, Loader2 } from "lucide-react";
+import { ClipboardList, CheckCircle2, Clock, AlertCircle, Loader2, Paperclip, Download } from "lucide-react";
+
+interface Attachment {
+  name: string;
+  url: string;
+  size: number;
+  type: string;
+}
 
 interface HomeworkWithDetails {
   id: string;
@@ -13,6 +20,7 @@ interface HomeworkWithDetails {
   description: string | null;
   instructions: string | null;
   points_reward: number;
+  attachments: Attachment[];
   lesson_title: string;
   course_title: string;
   course_emoji: string;
@@ -91,6 +99,7 @@ export function HomeworkSection() {
       const homeworkWithDetails: HomeworkWithDetails[] = homeworkData.map((h) => {
         const lesson = lessons.find((l) => l.id === h.lesson_id);
         const course = lesson?.courses as { title: string; emoji: string } | null;
+        const attachments = Array.isArray(h.attachments) ? (h.attachments as unknown as Attachment[]) : [];
         
         return {
           id: h.id,
@@ -98,6 +107,7 @@ export function HomeworkSection() {
           description: h.description,
           instructions: h.instructions,
           points_reward: h.points_reward,
+          attachments,
           lesson_title: lesson?.title || "Lezione",
           course_title: course?.title || "Corso",
           course_emoji: course?.emoji || "📚",
@@ -211,6 +221,29 @@ export function HomeworkSection() {
                   <CardContent>
                     {hw.description && (
                       <p className="text-sm text-muted-foreground mb-3">{hw.description}</p>
+                    )}
+                    {/* Attachments */}
+                    {hw.attachments && hw.attachments.length > 0 && (
+                      <div className="mb-3 space-y-2">
+                        <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                          <Paperclip className="w-3 h-3" />
+                          Materiali allegati
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {hw.attachments.map((att, idx) => (
+                            <a
+                              key={idx}
+                              href={att.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-2 py-1 bg-muted rounded text-xs hover:bg-muted/80 transition-colors"
+                            >
+                              <Download className="w-3 h-3" />
+                              {att.name}
+                            </a>
+                          ))}
+                        </div>
+                      </div>
                     )}
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-muted-foreground">

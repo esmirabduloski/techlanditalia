@@ -341,6 +341,7 @@ export type Database = {
       }
       homework: {
         Row: {
+          attachments: Json | null
           created_at: string
           description: string | null
           id: string
@@ -350,6 +351,7 @@ export type Database = {
           title: string
         }
         Insert: {
+          attachments?: Json | null
           created_at?: string
           description?: string | null
           id?: string
@@ -359,6 +361,7 @@ export type Database = {
           title: string
         }
         Update: {
+          attachments?: Json | null
           created_at?: string
           description?: string | null
           id?: string

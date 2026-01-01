@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { AdminNav } from '@/components/admin/AdminNav';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -229,6 +230,9 @@ export default function AdminHomework() {
           </div>
         </div>
       </header>
+
+      {/* Navigation */}
+      <AdminNav />
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 py-8">

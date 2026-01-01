@@ -18,7 +18,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { 
-  LogOut, Loader2, Plus, Edit, Trash2, ArrowLeft, BookOpen, ClipboardList 
+  LogOut, Loader2, Plus, Edit, Trash2, ArrowLeft, BookOpen, ClipboardList, FileText 
 } from 'lucide-react';
 
 interface Course {
@@ -202,6 +202,11 @@ export default function AdminLessons() {
                   <Button variant="ghost" size="icon" asChild title="Task">
                     <Link to={`/admin/corsi/${courseId}/lezioni/${lesson.id}/task`}>
                       <ClipboardList className="w-4 h-4" />
+                    </Link>
+                  </Button>
+                  <Button variant="ghost" size="icon" asChild title="Compiti">
+                    <Link to={`/admin/corsi/${courseId}/lezioni/${lesson.id}/compiti`}>
+                      <FileText className="w-4 h-4" />
                     </Link>
                   </Button>
                   <Button variant="ghost" size="icon" asChild title="Modifica">

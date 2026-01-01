@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -31,13 +32,20 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { 
-  LogOut, Loader2, ArrowLeft, Plus, Edit, Trash2, ClipboardList, Save 
+  LogOut, Loader2, ArrowLeft, Plus, Edit, Trash2, ClipboardList, Save, Upload, FileText, X, Paperclip 
 } from 'lucide-react';
 
 interface Lesson {
   id: string;
   title: string;
   lesson_number: number;
+}
+
+interface Attachment {
+  name: string;
+  url: string;
+  size: number;
+  type: string;
 }
 
 interface Homework {
@@ -47,6 +55,7 @@ interface Homework {
   description: string | null;
   instructions: string | null;
   points_reward: number;
+  attachments: Attachment[];
   created_at: string;
 }
 
@@ -55,6 +64,7 @@ interface HomeworkFormData {
   description: string;
   instructions: string;
   points_reward: number;
+  attachments: Attachment[];
 }
 
 export default function AdminHomework() {
@@ -63,14 +73,17 @@ export default function AdminHomework() {
   const [homework, setHomework] = useState<Homework[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingHomework, setEditingHomework] = useState<Homework | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [formData, setFormData] = useState<HomeworkFormData>({
     title: '',
     description: '',
     instructions: '',
     points_reward: 25,
+    attachments: [],
   });
 
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
@@ -109,7 +122,12 @@ export default function AdminHomework() {
       .order('created_at');
 
     if (homeworkData) {
-      setHomework(homeworkData);
+      // Parse attachments from JSON
+      const parsedHomework: Homework[] = homeworkData.map(h => ({
+        ...h,
+        attachments: Array.isArray(h.attachments) ? (h.attachments as unknown as Attachment[]) : []
+      }));
+      setHomework(parsedHomework);
     }
 
     setIsLoading(false);
@@ -122,6 +140,7 @@ export default function AdminHomework() {
       description: '',
       instructions: '',
       points_reward: 25,
+      attachments: [],
     });
     setDialogOpen(true);
   };
@@ -133,8 +152,73 @@ export default function AdminHomework() {
       description: hw.description || '',
       instructions: hw.instructions || '',
       points_reward: hw.points_reward,
+      attachments: hw.attachments || [],
     });
     setDialogOpen(true);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploading(true);
+    const newAttachments: Attachment[] = [];
+
+    try {
+      for (const file of Array.from(files)) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${lessonId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+        const { data, error } = await supabase.storage
+          .from('homework-attachments')
+          .upload(fileName, file);
+
+        if (error) {
+          console.error('Upload error:', error);
+          toast({ title: 'Errore', description: `Errore upload: ${file.name}`, variant: 'destructive' });
+          continue;
+        }
+
+        const { data: urlData } = supabase.storage
+          .from('homework-attachments')
+          .getPublicUrl(data.path);
+
+        newAttachments.push({
+          name: file.name,
+          url: urlData.publicUrl,
+          size: file.size,
+          type: file.type || 'application/octet-stream',
+        });
+      }
+
+      setFormData(prev => ({
+        ...prev,
+        attachments: [...prev.attachments, ...newAttachments],
+      }));
+
+      toast({ title: 'Successo', description: `${newAttachments.length} file caricati` });
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({ title: 'Errore', description: 'Errore durante il caricamento', variant: 'destructive' });
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const removeAttachment = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      attachments: prev.attachments.filter((_, i) => i !== index),
+    }));
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
   const handleSubmit = async () => {
@@ -146,11 +230,12 @@ export default function AdminHomework() {
     setIsSaving(true);
 
     const payload = {
-      lesson_id: lessonId,
+      lesson_id: lessonId!,
       title: formData.title,
       description: formData.description || null,
       instructions: formData.instructions || null,
       points_reward: formData.points_reward,
+      attachments: formData.attachments as unknown as Json,
     };
 
     try {
@@ -260,7 +345,7 @@ export default function AdminHomework() {
                 Nuovo Compito
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{editingHomework ? 'Modifica Compito' : 'Nuovo Compito'}</DialogTitle>
                 <DialogDescription>
@@ -306,6 +391,70 @@ export default function AdminHomework() {
                     value={formData.points_reward}
                     onChange={(e) => setFormData(prev => ({ ...prev, points_reward: parseInt(e.target.value) || 0 }))}
                   />
+                </div>
+
+                {/* Attachments Section */}
+                <div className="space-y-2">
+                  <Label>Allegati</Label>
+                  <div className="border rounded-lg p-3 space-y-3">
+                    {/* Upload Button */}
+                    <div>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        multiple
+                        onChange={handleFileUpload}
+                        className="hidden"
+                        id="attachment-upload"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploading}
+                      >
+                        {isUploading ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Upload className="w-4 h-4 mr-2" />
+                        )}
+                        {isUploading ? 'Caricamento...' : 'Carica File'}
+                      </Button>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        PDF, immagini, file Roblox, ecc.
+                      </p>
+                    </div>
+
+                    {/* Attachments List */}
+                    {formData.attachments.length > 0 && (
+                      <div className="space-y-2">
+                        {formData.attachments.map((att, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between gap-2 p-2 bg-muted/50 rounded-md"
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <FileText className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium truncate">{att.name}</p>
+                                <p className="text-xs text-muted-foreground">{formatFileSize(att.size)}</p>
+                              </div>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              onClick={() => removeAttachment(index)}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
               <DialogFooter>
@@ -353,6 +502,15 @@ export default function AdminHomework() {
                         <span>{hw.points_reward} punti</span>
                         <span>•</span>
                         <span>{new Date(hw.created_at).toLocaleDateString('it-IT')}</span>
+                        {hw.attachments && hw.attachments.length > 0 && (
+                          <>
+                            <span>•</span>
+                            <span className="flex items-center gap-1">
+                              <Paperclip className="w-3 h-3" />
+                              {hw.attachments.length} allegati
+                            </span>
+                          </>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">

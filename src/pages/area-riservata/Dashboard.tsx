@@ -17,6 +17,7 @@ import { ParentChildrenSection } from '@/components/dashboard/ParentChildrenSect
 import { StreakDisplay } from '@/components/dashboard/StreakDisplay';
 import { AttendanceHistory } from '@/components/dashboard/AttendanceHistory';
 import { StreakBonusesDisplay } from '@/components/dashboard/StreakBonusesDisplay';
+import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { Loader2, BookOpen, Trophy, Target, Settings, LogOut, Rocket, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -32,12 +33,20 @@ export default function Dashboard() {
   const { streaks, attendance, stats, bonuses, loading: streaksLoading } = useStudentStreaks(user?.id);
   const navigate = useNavigate();
   const [courseProgressMap, setCourseProgressMap] = useState<CourseProgress[]>([]);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
       navigate('/auth');
     }
   }, [user, authLoading, navigate]);
+
+  // Check if onboarding should be shown
+  useEffect(() => {
+    if (profile && profile.onboarding_completed === false) {
+      setShowOnboarding(true);
+    }
+  }, [profile]);
 
   // Fetch task counts and completed tasks for all enrolled courses
   useEffect(() => {
@@ -148,8 +157,19 @@ export default function Dashboard() {
     navigate('/');
   };
 
+  const userRole = profile.role === 'parent' ? 'parent' : 'student';
+
   return (
     <Layout>
+      {/* Onboarding Tour */}
+      {showOnboarding && user && (
+        <OnboardingTour 
+          userId={user.id}
+          userRole={userRole as 'student' | 'parent'}
+          onComplete={() => setShowOnboarding(false)}
+        />
+      )}
+
       <div className="min-h-screen bg-gradient-to-br from-background via-tech-green-light/20 to-tech-cyan-light/20">
         <div className="max-w-6xl mx-auto px-4 py-8">
           {/* Header */}

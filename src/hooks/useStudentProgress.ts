@@ -9,6 +9,7 @@ interface Profile {
   avatar_id: number;
   total_points: number;
   parent_id: string | null;
+  onboarding_completed: boolean | null;
 }
 
 interface Enrollment {

@@ -24,7 +24,9 @@ import {
   Edit2,
   Search,
   MessageCircle,
-  BookOpen
+  BookOpen,
+  Clock,
+  Trash2
 } from 'lucide-react';
 import {
   Select,
@@ -68,6 +70,18 @@ interface Course {
   emoji: string;
 }
 
+interface TeacherProfile {
+  user_id: string;
+  phone: string | null;
+  availability: AvailabilitySlot[];
+}
+
+interface AvailabilitySlot {
+  day: string;
+  startTime: string;
+  endTime: string;
+}
+
 interface Enrollment {
   id: string;
   course_id: string;
@@ -97,6 +111,9 @@ export default function AdminUsers() {
   const [teacherCourseDialog, setTeacherCourseDialog] = useState<{ open: boolean; userId: string; userName: string }>({ open: false, userId: '', userName: '' });
   const [selectedTeacherCourses, setSelectedTeacherCourses] = useState<string[]>([]);
   const [teacherCourses, setTeacherCourses] = useState<TeacherCourse[]>([]);
+  const [teacherProfiles, setTeacherProfiles] = useState<TeacherProfile[]>([]);
+  const [availabilityDialog, setAvailabilityDialog] = useState<{ open: boolean; userId: string; userName: string }>({ open: false, userId: '', userName: '' });
+  const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([]);
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -148,6 +165,16 @@ export default function AdminUsers() {
       .select('teacher_id, course_id');
 
     setTeacherCourses(teacherCoursesData || []);
+
+    // Fetch teacher profiles (with availability)
+    const { data: teacherProfilesData } = await supabase
+      .from('teacher_profiles')
+      .select('user_id, phone, availability');
+
+    setTeacherProfiles((teacherProfilesData || []).map(tp => ({
+      ...tp,
+      availability: Array.isArray(tp.availability) ? tp.availability as unknown as AvailabilitySlot[] : []
+    })));
 
     const enrichedProfiles = (profilesData || []).map(p => ({
       ...p,
@@ -404,6 +431,61 @@ export default function AdminUsers() {
     }
   };
 
+  const DAYS_OF_WEEK = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
+
+  const openAvailabilityDialog = (userId: string, userName: string) => {
+    const teacherProfile = teacherProfiles.find(tp => tp.user_id === userId);
+    setAvailabilitySlots(teacherProfile?.availability || []);
+    setAvailabilityDialog({ open: true, userId, userName });
+  };
+
+  const addAvailabilitySlot = () => {
+    setAvailabilitySlots([...availabilitySlots, { day: 'Lunedì', startTime: '09:00', endTime: '18:00' }]);
+  };
+
+  const removeAvailabilitySlot = (index: number) => {
+    setAvailabilitySlots(availabilitySlots.filter((_, i) => i !== index));
+  };
+
+  const updateAvailabilitySlot = (index: number, field: keyof AvailabilitySlot, value: string) => {
+    const updated = [...availabilitySlots];
+    updated[index] = { ...updated[index], [field]: value };
+    setAvailabilitySlots(updated);
+  };
+
+  const handleSaveAvailability = async () => {
+    setIsSaving(true);
+    try {
+      const existingProfile = teacherProfiles.find(tp => tp.user_id === availabilityDialog.userId);
+      
+      if (existingProfile) {
+        const { error } = await supabase
+          .from('teacher_profiles')
+          .update({ availability: availabilitySlots as unknown as any })
+          .eq('user_id', availabilityDialog.userId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('teacher_profiles')
+          .insert([{ user_id: availabilityDialog.userId, availability: availabilitySlots as unknown as any }]);
+        if (error) throw error;
+      }
+
+      toast({ title: 'Successo', description: 'Disponibilità aggiornata' });
+      setAvailabilityDialog({ open: false, userId: '', userName: '' });
+      fetchData();
+    } catch (error: any) {
+      toast({ title: 'Errore', description: error.message || 'Impossibile aggiornare la disponibilità', variant: 'destructive' });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const getTeacherAvailability = (userId: string) => {
+    const profile = teacherProfiles.find(tp => tp.user_id === userId);
+    return profile?.availability || [];
+  };
+
   const openEditChildDialog = (child: Profile) => {
     setEditingChild({
       id: child.id,
@@ -601,6 +683,17 @@ export default function AdminUsers() {
                                 >
                                   <BookOpen className="w-4 h-4 mr-1" />
                                   Corsi
+                                </Button>
+                              )}
+                              {group.parent.isTeacher && (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={(e) => { e.stopPropagation(); openAvailabilityDialog(group.parent!.id, group.parent!.full_name); }}
+                                  title="Gestisci disponibilità oraria"
+                                >
+                                  <Clock className="w-4 h-4 mr-1" />
+                                  Orari
                                 </Button>
                               )}
                             </div>
@@ -888,6 +981,81 @@ export default function AdminUsers() {
             </Button>
             <Button onClick={handleSaveTeacherCourses} disabled={isSaving}>
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salva Corsi'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Teacher Availability Dialog */}
+      <Dialog open={availabilityDialog.open} onOpenChange={(open) => !open && setAvailabilityDialog({ open: false, userId: '', userName: '' })}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Disponibilità Oraria - {availabilityDialog.userName}</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 space-y-4 max-h-[60vh] overflow-y-auto">
+            <p className="text-sm text-muted-foreground">
+              Configura gli orari in cui l'insegnante è disponibile per le lezioni.
+            </p>
+            
+            {availabilitySlots.length === 0 ? (
+              <div className="text-center py-6 text-muted-foreground border-dashed border rounded-lg">
+                <Clock className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">Nessun orario configurato</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {availabilitySlots.map((slot, index) => (
+                  <div key={index} className="flex items-center gap-2 p-3 border rounded-lg bg-muted/30">
+                    <Select 
+                      value={slot.day} 
+                      onValueChange={(v) => updateAvailabilitySlot(index, 'day', v)}
+                    >
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {DAYS_OF_WEEK.map(day => (
+                          <SelectItem key={day} value={day}>{day}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      type="time"
+                      value={slot.startTime}
+                      onChange={(e) => updateAvailabilitySlot(index, 'startTime', e.target.value)}
+                      className="w-28"
+                    />
+                    <span className="text-muted-foreground">-</span>
+                    <Input
+                      type="time"
+                      value={slot.endTime}
+                      onChange={(e) => updateAvailabilitySlot(index, 'endTime', e.target.value)}
+                      className="w-28"
+                    />
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => removeAvailabilitySlot(index)}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <Button variant="outline" onClick={addAvailabilitySlot} className="w-full">
+              <Plus className="w-4 h-4 mr-2" />
+              Aggiungi Fascia Oraria
+            </Button>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAvailabilityDialog({ open: false, userId: '', userName: '' })}>
+              Annulla
+            </Button>
+            <Button onClick={handleSaveAvailability} disabled={isSaving}>
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salva Disponibilità'}
             </Button>
           </DialogFooter>
         </DialogContent>

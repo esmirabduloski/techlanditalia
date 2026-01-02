@@ -34,13 +34,23 @@ export function CTASection() {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button variant="secondary" size="xl" asChild>
+                <Button 
+                  variant="secondary" 
+                  size="xl" 
+                  asChild
+                  data-track-cta="cta_section_booking"
+                >
                   <Link to="/prenota" className="gap-2">
                     Prenota lezione gratuita
                     <ArrowRight className="w-5 h-5" />
                   </Link>
                 </Button>
-                <Button variant="hero-outline" size="xl" asChild>
+                <Button 
+                  variant="hero-outline" 
+                  size="xl" 
+                  asChild
+                  data-track-cta="cta_section_courses"
+                >
                   <Link to="/corsi">Esplora i corsi</Link>
                 </Button>
               </div>
@@ -61,13 +71,23 @@ export function CTASection() {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button variant="secondary" size="xl" asChild>
+                <Button 
+                  variant="secondary" 
+                  size="xl" 
+                  asChild
+                  data-track-cta="cta_section_dashboard"
+                >
                   <Link to="/area-riservata" className="gap-2">
                     Vai ai tuoi corsi
                     <ArrowRight className="w-5 h-5" />
                   </Link>
                 </Button>
-                <Button variant="hero-outline" size="xl" asChild>
+                <Button 
+                  variant="hero-outline" 
+                  size="xl" 
+                  asChild
+                  data-track-cta="cta_section_discover"
+                >
                   <Link to="/corsi">Scopri altri corsi</Link>
                 </Button>
               </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -26,6 +26,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SEOHead } from "@/components/seo/SEOHead";
 import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
+import { useAnalytics } from "@/hooks/useAnalytics";
 
 const interests = [
   { value: "coding-base", label: "Coding Base (6-8 anni)" },
@@ -77,6 +78,8 @@ export default function Prenota() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const { trackFormStart, trackFormSubmit, trackFormError, trackBookingConversion, trackFunnelStep } = useAnalytics();
+  const formStartTracked = useRef(false);
 
   const form = useForm<BookingFormData>({
     resolver: zodResolver(bookingSchema),
@@ -92,8 +95,25 @@ export default function Prenota() {
     },
   });
 
+  // Track funnel step: page visit
+  useEffect(() => {
+    trackFunnelStep('booking_funnel', 1, 'page_visit');
+  }, [trackFunnelStep]);
+
+  // Track form start when user first interacts
+  const handleFormFocus = () => {
+    if (!formStartTracked.current) {
+      formStartTracked.current = true;
+      trackFormStart('booking_form');
+      trackFunnelStep('booking_funnel', 2, 'form_start');
+    }
+  };
+
   const onSubmit = async (data: BookingFormData) => {
     setIsSubmitting(true);
+    
+    // Track funnel step: form submit attempt
+    trackFunnelStep('booking_funnel', 3, 'form_submit_attempt');
 
     try {
       // Submit booking through secure Edge Function with rate limiting
@@ -114,10 +134,12 @@ export default function Prenota() {
 
       if (bookingError) {
         console.error("Booking error:", bookingError);
+        trackFormError('booking_form', bookingError.message || 'Booking error');
         throw new Error("Errore nell'invio della richiesta");
       }
 
       if (!bookingResult?.success) {
+        trackFormError('booking_form', bookingResult?.error || 'Unknown error');
         throw new Error(bookingResult?.error || "Errore nell'invio della richiesta");
       }
 
@@ -143,9 +165,25 @@ export default function Prenota() {
         }
       }
 
+      // Track successful conversion
+      trackFormSubmit('booking_form', {
+        interest: data.interest,
+        child_age: data.childAge,
+        has_phone: !!data.phone,
+        has_message: !!data.message
+      });
+      
+      trackBookingConversion({
+        interest: data.interest,
+        child_age: data.childAge,
+        preferred_day: data.preferredDay,
+        preferred_time: data.preferredTime
+      });
+
       setIsSubmitted(true);
     } catch (error: any) {
       console.error("Submission error:", error);
+      trackFormError('booking_form', error.message || 'Submission error');
       toast({
         title: "Errore",
         description: error.message || "Si è verificato un errore. Riprova più tardi.",
@@ -242,7 +280,7 @@ export default function Prenota() {
               <h2 className="text-2xl font-semibold mb-6">Compila il form</h2>
               
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" onFocus={handleFormFocus}>
                   <FormField
                     control={form.control}
                     name="parentName"

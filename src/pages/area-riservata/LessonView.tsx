@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import { supabase } from '@/integrations/supabase/client';
 import { Layout } from '@/components/layout/Layout';
 import { LessonContent } from '@/components/lesson/LessonContent';
@@ -37,11 +38,13 @@ const SPLIT_LAYOUT_COURSES = [...PYTHON_COURSES, ...WEB_COURSES];
 export default function LessonView() {
   const { courseId, lessonNumber } = useParams<{ courseId: string; lessonNumber: string }>();
   const { user, isLoading: authLoading } = useAuth();
+  const { trackLessonStart, trackLessonComplete, startLessonTimer, getLessonTime } = useAnalytics();
   const navigate = useNavigate();
   
   const [course, setCourse] = useState<Course | null>(null);
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const lessonTracked = useRef(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -104,7 +107,36 @@ export default function LessonView() {
     }
   };
 
+  // Track lesson start
+  useEffect(() => {
+    if (lesson && course && !lessonTracked.current) {
+      lessonTracked.current = true;
+      startLessonTimer();
+      trackLessonStart(lesson.id, lesson.title, course.id);
+    }
+  }, [lesson, course, startLessonTimer, trackLessonStart]);
+
+  // Track lesson time on unmount or navigation
+  useEffect(() => {
+    return () => {
+      if (lesson && course && lessonTracked.current) {
+        const timeSpent = getLessonTime();
+        if (timeSpent > 5) { // Only track if spent more than 5 seconds
+          trackLessonComplete(lesson.id, lesson.title, course.id, timeSpent);
+        }
+      }
+    };
+  }, [lesson, course, getLessonTime, trackLessonComplete]);
+
   const navigateToLesson = (newLessonNumber: number) => {
+    // Track current lesson before navigating
+    if (lesson && course) {
+      const timeSpent = getLessonTime();
+      if (timeSpent > 5) {
+        trackLessonComplete(lesson.id, lesson.title, course.id, timeSpent);
+      }
+    }
+    lessonTracked.current = false;
     navigate(`/area-riservata/corso/${courseId}/lezione/${newLessonNumber}`);
   };
 

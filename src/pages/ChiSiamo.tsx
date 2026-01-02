@@ -2,6 +2,7 @@ import { Layout } from "@/components/layout/Layout";
 import { SEOHead } from "@/components/seo/SEOHead";
 import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
 import { Button } from "@/components/ui/button";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import { Link } from "react-router-dom";
 import { Users, Award, Target, Heart, Sparkles, GraduationCap } from "lucide-react";
 
@@ -128,10 +129,12 @@ export default function ChiSiamo() {
             <div className="relative">
               <div className="aspect-video rounded-3xl bg-gradient-hero p-1">
                 <div className="w-full h-full rounded-3xl bg-card flex items-center justify-center overflow-hidden">
-                  <img 
-                    src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=800&q=80" 
-                    alt="Team TECHLAND"
+                  <OptimizedImage 
+                    src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f" 
+                    alt="Team TECHLAND - docenti esperti di programmazione per bambini"
                     className="w-full h-full object-cover"
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    aspectRatio="video"
                   />
                 </div>
               </div>

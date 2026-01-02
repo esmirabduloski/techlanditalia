@@ -6,6 +6,7 @@ import { SEOHead } from "@/components/seo/SEOHead";
 import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import { ArrowRight, Clock, Loader2, Mail, CheckCircle, Search, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
@@ -312,12 +313,13 @@ export default function Blog() {
       return (
         <Link to={`/blog/${post.slug}`} className="block">
           <div className="tech-card tech-card-hover overflow-hidden grid lg:grid-cols-2">
-            <div className="aspect-video lg:aspect-auto">
-              <img 
+            <div className="aspect-video lg:aspect-auto lg:h-full">
+              <OptimizedImage 
                 src={post.featured_image || defaultImage} 
                 alt={post.title}
                 className="w-full h-full object-cover"
-                loading="lazy"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                aspectRatio="video"
               />
             </div>
             <div className="p-8 lg:p-12 flex flex-col justify-center">
@@ -349,11 +351,12 @@ export default function Blog() {
         className="tech-card tech-card-hover overflow-hidden group flex flex-col"
       >
         <div className="aspect-video overflow-hidden">
-          <img 
+          <OptimizedImage 
             src={post.featured_image || defaultImage} 
             alt={post.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            loading="lazy"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            aspectRatio="video"
           />
         </div>
         <div className="p-6 flex flex-col flex-1">

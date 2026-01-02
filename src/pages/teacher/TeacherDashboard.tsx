@@ -328,9 +328,20 @@ export default function TeacherDashboard() {
                     <Clock className="w-4 h-4 text-muted-foreground" />
                     Orari di Disponibilità
                   </h4>
-                  <p className="text-muted-foreground text-sm">
-                    Gli orari di disponibilità verranno configurati dall'amministratore.
-                  </p>
+                  {teacherProfile?.availability && Array.isArray(teacherProfile.availability) && teacherProfile.availability.length > 0 ? (
+                    <div className="space-y-2">
+                      {(teacherProfile.availability as { day: string; startTime: string; endTime: string }[]).map((slot, index) => (
+                        <div key={index} className="flex items-center gap-2 text-sm">
+                          <Badge variant="secondary" className="min-w-20">{slot.day}</Badge>
+                          <span className="text-muted-foreground">{slot.startTime} - {slot.endTime}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground text-sm">
+                      Nessun orario configurato. Contatta l'amministratore.
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>

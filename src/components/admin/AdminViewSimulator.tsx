@@ -37,6 +37,7 @@ interface Teacher {
   full_name: string;
   email: string | null;
   phone?: string | null;
+  availability?: { day: string; startTime: string; endTime: string }[];
   courses: { id: string; title: string; emoji: string; total_lessons: number }[];
   groups: { id: string; title: string; course_title: string; student_count: number }[];
 }
@@ -99,10 +100,10 @@ export function AdminViewSimulator() {
 
         const teachersWithData: Teacher[] = await Promise.all(
           (teacherProfiles || []).map(async (tp) => {
-            // Get phone from teacher_profiles
+            // Get phone and availability from teacher_profiles
             const { data: tpData } = await supabase
               .from('teacher_profiles')
-              .select('phone')
+              .select('phone, availability')
               .eq('user_id', tp.id)
               .maybeSingle();
 
@@ -147,6 +148,7 @@ export function AdminViewSimulator() {
               full_name: tp.full_name,
               email: tp.email,
               phone: tpData?.phone,
+              availability: Array.isArray(tpData?.availability) ? tpData.availability as unknown as { day: string; startTime: string; endTime: string }[] : [],
               courses,
               groups
             };
@@ -408,6 +410,26 @@ export function AdminViewSimulator() {
                             </Badge>
                           ))}
                         </div>
+                      )}
+                    </div>
+
+                    {/* Availability Section */}
+                    <div className="border-t pt-4">
+                      <h4 className="font-medium mb-3 flex items-center gap-2">
+                        <Clock className="w-4 h-4" />
+                        Disponibilità Oraria
+                      </h4>
+                      {selectedTeacher.availability && selectedTeacher.availability.length > 0 ? (
+                        <div className="space-y-2">
+                          {selectedTeacher.availability.map((slot, index) => (
+                            <div key={index} className="flex items-center gap-2 text-sm">
+                              <Badge variant="secondary" className="min-w-20">{slot.day}</Badge>
+                              <span className="text-muted-foreground">{slot.startTime} - {slot.endTime}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">Nessun orario configurato</p>
                       )}
                     </div>
 

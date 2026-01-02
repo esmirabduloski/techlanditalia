@@ -5,7 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Eye, User, Users, GraduationCap } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Loader2, Eye, User, Users, GraduationCap, BookOpen, UsersRound, Phone, Mail, Clock, ChevronRight } from "lucide-react";
 import { BadgesDisplay } from "@/components/gamification/BadgesDisplay";
 import { LevelBadge, PointsDisplay, getLevelFromPoints } from "@/components/gamification/LevelBadge";
 import { AvatarDisplay } from "@/components/gamification/AvatarSelector";
@@ -30,11 +32,21 @@ interface Parent {
   children: Student[];
 }
 
+interface Teacher {
+  id: string;
+  full_name: string;
+  email: string | null;
+  phone?: string | null;
+  courses: { id: string; title: string; emoji: string; total_lessons: number }[];
+  groups: { id: string; title: string; course_title: string; student_count: number }[];
+}
+
 export function AdminViewSimulator() {
   const { user, isAdmin } = useAuth();
-  const [viewMode, setViewMode] = useState<'student' | 'parent'>('student');
+  const [viewMode, setViewMode] = useState<'student' | 'parent' | 'teacher'>('student');
   const [students, setStudents] = useState<Student[]>([]);
   const [parents, setParents] = useState<Parent[]>([]);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -69,6 +81,80 @@ export function AdminViewSimulator() {
       }));
 
       setParents(parentsWithChildren);
+
+      // Fetch all teachers
+      const { data: rolesData } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'teacher');
+
+      if (rolesData && rolesData.length > 0) {
+        const teacherIds = rolesData.map(r => r.user_id);
+        
+        const { data: teacherProfiles } = await supabase
+          .from('profiles')
+          .select('id, full_name, email')
+          .in('id', teacherIds)
+          .order('full_name');
+
+        const teachersWithData: Teacher[] = await Promise.all(
+          (teacherProfiles || []).map(async (tp) => {
+            // Get phone from teacher_profiles
+            const { data: tpData } = await supabase
+              .from('teacher_profiles')
+              .select('phone')
+              .eq('user_id', tp.id)
+              .maybeSingle();
+
+            // Get assigned courses
+            const { data: tcData } = await supabase
+              .from('teacher_courses')
+              .select('course_id')
+              .eq('teacher_id', tp.id);
+
+            let courses: any[] = [];
+            if (tcData && tcData.length > 0) {
+              const { data: coursesData } = await supabase
+                .from('courses')
+                .select('id, title, emoji, total_lessons')
+                .in('id', tcData.map(tc => tc.course_id));
+              courses = coursesData || [];
+            }
+
+            // Get groups
+            const { data: groupsData } = await supabase
+              .from('student_groups')
+              .select(`id, title, courses!inner(title)`)
+              .eq('teacher_id', tp.id);
+
+            const groups = await Promise.all(
+              (groupsData || []).map(async (g: any) => {
+                const { count } = await supabase
+                  .from('group_students')
+                  .select('*', { count: 'exact', head: true })
+                  .eq('group_id', g.id);
+                return {
+                  id: g.id,
+                  title: g.title,
+                  course_title: g.courses?.title,
+                  student_count: count || 0
+                };
+              })
+            );
+
+            return {
+              id: tp.id,
+              full_name: tp.full_name,
+              email: tp.email,
+              phone: tpData?.phone,
+              courses,
+              groups
+            };
+          })
+        );
+
+        setTeachers(teachersWithData);
+      }
       
       if (studentsData && studentsData.length > 0) {
         setSelectedUserId(studentsData[0].id);
@@ -94,6 +180,7 @@ export function AdminViewSimulator() {
 
   const selectedStudent = students.find(s => s.id === selectedUserId);
   const selectedParent = parents.find(p => p.id === selectedUserId);
+  const selectedTeacher = teachers.find(t => t.id === selectedUserId);
 
   return (
     <Card className="border-primary/30 bg-gradient-to-br from-card to-primary/5">
@@ -103,26 +190,32 @@ export function AdminViewSimulator() {
           <CardTitle>Simulatore Vista</CardTitle>
         </div>
         <CardDescription>
-          Visualizza come appare la dashboard per studenti e genitori
+          Visualizza come appare la dashboard per studenti, genitori e insegnanti
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <Tabs value={viewMode} onValueChange={(v) => {
-          setViewMode(v as 'student' | 'parent');
+          setViewMode(v as 'student' | 'parent' | 'teacher');
           if (v === 'student' && students.length > 0) {
             setSelectedUserId(students[0].id);
           } else if (v === 'parent' && parents.length > 0) {
             setSelectedUserId(parents[0].id);
+          } else if (v === 'teacher' && teachers.length > 0) {
+            setSelectedUserId(teachers[0].id);
           }
         }}>
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="student" className="gap-2">
               <GraduationCap className="w-4 h-4" />
-              Vista Studente
+              <span className="hidden sm:inline">Studente</span>
             </TabsTrigger>
             <TabsTrigger value="parent" className="gap-2">
               <Users className="w-4 h-4" />
-              Vista Genitore
+              <span className="hidden sm:inline">Genitore</span>
+            </TabsTrigger>
+            <TabsTrigger value="teacher" className="gap-2">
+              <BookOpen className="w-4 h-4" />
+              <span className="hidden sm:inline">Insegnante</span>
             </TabsTrigger>
           </TabsList>
 
@@ -247,6 +340,111 @@ export function AdminViewSimulator() {
                   </div>
                 )}
               </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="teacher" className="space-y-4 mt-4">
+            {teachers.length === 0 ? (
+              <Card className="border-dashed">
+                <CardContent className="py-8 text-center">
+                  <BookOpen className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-muted-foreground">
+                    Nessun insegnante configurato
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <>
+                <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleziona insegnante" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {teachers.map(teacher => (
+                      <SelectItem key={teacher.id} value={teacher.id}>
+                        {teacher.full_name} ({teacher.courses.length} corsi, {teacher.groups.length} gruppi)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {selectedTeacher && (
+                  <div className="space-y-6 mt-4 p-4 border rounded-lg bg-background">
+                    {/* Profile Section */}
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-tech-teal/10 flex items-center justify-center">
+                        <GraduationCap className="w-6 h-6 text-tech-teal" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold">{selectedTeacher.full_name}</h3>
+                        <Badge className="bg-tech-teal text-white">Insegnante</Badge>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Mail className="w-4 h-4 text-muted-foreground" />
+                        <span>{selectedTeacher.email || '-'}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Phone className="w-4 h-4 text-muted-foreground" />
+                        <span>{selectedTeacher.phone || 'Non configurato'}</span>
+                      </div>
+                    </div>
+
+                    {/* Courses Section */}
+                    <div className="border-t pt-4">
+                      <h4 className="font-medium mb-3 flex items-center gap-2">
+                        <BookOpen className="w-4 h-4" />
+                        Corsi Assegnati ({selectedTeacher.courses.length})
+                      </h4>
+                      {selectedTeacher.courses.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">Nessun corso assegnato</p>
+                      ) : (
+                        <div className="flex flex-wrap gap-2">
+                          {selectedTeacher.courses.map(course => (
+                            <Badge key={course.id} variant="secondary">
+                              {course.emoji} {course.title} ({course.total_lessons} lezioni)
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Groups Section */}
+                    <div className="border-t pt-4">
+                      <h4 className="font-medium mb-3 flex items-center gap-2">
+                        <UsersRound className="w-4 h-4" />
+                        Gruppi Assegnati ({selectedTeacher.groups.length})
+                      </h4>
+                      {selectedTeacher.groups.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">Nessun gruppo assegnato</p>
+                      ) : (
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Gruppo</TableHead>
+                              <TableHead>Corso</TableHead>
+                              <TableHead className="text-center">Studenti</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {selectedTeacher.groups.map(group => (
+                              <TableRow key={group.id}>
+                                <TableCell className="font-medium">{group.title}</TableCell>
+                                <TableCell>{group.course_title}</TableCell>
+                                <TableCell className="text-center">
+                                  <Badge variant="outline">{group.student_count}</Badge>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </TabsContent>
         </Tabs>

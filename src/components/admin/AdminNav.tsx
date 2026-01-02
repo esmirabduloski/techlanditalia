@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { 
   FileText, GraduationCap, BookOpen, Mail, User, BarChart3, 
-  Award, Eye, Calendar, ClipboardCheck, Users, Newspaper
+  Award, Eye, Calendar, ClipboardCheck, Users, Newspaper, UsersRound
 } from 'lucide-react';
 
 interface NavItem {
@@ -13,6 +13,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { to: '/admin', label: 'Blog', icon: FileText },
   { to: '/admin/corsi', label: 'Corsi', icon: GraduationCap },
+  { to: '/admin/gruppi', label: 'Gruppi', icon: UsersRound },
   { to: '/admin/calendario', label: 'Calendario', icon: Calendar },
   { to: '/admin/presenze', label: 'Presenze', icon: ClipboardCheck },
   { to: '/admin/prenotazioni', label: 'Prenotazioni', icon: BookOpen },

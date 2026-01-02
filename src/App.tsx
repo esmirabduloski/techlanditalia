@@ -47,6 +47,11 @@ import CourseProgress from "./pages/area-riservata/CourseProgress";
 import LessonView from "./pages/area-riservata/LessonView";
 import TaskView from "./pages/area-riservata/TaskView";
 import HomeworkDetail from "./pages/area-riservata/HomeworkDetail";
+import TeacherDashboard from "./pages/teacher/TeacherDashboard";
+import TeacherCourseDetail from "./pages/teacher/TeacherCourseDetail";
+import TeacherGroupDetail from "./pages/teacher/TeacherGroupDetail";
+import TeacherStudentDetail from "./pages/teacher/TeacherStudentDetail";
+import AdminGroups from "./pages/admin/AdminGroups";
 
 const queryClient = new QueryClient();
 
@@ -103,6 +108,11 @@ const App = () => (
                 <Route path="/admin/lezioni-programmate" element={<AdminScheduledLessons />} />
                 <Route path="/admin/presenze" element={<AdminAttendance />} />
                 <Route path="/admin/analytics" element={<AdminAnalytics />} />
+                <Route path="/admin/gruppi" element={<AdminGroups />} />
+                <Route path="/insegnante" element={<TeacherDashboard />} />
+                <Route path="/insegnante/corso/:courseId" element={<TeacherCourseDetail />} />
+                <Route path="/insegnante/gruppo/:groupId" element={<TeacherGroupDetail />} />
+                <Route path="/insegnante/studente/:studentId" element={<TeacherStudentDetail />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </AnalyticsProvider>

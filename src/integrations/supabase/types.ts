@@ -432,6 +432,90 @@ export type Database = {
         }
         Relationships: []
       }
+      group_attendance: {
+        Row: {
+          group_id: string
+          id: string
+          lesson_number: number
+          marked_at: string | null
+          marked_by: string | null
+          notes: string | null
+          status: string
+          student_id: string
+        }
+        Insert: {
+          group_id: string
+          id?: string
+          lesson_number: number
+          marked_at?: string | null
+          marked_by?: string | null
+          notes?: string | null
+          status?: string
+          student_id: string
+        }
+        Update: {
+          group_id?: string
+          id?: string
+          lesson_number?: number
+          marked_at?: string | null
+          marked_by?: string | null
+          notes?: string | null
+          status?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_attendance_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "student_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_attendance_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_students: {
+        Row: {
+          group_id: string
+          id: string
+          joined_at: string | null
+          student_id: string
+        }
+        Insert: {
+          group_id: string
+          id?: string
+          joined_at?: string | null
+          student_id: string
+        }
+        Update: {
+          group_id?: string
+          id?: string
+          joined_at?: string | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_students_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "student_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_students_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       homework: {
         Row: {
           attachments: Json | null
@@ -635,6 +719,7 @@ export type Database = {
           id: string
           images: Json | null
           lesson_number: number
+          manual_url: string | null
           points_reward: number
           slides_url: string | null
           title: string
@@ -649,6 +734,7 @@ export type Database = {
           id?: string
           images?: Json | null
           lesson_number: number
+          manual_url?: string | null
           points_reward?: number
           slides_url?: string | null
           title: string
@@ -663,6 +749,7 @@ export type Database = {
           id?: string
           images?: Json | null
           lesson_number?: number
+          manual_url?: string | null
           points_reward?: number
           slides_url?: string | null
           title?: string
@@ -985,6 +1072,50 @@ export type Database = {
           },
         ]
       }
+      student_groups: {
+        Row: {
+          course_id: string
+          created_at: string | null
+          id: string
+          last_lesson_title: string | null
+          max_lessons: number | null
+          start_date: string | null
+          teacher_id: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          course_id: string
+          created_at?: string | null
+          id?: string
+          last_lesson_title?: string | null
+          max_lessons?: number | null
+          start_date?: string | null
+          teacher_id?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          course_id?: string
+          created_at?: string | null
+          id?: string
+          last_lesson_title?: string | null
+          max_lessons?: number | null
+          start_date?: string | null
+          teacher_id?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_groups_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_streaks: {
         Row: {
           attendance_streak: number | null
@@ -1067,6 +1198,62 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      teacher_courses: {
+        Row: {
+          assigned_at: string | null
+          course_id: string
+          id: string
+          teacher_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          course_id: string
+          id?: string
+          teacher_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          course_id?: string
+          id?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_courses_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_profiles: {
+        Row: {
+          availability: Json | null
+          created_at: string | null
+          id: string
+          phone: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          availability?: Json | null
+          created_at?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          availability?: Json | null
+          created_at?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       trial_bookings: {
         Row: {

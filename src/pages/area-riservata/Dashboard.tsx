@@ -17,6 +17,7 @@ import { ParentChildrenSection } from '@/components/dashboard/ParentChildrenSect
 import { StreakDisplay } from '@/components/dashboard/StreakDisplay';
 import { AttendanceHistory } from '@/components/dashboard/AttendanceHistory';
 import { StreakBonusesDisplay } from '@/components/dashboard/StreakBonusesDisplay';
+import { DeadlineNotifications } from '@/components/dashboard/DeadlineNotifications';
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { CelebrationOverlay } from '@/components/gamification/CelebrationOverlay';
 import { useCelebration } from '@/hooks/useCelebration';
@@ -184,6 +185,9 @@ export default function Dashboard() {
           onComplete={() => setShowOnboarding(false)}
         />
       )}
+
+      {/* Deadline Notifications */}
+      <DeadlineNotifications />
 
       <div className="min-h-screen bg-gradient-to-br from-background via-tech-green-light/20 to-tech-cyan-light/20">
         <div className="max-w-6xl mx-auto px-4 py-8">

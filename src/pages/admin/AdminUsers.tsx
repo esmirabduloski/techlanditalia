@@ -23,7 +23,8 @@ import {
   Home,
   Edit2,
   Search,
-  MessageCircle
+  MessageCircle,
+  BookOpen
 } from 'lucide-react';
 import {
   Select,
@@ -58,6 +59,7 @@ interface Profile {
   isAdmin?: boolean;
   isTeacher?: boolean;
   username?: string | null;
+  teacherCourses?: string[];
 }
 
 interface Course {
@@ -71,6 +73,11 @@ interface Enrollment {
   course_id: string;
   student_id: string;
   status: string;
+}
+
+interface TeacherCourse {
+  teacher_id: string;
+  course_id: string;
 }
 
 export default function AdminUsers() {
@@ -87,6 +94,9 @@ export default function AdminUsers() {
   const [editingChild, setEditingChild] = useState<{ id: string; username: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterRole, setFilterRole] = useState<'all' | 'parent' | 'student'>('all');
+  const [teacherCourseDialog, setTeacherCourseDialog] = useState<{ open: boolean; userId: string; userName: string }>({ open: false, userId: '', userName: '' });
+  const [selectedTeacherCourses, setSelectedTeacherCourses] = useState<string[]>([]);
+  const [teacherCourses, setTeacherCourses] = useState<TeacherCourse[]>([]);
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -132,10 +142,18 @@ export default function AdminUsers() {
       .from('enrollments')
       .select('id, course_id, student_id, status');
 
+    // Fetch teacher courses
+    const { data: teacherCoursesData } = await supabase
+      .from('teacher_courses')
+      .select('teacher_id, course_id');
+
+    setTeacherCourses(teacherCoursesData || []);
+
     const enrichedProfiles = (profilesData || []).map(p => ({
       ...p,
       isAdmin: adminIds.has(p.id),
-      isTeacher: teacherIds.has(p.id)
+      isTeacher: teacherIds.has(p.id),
+      teacherCourses: (teacherCoursesData || []).filter(tc => tc.teacher_id === p.id).map(tc => tc.course_id)
     })) as Profile[];
 
     setProfiles(enrichedProfiles);
@@ -335,6 +353,57 @@ export default function AdminUsers() {
       .filter(Boolean) as Course[];
   };
 
+  const getTeacherCourses = (userId: string) => {
+    return teacherCourses
+      .filter(tc => tc.teacher_id === userId)
+      .map(tc => courses.find(c => c.id === tc.course_id))
+      .filter(Boolean) as Course[];
+  };
+
+  const openTeacherCourseDialog = (userId: string, userName: string) => {
+    const userTeacherCourses = teacherCourses.filter(tc => tc.teacher_id === userId);
+    setSelectedTeacherCourses(userTeacherCourses.map(tc => tc.course_id));
+    setTeacherCourseDialog({ open: true, userId, userName });
+  };
+
+  const handleSaveTeacherCourses = async () => {
+    setIsSaving(true);
+    try {
+      const currentTeacherCourses = teacherCourses.filter(tc => tc.teacher_id === teacherCourseDialog.userId);
+      const currentCourseIds = currentTeacherCourses.map(tc => tc.course_id);
+      
+      const toAdd = selectedTeacherCourses.filter(c => !currentCourseIds.includes(c));
+      const toRemove = currentCourseIds.filter(c => !selectedTeacherCourses.includes(c));
+
+      if (toRemove.length > 0) {
+        const { error } = await supabase
+          .from('teacher_courses')
+          .delete()
+          .eq('teacher_id', teacherCourseDialog.userId)
+          .in('course_id', toRemove);
+        if (error) throw error;
+      }
+
+      if (toAdd.length > 0) {
+        const { error } = await supabase
+          .from('teacher_courses')
+          .insert(toAdd.map(courseId => ({
+            teacher_id: teacherCourseDialog.userId,
+            course_id: courseId,
+          })));
+        if (error) throw error;
+      }
+
+      toast({ title: 'Successo', description: 'Corsi insegnante aggiornati' });
+      setTeacherCourseDialog({ open: false, userId: '', userName: '' });
+      fetchData();
+    } catch (error: any) {
+      toast({ title: 'Errore', description: error.message || 'Impossibile aggiornare i corsi', variant: 'destructive' });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const openEditChildDialog = (child: Profile) => {
     setEditingChild({
       id: child.id,
@@ -489,6 +558,15 @@ export default function AdminUsers() {
                                     </>
                                   )}
                                 </div>
+                                {group.parent.isTeacher && getTeacherCourses(group.parent.id).length > 0 && (
+                                  <div className="flex items-center gap-1 flex-wrap mt-1">
+                                    {getTeacherCourses(group.parent.id).map(course => (
+                                      <Badge key={course.id} variant="outline" className="text-xs bg-tech-teal/10">
+                                        {course.emoji} {course.title}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
                             </div>
                             <div className="flex items-center gap-2 flex-shrink-0">
@@ -514,6 +592,17 @@ export default function AdminUsers() {
                               >
                                 <GraduationCap className="w-4 h-4" />
                               </Button>
+                              {group.parent.isTeacher && (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={(e) => { e.stopPropagation(); openTeacherCourseDialog(group.parent!.id, group.parent!.full_name); }}
+                                  title="Assegna corsi all'insegnante"
+                                >
+                                  <BookOpen className="w-4 h-4 mr-1" />
+                                  Corsi
+                                </Button>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -758,6 +847,47 @@ export default function AdminUsers() {
             </Button>
             <Button onClick={handleSaveChildCredentials} disabled={isSaving}>
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salva'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Teacher Course Assignment Dialog */}
+      <Dialog open={teacherCourseDialog.open} onOpenChange={(open) => !open && setTeacherCourseDialog({ open: false, userId: '', userName: '' })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assegna Corsi Insegnante - {teacherCourseDialog.userName}</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 space-y-3">
+            <p className="text-sm text-muted-foreground mb-4">
+              Seleziona i corsi che questo insegnante è abilitato a insegnare.
+            </p>
+            {courses.map(course => (
+              <div key={course.id} className="flex items-center gap-3">
+                <Checkbox
+                  id={`teacher-${course.id}`}
+                  checked={selectedTeacherCourses.includes(course.id)}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setSelectedTeacherCourses([...selectedTeacherCourses, course.id]);
+                    } else {
+                      setSelectedTeacherCourses(selectedTeacherCourses.filter(c => c !== course.id));
+                    }
+                  }}
+                />
+                <label htmlFor={`teacher-${course.id}`} className="flex items-center gap-2 cursor-pointer">
+                  <span>{course.emoji}</span>
+                  <span>{course.title}</span>
+                </label>
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTeacherCourseDialog({ open: false, userId: '', userName: '' })}>
+              Annulla
+            </Button>
+            <Button onClick={handleSaveTeacherCourses} disabled={isSaving}>
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salva Corsi'}
             </Button>
           </DialogFooter>
         </DialogContent>

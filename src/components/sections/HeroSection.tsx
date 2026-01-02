@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import { Play, Sparkles, Users, Award, Shield } from "lucide-react";
 
 export function HeroSection() {
@@ -75,11 +76,13 @@ export function HeroSection() {
             <div className="relative z-10 animate-float">
               <div className="aspect-square max-w-lg mx-auto rounded-3xl bg-gradient-hero p-1">
                 <div className="w-full h-full rounded-3xl bg-card flex items-center justify-center overflow-hidden">
-                  <img 
-                    src="https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=800&q=80" 
+                  <OptimizedImage 
+                    src="https://images.unsplash.com/photo-1488590528505-98d2b5aba04b" 
                     alt="Bambini che imparano a programmare durante un corso di coding online"
                     className="w-full h-full object-cover"
-                    loading="eager"
+                    priority={true}
+                    sizes="(max-width: 1024px) 0vw, 50vw"
+                    aspectRatio="square"
                   />
                 </div>
               </div>

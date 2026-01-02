@@ -625,6 +625,7 @@ export type Database = {
           email: string | null
           full_name: string
           id: string
+          onboarding_completed: boolean | null
           parent_id: string | null
           role: string
           total_points: number
@@ -637,6 +638,7 @@ export type Database = {
           email?: string | null
           full_name: string
           id: string
+          onboarding_completed?: boolean | null
           parent_id?: string | null
           role: string
           total_points?: number
@@ -649,6 +651,7 @@ export type Database = {
           email?: string | null
           full_name?: string
           id?: string
+          onboarding_completed?: boolean | null
           parent_id?: string | null
           role?: string
           total_points?: number

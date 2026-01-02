@@ -9,9 +9,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Loader2, User, BookOpen, Users, UsersRound, LogOut, Home, Phone, Mail, Clock,
-  ChevronRight, GraduationCap, Plus, Trash2, Edit2
+  ChevronRight, GraduationCap, Plus, Trash2, Edit2, Bell, Check, CheckCheck
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -47,6 +49,16 @@ interface StudentGroup {
   student_count?: number;
 }
 
+interface TeacherNotification {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  is_read: boolean;
+  metadata: any;
+  created_at: string;
+}
+
 const DAYS = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"];
 const TIMES = Array.from({ length: 28 }, (_, i) => {
   const hour = Math.floor(i / 2) + 8;
@@ -70,6 +82,8 @@ export default function TeacherDashboard() {
   const [isSaving, setIsSaving] = useState(false);
   const [isEditingAvailability, setIsEditingAvailability] = useState(false);
   const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([]);
+  const [notifications, setNotifications] = useState<TeacherNotification[]>([]);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -184,12 +198,77 @@ export default function TeacherDashboard() {
         );
         setGroups(groupsWithCounts);
       }
+
+      // Fetch notifications
+      const { data: notificationsData } = await supabase
+        .from('teacher_notifications')
+        .select('*')
+        .eq('teacher_id', user!.id)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      
+      setNotifications(notificationsData || []);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Subscribe to realtime notifications
+  useEffect(() => {
+    if (!user || !isTeacher) return;
+
+    const channel = supabase
+      .channel('teacher-notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'teacher_notifications',
+          filter: `teacher_id=eq.${user.id}`
+        },
+        (payload) => {
+          const newNotification = payload.new as TeacherNotification;
+          setNotifications(prev => [newNotification, ...prev]);
+          toast({
+            title: newNotification.title,
+            description: newNotification.message
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, isTeacher, toast]);
+
+  const markNotificationAsRead = async (id: string) => {
+    await supabase
+      .from('teacher_notifications')
+      .update({ is_read: true })
+      .eq('id', id);
+    
+    setNotifications(prev => 
+      prev.map(n => n.id === id ? { ...n, is_read: true } : n)
+    );
+  };
+
+  const markAllNotificationsAsRead = async () => {
+    await supabase
+      .from('teacher_notifications')
+      .update({ is_read: true })
+      .eq('teacher_id', user!.id)
+      .eq('is_read', false);
+    
+    setNotifications(prev => 
+      prev.map(n => ({ ...n, is_read: true }))
+    );
+  };
+
+  const unreadCount = notifications.filter(n => !n.is_read).length;
 
   const handleSavePhone = async () => {
     setIsSaving(true);
@@ -288,7 +367,97 @@ export default function TeacherDashboard() {
             </Link>
             <Badge className="bg-tech-teal text-white">Insegnante</Badge>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            {/* Notifications */}
+            <Popover open={notificationsOpen} onOpenChange={setNotificationsOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  <Bell className="w-5 h-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-0" align="end">
+                <div className="flex items-center justify-between p-3 border-b">
+                  <h4 className="font-semibold">Notifiche</h4>
+                  {unreadCount > 0 && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={markAllNotificationsAsRead}
+                      className="text-xs h-7"
+                    >
+                      <CheckCheck className="w-3 h-3 mr-1" />
+                      Segna tutte lette
+                    </Button>
+                  )}
+                </div>
+                <ScrollArea className="h-80">
+                  {notifications.length === 0 ? (
+                    <div className="p-4 text-center text-muted-foreground text-sm">
+                      Nessuna notifica
+                    </div>
+                  ) : (
+                    <div className="divide-y">
+                      {notifications.map(notification => (
+                        <div
+                          key={notification.id}
+                          className={`p-3 hover:bg-muted/50 cursor-pointer transition-colors ${
+                            !notification.is_read ? 'bg-primary/5' : ''
+                          }`}
+                          onClick={() => {
+                            if (!notification.is_read) {
+                              markNotificationAsRead(notification.id);
+                            }
+                            if (notification.metadata?.group_id) {
+                              navigate(`/insegnante/gruppo/${notification.metadata.group_id}`);
+                              setNotificationsOpen(false);
+                            }
+                          }}
+                        >
+                          <div className="flex items-start gap-2">
+                            <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
+                              !notification.is_read ? 'bg-primary' : 'bg-transparent'
+                            }`} />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm">{notification.title}</p>
+                              <p className="text-xs text-muted-foreground line-clamp-2">
+                                {notification.message}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {new Date(notification.created_at).toLocaleDateString('it-IT', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </p>
+                            </div>
+                            {!notification.is_read && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 flex-shrink-0"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  markNotificationAsRead(notification.id);
+                                }}
+                              >
+                                <Check className="w-3 h-3" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </ScrollArea>
+              </PopoverContent>
+            </Popover>
+
             <Link to="/area-riservata">
               <Button variant="outline" size="sm">
                 <Home className="w-4 h-4 mr-2" />

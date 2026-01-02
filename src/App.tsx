@@ -52,6 +52,7 @@ import TeacherCourseDetail from "./pages/teacher/TeacherCourseDetail";
 import TeacherGroupDetail from "./pages/teacher/TeacherGroupDetail";
 import TeacherStudentDetail from "./pages/teacher/TeacherStudentDetail";
 import AdminGroups from "./pages/admin/AdminGroups";
+import AdminTeacherCalendar from "./pages/admin/AdminTeacherCalendar";
 
 const queryClient = new QueryClient();
 
@@ -109,6 +110,7 @@ const App = () => (
                 <Route path="/admin/presenze" element={<AdminAttendance />} />
                 <Route path="/admin/analytics" element={<AdminAnalytics />} />
                 <Route path="/admin/gruppi" element={<AdminGroups />} />
+                <Route path="/admin/disponibilita" element={<AdminTeacherCalendar />} />
                 <Route path="/insegnante" element={<TeacherDashboard />} />
                 <Route path="/insegnante/corso/:courseId" element={<TeacherCourseDetail />} />
                 <Route path="/insegnante/gruppo/:groupId" element={<TeacherGroupDetail />} />

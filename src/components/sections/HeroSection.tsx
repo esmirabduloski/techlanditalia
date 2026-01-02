@@ -32,12 +32,22 @@ export function HeroSection() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button variant="hero" size="xl" asChild>
+              <Button 
+                variant="hero" 
+                size="xl" 
+                asChild
+                data-track-cta="hero_booking_primary"
+              >
                 <Link to="/prenota">
                   Prenota lezione gratuita
                 </Link>
               </Button>
-              <Button variant="outline" size="xl" asChild>
+              <Button 
+                variant="outline" 
+                size="xl" 
+                asChild
+                data-track-cta="hero_courses_secondary"
+              >
                 <Link to="/corsi" className="gap-2">
                   <Play className="w-5 h-5" />
                   Scopri i corsi

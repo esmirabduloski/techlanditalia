@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      analytics_events: {
+        Row: {
+          browser: string | null
+          created_at: string
+          device_type: string | null
+          event_action: string
+          event_category: string
+          event_label: string | null
+          event_type: string
+          event_value: number | null
+          id: string
+          metadata: Json | null
+          page_title: string | null
+          page_url: string | null
+          referrer: string | null
+          screen_size: string | null
+          session_id: string
+          user_id: string | null
+        }
+        Insert: {
+          browser?: string | null
+          created_at?: string
+          device_type?: string | null
+          event_action: string
+          event_category: string
+          event_label?: string | null
+          event_type: string
+          event_value?: number | null
+          id?: string
+          metadata?: Json | null
+          page_title?: string | null
+          page_url?: string | null
+          referrer?: string | null
+          screen_size?: string | null
+          session_id: string
+          user_id?: string | null
+        }
+        Update: {
+          browser?: string | null
+          created_at?: string
+          device_type?: string | null
+          event_action?: string
+          event_category?: string
+          event_label?: string | null
+          event_type?: string
+          event_value?: number | null
+          id?: string
+          metadata?: Json | null
+          page_title?: string | null
+          page_url?: string | null
+          referrer?: string | null
+          screen_size?: string | null
+          session_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       attendance: {
         Row: {
           id: string
@@ -237,6 +294,42 @@ export type Database = {
           messaggio?: string
           nome?: string
           oggetto?: string
+        }
+        Relationships: []
+      }
+      conversion_funnels: {
+        Row: {
+          completed: boolean | null
+          created_at: string
+          funnel_name: string
+          id: string
+          metadata: Json | null
+          session_id: string
+          step_name: string
+          step_number: number
+          user_id: string | null
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string
+          funnel_name: string
+          id?: string
+          metadata?: Json | null
+          session_id: string
+          step_name: string
+          step_number: number
+          user_id?: string | null
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string
+          funnel_name?: string
+          id?: string
+          metadata?: Json | null
+          session_id?: string
+          step_name?: string
+          step_number?: number
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -615,6 +708,57 @@ export type Database = {
           id?: string
           unsubscribe_token?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      page_views: {
+        Row: {
+          device_type: string | null
+          entered_at: string
+          exited_at: string | null
+          id: string
+          page_title: string | null
+          page_url: string
+          referrer: string | null
+          scroll_depth: number | null
+          session_id: string
+          time_on_page: number | null
+          user_id: string | null
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          device_type?: string | null
+          entered_at?: string
+          exited_at?: string | null
+          id?: string
+          page_title?: string | null
+          page_url: string
+          referrer?: string | null
+          scroll_depth?: number | null
+          session_id: string
+          time_on_page?: number | null
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          device_type?: string | null
+          entered_at?: string
+          exited_at?: string | null
+          id?: string
+          page_title?: string | null
+          page_url?: string
+          referrer?: string | null
+          scroll_depth?: number | null
+          session_id?: string
+          time_on_page?: number | null
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
         }
         Relationships: []
       }

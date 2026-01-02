@@ -3,8 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Calendar, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Loader2, Calendar, User, Download, FileText, FileSpreadsheet, CalendarDays } from "lucide-react";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { toast } from "sonner";
 
 interface AvailabilitySlot {
   day: string;
@@ -132,6 +135,184 @@ export default function AdminTeacherCalendar() {
     return { isStart, isEnd, heightPercent: 100 };
   };
 
+  // Export to CSV
+  const exportToCSV = () => {
+    const filteredTeachers = selectedTeacher === "all" 
+      ? teachers 
+      : teachers.filter(t => t.id === selectedTeacher);
+
+    const headers = ["Insegnante", "Email", "Giorno", "Ora Inizio", "Ora Fine"];
+    const rows: string[][] = [];
+
+    filteredTeachers.forEach(teacher => {
+      teacher.availability.forEach(slot => {
+        rows.push([
+          teacher.full_name,
+          teacher.email,
+          slot.day,
+          slot.startTime,
+          slot.endTime
+        ]);
+      });
+    });
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `disponibilita-insegnanti-${new Date().toISOString().split("T")[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success("CSV esportato con successo!");
+  };
+
+  // Export to ICS (iCal for Google Calendar)
+  const exportToICS = () => {
+    const filteredTeachers = selectedTeacher === "all" 
+      ? teachers 
+      : teachers.filter(t => t.id === selectedTeacher);
+
+    const dayToNumber: Record<string, number> = {
+      "Lunedì": 1,
+      "Martedì": 2,
+      "Mercoledì": 3,
+      "Giovedì": 4,
+      "Venerdì": 5,
+      "Sabato": 6,
+      "Domenica": 0
+    };
+
+    // Get next occurrence of each day
+    const getNextDate = (dayName: string): Date => {
+      const today = new Date();
+      const targetDay = dayToNumber[dayName];
+      const currentDay = today.getDay();
+      const daysUntil = (targetDay - currentDay + 7) % 7 || 7;
+      const nextDate = new Date(today);
+      nextDate.setDate(today.getDate() + daysUntil);
+      return nextDate;
+    };
+
+    const formatICSDate = (date: Date, time: string): string => {
+      const [hours, minutes] = time.split(":").map(Number);
+      date.setHours(hours, minutes, 0, 0);
+      return date.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+    };
+
+    const events: string[] = [];
+
+    filteredTeachers.forEach(teacher => {
+      teacher.availability.forEach((slot, idx) => {
+        const date = getNextDate(slot.day);
+        const startDate = new Date(date);
+        const endDate = new Date(date);
+        
+        const uid = `${teacher.id}-${idx}-${Date.now()}@techland`;
+        
+        events.push(`BEGIN:VEVENT
+UID:${uid}
+DTSTAMP:${new Date().toISOString().replace(/[-:]/g, "").split(".")[0]}Z
+DTSTART:${formatICSDate(startDate, slot.startTime)}
+DTEND:${formatICSDate(endDate, slot.endTime)}
+RRULE:FREQ=WEEKLY
+SUMMARY:Disponibilità ${teacher.full_name}
+DESCRIPTION:Disponibilità oraria di ${teacher.full_name} (${teacher.email})
+END:VEVENT`);
+      });
+    });
+
+    const icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Techland//Disponibilità Insegnanti//IT
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Disponibilità Insegnanti Techland
+${events.join("\n")}
+END:VCALENDAR`;
+
+    const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `disponibilita-insegnanti-${new Date().toISOString().split("T")[0]}.ics`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success("File ICS esportato! Importalo in Google Calendar.");
+  };
+
+  // Export to PDF (using print)
+  const exportToPDF = () => {
+    const filteredTeachers = selectedTeacher === "all" 
+      ? teachers 
+      : teachers.filter(t => t.id === selectedTeacher);
+
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Disponibilità Insegnanti - Techland</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; }
+          h1 { color: #333; border-bottom: 2px solid #6366f1; padding-bottom: 10px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+          th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+          th { background-color: #6366f1; color: white; }
+          tr:nth-child(even) { background-color: #f9f9f9; }
+          .teacher-section { margin-bottom: 30px; }
+          .teacher-name { font-size: 18px; font-weight: bold; color: #6366f1; margin-bottom: 10px; }
+          .no-print { display: none; }
+          @media print { .no-print { display: none; } }
+        </style>
+      </head>
+      <body>
+        <h1>📅 Disponibilità Insegnanti</h1>
+        <p>Esportato il: ${new Date().toLocaleDateString("it-IT")}</p>
+        ${filteredTeachers.map(teacher => `
+          <div class="teacher-section">
+            <div class="teacher-name">👤 ${teacher.full_name}</div>
+            <p>Email: ${teacher.email}</p>
+            ${teacher.availability.length > 0 ? `
+              <table>
+                <thead>
+                  <tr>
+                    <th>Giorno</th>
+                    <th>Ora Inizio</th>
+                    <th>Ora Fine</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${teacher.availability.map(slot => `
+                    <tr>
+                      <td>${slot.day}</td>
+                      <td>${slot.startTime}</td>
+                      <td>${slot.endTime}</td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            ` : `<p><em>Nessuna disponibilità configurata</em></p>`}
+          </div>
+        `).join("")}
+      </body>
+      </html>
+    `;
+
+    const printWindow = window.open("", "_blank");
+    if (printWindow) {
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      printWindow.onload = () => {
+        printWindow.print();
+      };
+    }
+    toast.success("PDF pronto per la stampa!");
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-muted/30">
@@ -175,6 +356,29 @@ export default function AdminTeacherCalendar() {
                 ))}
               </SelectContent>
             </Select>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Download className="w-4 h-4" />
+                  Esporta
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={exportToPDF} className="gap-2 cursor-pointer">
+                  <FileText className="w-4 h-4" />
+                  Esporta PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={exportToCSV} className="gap-2 cursor-pointer">
+                  <FileSpreadsheet className="w-4 h-4" />
+                  Esporta CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={exportToICS} className="gap-2 cursor-pointer">
+                  <CalendarDays className="w-4 h-4" />
+                  Esporta per Google Calendar (.ics)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 

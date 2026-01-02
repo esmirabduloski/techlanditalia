@@ -56,6 +56,7 @@ interface Profile {
   created_at: string;
   email?: string;
   isAdmin?: boolean;
+  isTeacher?: boolean;
   username?: string | null;
 }
 
@@ -118,10 +119,10 @@ export default function AdminUsers() {
 
     const { data: rolesData } = await supabase
       .from('user_roles')
-      .select('user_id, role')
-      .eq('role', 'admin');
+      .select('user_id, role');
 
-    const adminIds = new Set(rolesData?.map(r => r.user_id) || []);
+    const adminIds = new Set(rolesData?.filter(r => r.role === 'admin').map(r => r.user_id) || []);
+    const teacherIds = new Set(rolesData?.filter(r => r.role === 'teacher').map(r => r.user_id) || []);
 
     const { data: coursesData } = await supabase
       .from('courses')
@@ -133,7 +134,8 @@ export default function AdminUsers() {
 
     const enrichedProfiles = (profilesData || []).map(p => ({
       ...p,
-      isAdmin: adminIds.has(p.id)
+      isAdmin: adminIds.has(p.id),
+      isTeacher: teacherIds.has(p.id)
     })) as Profile[];
 
     setProfiles(enrichedProfiles);
@@ -305,26 +307,24 @@ export default function AdminUsers() {
     }
   };
 
-  const toggleAdminRole = async (userId: string, currentlyAdmin: boolean) => {
+  const toggleTeacherRole = async (userId: string, currentlyTeacher: boolean) => {
     try {
-      if (currentlyAdmin) {
-        const { error } = await supabase
-          .from('user_roles')
-          .delete()
-          .eq('user_id', userId)
-          .eq('role', 'admin');
+      if (currentlyTeacher) {
+        const { error } = await supabase.functions.invoke('admin-toggle-role', {
+          body: { userId, action: 'remove', role: 'teacher' }
+        });
         if (error) throw error;
       } else {
         const { error } = await supabase.functions.invoke('admin-toggle-role', {
-          body: { userId, action: 'add' }
+          body: { userId, action: 'add', role: 'teacher' }
         });
         if (error) throw error;
       }
 
-      setProfiles(profiles.map(p => p.id === userId ? { ...p, isAdmin: !currentlyAdmin } : p));
-      toast({ title: 'Successo', description: currentlyAdmin ? 'Admin rimosso' : 'Admin aggiunto' });
+      setProfiles(profiles.map(p => p.id === userId ? { ...p, isTeacher: !currentlyTeacher } : p));
+      toast({ title: 'Successo', description: currentlyTeacher ? 'Ruolo insegnante rimosso' : 'Ruolo insegnante assegnato' });
     } catch (error: any) {
-      toast({ title: 'Errore', description: error.message || 'Impossibile modificare il ruolo admin', variant: 'destructive' });
+      toast({ title: 'Errore', description: error.message || 'Impossibile modificare il ruolo insegnante', variant: 'destructive' });
     }
   };
 
@@ -478,7 +478,7 @@ export default function AdminUsers() {
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <h3 className="font-semibold truncate">{group.parent.full_name}</h3>
                                   <Badge variant="secondary">Genitore</Badge>
-                                  {group.parent.isAdmin && <Badge className="bg-amber-500">Admin</Badge>}
+                                  {group.parent.isTeacher && <Badge className="bg-tech-teal text-white">Insegnante</Badge>}
                                 </div>
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
                                   <span>{hasChildren ? `${group.children.length} ${group.children.length === 1 ? 'figlio' : 'figli'}` : 'Nessun figlio associato'}</span>
@@ -507,11 +507,12 @@ export default function AdminUsers() {
                                 <Key className="w-4 h-4" />
                               </Button>
                               <Button 
-                                variant={group.parent.isAdmin ? "destructive" : "outline"} 
+                                variant={group.parent.isTeacher ? "destructive" : "outline"} 
                                 size="sm"
-                                onClick={(e) => { e.stopPropagation(); toggleAdminRole(group.parent!.id, group.parent!.isAdmin || false); }}
+                                onClick={(e) => { e.stopPropagation(); toggleTeacherRole(group.parent!.id, group.parent!.isTeacher || false); }}
+                                title={group.parent.isTeacher ? "Rimuovi ruolo insegnante" : "Rendi insegnante"}
                               >
-                                <Shield className="w-4 h-4" />
+                                <GraduationCap className="w-4 h-4" />
                               </Button>
                             </div>
                           </div>

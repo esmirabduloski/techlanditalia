@@ -1228,6 +1228,39 @@ export type Database = {
           },
         ]
       }
+      teacher_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          metadata: Json | null
+          teacher_id: string
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          metadata?: Json | null
+          teacher_id: string
+          title: string
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          metadata?: Json | null
+          teacher_id?: string
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
       teacher_profiles: {
         Row: {
           availability: Json | null

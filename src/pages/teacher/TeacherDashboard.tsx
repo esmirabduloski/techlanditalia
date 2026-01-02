@@ -8,17 +8,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Loader2, User, BookOpen, Users, UsersRound, LogOut, Home, Phone, Mail, Clock,
-  ChevronRight, GraduationCap
+  ChevronRight, GraduationCap, Plus, Trash2, Edit2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+interface AvailabilitySlot {
+  day: string;
+  startTime: string;
+  endTime: string;
+}
 
 interface TeacherProfile {
   id: string;
   user_id: string;
   phone: string | null;
-  availability: any;
+  availability: AvailabilitySlot[] | null;
 }
 
 interface Course {
@@ -40,6 +47,13 @@ interface StudentGroup {
   student_count?: number;
 }
 
+const DAYS = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"];
+const TIMES = Array.from({ length: 28 }, (_, i) => {
+  const hour = Math.floor(i / 2) + 8;
+  const minutes = i % 2 === 0 ? "00" : "30";
+  return `${hour.toString().padStart(2, "0")}:${minutes}`;
+});
+
 export default function TeacherDashboard() {
   const { user, isLoading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
@@ -54,6 +68,8 @@ export default function TeacherDashboard() {
   const [groups, setGroups] = useState<StudentGroup[]>([]);
   const [phone, setPhone] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isEditingAvailability, setIsEditingAvailability] = useState(false);
+  const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([]);
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -105,8 +121,18 @@ export default function TeacherDashboard() {
         .maybeSingle();
 
       if (teacherData) {
-        setTeacherProfile(teacherData);
+        const parsedAvailability = Array.isArray(teacherData.availability) 
+          ? (teacherData.availability as unknown as AvailabilitySlot[])
+          : null;
+        const parsedProfile: TeacherProfile = {
+          id: teacherData.id,
+          user_id: teacherData.user_id,
+          phone: teacherData.phone,
+          availability: parsedAvailability
+        };
+        setTeacherProfile(parsedProfile);
         setPhone(teacherData.phone || "");
+        setAvailabilitySlots(parsedAvailability || []);
       }
 
       // Fetch assigned courses
@@ -190,6 +216,54 @@ export default function TeacherDashboard() {
   const handleSignOut = async () => {
     await signOut();
     navigate('/auth');
+  };
+
+  const addAvailabilitySlot = () => {
+    setAvailabilitySlots([...availabilitySlots, { day: "Lunedì", startTime: "09:00", endTime: "10:00" }]);
+  };
+
+  const removeAvailabilitySlot = (index: number) => {
+    setAvailabilitySlots(availabilitySlots.filter((_, i) => i !== index));
+  };
+
+  const updateAvailabilitySlot = (index: number, field: keyof AvailabilitySlot, value: string) => {
+    const updated = [...availabilitySlots];
+    updated[index] = { ...updated[index], [field]: value };
+    setAvailabilitySlots(updated);
+  };
+
+  const handleSaveAvailability = async () => {
+    setIsSaving(true);
+    try {
+      const availabilityData = availabilitySlots.map(slot => ({
+        day: slot.day,
+        startTime: slot.startTime,
+        endTime: slot.endTime
+      }));
+      
+      if (teacherProfile) {
+        await supabase
+          .from('teacher_profiles')
+          .update({ availability: availabilityData as unknown as any })
+          .eq('user_id', user!.id);
+      } else {
+        await supabase
+          .from('teacher_profiles')
+          .insert([{ user_id: user!.id, availability: availabilityData as unknown as any }]);
+      }
+      toast({ title: 'Salvato', description: 'Disponibilità aggiornata' });
+      setIsEditingAvailability(false);
+      fetchData();
+    } catch (error: any) {
+      toast({ title: 'Errore', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const cancelEditAvailability = () => {
+    setAvailabilitySlots(teacherProfile?.availability || []);
+    setIsEditingAvailability(false);
   };
 
   if (authLoading || isLoading) {
@@ -324,23 +398,88 @@ export default function TeacherDashboard() {
                 </div>
 
                 <div className="border-t pt-6">
-                  <h4 className="font-medium mb-4 flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-muted-foreground" />
-                    Orari di Disponibilità
-                  </h4>
-                  {teacherProfile?.availability && Array.isArray(teacherProfile.availability) && teacherProfile.availability.length > 0 ? (
-                    <div className="space-y-2">
-                      {(teacherProfile.availability as { day: string; startTime: string; endTime: string }[]).map((slot, index) => (
-                        <div key={index} className="flex items-center gap-2 text-sm">
-                          <Badge variant="secondary" className="min-w-20">{slot.day}</Badge>
-                          <span className="text-muted-foreground">{slot.startTime} - {slot.endTime}</span>
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-medium flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-muted-foreground" />
+                      Orari di Disponibilità
+                    </h4>
+                    {!isEditingAvailability ? (
+                      <Button variant="outline" size="sm" onClick={() => setIsEditingAvailability(true)}>
+                        <Edit2 className="w-4 h-4 mr-2" />
+                        Modifica
+                      </Button>
+                    ) : (
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={cancelEditAvailability}>
+                          Annulla
+                        </Button>
+                        <Button size="sm" onClick={handleSaveAvailability} disabled={isSaving}>
+                          {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salva'}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {isEditingAvailability ? (
+                    <div className="space-y-3">
+                      {availabilitySlots.map((slot, index) => (
+                        <div key={index} className="flex items-center gap-2 flex-wrap">
+                          <Select value={slot.day} onValueChange={(v) => updateAvailabilitySlot(index, 'day', v)}>
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {DAYS.map(d => (
+                                <SelectItem key={d} value={d}>{d}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Select value={slot.startTime} onValueChange={(v) => updateAvailabilitySlot(index, 'startTime', v)}>
+                            <SelectTrigger className="w-24">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {TIMES.map(t => (
+                                <SelectItem key={t} value={t}>{t}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <span className="text-muted-foreground">-</span>
+                          <Select value={slot.endTime} onValueChange={(v) => updateAvailabilitySlot(index, 'endTime', v)}>
+                            <SelectTrigger className="w-24">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {TIMES.map(t => (
+                                <SelectItem key={t} value={t}>{t}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Button variant="ghost" size="icon" onClick={() => removeAvailabilitySlot(index)}>
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
                         </div>
                       ))}
+                      <Button variant="outline" size="sm" onClick={addAvailabilitySlot}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Aggiungi Orario
+                      </Button>
                     </div>
                   ) : (
-                    <p className="text-muted-foreground text-sm">
-                      Nessun orario configurato. Contatta l'amministratore.
-                    </p>
+                    teacherProfile?.availability && teacherProfile.availability.length > 0 ? (
+                      <div className="space-y-2">
+                        {teacherProfile.availability.map((slot, index) => (
+                          <div key={index} className="flex items-center gap-2 text-sm">
+                            <Badge variant="secondary" className="min-w-20">{slot.day}</Badge>
+                            <span className="text-muted-foreground">{slot.startTime} - {slot.endTime}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground text-sm">
+                        Nessun orario configurato. Clicca "Modifica" per aggiungere i tuoi orari.
+                      </p>
+                    )
                   )}
                 </div>
               </CardContent>

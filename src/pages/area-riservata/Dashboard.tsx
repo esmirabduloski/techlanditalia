@@ -18,6 +18,8 @@ import { StreakDisplay } from '@/components/dashboard/StreakDisplay';
 import { AttendanceHistory } from '@/components/dashboard/AttendanceHistory';
 import { StreakBonusesDisplay } from '@/components/dashboard/StreakBonusesDisplay';
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
+import { CelebrationOverlay } from '@/components/gamification/CelebrationOverlay';
+import { useCelebration } from '@/hooks/useCelebration';
 import { Loader2, BookOpen, Trophy, Target, Settings, LogOut, Rocket, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -31,6 +33,7 @@ export default function Dashboard() {
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const { profile, enrollments, lessonProgress, taskProgress, isLoading: dataLoading } = useStudentProgress();
   const { streaks, attendance, stats, bonuses, loading: streaksLoading } = useStudentStreaks(user?.id);
+  const { celebration, isVisible: showCelebration, hideCelebration } = useCelebration();
   const navigate = useNavigate();
   const [courseProgressMap, setCourseProgressMap] = useState<CourseProgress[]>([]);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -161,6 +164,18 @@ export default function Dashboard() {
 
   return (
     <Layout>
+      {/* Celebration Overlay */}
+      {celebration && (
+        <CelebrationOverlay
+          type={celebration.type}
+          title={celebration.title}
+          subtitle={celebration.subtitle}
+          emoji={celebration.emoji}
+          isVisible={showCelebration}
+          onClose={hideCelebration}
+        />
+      )}
+
       {/* Onboarding Tour */}
       {showOnboarding && user && (
         <OnboardingTour 

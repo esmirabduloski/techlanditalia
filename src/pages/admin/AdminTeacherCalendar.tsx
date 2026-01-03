@@ -5,7 +5,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Loader2, Calendar, User, Download, FileText, FileSpreadsheet, CalendarDays } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Loader2, Calendar, User, Download, FileText, FileSpreadsheet, CalendarDays, Edit2, Plus, Trash2 } from "lucide-react";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { toast } from "sonner";
 
@@ -39,10 +41,19 @@ const TEACHER_COLORS = [
   "bg-cyan-500",
 ];
 
+const TIME_OPTIONS = Array.from({ length: 28 }, (_, i) => {
+  const hour = Math.floor(i / 2) + 8;
+  const minute = (i % 2) * 30;
+  return `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
+});
+
 export default function AdminTeacherCalendar() {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTeacher, setSelectedTeacher] = useState<string>("all");
+  const [editDialog, setEditDialog] = useState<{ open: boolean; teacherId: string; teacherName: string }>({ open: false, teacherId: "", teacherName: "" });
+  const [editingSlots, setEditingSlots] = useState<AvailabilitySlot[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     fetchTeachers();
@@ -133,6 +144,66 @@ export default function AdminTeacherCalendar() {
     const isEnd = hour === endHour - 1 || (hour === endHour && endMinute > 0);
 
     return { isStart, isEnd, heightPercent: 100 };
+  };
+
+  // Open edit dialog for a teacher
+  const openEditDialog = (teacherId: string) => {
+    const teacher = teachers.find(t => t.id === teacherId);
+    if (!teacher) return;
+    setEditingSlots([...teacher.availability]);
+    setEditDialog({ open: true, teacherId, teacherName: teacher.full_name });
+  };
+
+  // Add new availability slot
+  const addSlot = () => {
+    setEditingSlots([...editingSlots, { day: "Lunedì", startTime: "09:00", endTime: "18:00" }]);
+  };
+
+  // Remove availability slot
+  const removeSlot = (index: number) => {
+    setEditingSlots(editingSlots.filter((_, i) => i !== index));
+  };
+
+  // Update availability slot
+  const updateSlot = (index: number, field: keyof AvailabilitySlot, value: string) => {
+    const updated = [...editingSlots];
+    updated[index] = { ...updated[index], [field]: value };
+    setEditingSlots(updated);
+  };
+
+  // Save availability
+  const saveAvailability = async () => {
+    setIsSaving(true);
+    try {
+      // Check if teacher has a profile
+      const { data: existingProfile } = await supabase
+        .from("teacher_profiles")
+        .select("id")
+        .eq("user_id", editDialog.teacherId)
+        .maybeSingle();
+
+      if (existingProfile) {
+        const { error } = await supabase
+          .from("teacher_profiles")
+          .update({ availability: editingSlots as unknown as any })
+          .eq("user_id", editDialog.teacherId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("teacher_profiles")
+          .insert([{ user_id: editDialog.teacherId, availability: editingSlots as unknown as any }]);
+        if (error) throw error;
+      }
+
+      toast.success("Disponibilità aggiornata con successo!");
+      setEditDialog({ open: false, teacherId: "", teacherName: "" });
+      fetchTeachers();
+    } catch (error: any) {
+      console.error("Error saving availability:", error);
+      toast.error("Errore nel salvare la disponibilità");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Export to CSV
@@ -388,7 +459,7 @@ END:VCALENDAR`;
             <CardHeader className="py-3">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
                 <User className="w-4 h-4" />
-                Legenda Insegnanti
+                Legenda Insegnanti (clicca per modificare)
               </CardTitle>
             </CardHeader>
             <CardContent className="py-2">
@@ -397,16 +468,37 @@ END:VCALENDAR`;
                   <Badge 
                     key={teacher.id} 
                     variant="secondary" 
-                    className="flex items-center gap-2 cursor-pointer hover:opacity-80"
-                    onClick={() => setSelectedTeacher(teacher.id)}
+                    className="flex items-center gap-2 cursor-pointer hover:opacity-80 group"
+                    onClick={() => openEditDialog(teacher.id)}
                   >
                     <div className={`w-3 h-3 rounded-full ${teacher.color}`} />
                     {teacher.full_name}
+                    <Edit2 className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </Badge>
                 ))}
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Single teacher selected - show edit button */}
+        {selectedTeacher !== "all" && (
+          <div className="mb-6 flex items-center gap-4">
+            <Button 
+              variant="outline" 
+              onClick={() => openEditDialog(selectedTeacher)}
+              className="gap-2"
+            >
+              <Edit2 className="w-4 h-4" />
+              Modifica Disponibilità di {teachers.find(t => t.id === selectedTeacher)?.full_name}
+            </Button>
+            <Button 
+              variant="ghost" 
+              onClick={() => setSelectedTeacher("all")}
+            >
+              Mostra tutti
+            </Button>
+          </div>
         )}
 
         {/* Calendar Grid */}
@@ -441,8 +533,9 @@ END:VCALENDAR`;
                             {slots.map(({ teacher, slot }, idx) => (
                               <div
                                 key={`${teacher.id}-${idx}`}
-                                className={`${teacher.color} text-white text-xs px-1 py-0.5 rounded flex-1 min-w-0 truncate flex items-center justify-center`}
-                                title={`${teacher.full_name}: ${slot.startTime} - ${slot.endTime}`}
+                                className={`${teacher.color} text-white text-xs px-1 py-0.5 rounded flex-1 min-w-0 truncate flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity`}
+                                title={`${teacher.full_name}: ${slot.startTime} - ${slot.endTime} (clicca per modificare)`}
+                                onClick={() => openEditDialog(teacher.id)}
                               >
                                 <span className="truncate text-[10px]">
                                   {selectedTeacher === "all" ? teacher.full_name.split(" ")[0] : `${slot.startTime}-${slot.endTime}`}
@@ -474,12 +567,112 @@ END:VCALENDAR`;
             <CardContent className="py-12 text-center">
               <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground">
-                Nessuna disponibilità configurata. Configura gli orari dalla pagina Utenti.
+                Nessuna disponibilità configurata. Clicca su un insegnante nella legenda per configurare gli orari.
               </p>
             </CardContent>
           </Card>
         )}
       </div>
+
+      {/* Edit Availability Dialog */}
+      <Dialog open={editDialog.open} onOpenChange={(open) => !open && setEditDialog({ open: false, teacherId: "", teacherName: "" })}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Calendar className="w-5 h-5" />
+              Modifica Disponibilità - {editDialog.teacherName}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {editingSlots.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                <Calendar className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                <p>Nessuna disponibilità configurata</p>
+                <p className="text-sm">Clicca "Aggiungi Fascia Oraria" per iniziare</p>
+              </div>
+            )}
+
+            {editingSlots.map((slot, index) => (
+              <div key={index} className="flex items-center gap-3 p-3 border rounded-lg bg-muted/20">
+                <div className="flex-1 grid grid-cols-3 gap-3">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Giorno</Label>
+                    <Select
+                      value={slot.day}
+                      onValueChange={(value) => updateSlot(index, "day", value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {DAYS.map(day => (
+                          <SelectItem key={day} value={day}>{day}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Ora Inizio</Label>
+                    <Select
+                      value={slot.startTime}
+                      onValueChange={(value) => updateSlot(index, "startTime", value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TIME_OPTIONS.map(time => (
+                          <SelectItem key={time} value={time}>{time}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Ora Fine</Label>
+                    <Select
+                      value={slot.endTime}
+                      onValueChange={(value) => updateSlot(index, "endTime", value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TIME_OPTIONS.map(time => (
+                          <SelectItem key={time} value={time}>{time}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeSlot(index)}
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            ))}
+
+            <Button variant="outline" onClick={addSlot} className="w-full gap-2">
+              <Plus className="w-4 h-4" />
+              Aggiungi Fascia Oraria
+            </Button>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialog({ open: false, teacherId: "", teacherName: "" })}>
+              Annulla
+            </Button>
+            <Button onClick={saveAvailability} disabled={isSaving}>
+              {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Salva Disponibilità
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

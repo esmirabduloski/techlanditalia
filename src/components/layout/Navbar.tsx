@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useHasEnrollments } from "@/hooks/useHasEnrollments";
 import { useStudentRole } from "@/hooks/useStudentRole";
+import { useTeacherRole } from "@/hooks/useTeacherRole";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 const navLinks = [
@@ -22,10 +23,11 @@ export function Navbar() {
   const { user } = useAuth();
   const { hasEnrollments } = useHasEnrollments();
   const { isStudent } = useStudentRole();
+  const { isTeacher } = useTeacherRole();
   const isInAreaRiservata = location.pathname.startsWith('/area-riservata');
   
-  // Mostra bottone lezione gratuita solo se non loggato o senza iscrizioni, e non è uno studente
-  const showTrialButton = !user || (!hasEnrollments && !isStudent);
+  // Mostra bottone lezione gratuita solo se non loggato o senza iscrizioni, e non è uno studente né un insegnante
+  const showTrialButton = !user || (!hasEnrollments && !isStudent && !isTeacher);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">

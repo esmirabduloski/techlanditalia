@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useStudentProgress } from '@/hooks/useStudentProgress';
 import { useStudentStreaks } from '@/hooks/useStudentStreaks';
+import { useTeacherRole } from '@/hooks/useTeacherRole';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,7 +22,7 @@ import { DeadlineNotifications } from '@/components/dashboard/DeadlineNotificati
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { CelebrationOverlay } from '@/components/gamification/CelebrationOverlay';
 import { useCelebration } from '@/hooks/useCelebration';
-import { Loader2, BookOpen, Trophy, Target, Settings, LogOut, Rocket, Shield } from 'lucide-react';
+import { Loader2, BookOpen, Trophy, Target, Settings, LogOut, Rocket, Shield, GraduationCap } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface CourseProgress {
@@ -34,10 +35,12 @@ export default function Dashboard() {
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const { profile, enrollments, lessonProgress, taskProgress, isLoading: dataLoading } = useStudentProgress();
   const { streaks, attendance, stats, bonuses, loading: streaksLoading } = useStudentStreaks(user?.id);
+  const { isTeacher, isLoading: teacherLoading } = useTeacherRole();
   const { celebration, isVisible: showCelebration, hideCelebration } = useCelebration();
   const navigate = useNavigate();
   const [courseProgressMap, setCourseProgressMap] = useState<CourseProgress[]>([]);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [teacherLessonsCount, setTeacherLessonsCount] = useState(0);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -47,10 +50,31 @@ export default function Dashboard() {
 
   // Check if onboarding should be shown
   useEffect(() => {
-    if (profile && profile.onboarding_completed === false) {
+    if (profile && profile.onboarding_completed === false && !isTeacher) {
       setShowOnboarding(true);
     }
-  }, [profile]);
+  }, [profile, isTeacher]);
+
+  // Fetch teacher lessons count (lezioni insegnate)
+  useEffect(() => {
+    const fetchTeacherLessons = async () => {
+      if (!isTeacher || !user) return;
+
+      // Count unique lesson numbers from group_attendance marked by this teacher
+      const { data: attendanceData } = await supabase
+        .from('group_attendance')
+        .select('lesson_number, group_id')
+        .eq('marked_by', user.id);
+
+      if (attendanceData) {
+        // Count unique lesson_number per group
+        const uniqueLessons = new Set(attendanceData.map(a => `${a.group_id}-${a.lesson_number}`));
+        setTeacherLessonsCount(uniqueLessons.size);
+      }
+    };
+
+    fetchTeacherLessons();
+  }, [isTeacher, user]);
 
   // Fetch task counts and completed tasks for all enrolled courses
   useEffect(() => {
@@ -209,6 +233,14 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {isTeacher && (
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/insegnante">
+                    <GraduationCap className="w-4 h-4 mr-2" />
+                    Dashboard Insegnante
+                  </Link>
+                </Button>
+              )}
               {isAdmin && (
                 <Button variant="outline" size="sm" asChild>
                   <Link to="/admin">
@@ -230,38 +262,46 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <Card className="border-primary/20 bg-gradient-to-br from-card to-primary/5">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Livello Attuale</p>
-                    <LevelBadge points={profile.total_points} size="md" showProgress />
-                  </div>
-                  <Trophy className="w-10 h-10 text-primary/30" />
-                </div>
-              </CardContent>
-            </Card>
+          {/* Stats Cards - Hide Level and Points for teachers */}
+          <div className={`grid grid-cols-1 ${isTeacher ? 'md:grid-cols-1' : 'md:grid-cols-3'} gap-4 mb-8`}>
+            {!isTeacher && (
+              <>
+                <Card className="border-primary/20 bg-gradient-to-br from-card to-primary/5">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Livello Attuale</p>
+                        <LevelBadge points={profile.total_points} size="md" showProgress />
+                      </div>
+                      <Trophy className="w-10 h-10 text-primary/30" />
+                    </div>
+                  </CardContent>
+                </Card>
 
-            <Card className="border-accent/20 bg-gradient-to-br from-card to-accent/5">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Punti Totali</p>
-                    <PointsDisplay points={profile.total_points} size="lg" />
-                  </div>
-                  <Target className="w-10 h-10 text-accent/30" />
-                </div>
-              </CardContent>
-            </Card>
+                <Card className="border-accent/20 bg-gradient-to-br from-card to-accent/5">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Punti Totali</p>
+                        <PointsDisplay points={profile.total_points} size="lg" />
+                      </div>
+                      <Target className="w-10 h-10 text-accent/30" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            )}
 
             <Card className="border-secondary/20 bg-gradient-to-br from-card to-secondary/5">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Lezioni Completate</p>
-                    <p className="text-3xl font-bold text-foreground">{completedLessons}</p>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      {isTeacher ? 'Lezioni Insegnate' : 'Lezioni Completate'}
+                    </p>
+                    <p className="text-3xl font-bold text-foreground">
+                      {isTeacher ? teacherLessonsCount : completedLessons}
+                    </p>
                   </div>
                   <BookOpen className="w-10 h-10 text-secondary/30" />
                 </div>
@@ -269,8 +309,8 @@ export default function Dashboard() {
             </Card>
           </div>
 
-          {/* Streaks Section */}
-          {streaks && (
+          {/* Streaks Section - Hide for teachers */}
+          {streaks && !isTeacher && (
             <div className="mb-8">
               <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                 🔥 Le Tue Streak
@@ -292,97 +332,105 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Active Courses */}
-          <div className="mb-8">
-            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-              <Rocket className="w-5 h-5 text-primary" />
-              I Tuoi Corsi
-            </h2>
+          {/* Active Courses - Hide for teachers (they use TeacherDashboard) */}
+          {!isTeacher && (
+            <div className="mb-8">
+              <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+                <Rocket className="w-5 h-5 text-primary" />
+                I Tuoi Corsi
+              </h2>
 
-            {enrollments.length === 0 ? (
-              <Card className="border-dashed">
-                <CardContent className="py-12 text-center">
-                  <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-foreground mb-2">
-                    Nessun corso attivo
-                  </h3>
-                  <p className="text-muted-foreground mb-4">
-                    Non sei ancora iscritto a nessun corso. Scopri i nostri corsi!
-                  </p>
-                  <Button asChild>
-                    <Link to="/corsi">Esplora i Corsi</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {enrollments.map((enrollment) => {
-                  const course = enrollment.course;
-                  const progressPercent = getCourseProgressPercent(course.id);
-                  
-                  return (
-                    <Link 
-                      key={enrollment.id} 
-                      to={`/area-riservata/corso/${course.id}`}
-                      className="block"
-                    >
-                      <Card className="hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border-border/50">
-                        <CardHeader className="pb-2">
-                          <div className="flex items-center gap-3">
-                            <span className="text-4xl">{course.emoji}</span>
-                            <div className="flex-1">
-                              <CardTitle className="text-lg">{course.title}</CardTitle>
-                              <CardDescription>
-                                {course.total_lessons} lezioni · Livello {course.level}
-                              </CardDescription>
+              {enrollments.length === 0 ? (
+                <Card className="border-dashed">
+                  <CardContent className="py-12 text-center">
+                    <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-foreground mb-2">
+                      Nessun corso attivo
+                    </h3>
+                    <p className="text-muted-foreground mb-4">
+                      Non sei ancora iscritto a nessun corso. Scopri i nostri corsi!
+                    </p>
+                    <Button asChild>
+                      <Link to="/corsi">Esplora i Corsi</Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {enrollments.map((enrollment) => {
+                    const course = enrollment.course;
+                    const progressPercent = getCourseProgressPercent(course.id);
+                    
+                    return (
+                      <Link 
+                        key={enrollment.id} 
+                        to={`/area-riservata/corso/${course.id}`}
+                        className="block"
+                      >
+                        <Card className="hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border-border/50">
+                          <CardHeader className="pb-2">
+                            <div className="flex items-center gap-3">
+                              <span className="text-4xl">{course.emoji}</span>
+                              <div className="flex-1">
+                                <CardTitle className="text-lg">{course.title}</CardTitle>
+                                <CardDescription>
+                                  {course.total_lessons} lezioni · Livello {course.level}
+                                </CardDescription>
+                              </div>
                             </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-2">
-                            <div className="flex justify-between text-sm">
-                              <span className="text-muted-foreground">Avanzamento</span>
-                              <span className="font-medium">{progressPercent}%</span>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-2">
+                              <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">Avanzamento</span>
+                                <span className="font-medium">{progressPercent}%</span>
+                              </div>
+                              <Progress value={progressPercent} className="h-2" />
                             </div>
-                            <Progress value={progressPercent} className="h-2" />
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
 
-          {/* Badges Section */}
-          {user && (
+          {/* Badges Section - Hide for teachers */}
+          {user && !isTeacher && (
             <div className="mb-8">
               <BadgesDisplay userId={user.id} showAll={true} />
             </div>
           )}
 
-          {/* Homework Section for Students */}
-          <div className="mb-8">
-            <HomeworkSection />
-          </div>
+          {/* Homework Section for Students - Hide for teachers */}
+          {!isTeacher && (
+            <div className="mb-8">
+              <HomeworkSection />
+            </div>
+          )}
 
-          {/* Student Comments Section */}
-          {user && (
+          {/* Student Comments Section - Hide for teachers */}
+          {user && !isTeacher && (
             <div className="mb-8">
               <StudentCommentsSection />
             </div>
           )}
 
-          {/* Parent Children Section - shows badges and progress for children */}
-          <div className="mb-8">
-            <ParentChildrenSection />
-          </div>
+          {/* Parent Children Section - Hide for teachers */}
+          {!isTeacher && (
+            <div className="mb-8">
+              <ParentChildrenSection />
+            </div>
+          )}
 
-          {/* Parent Feedback Section - only visible for parents */}
-          <div className="mb-8">
-            <ParentFeedbackSection />
-          </div>
+          {/* Parent Feedback Section - Hide for teachers */}
+          {!isTeacher && (
+            <div className="mb-8">
+              <ParentFeedbackSection />
+            </div>
+          )}
 
           {/* Quick Actions */}
           <Card>
@@ -390,25 +438,35 @@ export default function Dashboard() {
               <CardTitle className="text-lg">Azioni Rapide</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className={`grid grid-cols-2 ${isTeacher ? 'md:grid-cols-3' : 'md:grid-cols-4'} gap-3`}>
                 <Button variant="outline" className="h-auto py-4 flex-col" asChild>
                   <Link to="/area-riservata/profilo">
                     <Settings className="w-5 h-5 mb-2" />
                     <span>Modifica Profilo</span>
                   </Link>
                 </Button>
+                {isTeacher && (
+                  <Button variant="outline" className="h-auto py-4 flex-col" asChild>
+                    <Link to="/insegnante">
+                      <GraduationCap className="w-5 h-5 mb-2" />
+                      <span>Dashboard Insegnante</span>
+                    </Link>
+                  </Button>
+                )}
                 <Button variant="outline" className="h-auto py-4 flex-col" asChild>
                   <Link to="/corsi">
                     <BookOpen className="w-5 h-5 mb-2" />
                     <span>Tutti i Corsi</span>
                   </Link>
                 </Button>
-                <Button variant="outline" className="h-auto py-4 flex-col" asChild>
-                  <Link to="/prenota">
-                    <Target className="w-5 h-5 mb-2" />
-                    <span>Prenota Lezione</span>
-                  </Link>
-                </Button>
+                {!isTeacher && (
+                  <Button variant="outline" className="h-auto py-4 flex-col" asChild>
+                    <Link to="/prenota">
+                      <Target className="w-5 h-5 mb-2" />
+                      <span>Prenota Lezione</span>
+                    </Link>
+                  </Button>
+                )}
                 <Button variant="outline" className="h-auto py-4 flex-col" asChild>
                   <Link to="/chi-siamo">
                     <Trophy className="w-5 h-5 mb-2" />

@@ -5,13 +5,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
-import { Loader2, TrendingUp, MousePointer, Clock, Target, Eye, ArrowUpRight, ArrowDownRight, Flame, Download } from 'lucide-react';
+import { Loader2, TrendingUp, MousePointer, Clock, Target, Eye, ArrowUpRight, ArrowDownRight, Flame, Download, CalendarIcon } from 'lucide-react';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { ClickHeatmap } from '@/components/analytics/ClickHeatmap';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 // Helper function to convert data to CSV
 const convertToCSV = (data: Record<string, unknown>[], filename: string) => {
@@ -87,6 +90,8 @@ const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', '#10B981', '#F59
 export default function AdminAnalytics() {
   const [isLoading, setIsLoading] = useState(true);
   const [dateRange, setDateRange] = useState('7');
+  const [customDateFrom, setCustomDateFrom] = useState<Date | undefined>(undefined);
+  const [customDateTo, setCustomDateTo] = useState<Date | undefined>(undefined);
   const [events, setEvents] = useState<AnalyticsEvent[]>([]);
   const [pageViews, setPageViews] = useState<PageView[]>([]);
   const [funnelData, setFunnelData] = useState<ConversionFunnel[]>([]);
@@ -94,12 +99,20 @@ export default function AdminAnalytics() {
 
   useEffect(() => {
     fetchAnalytics();
-  }, [dateRange]);
+  }, [dateRange, customDateFrom, customDateTo]);
 
   const fetchAnalytics = async () => {
     setIsLoading(true);
-    const startDate = startOfDay(subDays(new Date(), parseInt(dateRange)));
-    const endDate = endOfDay(new Date());
+    
+    let startDate: Date;
+    let endDate: Date = endOfDay(new Date());
+    
+    if (dateRange === 'custom' && customDateFrom && customDateTo) {
+      startDate = startOfDay(customDateFrom);
+      endDate = endOfDay(customDateTo);
+    } else {
+      startDate = startOfDay(subDays(new Date(), parseInt(dateRange) || 7));
+    }
 
     try {
       const [eventsRes, pageViewsRes, funnelRes] = await Promise.all([
@@ -217,8 +230,14 @@ export default function AdminAnalytics() {
             <h1 className="text-3xl font-bold">Analytics & Tracking</h1>
             <p className="text-muted-foreground">Monitora conversioni, engagement e comportamento utenti</p>
           </div>
-          <div className="flex items-center gap-3">
-            <Select value={dateRange} onValueChange={setDateRange}>
+          <div className="flex items-center gap-3 flex-wrap">
+            <Select value={dateRange} onValueChange={(value) => {
+              setDateRange(value);
+              if (value !== 'custom') {
+                setCustomDateFrom(undefined);
+                setCustomDateTo(undefined);
+              }
+            }}>
               <SelectTrigger className="w-40">
                 <SelectValue />
               </SelectTrigger>
@@ -227,8 +246,63 @@ export default function AdminAnalytics() {
                 <SelectItem value="14">Ultimi 14 giorni</SelectItem>
                 <SelectItem value="30">Ultimi 30 giorni</SelectItem>
                 <SelectItem value="90">Ultimi 90 giorni</SelectItem>
+                <SelectItem value="custom">Personalizzato</SelectItem>
               </SelectContent>
             </Select>
+
+            {dateRange === 'custom' && (
+              <div className="flex items-center gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-[140px] justify-start text-left font-normal",
+                        !customDateFrom && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {customDateFrom ? format(customDateFrom, "dd MMM yyyy", { locale: it }) : "Da"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={customDateFrom}
+                      onSelect={setCustomDateFrom}
+                      disabled={(date) => date > new Date() || (customDateTo ? date > customDateTo : false)}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+                <span className="text-muted-foreground">-</span>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-[140px] justify-start text-left font-normal",
+                        !customDateTo && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {customDateTo ? format(customDateTo, "dd MMM yyyy", { locale: it }) : "A"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={customDateTo}
+                      onSelect={setCustomDateTo}
+                      disabled={(date) => date > new Date() || (customDateFrom ? date < customDateFrom : false)}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
             <Select onValueChange={(value) => {
               switch (value) {
                 case 'events':

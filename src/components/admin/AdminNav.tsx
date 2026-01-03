@@ -3,11 +3,15 @@ import {
   FileText, GraduationCap, BookOpen, Mail, User, BarChart3, 
   Award, Eye, Calendar, ClipboardCheck, Users, Newspaper, UsersRound, CalendarClock
 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { useAdminNotifications } from '@/hooks/useAdminNotifications';
+import { useEffect } from 'react';
 
 interface NavItem {
   to: string;
   label: string;
   icon: React.ElementType;
+  notificationKey?: 'newBookings' | 'newContacts';
 }
 
 const navItems: NavItem[] = [
@@ -16,8 +20,8 @@ const navItems: NavItem[] = [
   { to: '/admin/gruppi', label: 'Gruppi', icon: UsersRound },
   { to: '/admin/calendario', label: 'Calendario', icon: Calendar },
   { to: '/admin/presenze', label: 'Presenze', icon: ClipboardCheck },
-  { to: '/admin/prenotazioni', label: 'Prenotazioni', icon: BookOpen },
-  { to: '/admin/contatti', label: 'Contatti', icon: Mail },
+  { to: '/admin/prenotazioni', label: 'Prenotazioni', icon: BookOpen, notificationKey: 'newBookings' },
+  { to: '/admin/contatti', label: 'Contatti', icon: Mail, notificationKey: 'newContacts' },
   { to: '/admin/newsletter', label: 'Newsletter', icon: Newspaper },
   { to: '/admin/utenti', label: 'Utenti', icon: Users },
   { to: '/admin/disponibilita', label: 'Disponibilità', icon: CalendarClock },
@@ -28,12 +32,28 @@ const navItems: NavItem[] = [
 
 export function AdminNav() {
   const location = useLocation();
+  const { notifications, markBookingsAsSeen, markContactsAsSeen } = useAdminNotifications();
   
   const isActive = (path: string) => {
     if (path === '/admin') {
       return location.pathname === '/admin';
     }
     return location.pathname.startsWith(path);
+  };
+
+  // Mark notifications as seen when visiting the respective pages
+  useEffect(() => {
+    if (location.pathname === '/admin/prenotazioni') {
+      markBookingsAsSeen();
+    }
+    if (location.pathname === '/admin/contatti') {
+      markContactsAsSeen();
+    }
+  }, [location.pathname]);
+
+  const getNotificationCount = (key?: 'newBookings' | 'newContacts') => {
+    if (!key) return 0;
+    return notifications[key];
   };
 
   return (
@@ -43,11 +63,12 @@ export function AdminNav() {
           {navItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.to);
+            const notificationCount = getNotificationCount(item.notificationKey);
             return (
               <Link
                 key={item.to}
                 to={item.to}
-                className={`py-3 px-2 flex items-center gap-2 whitespace-nowrap ${
+                className={`py-3 px-2 flex items-center gap-2 whitespace-nowrap relative ${
                   active
                     ? 'border-b-2 border-primary text-primary font-medium'
                     : 'text-muted-foreground hover:text-foreground'
@@ -55,6 +76,14 @@ export function AdminNav() {
               >
                 <Icon className="w-4 h-4" />
                 {item.label}
+                {notificationCount > 0 && (
+                  <Badge 
+                    variant="destructive" 
+                    className="h-5 min-w-5 px-1.5 text-xs font-bold animate-pulse"
+                  >
+                    {notificationCount > 99 ? '99+' : notificationCount}
+                  </Badge>
+                )}
               </Link>
             );
           })}

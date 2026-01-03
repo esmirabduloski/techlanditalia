@@ -18,7 +18,7 @@ const navItems: NavItem[] = [
   { to: '/admin', label: 'Blog', icon: FileText },
   { to: '/admin/corsi', label: 'Corsi', icon: GraduationCap },
   { to: '/admin/gruppi', label: 'Gruppi', icon: UsersRound },
-  { to: '/admin/calendario', label: 'Calendario', icon: Calendar },
+  { to: '/admin/lezioni-programmate', label: 'Calendario', icon: Calendar },
   { to: '/admin/presenze', label: 'Presenze', icon: ClipboardCheck },
   { to: '/admin/prenotazioni', label: 'Prenotazioni', icon: BookOpen, notificationKey: 'newBookings' },
   { to: '/admin/contatti', label: 'Contatti', icon: Mail, notificationKey: 'newContacts' },

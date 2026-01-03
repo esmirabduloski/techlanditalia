@@ -373,6 +373,27 @@ export default function AdminUsers() {
     }
   };
 
+  const toggleAdminRole = async (userId: string, currentlyAdmin: boolean) => {
+    try {
+      if (currentlyAdmin) {
+        const { error } = await supabase.functions.invoke('admin-toggle-role', {
+          body: { userId, action: 'remove', role: 'admin' }
+        });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.functions.invoke('admin-toggle-role', {
+          body: { userId, action: 'add', role: 'admin' }
+        });
+        if (error) throw error;
+      }
+
+      setProfiles(profiles.map(p => p.id === userId ? { ...p, isAdmin: !currentlyAdmin } : p));
+      toast({ title: 'Successo', description: currentlyAdmin ? 'Ruolo admin rimosso' : 'Ruolo admin assegnato' });
+    } catch (error: any) {
+      toast({ title: 'Errore', description: error.message || 'Impossibile modificare il ruolo admin', variant: 'destructive' });
+    }
+  };
+
   const getUserEnrollments = (userId: string) => {
     return enrollments
       .filter(e => e.student_id === userId)
@@ -626,11 +647,11 @@ export default function AdminUsers() {
                                 <User className="w-5 h-5 text-primary" />
                               </div>
                               <div className="min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <h3 className="font-semibold truncate">{group.parent.full_name}</h3>
-                                  <Badge variant="secondary">Genitore</Badge>
-                                  {group.parent.isTeacher && <Badge className="bg-tech-teal text-white">Insegnante</Badge>}
-                                </div>
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <h3 className="font-semibold truncate">{group.parent.full_name}</h3>
+                                      {group.parent.isAdmin && <Badge className="bg-amber-500 text-white">Admin</Badge>}
+                                      {group.parent.isTeacher && <Badge className="bg-tech-teal text-white">Insegnante</Badge>}
+                                    </div>
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
                                   <span>{hasChildren ? `${group.children.length} ${group.children.length === 1 ? 'figlio' : 'figli'}` : 'Nessun figlio associato'}</span>
                                   {group.parent.email && (
@@ -665,6 +686,14 @@ export default function AdminUsers() {
                               </Button>
                               <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openPasswordDialog(group.parent!.id, group.parent!.full_name); }}>
                                 <Key className="w-4 h-4" />
+                              </Button>
+                              <Button 
+                                variant={group.parent.isAdmin ? "destructive" : "outline"} 
+                                size="sm"
+                                onClick={(e) => { e.stopPropagation(); toggleAdminRole(group.parent!.id, group.parent!.isAdmin || false); }}
+                                title={group.parent.isAdmin ? "Rimuovi ruolo admin" : "Rendi admin"}
+                              >
+                                <Shield className="w-4 h-4" />
                               </Button>
                               <Button 
                                 variant={group.parent.isTeacher ? "destructive" : "outline"} 

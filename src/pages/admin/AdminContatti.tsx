@@ -69,6 +69,45 @@ export default function AdminContatti() {
   useEffect(() => {
     if (user && isAdmin) {
       fetchSubmissions();
+
+      // Subscribe to realtime changes for new contact submissions
+      const channel = supabase
+        .channel('contact-submissions-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'contact_submissions'
+          },
+          (payload) => {
+            console.log('New contact submission received:', payload);
+            const newSubmission = payload.new as ContactSubmission;
+            setSubmissions(prev => [newSubmission, ...prev]);
+            toast({
+              title: "📩 Nuovo messaggio!",
+              description: `${newSubmission.nome} ha inviato un messaggio: "${newSubmission.oggetto}"`,
+            });
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'DELETE',
+            schema: 'public',
+            table: 'contact_submissions'
+          },
+          (payload) => {
+            console.log('Contact submission deleted:', payload);
+            const deletedSubmission = payload.old as ContactSubmission;
+            setSubmissions(prev => prev.filter(s => s.id !== deletedSubmission.id));
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [user, isAdmin]);
 

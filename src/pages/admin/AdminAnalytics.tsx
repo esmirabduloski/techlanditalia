@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -6,9 +6,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
-import { Loader2, TrendingUp, MousePointer, Clock, Target, Eye, Users, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Loader2, TrendingUp, MousePointer, Clock, Target, Eye, Users, ArrowUpRight, ArrowDownRight, Flame } from 'lucide-react';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { it } from 'date-fns/locale';
+import { ClickHeatmap } from '@/components/analytics/ClickHeatmap';
 
 interface AnalyticsEvent {
   event_type: string;
@@ -18,6 +19,11 @@ interface AnalyticsEvent {
   created_at: string;
   page_url: string;
   metadata: unknown;
+  click_x: number | null;
+  click_y: number | null;
+  viewport_width: number | null;
+  viewport_height: number | null;
+  element_selector: string | null;
 }
 
 interface PageView {
@@ -44,6 +50,7 @@ export default function AdminAnalytics() {
   const [events, setEvents] = useState<AnalyticsEvent[]>([]);
   const [pageViews, setPageViews] = useState<PageView[]>([]);
   const [funnelData, setFunnelData] = useState<ConversionFunnel[]>([]);
+  const [selectedHeatmapPage, setSelectedHeatmapPage] = useState('/');
 
   useEffect(() => {
     fetchAnalytics();
@@ -238,6 +245,10 @@ export default function AdminAnalytics() {
           <TabsList>
             <TabsTrigger value="overview">Panoramica</TabsTrigger>
             <TabsTrigger value="cta">CTA & Click</TabsTrigger>
+            <TabsTrigger value="heatmap" className="gap-1">
+              <Flame className="w-4 h-4" />
+              Heatmap
+            </TabsTrigger>
             <TabsTrigger value="funnel">Funnel Conversione</TabsTrigger>
             <TabsTrigger value="pages">Pagine</TabsTrigger>
           </TabsList>
@@ -343,6 +354,15 @@ export default function AdminAnalytics() {
                 </Card>
               ))}
             </div>
+          </TabsContent>
+
+          <TabsContent value="heatmap">
+            <ClickHeatmap
+              clicks={events.filter(e => e.click_x !== null)}
+              selectedPage={selectedHeatmapPage}
+              onPageChange={setSelectedHeatmapPage}
+              availablePages={[...new Set(pageViews.map(pv => pv.page_url))].sort()}
+            />
           </TabsContent>
 
           <TabsContent value="funnel" className="space-y-6">

@@ -176,11 +176,32 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
     };
   }, [updatePageView]);
 
-  // Auto-track CTA clicks via data attributes
+  // Get element selector for tracking
+  const getElementSelector = (element: HTMLElement): string => {
+    if (element.id) return `#${element.id}`;
+    if (element.getAttribute('data-track-cta')) return `[data-track-cta="${element.getAttribute('data-track-cta')}"]`;
+    
+    const classes = Array.from(element.classList).slice(0, 2).join('.');
+    const tag = element.tagName.toLowerCase();
+    
+    if (classes) return `${tag}.${classes}`;
+    return tag;
+  };
+
+  // Auto-track CTA clicks via data attributes + position tracking
   useEffect(() => {
     const handleClick = async (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       const ctaElement = target.closest('[data-track-cta]');
+      
+      // Track click position for heatmap
+      const clickData = {
+        click_x: Math.round(event.clientX),
+        click_y: Math.round(event.clientY + window.scrollY),
+        viewport_width: window.innerWidth,
+        viewport_height: document.documentElement.scrollHeight,
+        element_selector: getElementSelector(target),
+      };
       
       if (ctaElement) {
         const ctaId = ctaElement.getAttribute('data-track-cta');
@@ -199,6 +220,7 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
             session_id: sessionId,
             user_id: user?.id || null,
             device_type: getDeviceType(),
+            ...clickData,
             metadata: {
               cta_text: ctaText,
               destination,
@@ -208,6 +230,31 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
           });
         } catch (error) {
           console.error('CTA tracking error:', error);
+        }
+      } else {
+        // Track general clicks on interactive elements for heatmap
+        const isInteractive = target.closest('a, button, [role="button"], input, select, textarea, [onclick]');
+        if (isInteractive) {
+          try {
+            await supabase.from('analytics_events').insert({
+              event_type: 'element_click',
+              event_category: 'engagement',
+              event_action: 'click',
+              event_label: getElementSelector(target),
+              page_url: location.pathname,
+              page_title: document.title,
+              session_id: sessionId,
+              user_id: user?.id || null,
+              device_type: getDeviceType(),
+              ...clickData,
+              metadata: {
+                element_text: target.textContent?.trim().substring(0, 50) || '',
+                timestamp: new Date().toISOString()
+              }
+            });
+          } catch (error) {
+            console.error('Click tracking error:', error);
+          }
         }
       }
     };

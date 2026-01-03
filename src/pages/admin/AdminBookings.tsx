@@ -151,6 +151,58 @@ export default function AdminBookings() {
   useEffect(() => {
     if (user && isAdmin) {
       fetchBookings();
+
+      // Subscribe to realtime changes for new bookings
+      const channel = supabase
+        .channel('trial-bookings-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'trial_bookings'
+          },
+          (payload) => {
+            console.log('New booking received:', payload);
+            const newBooking = payload.new as TrialBooking;
+            setBookings(prev => [newBooking, ...prev]);
+            toast({
+              title: "🔔 Nuova prenotazione!",
+              description: `${newBooking.parent_name} ha prenotato una lezione di prova`,
+            });
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'trial_bookings'
+          },
+          (payload) => {
+            console.log('Booking updated:', payload);
+            const updatedBooking = payload.new as TrialBooking;
+            setBookings(prev => prev.map(b => b.id === updatedBooking.id ? updatedBooking : b));
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'DELETE',
+            schema: 'public',
+            table: 'trial_bookings'
+          },
+          (payload) => {
+            console.log('Booking deleted:', payload);
+            const deletedBooking = payload.old as TrialBooking;
+            setBookings(prev => prev.filter(b => b.id !== deletedBooking.id));
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [user, isAdmin]);
 

@@ -89,7 +89,7 @@ export default function AdminGroups() {
   const [formData, setFormData] = useState({
     title: '',
     course_id: '',
-    teacher_id: '',
+    teacher_id: '__none__',
     start_date: '',
     max_lessons: 32,
     selected_students: [] as string[]
@@ -198,7 +198,7 @@ export default function AdminGroups() {
     setFormData({
       title: '',
       course_id: '',
-      teacher_id: '',
+      teacher_id: '__none__',
       start_date: '',
       max_lessons: 32,
       selected_students: []
@@ -217,7 +217,7 @@ export default function AdminGroups() {
     setFormData({
       title: group.title,
       course_id: group.course_id,
-      teacher_id: group.teacher_id || '',
+      teacher_id: group.teacher_id || '__none__',
       start_date: group.start_date || '',
       max_lessons: group.max_lessons,
       selected_students: groupStudents?.map(gs => gs.student_id) || []
@@ -240,7 +240,7 @@ export default function AdminGroups() {
           .update({
             title: formData.title,
             course_id: formData.course_id,
-            teacher_id: formData.teacher_id || null,
+            teacher_id: formData.teacher_id === '__none__' ? null : formData.teacher_id,
             start_date: formData.start_date || null,
             max_lessons: formData.max_lessons
           })
@@ -269,7 +269,7 @@ export default function AdminGroups() {
           .insert({
             title: formData.title,
             course_id: formData.course_id,
-            teacher_id: formData.teacher_id || null,
+            teacher_id: formData.teacher_id === '__none__' ? null : formData.teacher_id,
             start_date: formData.start_date || null,
             max_lessons: formData.max_lessons
           })
@@ -497,7 +497,7 @@ export default function AdminGroups() {
                       <SelectValue placeholder="Seleziona insegnante" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Nessuno</SelectItem>
+                      <SelectItem value="__none__">Nessuno</SelectItem>
                       {teachers.map(t => (
                         <SelectItem key={t.id} value={t.id}>
                           {t.full_name}

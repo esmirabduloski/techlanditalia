@@ -26,7 +26,9 @@ import {
   MessageCircle,
   BookOpen,
   Clock,
-  Trash2
+  Trash2,
+  Users2,
+  UserPlus
 } from 'lucide-react';
 import {
   Select,
@@ -67,6 +69,7 @@ interface Profile {
   email?: string;
   isAdmin?: boolean;
   isTeacher?: boolean;
+  isParentRole?: boolean;
   username?: string | null;
   teacherCourses?: string[];
 }
@@ -122,6 +125,8 @@ export default function AdminUsers() {
   const [availabilityDialog, setAvailabilityDialog] = useState<{ open: boolean; userId: string; userName: string }>({ open: false, userId: '', userName: '' });
   const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([]);
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; userId: string; userName: string }>({ open: false, userId: '', userName: '' });
+  const [assignChildrenDialog, setAssignChildrenDialog] = useState<{ open: boolean; parentId: string; parentName: string }>({ open: false, parentId: '', parentName: '' });
+  const [selectedChildrenToAssign, setSelectedChildrenToAssign] = useState<string[]>([]);
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -158,6 +163,7 @@ export default function AdminUsers() {
 
     const adminIds = new Set(rolesData?.filter(r => r.role === 'admin').map(r => r.user_id) || []);
     const teacherIds = new Set(rolesData?.filter(r => r.role === 'teacher').map(r => r.user_id) || []);
+    const parentRoleIds = new Set(rolesData?.filter(r => r.role === 'user').map(r => r.user_id) || []);
 
     const { data: coursesData } = await supabase
       .from('courses')
@@ -188,6 +194,7 @@ export default function AdminUsers() {
       ...p,
       isAdmin: adminIds.has(p.id),
       isTeacher: teacherIds.has(p.id),
+      isParentRole: parentRoleIds.has(p.id),
       teacherCourses: (teacherCoursesData || []).filter(tc => tc.teacher_id === p.id).map(tc => tc.course_id)
     })) as Profile[];
 
@@ -378,6 +385,85 @@ export default function AdminUsers() {
       toast({ title: 'Successo', description: currentlyTeacher ? 'Ruolo insegnante rimosso' : 'Ruolo insegnante assegnato' });
     } catch (error: any) {
       toast({ title: 'Errore', description: error.message || 'Impossibile modificare il ruolo insegnante', variant: 'destructive' });
+    }
+  };
+
+  const toggleParentRole = async (userId: string, currentlyParent: boolean) => {
+    try {
+      if (currentlyParent) {
+        const { error } = await supabase.functions.invoke('admin-toggle-role', {
+          body: { userId, action: 'remove', role: 'user' }
+        });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.functions.invoke('admin-toggle-role', {
+          body: { userId, action: 'add', role: 'user' }
+        });
+        if (error) throw error;
+      }
+
+      setProfiles(profiles.map(p => p.id === userId ? { ...p, isParentRole: !currentlyParent } : p));
+      toast({ title: 'Successo', description: currentlyParent ? 'Ruolo genitore rimosso' : 'Ruolo genitore assegnato' });
+    } catch (error: any) {
+      toast({ title: 'Errore', description: error.message || 'Impossibile modificare il ruolo genitore', variant: 'destructive' });
+    }
+  };
+
+  const openAssignChildrenDialog = (parentId: string, parentName: string) => {
+    // Get current children of this parent
+    const currentChildren = profiles.filter(p => p.parent_id === parentId).map(p => p.id);
+    setSelectedChildrenToAssign(currentChildren);
+    setAssignChildrenDialog({ open: true, parentId, parentName });
+  };
+
+  const getAvailableChildrenForAssignment = () => {
+    // Get students that either have no parent or are already assigned to this parent
+    return profiles.filter(p => 
+      p.role === 'student' && 
+      (p.parent_id === null || p.parent_id === assignChildrenDialog.parentId)
+    );
+  };
+
+  const handleSaveChildrenAssignment = async () => {
+    setIsSaving(true);
+    try {
+      const allStudents = profiles.filter(p => p.role === 'student');
+      
+      // Students to assign to this parent
+      const toAssign = allStudents.filter(s => 
+        selectedChildrenToAssign.includes(s.id) && s.parent_id !== assignChildrenDialog.parentId
+      );
+      
+      // Students to unassign from this parent
+      const toUnassign = allStudents.filter(s => 
+        s.parent_id === assignChildrenDialog.parentId && !selectedChildrenToAssign.includes(s.id)
+      );
+
+      // Assign new children
+      for (const student of toAssign) {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ parent_id: assignChildrenDialog.parentId })
+          .eq('id', student.id);
+        if (error) throw error;
+      }
+
+      // Unassign removed children
+      for (const student of toUnassign) {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ parent_id: null })
+          .eq('id', student.id);
+        if (error) throw error;
+      }
+
+      toast({ title: 'Successo', description: 'Figli aggiornati' });
+      setAssignChildrenDialog({ open: false, parentId: '', parentName: '' });
+      fetchData();
+    } catch (error: any) {
+      toast({ title: 'Errore', description: error.message || 'Impossibile aggiornare i figli', variant: 'destructive' });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -682,6 +768,7 @@ export default function AdminUsers() {
                                   <Badge variant="secondary">Genitore</Badge>
                                   {group.parent.isAdmin && <Badge className="bg-amber-500 text-white">Admin</Badge>}
                                   {group.parent.isTeacher && <Badge className="bg-tech-teal text-white">Insegnante</Badge>}
+                                  {group.parent.isParentRole && <Badge className="bg-purple-500 text-white">Ruolo Genitore</Badge>}
                                 </div>
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
                                   <span>{hasChildren ? `${group.children.length} ${group.children.length === 1 ? 'figlio' : 'figli'}` : 'Nessun figlio associato'}</span>
@@ -758,6 +845,35 @@ export default function AdminUsers() {
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>{group.parent.isAdmin ? "Rimuovi ruolo admin" : "Rendi admin"}</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button 
+                                      variant={group.parent.isParentRole ? "default" : "outline"} 
+                                      size="sm"
+                                      onClick={(e) => { e.stopPropagation(); toggleParentRole(group.parent!.id, group.parent!.isParentRole || false); }}
+                                      className={group.parent.isParentRole ? "bg-purple-500 hover:bg-purple-600" : ""}
+                                    >
+                                      <Users2 className="w-4 h-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>{group.parent.isParentRole ? "Rimuovi ruolo genitore" : "Rendi genitore"}</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={(e) => { e.stopPropagation(); openAssignChildrenDialog(group.parent!.id, group.parent!.full_name); }}
+                                    >
+                                      <UserPlus className="w-4 h-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Assegna figli</TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
                               {group.parent.isTeacher && (
@@ -1214,6 +1330,62 @@ export default function AdminUsers() {
             </Button>
             <Button variant="destructive" onClick={handleDeleteUser} disabled={isSaving}>
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Elimina'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign Children Dialog */}
+      <Dialog open={assignChildrenDialog.open} onOpenChange={(open) => !open && setAssignChildrenDialog({ open: false, parentId: '', parentName: '' })}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Assegna Figli - {assignChildrenDialog.parentName}</DialogTitle>
+            <DialogDescription>
+              Seleziona gli studenti da assegnare come figli a questo genitore.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-3 max-h-[60vh] overflow-y-auto">
+            {getAvailableChildrenForAssignment().length === 0 ? (
+              <div className="text-center py-6 text-muted-foreground border-dashed border rounded-lg">
+                <GraduationCap className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">Nessuno studente disponibile</p>
+                <p className="text-xs mt-1">Gli studenti già assegnati ad altri genitori non sono mostrati</p>
+              </div>
+            ) : (
+              getAvailableChildrenForAssignment().map(student => (
+                <div key={student.id} className="flex items-center gap-3 p-2 border rounded-lg">
+                  <Checkbox
+                    id={`child-${student.id}`}
+                    checked={selectedChildrenToAssign.includes(student.id)}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setSelectedChildrenToAssign([...selectedChildrenToAssign, student.id]);
+                      } else {
+                        setSelectedChildrenToAssign(selectedChildrenToAssign.filter(c => c !== student.id));
+                      }
+                    }}
+                  />
+                  <label htmlFor={`child-${student.id}`} className="flex items-center gap-2 cursor-pointer flex-1">
+                    <div className="w-8 h-8 rounded-full bg-tech-teal/20 flex items-center justify-center">
+                      <GraduationCap className="w-4 h-4 text-tech-teal" />
+                    </div>
+                    <div>
+                      <div className="font-medium">{student.full_name}</div>
+                      {student.username && (
+                        <div className="text-xs text-muted-foreground">@{student.username}</div>
+                      )}
+                    </div>
+                  </label>
+                </div>
+              ))
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssignChildrenDialog({ open: false, parentId: '', parentName: '' })}>
+              Annulla
+            </Button>
+            <Button onClick={handleSaveChildrenAssignment} disabled={isSaving}>
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salva'}
             </Button>
           </DialogFooter>
         </DialogContent>

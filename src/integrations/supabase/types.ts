@@ -17,8 +17,11 @@ export type Database = {
       analytics_events: {
         Row: {
           browser: string | null
+          click_x: number | null
+          click_y: number | null
           created_at: string
           device_type: string | null
+          element_selector: string | null
           event_action: string
           event_category: string
           event_label: string | null
@@ -32,11 +35,16 @@ export type Database = {
           screen_size: string | null
           session_id: string
           user_id: string | null
+          viewport_height: number | null
+          viewport_width: number | null
         }
         Insert: {
           browser?: string | null
+          click_x?: number | null
+          click_y?: number | null
           created_at?: string
           device_type?: string | null
+          element_selector?: string | null
           event_action: string
           event_category: string
           event_label?: string | null
@@ -50,11 +58,16 @@ export type Database = {
           screen_size?: string | null
           session_id: string
           user_id?: string | null
+          viewport_height?: number | null
+          viewport_width?: number | null
         }
         Update: {
           browser?: string | null
+          click_x?: number | null
+          click_y?: number | null
           created_at?: string
           device_type?: string | null
+          element_selector?: string | null
           event_action?: string
           event_category?: string
           event_label?: string | null
@@ -68,6 +81,8 @@ export type Database = {
           screen_size?: string | null
           session_id?: string
           user_id?: string | null
+          viewport_height?: number | null
+          viewport_width?: number | null
         }
         Relationships: []
       }

@@ -41,7 +41,14 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   Collapsible,
   CollapsibleContent,
@@ -114,6 +121,7 @@ export default function AdminUsers() {
   const [teacherProfiles, setTeacherProfiles] = useState<TeacherProfile[]>([]);
   const [availabilityDialog, setAvailabilityDialog] = useState<{ open: boolean; userId: string; userName: string }>({ open: false, userId: '', userName: '' });
   const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([]);
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; userId: string; userName: string }>({ open: false, userId: '', userName: '' });
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -517,6 +525,49 @@ export default function AdminUsers() {
     }
   };
 
+  const toggleAdminRole = async (userId: string, currentlyAdmin: boolean) => {
+    try {
+      if (currentlyAdmin) {
+        const { error } = await supabase.functions.invoke('admin-toggle-role', {
+          body: { userId, action: 'remove', role: 'admin' }
+        });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.functions.invoke('admin-toggle-role', {
+          body: { userId, action: 'add', role: 'admin' }
+        });
+        if (error) throw error;
+      }
+
+      setProfiles(profiles.map(p => p.id === userId ? { ...p, isAdmin: !currentlyAdmin } : p));
+      toast({ title: 'Successo', description: currentlyAdmin ? 'Ruolo admin rimosso' : 'Ruolo admin assegnato' });
+    } catch (error: any) {
+      toast({ title: 'Errore', description: error.message || 'Impossibile modificare il ruolo admin', variant: 'destructive' });
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!deleteDialog.userId) return;
+    
+    setIsSaving(true);
+    try {
+      // Delete the user from auth (this will cascade delete the profile due to the foreign key)
+      const { error } = await supabase.functions.invoke('admin-set-password', {
+        body: { userId: deleteDialog.userId, action: 'delete' }
+      });
+
+      if (error) throw error;
+
+      toast({ title: 'Successo', description: 'Utente eliminato' });
+      setDeleteDialog({ open: false, userId: '', userName: '' });
+      fetchData();
+    } catch (error: any) {
+      toast({ title: 'Errore', description: error.message || 'Impossibile eliminare l\'utente', variant: 'destructive' });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -629,6 +680,7 @@ export default function AdminUsers() {
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <h3 className="font-semibold truncate">{group.parent.full_name}</h3>
                                   <Badge variant="secondary">Genitore</Badge>
+                                  {group.parent.isAdmin && <Badge className="bg-amber-500 text-white">Admin</Badge>}
                                   {group.parent.isTeacher && <Badge className="bg-tech-teal text-white">Insegnante</Badge>}
                                 </div>
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
@@ -652,28 +704,62 @@ export default function AdminUsers() {
                               </div>
                             </div>
                             <div className="flex items-center gap-2 flex-shrink-0">
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                onClick={(e) => { 
-                                  e.stopPropagation(); 
-                                  navigate(`/admin/commenti?parent_id=${group.parent!.id}&visibility=parent_only`); 
-                                }}
-                                title="Aggiungi commento (visibile solo al genitore)"
-                              >
-                                <MessageCircle className="w-4 h-4" />
-                              </Button>
-                              <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openPasswordDialog(group.parent!.id, group.parent!.full_name); }}>
-                                <Key className="w-4 h-4" />
-                              </Button>
-                              <Button 
-                                variant={group.parent.isTeacher ? "destructive" : "outline"} 
-                                size="sm"
-                                onClick={(e) => { e.stopPropagation(); toggleTeacherRole(group.parent!.id, group.parent!.isTeacher || false); }}
-                                title={group.parent.isTeacher ? "Rimuovi ruolo insegnante" : "Rendi insegnante"}
-                              >
-                                <GraduationCap className="w-4 h-4" />
-                              </Button>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      onClick={(e) => { 
+                                        e.stopPropagation(); 
+                                        navigate(`/admin/commenti?parent_id=${group.parent!.id}&visibility=parent_only`); 
+                                      }}
+                                    >
+                                      <MessageCircle className="w-4 h-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Aggiungi commento</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openPasswordDialog(group.parent!.id, group.parent!.full_name); }}>
+                                      <Key className="w-4 h-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Reset password</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button 
+                                      variant={group.parent.isTeacher ? "destructive" : "outline"} 
+                                      size="sm"
+                                      onClick={(e) => { e.stopPropagation(); toggleTeacherRole(group.parent!.id, group.parent!.isTeacher || false); }}
+                                    >
+                                      <GraduationCap className="w-4 h-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>{group.parent.isTeacher ? "Rimuovi ruolo insegnante" : "Rendi insegnante"}</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button 
+                                      variant={group.parent.isAdmin ? "default" : "outline"} 
+                                      size="sm"
+                                      onClick={(e) => { e.stopPropagation(); toggleAdminRole(group.parent!.id, group.parent!.isAdmin || false); }}
+                                      className={group.parent.isAdmin ? "bg-amber-500 hover:bg-amber-600" : ""}
+                                    >
+                                      <Shield className="w-4 h-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>{group.parent.isAdmin ? "Rimuovi ruolo admin" : "Rendi admin"}</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                               {group.parent.isTeacher && (
                                 <Button 
                                   variant="outline" 
@@ -696,6 +782,21 @@ export default function AdminUsers() {
                                   Orari
                                 </Button>
                               )}
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm"
+                                      onClick={(e) => { e.stopPropagation(); setDeleteDialog({ open: true, userId: group.parent!.id, userName: group.parent!.full_name }); }}
+                                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Elimina utente</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             </div>
                           </div>
                         </div>
@@ -736,22 +837,43 @@ export default function AdminUsers() {
                                 </div>
                               </div>
                               <div className="flex items-center gap-2 flex-shrink-0">
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
-                                  onClick={() => navigate(`/admin/commenti?student_id=${child.id}`)}
-                                  title="Aggiungi commento"
-                                >
-                                  <MessageCircle className="w-4 h-4" />
-                                </Button>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        onClick={() => navigate(`/admin/commenti?student_id=${child.id}`)}
+                                      >
+                                        <MessageCircle className="w-4 h-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Aggiungi commento</TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
                                 <Button variant="outline" size="sm" onClick={() => openEditChildDialog(child)}>
                                   <Edit2 className="w-4 h-4 mr-1" />
                                   Modifica
                                 </Button>
-                              <Button variant="outline" size="sm" onClick={() => openCourseDialog(child.id, child.full_name)}>
+                                <Button variant="outline" size="sm" onClick={() => openCourseDialog(child.id, child.full_name)}>
                                   <Plus className="w-4 h-4 mr-1" />
                                   Corsi
                                 </Button>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm"
+                                        onClick={() => setDeleteDialog({ open: true, userId: child.id, userName: child.full_name })}
+                                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Elimina studente</TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
                               </div>
                             </div>
                           </div>
@@ -835,6 +957,21 @@ export default function AdminUsers() {
                                 <Plus className="w-4 h-4 mr-1" />
                                 Corsi
                               </Button>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm"
+                                      onClick={() => setDeleteDialog({ open: true, userId: child.id, userName: child.full_name })}
+                                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Elimina utente</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             </div>
                           </div>
                         </div>
@@ -1056,6 +1193,27 @@ export default function AdminUsers() {
             </Button>
             <Button onClick={handleSaveAvailability} disabled={isSaving}>
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salva Disponibilità'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialog.open} onOpenChange={(open) => !open && setDeleteDialog({ open: false, userId: '', userName: '' })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Elimina Utente</DialogTitle>
+            <DialogDescription>
+              Sei sicuro di voler eliminare l'utente <strong>{deleteDialog.userName}</strong>? 
+              Questa azione è irreversibile e eliminerà anche tutti i figli associati.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialog({ open: false, userId: '', userName: '' })}>
+              Annulla
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteUser} disabled={isSaving}>
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Elimina'}
             </Button>
           </DialogFooter>
         </DialogContent>

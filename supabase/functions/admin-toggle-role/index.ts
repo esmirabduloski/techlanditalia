@@ -54,8 +54,8 @@ serve(async (req) => {
       });
     }
 
-    // Validate role - only allow teacher role to be toggled from this endpoint
-    if (role !== "teacher") {
+    // Validate role - allow teacher and admin roles to be toggled
+    if (role !== "teacher" && role !== "admin") {
       return new Response(JSON.stringify({ error: "Ruolo non valido" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

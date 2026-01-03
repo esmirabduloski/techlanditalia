@@ -45,8 +45,71 @@ serve(async (req) => {
       });
     }
 
-    const { userId, newPassword } = await req.json();
+    const { userId, newPassword, action } = await req.json();
 
+    // Handle delete action
+    if (action === 'delete') {
+      if (!userId) {
+        return new Response(JSON.stringify({ error: "userId mancante" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Prevent deleting yourself
+      if (userId === user.id) {
+        return new Response(JSON.stringify({ error: "Non puoi eliminare il tuo stesso account" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Get user's profile to check if it's a parent with children
+      const { data: profile } = await supabaseAdmin
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .single();
+
+      if (profile?.role === 'parent') {
+        // Get children
+        const { data: children } = await supabaseAdmin
+          .from('profiles')
+          .select('id')
+          .eq('parent_id', userId)
+          .eq('role', 'student');
+
+        // Delete children first
+        if (children && children.length > 0) {
+          for (const child of children) {
+            const { error: childDeleteError } = await supabaseAdmin.auth.admin.deleteUser(child.id);
+            if (childDeleteError) {
+              console.error(`Error deleting child ${child.id}:`, childDeleteError);
+            }
+          }
+          console.log(`Deleted ${children.length} children of parent ${userId}`);
+        }
+      }
+
+      // Delete the user
+      const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
+
+      if (deleteError) {
+        console.error("Error deleting user:", deleteError);
+        return new Response(JSON.stringify({ error: "Impossibile eliminare l'utente" }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      console.log(`User ${userId} deleted by admin ${user.id}`);
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Handle password update (default action)
     if (!userId || !newPassword || newPassword.length < 6) {
       return new Response(JSON.stringify({ error: "Password non valida (minimo 6 caratteri)" }), {
         status: 400,

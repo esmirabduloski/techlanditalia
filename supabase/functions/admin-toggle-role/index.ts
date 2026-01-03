@@ -54,8 +54,8 @@ serve(async (req) => {
       });
     }
 
-    // Validate role - only allow teacher role to be toggled from this endpoint
-    if (role !== "teacher") {
+    // Validate role - allow admin and teacher roles to be toggled from this endpoint
+    if (role !== "teacher" && role !== "admin") {
       return new Response(JSON.stringify({ error: "Ruolo non valido" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -63,20 +63,20 @@ serve(async (req) => {
     }
 
     if (action === "add") {
-      // Add teacher role
+      // Add role
       const { error } = await supabaseAdmin
         .from("user_roles")
         .insert({ user_id: userId, role: role });
 
       if (error && !error.message.includes("duplicate")) {
-        console.error("Error adding teacher role:", error);
-        return new Response(JSON.stringify({ error: "Impossibile aggiungere il ruolo insegnante" }), {
+        console.error(`Error adding ${role} role:`, error);
+        return new Response(JSON.stringify({ error: `Impossibile aggiungere il ruolo ${role}` }), {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
     } else if (action === "remove") {
-      // Remove teacher role
+      // Remove role
       const { error } = await supabaseAdmin
         .from("user_roles")
         .delete()
@@ -84,15 +84,15 @@ serve(async (req) => {
         .eq("role", role);
 
       if (error) {
-        console.error("Error removing teacher role:", error);
-        return new Response(JSON.stringify({ error: "Impossibile rimuovere il ruolo insegnante" }), {
+        console.error(`Error removing ${role} role:`, error);
+        return new Response(JSON.stringify({ error: `Impossibile rimuovere il ruolo ${role}` }), {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
     }
 
-    console.log(`Teacher role ${action}ed for user ${userId} by admin ${user.id}`);
+    console.log(`${role} role ${action}ed for user ${userId} by admin ${user.id}`);
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

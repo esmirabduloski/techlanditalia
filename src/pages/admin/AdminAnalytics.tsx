@@ -1,15 +1,55 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
-import { Loader2, TrendingUp, MousePointer, Clock, Target, Eye, Users, ArrowUpRight, ArrowDownRight, Flame } from 'lucide-react';
+import { Loader2, TrendingUp, MousePointer, Clock, Target, Eye, ArrowUpRight, ArrowDownRight, Flame, Download } from 'lucide-react';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { ClickHeatmap } from '@/components/analytics/ClickHeatmap';
+import { toast } from 'sonner';
+
+// Helper function to convert data to CSV
+const convertToCSV = (data: Record<string, unknown>[], filename: string) => {
+  if (data.length === 0) {
+    toast.error('Nessun dato da esportare');
+    return;
+  }
+
+  const headers = Object.keys(data[0]);
+  const csvRows = [
+    headers.join(','),
+    ...data.map(row => 
+      headers.map(header => {
+        const value = row[header];
+        // Handle objects, arrays, and values with commas/quotes
+        if (value === null || value === undefined) return '';
+        if (typeof value === 'object') return `"${JSON.stringify(value).replace(/"/g, '""')}"`;
+        const stringValue = String(value);
+        if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+          return `"${stringValue.replace(/"/g, '""')}"`;
+        }
+        return stringValue;
+      }).join(',')
+    )
+  ];
+
+  const csvContent = csvRows.join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', `${filename}_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+  toast.success(`${filename}.csv esportato con successo`);
+};
 
 interface AnalyticsEvent {
   event_type: string;
@@ -177,17 +217,103 @@ export default function AdminAnalytics() {
             <h1 className="text-3xl font-bold">Analytics & Tracking</h1>
             <p className="text-muted-foreground">Monitora conversioni, engagement e comportamento utenti</p>
           </div>
-          <Select value={dateRange} onValueChange={setDateRange}>
-            <SelectTrigger className="w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7">Ultimi 7 giorni</SelectItem>
-              <SelectItem value="14">Ultimi 14 giorni</SelectItem>
-              <SelectItem value="30">Ultimi 30 giorni</SelectItem>
-              <SelectItem value="90">Ultimi 90 giorni</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-3">
+            <Select value={dateRange} onValueChange={setDateRange}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7">Ultimi 7 giorni</SelectItem>
+                <SelectItem value="14">Ultimi 14 giorni</SelectItem>
+                <SelectItem value="30">Ultimi 30 giorni</SelectItem>
+                <SelectItem value="90">Ultimi 90 giorni</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select onValueChange={(value) => {
+              switch (value) {
+                case 'events':
+                  convertToCSV(events.map(e => ({
+                    data: format(new Date(e.created_at), 'yyyy-MM-dd HH:mm:ss'),
+                    tipo: e.event_type,
+                    categoria: e.event_category,
+                    azione: e.event_action,
+                    etichetta: e.event_label || '',
+                    pagina: e.page_url || '',
+                    elemento: e.element_selector || '',
+                    click_x: e.click_x ?? '',
+                    click_y: e.click_y ?? ''
+                  })), 'analytics_eventi');
+                  break;
+                case 'pageviews':
+                  convertToCSV(pageViews.map(pv => ({
+                    data: format(new Date(pv.entered_at), 'yyyy-MM-dd HH:mm:ss'),
+                    pagina: pv.page_url,
+                    tempo_secondi: pv.time_on_page ?? '',
+                    scroll_percentuale: pv.scroll_depth ?? '',
+                    dispositivo: pv.device_type || ''
+                  })), 'visualizzazioni_pagine');
+                  break;
+                case 'funnel':
+                  convertToCSV(funnelData.map(f => ({
+                    data: format(new Date(f.created_at), 'yyyy-MM-dd HH:mm:ss'),
+                    funnel: f.funnel_name,
+                    step: f.step_number,
+                    nome_step: f.step_name,
+                    completato: f.completed ? 'Sì' : 'No'
+                  })), 'funnel_conversione');
+                  break;
+                case 'cta':
+                  convertToCSV(Object.entries(ctaByLabel).map(([label, count]) => ({
+                    cta: label,
+                    click: count
+                  })), 'click_cta');
+                  break;
+                case 'all':
+                  // Export all data as separate files
+                  convertToCSV(events.map(e => ({
+                    data: format(new Date(e.created_at), 'yyyy-MM-dd HH:mm:ss'),
+                    tipo: e.event_type,
+                    categoria: e.event_category,
+                    azione: e.event_action,
+                    etichetta: e.event_label || '',
+                    pagina: e.page_url || ''
+                  })), 'analytics_eventi');
+                  setTimeout(() => {
+                    convertToCSV(pageViews.map(pv => ({
+                      data: format(new Date(pv.entered_at), 'yyyy-MM-dd HH:mm:ss'),
+                      pagina: pv.page_url,
+                      tempo_secondi: pv.time_on_page ?? '',
+                      scroll_percentuale: pv.scroll_depth ?? '',
+                      dispositivo: pv.device_type || ''
+                    })), 'visualizzazioni_pagine');
+                  }, 500);
+                  setTimeout(() => {
+                    convertToCSV(funnelData.map(f => ({
+                      data: format(new Date(f.created_at), 'yyyy-MM-dd HH:mm:ss'),
+                      funnel: f.funnel_name,
+                      step: f.step_number,
+                      nome_step: f.step_name,
+                      completato: f.completed ? 'Sì' : 'No'
+                    })), 'funnel_conversione');
+                  }, 1000);
+                  break;
+              }
+            }}>
+              <SelectTrigger className="w-44">
+                <div className="flex items-center gap-2">
+                  <Download className="w-4 h-4" />
+                  <span>Esporta CSV</span>
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="events">Eventi Analytics</SelectItem>
+                <SelectItem value="pageviews">Visualizzazioni Pagine</SelectItem>
+                <SelectItem value="funnel">Funnel Conversione</SelectItem>
+                <SelectItem value="cta">Click CTA</SelectItem>
+                <SelectItem value="all">Esporta Tutto</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Key Metrics */}

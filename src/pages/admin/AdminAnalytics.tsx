@@ -9,7 +9,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
-import { Loader2, TrendingUp, MousePointer, Clock, Target, Eye, ArrowUpRight, ArrowDownRight, Flame, Download, CalendarIcon } from 'lucide-react';
+import { Loader2, TrendingUp, MousePointer, Clock, Target, Eye, ArrowUpRight, ArrowDownRight, Flame, Download, CalendarIcon, GitCompare } from 'lucide-react';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { ClickHeatmap } from '@/components/analytics/ClickHeatmap';
@@ -96,6 +96,11 @@ export default function AdminAnalytics() {
   const [pageViews, setPageViews] = useState<PageView[]>([]);
   const [funnelData, setFunnelData] = useState<ConversionFunnel[]>([]);
   const [selectedHeatmapPage, setSelectedHeatmapPage] = useState('/');
+  
+  // Previous period data for comparison
+  const [prevPageViews, setPrevPageViews] = useState<PageView[]>([]);
+  const [prevEvents, setPrevEvents] = useState<AnalyticsEvent[]>([]);
+  const [showComparison, setShowComparison] = useState(true);
 
   useEffect(() => {
     fetchAnalytics();
@@ -106,16 +111,23 @@ export default function AdminAnalytics() {
     
     let startDate: Date;
     let endDate: Date = endOfDay(new Date());
+    let periodDays: number;
     
     if (dateRange === 'custom' && customDateFrom && customDateTo) {
       startDate = startOfDay(customDateFrom);
       endDate = endOfDay(customDateTo);
+      periodDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
     } else {
-      startDate = startOfDay(subDays(new Date(), parseInt(dateRange) || 7));
+      periodDays = parseInt(dateRange) || 7;
+      startDate = startOfDay(subDays(new Date(), periodDays));
     }
+    
+    // Calculate previous period dates
+    const prevEndDate = subDays(startDate, 1);
+    const prevStartDate = subDays(prevEndDate, periodDays);
 
     try {
-      const [eventsRes, pageViewsRes, funnelRes] = await Promise.all([
+      const [eventsRes, pageViewsRes, funnelRes, prevEventsRes, prevPageViewsRes] = await Promise.all([
         supabase
           .from('analytics_events')
           .select('*')
@@ -133,12 +145,27 @@ export default function AdminAnalytics() {
           .select('*')
           .gte('created_at', startDate.toISOString())
           .lte('created_at', endDate.toISOString())
-          .order('created_at', { ascending: false })
+          .order('created_at', { ascending: false }),
+        // Previous period
+        supabase
+          .from('analytics_events')
+          .select('*')
+          .gte('created_at', prevStartDate.toISOString())
+          .lte('created_at', prevEndDate.toISOString())
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('page_views')
+          .select('*')
+          .gte('entered_at', prevStartDate.toISOString())
+          .lte('entered_at', prevEndDate.toISOString())
+          .order('entered_at', { ascending: false })
       ]);
 
       if (eventsRes.data) setEvents(eventsRes.data);
       if (pageViewsRes.data) setPageViews(pageViewsRes.data);
       if (funnelRes.data) setFunnelData(funnelRes.data);
+      if (prevEventsRes.data) setPrevEvents(prevEventsRes.data);
+      if (prevPageViewsRes.data) setPrevPageViews(prevPageViewsRes.data);
     } catch (error) {
       console.error('Error fetching analytics:', error);
     } finally {
@@ -209,6 +236,58 @@ export default function AdminAnalytics() {
     { step: 3, name: 'Tentativo Invio', count: bookingFunnel.filter(f => f.step_number === 3).length },
     { step: 4, name: 'Conversione', count: bookingFunnel.filter(f => f.step_number === 4 && f.completed).length },
   ];
+
+  // Previous period metrics for comparison
+  const prevTotalPageViews = prevPageViews.length;
+  const prevCtaClicks = prevEvents.filter(e => e.event_type === 'cta_click').length;
+  const prevBookingConversions = prevEvents.filter(e => e.event_type === 'booking_conversion').length;
+  const prevAvgTimeOnPage = prevPageViews.filter(pv => pv.time_on_page).reduce((acc, pv) => acc + (pv.time_on_page || 0), 0) / (prevPageViews.filter(pv => pv.time_on_page).length || 1);
+
+  // Calculate percentage changes
+  const calcChange = (current: number, previous: number) => {
+    if (previous === 0) return current > 0 ? 100 : 0;
+    return ((current - previous) / previous) * 100;
+  };
+
+  const pageViewsChange = calcChange(totalPageViews, prevTotalPageViews);
+  const ctaClicksChange = calcChange(ctaClicks.length, prevCtaClicks);
+  const conversionsChange = calcChange(bookingConversions, prevBookingConversions);
+  const timeChange = calcChange(avgTimeOnPage, prevAvgTimeOnPage);
+
+  // Comparison chart data - group by day index for overlay
+  const periodDays = dateRange === 'custom' && customDateFrom && customDateTo 
+    ? Math.ceil((customDateTo.getTime() - customDateFrom.getTime()) / (1000 * 60 * 60 * 24))
+    : parseInt(dateRange) || 7;
+
+  const comparisonData = Array.from({ length: periodDays }, (_, i) => {
+    const dayLabel = `Giorno ${i + 1}`;
+    
+    // Count current period views for this day index
+    const currentDayViews = pageViews.filter(pv => {
+      const pvDate = new Date(pv.entered_at);
+      const startDate = dateRange === 'custom' && customDateFrom 
+        ? startOfDay(customDateFrom)
+        : startOfDay(subDays(new Date(), periodDays));
+      const daysDiff = Math.floor((pvDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      return daysDiff === i;
+    }).length;
+    
+    // Count previous period views for this day index
+    const prevDayViews = prevPageViews.filter(pv => {
+      const pvDate = new Date(pv.entered_at);
+      const startDate = dateRange === 'custom' && customDateFrom 
+        ? startOfDay(subDays(customDateFrom, periodDays + 1))
+        : startOfDay(subDays(new Date(), periodDays * 2));
+      const daysDiff = Math.floor((pvDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      return daysDiff === i;
+    }).length;
+    
+    return {
+      day: dayLabel,
+      current: currentDayViews,
+      previous: prevDayViews
+    };
+  });
 
   if (isLoading) {
     return (
@@ -444,6 +523,10 @@ export default function AdminAnalytics() {
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList>
             <TabsTrigger value="overview">Panoramica</TabsTrigger>
+            <TabsTrigger value="comparison" className="gap-1">
+              <GitCompare className="w-4 h-4" />
+              Comparazione
+            </TabsTrigger>
             <TabsTrigger value="cta">CTA & Click</TabsTrigger>
             <TabsTrigger value="heatmap" className="gap-1">
               <Flame className="w-4 h-4" />
@@ -508,6 +591,115 @@ export default function AdminAnalytics() {
                         <Tooltip />
                       </PieChart>
                     </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="comparison" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Confronto Periodi</CardTitle>
+                <CardDescription>
+                  Periodo attuale vs periodo precedente ({periodDays} giorni)
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={comparisonData}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                      <XAxis dataKey="day" className="text-xs" />
+                      <YAxis className="text-xs" />
+                      <Tooltip 
+                        formatter={(value, name) => [value, name === 'current' ? 'Periodo Attuale' : 'Periodo Precedente']}
+                      />
+                      <Bar dataKey="current" name="Periodo Attuale" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="previous" name="Periodo Precedente" fill="hsl(var(--muted-foreground))" radius={[4, 4, 0, 0]} opacity={0.5} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Visualizzazioni</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{totalPageViews}</div>
+                  <div className="flex items-center gap-1 text-xs">
+                    {pageViewsChange >= 0 ? (
+                      <ArrowUpRight className="w-3 h-3 text-green-500" />
+                    ) : (
+                      <ArrowDownRight className="w-3 h-3 text-red-500" />
+                    )}
+                    <span className={pageViewsChange >= 0 ? 'text-green-500' : 'text-red-500'}>
+                      {Math.abs(pageViewsChange).toFixed(1)}%
+                    </span>
+                    <span className="text-muted-foreground">vs {prevTotalPageViews} prima</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Click CTA</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{ctaClicks.length}</div>
+                  <div className="flex items-center gap-1 text-xs">
+                    {ctaClicksChange >= 0 ? (
+                      <ArrowUpRight className="w-3 h-3 text-green-500" />
+                    ) : (
+                      <ArrowDownRight className="w-3 h-3 text-red-500" />
+                    )}
+                    <span className={ctaClicksChange >= 0 ? 'text-green-500' : 'text-red-500'}>
+                      {Math.abs(ctaClicksChange).toFixed(1)}%
+                    </span>
+                    <span className="text-muted-foreground">vs {prevCtaClicks} prima</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Conversioni</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{bookingConversions}</div>
+                  <div className="flex items-center gap-1 text-xs">
+                    {conversionsChange >= 0 ? (
+                      <ArrowUpRight className="w-3 h-3 text-green-500" />
+                    ) : (
+                      <ArrowDownRight className="w-3 h-3 text-red-500" />
+                    )}
+                    <span className={conversionsChange >= 0 ? 'text-green-500' : 'text-red-500'}>
+                      {Math.abs(conversionsChange).toFixed(1)}%
+                    </span>
+                    <span className="text-muted-foreground">vs {prevBookingConversions} prima</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Tempo Medio</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{Math.round(avgTimeOnPage)}s</div>
+                  <div className="flex items-center gap-1 text-xs">
+                    {timeChange >= 0 ? (
+                      <ArrowUpRight className="w-3 h-3 text-green-500" />
+                    ) : (
+                      <ArrowDownRight className="w-3 h-3 text-red-500" />
+                    )}
+                    <span className={timeChange >= 0 ? 'text-green-500' : 'text-red-500'}>
+                      {Math.abs(timeChange).toFixed(1)}%
+                    </span>
+                    <span className="text-muted-foreground">vs {Math.round(prevAvgTimeOnPage)}s prima</span>
                   </div>
                 </CardContent>
               </Card>

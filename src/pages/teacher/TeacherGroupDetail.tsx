@@ -656,15 +656,7 @@ export default function TeacherGroupDetail() {
             <p className="text-sm text-muted-foreground mt-2">
               Lezioni disponibili: {availableLessonsCount} di {totalLessons}
             </p>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <Badge variant="secondary">UTC oggi: {new Date().toISOString().slice(0, 10)}</Badge>
-              {lessonSchedule[0] && (
-                <Badge variant="outline">L1: {lessonSchedule[0].lesson_date}</Badge>
-              )}
-              {lessonSchedule[1] && (
-                <Badge variant="outline">L2: {lessonSchedule[1].lesson_date}</Badge>
-              )}
-            </div>
+            <Badge variant="secondary" className="mt-2">UTC oggi: {new Date().toISOString().slice(0, 10)}</Badge>
           </CardHeader>
           <CardContent>
             {students.length === 0 ? (

@@ -256,29 +256,31 @@ export default function TeacherGroupDetail() {
     }
   };
 
-  // Check if a lesson date is today or in the past
+  // Returns true if a lesson date is today (UTC) or in the past (UTC)
+  const isLessonDateAvailableUtc = (lessonDateStr: string): boolean => {
+    // lessonDateStr expected format: yyyy-MM-dd
+    const parts = lessonDateStr.split('-').map(Number);
+    if (parts.length !== 3 || parts.some(n => Number.isNaN(n))) return false;
+
+    const [year, month, day] = parts;
+
+    const now = new Date();
+    const utcToday = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+    const lessonUtc = Date.UTC(year, month - 1, day);
+
+    return lessonUtc <= utcToday;
+  };
+
+  // Check if a lesson date is today or in the past (UTC)
   const isLessonAvailable = (lessonNumber: number): boolean => {
     const lesson = lessonSchedule.find(l => l.lesson_number === lessonNumber);
     if (!lesson) return false;
-    
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const lessonDate = new Date(lesson.lesson_date);
-    lessonDate.setHours(0, 0, 0, 0);
-    
-    // Lesson is available if its date is <= today
-    return lessonDate.getTime() <= today.getTime();
+
+    return isLessonDateAvailableUtc(lesson.lesson_date);
   };
 
   // Get count of available lessons for display
-  const availableLessonsCount = lessonSchedule.filter(lesson => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const lessonDate = new Date(lesson.lesson_date);
-    lessonDate.setHours(0, 0, 0, 0);
-    return lessonDate.getTime() <= today.getTime();
-  }).length;
+  const availableLessonsCount = lessonSchedule.filter(lesson => isLessonDateAvailableUtc(lesson.lesson_date)).length;
 
   // Calculate last completed lesson based on attendance
   const getLastCompletedLesson = (): string => {

@@ -117,7 +117,7 @@ export default function AdminUsers() {
   const [isSaving, setIsSaving] = useState(false);
   const [editingChild, setEditingChild] = useState<{ id: string; username: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterRole, setFilterRole] = useState<'all' | 'parent' | 'student'>('all');
+  const [filterRole, setFilterRole] = useState<'all' | 'parent' | 'student' | 'admin' | 'teacher' | 'parentRole'>('all');
   const [teacherCourseDialog, setTeacherCourseDialog] = useState<{ open: boolean; userId: string; userName: string }>({ open: false, userId: '', userName: '' });
   const [selectedTeacherCourses, setSelectedTeacherCourses] = useState<string[]>([]);
   const [teacherCourses, setTeacherCourses] = useState<TeacherCourse[]>([]);
@@ -225,26 +225,37 @@ export default function AdminUsers() {
     // Get all students
     const allStudents = profiles.filter(p => p.role === 'student');
     
+    // Helper to check if profile matches special role filter
+    const matchesSpecialRoleFilter = (p: Profile) => {
+      if (filterRole === 'admin') return p.isAdmin;
+      if (filterRole === 'teacher') return p.isTeacher;
+      if (filterRole === 'parentRole') return p.isParentRole;
+      return true;
+    };
+    
     // For each parent, get their children
     allParents.forEach(parent => {
       const children = allStudents.filter(s => s.parent_id === parent.id);
       
       // Check if parent matches filter
       const parentMatchesSearch = matchesSearchQuery(parent);
-      const parentMatchesRole = filterRole === 'all' || filterRole === 'parent';
+      const parentMatchesBasicRole = filterRole === 'all' || filterRole === 'parent';
+      const parentMatchesSpecialRole = filterRole === 'admin' || filterRole === 'teacher' || filterRole === 'parentRole';
+      const parentMatchesRole = parentMatchesBasicRole || (parentMatchesSpecialRole && matchesSpecialRoleFilter(parent));
       
       // Check if any child matches filter
       const matchingChildren = children.filter(c => {
         const childMatchesSearch = matchesSearchQuery(c);
-        const childMatchesRole = filterRole === 'all' || filterRole === 'student';
-        return childMatchesSearch && childMatchesRole;
+        const childMatchesBasicRole = filterRole === 'all' || filterRole === 'student';
+        const childMatchesSpecialRole = (filterRole === 'admin' || filterRole === 'teacher' || filterRole === 'parentRole') && matchesSpecialRoleFilter(c);
+        return childMatchesSearch && (childMatchesBasicRole || childMatchesSpecialRole);
       });
       
       // Include parent if:
       // 1. Parent matches search and role filter, OR
       // 2. Any child matches search and we're not filtering only parents
       const shouldIncludeParent = (parentMatchesSearch && parentMatchesRole) || 
-        (matchingChildren.length > 0 && filterRole !== 'parent');
+        (matchingChildren.length > 0 && filterRole !== 'parent' && !parentMatchesSpecialRole);
       
       if (shouldIncludeParent) {
         // If searching, only show matching children. Otherwise show all children.
@@ -256,13 +267,22 @@ export default function AdminUsers() {
     });
     
     // Orphan students (no parent)
-    if (filterRole !== 'parent') {
+    if (filterRole !== 'parent' && filterRole !== 'admin' && filterRole !== 'teacher' && filterRole !== 'parentRole') {
       const orphanStudents = allStudents.filter(s => {
         if (s.parent_id) return false;
         return matchesSearchQuery(s);
       });
       if (orphanStudents.length > 0) {
         groups.push({ parent: null, children: orphanStudents });
+      }
+    } else if (filterRole === 'admin' || filterRole === 'teacher' || filterRole === 'parentRole') {
+      // For special role filters, also show orphan students with that role
+      const orphanStudentsWithRole = allStudents.filter(s => {
+        if (s.parent_id) return false;
+        return matchesSearchQuery(s) && matchesSpecialRoleFilter(s);
+      });
+      if (orphanStudentsWithRole.length > 0) {
+        groups.push({ parent: null, children: orphanStudentsWithRole });
       }
     }
     
@@ -719,14 +739,17 @@ export default function AdminUsers() {
               className="pl-10"
             />
           </div>
-          <Select value={filterRole} onValueChange={(v) => setFilterRole(v as 'all' | 'parent' | 'student')}>
-            <SelectTrigger className="w-40">
+          <Select value={filterRole} onValueChange={(v) => setFilterRole(v as 'all' | 'parent' | 'student' | 'admin' | 'teacher' | 'parentRole')}>
+            <SelectTrigger className="w-48">
               <SelectValue placeholder="Filtra per ruolo" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tutti</SelectItem>
               <SelectItem value="parent">Genitori</SelectItem>
               <SelectItem value="student">Studenti</SelectItem>
+              <SelectItem value="admin">Admin</SelectItem>
+              <SelectItem value="teacher">Insegnanti</SelectItem>
+              <SelectItem value="parentRole">Ruolo Genitore</SelectItem>
             </SelectContent>
           </Select>
         </div>

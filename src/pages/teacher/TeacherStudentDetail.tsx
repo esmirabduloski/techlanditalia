@@ -12,8 +12,9 @@ import {
 } from "lucide-react";
 import { AvatarDisplay } from "@/components/gamification/AvatarSelector";
 import { LevelBadge, getLevelFromPoints } from "@/components/gamification/LevelBadge";
-import { StudentCommentsSection } from "@/components/dashboard/StudentCommentsSection";
 import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import { it } from "date-fns/locale";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +23,88 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+
+// Component to show comments for a student from teacher's view
+function TeacherCommentsView({ studentId }: { studentId: string }) {
+  const [comments, setComments] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchComments();
+  }, [studentId]);
+
+  const fetchComments = async () => {
+    try {
+      // First get comments
+      const { data: commentsData, error } = await supabase
+        .from('student_comments')
+        .select('id, content, visibility, created_at, author_id')
+        .eq('student_id', studentId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (commentsData && commentsData.length > 0) {
+        // Get author names separately
+        const authorIds = [...new Set(commentsData.map(c => c.author_id))];
+        const { data: authors } = await supabase
+          .from('profiles')
+          .select('id, full_name, role')
+          .in('id', authorIds);
+
+        const authorMap: Record<string, { full_name: string; role: string }> = {};
+        authors?.forEach(a => { authorMap[a.id] = { full_name: a.full_name, role: a.role }; });
+
+        setComments(commentsData.map(c => ({
+          ...c,
+          author: authorMap[c.author_id] || { full_name: 'Insegnante', role: 'teacher' }
+        })));
+      } else {
+        setComments([]);
+      }
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      setComments([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-4">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (comments.length === 0) {
+    return (
+      <div className="text-center py-6 text-muted-foreground">
+        <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
+        <p>Nessun commento ancora</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {comments.map((comment) => (
+        <div key={comment.id} className="p-3 bg-muted rounded-lg">
+          <div className="flex items-center gap-2 mb-2">
+            <User className="w-4 h-4 text-primary" />
+            <span className="font-medium text-sm">{comment.author?.full_name}</span>
+            <Badge variant="outline" className="text-xs">{comment.author?.role}</Badge>
+          </div>
+          <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
+          <p className="text-xs text-muted-foreground mt-2">
+            {format(new Date(comment.created_at), "d MMM yyyy 'alle' HH:mm", { locale: it })}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 interface StudentProfile {
   id: string;
@@ -365,7 +448,7 @@ export default function TeacherStudentDetail() {
                 </Button>
               </CardHeader>
               <CardContent>
-                <StudentCommentsSection key={refreshKey} studentId={student.id} viewMode="parent" />
+                <TeacherCommentsView key={refreshKey} studentId={student.id} />
               </CardContent>
             </Card>
           </div>

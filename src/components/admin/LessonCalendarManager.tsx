@@ -1,0 +1,327 @@
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Loader2, Calendar, ChevronLeft, ChevronRight, Save, RotateCcw
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { format, addDays, parseISO } from "date-fns";
+import { it } from "date-fns/locale";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+
+interface LessonSchedule {
+  id: string;
+  lesson_number: number;
+  lesson_date: string;
+  lesson_title: string | null;
+}
+
+interface LessonCalendarManagerProps {
+  groupId: string;
+  groupTitle: string;
+  startDate: string | null;
+  maxLessons: number;
+  lessonDays: number[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function LessonCalendarManager({
+  groupId,
+  groupTitle,
+  startDate,
+  maxLessons,
+  lessonDays,
+  open,
+  onOpenChange
+}: LessonCalendarManagerProps) {
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [schedule, setSchedule] = useState<LessonSchedule[]>([]);
+  const [editedDates, setEditedDates] = useState<Record<number, string>>({});
+  const [page, setPage] = useState(0);
+  const lessonsPerPage = 16;
+
+  useEffect(() => {
+    if (open && groupId) {
+      fetchSchedule();
+    }
+  }, [open, groupId]);
+
+  const fetchSchedule = async () => {
+    setIsLoading(true);
+    try {
+      const { data } = await supabase
+        .from('group_lesson_schedule')
+        .select('*')
+        .eq('group_id', groupId)
+        .order('lesson_number');
+
+      if (data && data.length > 0) {
+        setSchedule(data);
+      } else if (startDate) {
+        // Generate schedule if doesn't exist
+        await generateSchedule();
+      }
+    } catch (error) {
+      console.error("Error fetching schedule:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const generateSchedule = async () => {
+    if (!startDate) return;
+
+    const scheduleItems = [];
+    let currentDate = new Date(startDate);
+    let lessonCount = 0;
+
+    while (lessonCount < maxLessons) {
+      const dayOfWeek = currentDate.getDay();
+      
+      if (lessonDays.includes(dayOfWeek)) {
+        lessonCount++;
+        scheduleItems.push({
+          group_id: groupId,
+          lesson_number: lessonCount,
+          lesson_date: format(currentDate, 'yyyy-MM-dd'),
+          lesson_title: `M${Math.ceil(lessonCount / 4)}L${((lessonCount - 1) % 4) + 1}`
+        });
+      }
+      
+      currentDate = addDays(currentDate, 1);
+      if (lessonCount >= maxLessons) break;
+    }
+
+    if (scheduleItems.length > 0) {
+      const { data, error } = await supabase
+        .from('group_lesson_schedule')
+        .insert(scheduleItems)
+        .select();
+
+      if (!error && data) {
+        setSchedule(data);
+      }
+    }
+  };
+
+  const handleDateChange = (lessonNumber: number, newDate: string) => {
+    setEditedDates(prev => ({
+      ...prev,
+      [lessonNumber]: newDate
+    }));
+  };
+
+  const handleSave = async () => {
+    if (Object.keys(editedDates).length === 0) return;
+
+    setIsSaving(true);
+    try {
+      // Check for conflicts and shift dates if needed
+      const updatedSchedule = [...schedule];
+      const sortedEdits = Object.entries(editedDates)
+        .map(([num, date]) => ({ lessonNumber: parseInt(num), newDate: date }))
+        .sort((a, b) => a.lessonNumber - b.lessonNumber);
+
+      for (const edit of sortedEdits) {
+        const currentLesson = updatedSchedule.find(l => l.lesson_number === edit.lessonNumber);
+        if (!currentLesson) continue;
+
+        const newDateObj = parseISO(edit.newDate);
+        
+        // Check if this date conflicts with any other lesson
+        const conflictingLesson = updatedSchedule.find(
+          l => l.lesson_number !== edit.lessonNumber && 
+               l.lesson_date === edit.newDate
+        );
+
+        if (conflictingLesson) {
+          // Shift all lessons from the conflicting one onwards by 7 days
+          for (let i = conflictingLesson.lesson_number - 1; i < updatedSchedule.length; i++) {
+            if (i >= edit.lessonNumber - 1) {
+              const lesson = updatedSchedule[i];
+              if (lesson.lesson_number >= conflictingLesson.lesson_number) {
+                const currentLessonDate = parseISO(lesson.lesson_date);
+                lesson.lesson_date = format(addDays(currentLessonDate, 7), 'yyyy-MM-dd');
+              }
+            }
+          }
+        }
+
+        // Update the edited lesson
+        currentLesson.lesson_date = edit.newDate;
+      }
+
+      // Save all changes to database
+      for (const lesson of updatedSchedule) {
+        await supabase
+          .from('group_lesson_schedule')
+          .update({ lesson_date: lesson.lesson_date })
+          .eq('id', lesson.id);
+      }
+
+      setSchedule(updatedSchedule);
+      setEditedDates({});
+      toast({ title: 'Calendario salvato', description: 'Le date delle lezioni sono state aggiornate' });
+    } catch (error: any) {
+      toast({ title: 'Errore', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleRegenerate = async () => {
+    if (!startDate) {
+      toast({ title: 'Errore', description: 'Imposta prima una data di inizio', variant: 'destructive' });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Delete existing schedule
+      await supabase
+        .from('group_lesson_schedule')
+        .delete()
+        .eq('group_id', groupId);
+
+      // Generate new schedule
+      await generateSchedule();
+      setEditedDates({});
+      toast({ title: 'Calendario rigenerato' });
+    } catch (error: any) {
+      toast({ title: 'Errore', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const paginatedSchedule = schedule.slice(
+    page * lessonsPerPage,
+    (page + 1) * lessonsPerPage
+  );
+  const totalPages = Math.ceil(schedule.length / lessonsPerPage);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Calendar className="w-5 h-5" />
+            Calendario Lezioni - {groupTitle}
+          </DialogTitle>
+        </DialogHeader>
+
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        ) : schedule.length === 0 ? (
+          <div className="text-center py-8">
+            <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground mb-4">Nessun calendario generato</p>
+            {startDate ? (
+              <Button onClick={handleRegenerate}>
+                Genera Calendario
+              </Button>
+            ) : (
+              <p className="text-sm text-muted-foreground">Imposta una data di inizio gruppo</p>
+            )}
+          </div>
+        ) : (
+          <>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {paginatedSchedule.map(lesson => {
+                const editedDate = editedDates[lesson.lesson_number];
+                const displayDate = editedDate || lesson.lesson_date;
+                const isEdited = !!editedDate;
+
+                return (
+                  <Card key={lesson.id} className={isEdited ? 'ring-2 ring-primary' : ''}>
+                    <CardContent className="p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <Badge variant="secondary" className="text-xs">
+                          {lesson.lesson_title || `L${lesson.lesson_number}`}
+                        </Badge>
+                        {isEdited && (
+                          <Badge variant="default" className="text-[10px]">
+                            Modificata
+                          </Badge>
+                        )}
+                      </div>
+                      <Input
+                        type="date"
+                        value={displayDate}
+                        onChange={(e) => handleDateChange(lesson.lesson_number, e.target.value)}
+                        className="text-sm"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1 text-center">
+                        {format(parseISO(displayDate), "EEEE d MMMM", { locale: it })}
+                      </p>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-4 mt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => Math.max(0, p - 1))}
+                  disabled={page === 0}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Pagina {page + 1} di {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                  disabled={page >= totalPages - 1}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
+          </>
+        )}
+
+        <DialogFooter className="flex-col sm:flex-row gap-2">
+          <Button variant="outline" onClick={handleRegenerate} disabled={isLoading || !startDate}>
+            <RotateCcw className="w-4 h-4 mr-2" />
+            Rigenera
+          </Button>
+          <div className="flex-1" />
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Chiudi
+          </Button>
+          <Button 
+            onClick={handleSave} 
+            disabled={isSaving || Object.keys(editedDates).length === 0}
+          >
+            {isSaving ? (
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+            ) : (
+              <Save className="w-4 h-4 mr-2" />
+            )}
+            Salva Modifiche
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

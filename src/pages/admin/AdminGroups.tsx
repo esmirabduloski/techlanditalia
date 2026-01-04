@@ -9,8 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { LessonCalendarManager } from "@/components/admin/LessonCalendarManager";
 import { 
-  Loader2, Plus, Users, LogOut, Home, Edit, Trash2, UsersRound, Search
+  Loader2, Plus, Users, LogOut, Home, Edit, Trash2, UsersRound, Search, Calendar
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -51,6 +52,7 @@ interface StudentGroup {
   last_lesson_title: string | null;
   max_lessons: number;
   student_count: number;
+  lesson_days: number[];
 }
 
 interface Teacher {
@@ -85,6 +87,7 @@ export default function AdminGroups() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<StudentGroup | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [calendarGroup, setCalendarGroup] = useState<StudentGroup | null>(null);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -116,7 +119,7 @@ export default function AdminGroups() {
       const { data: groupsData } = await supabase
         .from('student_groups')
         .select(`
-          id, title, course_id, teacher_id, start_date, last_lesson_title, max_lessons,
+          id, title, course_id, teacher_id, start_date, last_lesson_title, max_lessons, lesson_days,
           courses!inner(title, emoji)
         `)
         .order('created_at', { ascending: false });
@@ -151,7 +154,8 @@ export default function AdminGroups() {
               start_date: g.start_date,
               last_lesson_title: g.last_lesson_title,
               max_lessons: g.max_lessons,
-              student_count: count || 0
+              student_count: count || 0,
+              lesson_days: (g.lesson_days as number[]) || [0]
             };
           })
         );
@@ -446,6 +450,14 @@ export default function AdminGroups() {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => setCalendarGroup(group)}
+                            title="Gestisci calendario"
+                          >
+                            <Calendar className="w-4 h-4" />
+                          </Button>
                           <Button variant="ghost" size="icon" onClick={() => openEditDialog(group)}>
                             <Edit className="w-4 h-4" />
                           </Button>
@@ -659,6 +671,19 @@ export default function AdminGroups() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Lesson Calendar Manager */}
+        {calendarGroup && (
+          <LessonCalendarManager
+            groupId={calendarGroup.id}
+            groupTitle={calendarGroup.title}
+            startDate={calendarGroup.start_date}
+            maxLessons={calendarGroup.max_lessons}
+            lessonDays={calendarGroup.lesson_days}
+            open={!!calendarGroup}
+            onOpenChange={(open) => !open && setCalendarGroup(null)}
+          />
+        )}
       </main>
     </div>
   );

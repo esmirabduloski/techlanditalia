@@ -11,9 +11,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Progress } from "@/components/ui/progress";
 import { 
   Loader2, User, BookOpen, Users, UsersRound, LogOut, Home, Phone, Mail, Clock,
-  ChevronRight, GraduationCap, Plus, Trash2, Edit2, Bell, Check, CheckCheck
+  ChevronRight, GraduationCap, Plus, Trash2, Edit2, Bell, Check, CheckCheck,
+  BarChart3, CalendarDays, ExternalLink, TrendingUp, TrendingDown, AlertTriangle,
+  Link as LinkIcon, Book, FileText, Calendar, Video, MessageCircle, HelpCircle, Settings, Star, Globe
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -59,12 +62,61 @@ interface TeacherNotification {
   created_at: string;
 }
 
+interface GroupStats {
+  groupId: string;
+  groupTitle: string;
+  attendanceRate: number;
+  totalLessons: number;
+  totalStudents: number;
+}
+
+interface StudentActivity {
+  studentId: string;
+  studentName: string;
+  attendanceRate: number;
+  totalPresent: number;
+  totalLessons: number;
+}
+
+interface UpcomingLesson {
+  id: string;
+  group_id: string;
+  group_title: string;
+  lesson_number: number;
+  lesson_date: string;
+  lesson_title: string | null;
+}
+
+interface TeacherLink {
+  id: string;
+  title: string;
+  url: string;
+  description: string | null;
+  icon: string;
+}
+
 const DAYS = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"];
 const TIMES = Array.from({ length: 28 }, (_, i) => {
   const hour = Math.floor(i / 2) + 8;
   const minutes = i % 2 === 0 ? "00" : "30";
   return `${hour.toString().padStart(2, "0")}:${minutes}`;
 });
+
+const getIconComponent = (iconName: string) => {
+  const icons: Record<string, React.ElementType> = {
+    link: LinkIcon,
+    book: Book,
+    file: FileText,
+    calendar: Calendar,
+    video: Video,
+    message: MessageCircle,
+    help: HelpCircle,
+    settings: Settings,
+    star: Star,
+    globe: Globe,
+  };
+  return icons[iconName] || LinkIcon;
+};
 
 export default function TeacherDashboard() {
   const { user, isLoading: authLoading, signOut } = useAuth();
@@ -84,6 +136,14 @@ export default function TeacherDashboard() {
   const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([]);
   const [notifications, setNotifications] = useState<TeacherNotification[]>([]);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  
+  // New state for statistics, reminders, and links
+  const [groupStats, setGroupStats] = useState<GroupStats[]>([]);
+  const [topStudents, setTopStudents] = useState<StudentActivity[]>([]);
+  const [lowAttendanceStudents, setLowAttendanceStudents] = useState<StudentActivity[]>([]);
+  const [upcomingLessons, setUpcomingLessons] = useState<UpcomingLesson[]>([]);
+  const [teacherLinks, setTeacherLinks] = useState<TeacherLink[]>([]);
+  const [statsLoading, setStatsLoading] = useState(true);
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -174,6 +234,7 @@ export default function TeacherDashboard() {
         `)
         .eq('teacher_id', user!.id);
 
+      let fetchedGroups: StudentGroup[] = [];
       if (groupsData) {
         // Get student counts for each group
         const groupsWithCounts = await Promise.all(
@@ -196,6 +257,7 @@ export default function TeacherDashboard() {
             };
           })
         );
+        fetchedGroups = groupsWithCounts;
         setGroups(groupsWithCounts);
       }
 
@@ -208,10 +270,165 @@ export default function TeacherDashboard() {
         .limit(20);
       
       setNotifications(notificationsData || []);
+
+      // Fetch teacher links
+      const { data: linksData } = await supabase
+        .from('teacher_links')
+        .select('id, title, url, description, icon')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+      
+      setTeacherLinks(linksData || []);
+
+      // Fetch statistics and upcoming lessons
+      await fetchStatistics(fetchedGroups);
+      await fetchUpcomingLessons(fetchedGroups);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchStatistics = async (groupsList: StudentGroup[]) => {
+    if (groupsList.length === 0) {
+      setStatsLoading(false);
+      return;
+    }
+
+    try {
+      const groupIds = groupsList.map(g => g.id);
+      
+      // Fetch all attendance data for teacher's groups
+      const { data: attendanceData } = await supabase
+        .from('group_attendance')
+        .select('group_id, student_id, status, lesson_number')
+        .in('group_id', groupIds);
+
+      // Fetch all students in groups
+      const { data: groupStudentsData } = await supabase
+        .from('group_students')
+        .select('group_id, student_id, profiles!inner(id, full_name)')
+        .in('group_id', groupIds);
+
+      if (attendanceData && groupStudentsData) {
+        // Calculate group stats
+        const statsMap = new Map<string, { present: number; total: number; students: Set<string>; lessons: Set<number> }>();
+        
+        groupsList.forEach(g => {
+          statsMap.set(g.id, { present: 0, total: 0, students: new Set(), lessons: new Set() });
+        });
+
+        // Count students per group
+        groupStudentsData.forEach((gs: any) => {
+          const stats = statsMap.get(gs.group_id);
+          if (stats) {
+            stats.students.add(gs.student_id);
+          }
+        });
+
+        // Calculate attendance
+        attendanceData.forEach((a: any) => {
+          const stats = statsMap.get(a.group_id);
+          if (stats) {
+            stats.total++;
+            stats.lessons.add(a.lesson_number);
+            if (a.status === 'present') {
+              stats.present++;
+            }
+          }
+        });
+
+        const calculatedGroupStats: GroupStats[] = groupsList.map(g => {
+          const stats = statsMap.get(g.id) || { present: 0, total: 0, students: new Set(), lessons: new Set() };
+          return {
+            groupId: g.id,
+            groupTitle: g.title,
+            attendanceRate: stats.total > 0 ? Math.round((stats.present / stats.total) * 100) : 0,
+            totalLessons: stats.lessons.size,
+            totalStudents: stats.students.size
+          };
+        });
+        
+        setGroupStats(calculatedGroupStats);
+
+        // Calculate student activity
+        const studentStatsMap = new Map<string, { name: string; present: number; total: number }>();
+        
+        groupStudentsData.forEach((gs: any) => {
+          if (!studentStatsMap.has(gs.student_id)) {
+            studentStatsMap.set(gs.student_id, { 
+              name: gs.profiles.full_name, 
+              present: 0, 
+              total: 0 
+            });
+          }
+        });
+
+        attendanceData.forEach((a: any) => {
+          const student = studentStatsMap.get(a.student_id);
+          if (student) {
+            student.total++;
+            if (a.status === 'present') {
+              student.present++;
+            }
+          }
+        });
+
+        const allStudentActivities: StudentActivity[] = Array.from(studentStatsMap.entries())
+          .map(([id, stats]) => ({
+            studentId: id,
+            studentName: stats.name,
+            attendanceRate: stats.total > 0 ? Math.round((stats.present / stats.total) * 100) : 0,
+            totalPresent: stats.present,
+            totalLessons: stats.total
+          }))
+          .filter(s => s.totalLessons > 0);
+
+        // Top 3 students (highest attendance)
+        const sorted = [...allStudentActivities].sort((a, b) => b.attendanceRate - a.attendanceRate);
+        setTopStudents(sorted.slice(0, 3));
+
+        // Students with < 70% attendance
+        const lowAttendance = allStudentActivities.filter(s => s.attendanceRate < 70);
+        setLowAttendanceStudents(lowAttendance.slice(0, 5));
+      }
+    } catch (error) {
+      console.error("Error fetching statistics:", error);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+  const fetchUpcomingLessons = async (groupsList: StudentGroup[]) => {
+    if (groupsList.length === 0) return;
+
+    try {
+      const groupIds = groupsList.map(g => g.id);
+      const today = new Date().toISOString().split('T')[0];
+      const next7Days = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+      const { data: lessonsData } = await supabase
+        .from('group_lesson_schedule')
+        .select('id, group_id, lesson_number, lesson_date, lesson_title')
+        .in('group_id', groupIds)
+        .gte('lesson_date', today)
+        .lte('lesson_date', next7Days)
+        .order('lesson_date', { ascending: true })
+        .limit(10);
+
+      if (lessonsData) {
+        const lessonsWithGroups = lessonsData.map((l: any) => {
+          const group = groupsList.find(g => g.id === l.group_id);
+          return {
+            ...l,
+            group_title: group?.title || 'Gruppo'
+          };
+        });
+        setUpcomingLessons(lessonsWithGroups);
+      }
+    } catch (error) {
+      console.error("Error fetching upcoming lessons:", error);
     }
   };
 
@@ -363,6 +580,15 @@ export default function TeacherDashboard() {
     setIsEditingAvailability(false);
   };
 
+  const getDateLabel = (dateStr: string) => {
+    const today = new Date().toISOString().split('T')[0];
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    
+    if (dateStr === today) return 'Oggi';
+    if (dateStr === tomorrow) return 'Domani';
+    return new Date(dateStr).toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' });
+  };
+
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -501,11 +727,169 @@ export default function TeacherDashboard() {
           <p className="text-muted-foreground mt-1">
             Gestisci i tuoi corsi, gruppi e studenti
           </p>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <Badge variant="secondary">UTC oggi: {new Date().toISOString().slice(0, 10)}</Badge>
-            <Badge variant="outline">Locale: {new Date().toLocaleString('it-IT')}</Badge>
-          </div>
         </div>
+
+        {/* Statistics Section */}
+        <div className="grid gap-6 md:grid-cols-2 mb-8">
+          {/* Attendance by Group */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-primary" />
+                Presenze per Gruppo
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {statsLoading ? (
+                <div className="flex justify-center py-4">
+                  <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                </div>
+              ) : groupStats.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nessun dato disponibile</p>
+              ) : (
+                <div className="space-y-4">
+                  {groupStats.map(stat => (
+                    <div key={stat.groupId} className="space-y-1">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-medium">{stat.groupTitle}</span>
+                        <span className={stat.attendanceRate >= 80 ? 'text-green-600' : stat.attendanceRate >= 60 ? 'text-yellow-600' : 'text-red-600'}>
+                          {stat.attendanceRate}%
+                        </span>
+                      </div>
+                      <Progress 
+                        value={stat.attendanceRate} 
+                        className="h-2"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {stat.totalStudents} studenti • {stat.totalLessons} lezioni
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Student Activity */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Users className="w-5 h-5 text-primary" />
+                Attività Studenti
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {statsLoading ? (
+                <div className="flex justify-center py-4">
+                  <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Top Students */}
+                  {topStudents.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-medium flex items-center gap-1 mb-2">
+                        <TrendingUp className="w-4 h-4 text-green-600" />
+                        Più Attivi
+                      </h4>
+                      <div className="space-y-2">
+                        {topStudents.map((s, i) => (
+                          <div key={s.studentId} className="flex items-center justify-between text-sm">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="secondary" className="w-5 h-5 p-0 flex items-center justify-center text-xs">
+                                {i + 1}
+                              </Badge>
+                              <button
+                                onClick={() => navigate(`/insegnante/studente/${s.studentId}`)}
+                                className="hover:text-primary hover:underline"
+                              >
+                                {s.studentName}
+                              </button>
+                            </div>
+                            <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
+                              {s.attendanceRate}%
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Low Attendance Alert */}
+                  {lowAttendanceStudents.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-medium flex items-center gap-1 mb-2">
+                        <AlertTriangle className="w-4 h-4 text-amber-600" />
+                        Attenzione ({"<"}70%)
+                      </h4>
+                      <div className="space-y-2">
+                        {lowAttendanceStudents.map(s => (
+                          <div key={s.studentId} className="flex items-center justify-between text-sm">
+                            <button
+                              onClick={() => navigate(`/insegnante/studente/${s.studentId}`)}
+                              className="hover:text-primary hover:underline"
+                            >
+                              {s.studentName}
+                            </button>
+                            <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100">
+                              {s.attendanceRate}%
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {topStudents.length === 0 && lowAttendanceStudents.length === 0 && (
+                    <p className="text-sm text-muted-foreground">Nessun dato disponibile</p>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Upcoming Lessons */}
+        {upcomingLessons.length > 0 && (
+          <Card className="mb-8">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <CalendarDays className="w-5 h-5 text-primary" />
+                Lezioni in Arrivo (prossimi 7 giorni)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {upcomingLessons.map(lesson => (
+                  <div 
+                    key={lesson.id}
+                    className="flex items-center gap-3 p-3 rounded-lg border bg-background hover:bg-muted/50 cursor-pointer transition-colors"
+                    onClick={() => navigate(`/insegnante/gruppo/${lesson.group_id}`)}
+                  >
+                    <div className="flex flex-col items-center justify-center bg-primary/10 rounded-lg p-2 min-w-[60px]">
+                      <span className="text-xs font-medium text-primary">
+                        {getDateLabel(lesson.lesson_date)}
+                      </span>
+                      {lesson.lesson_date !== new Date().toISOString().split('T')[0] && (
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(lesson.lesson_date).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{lesson.group_title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Lezione {lesson.lesson_number}
+                        {lesson.lesson_title && ` • ${lesson.lesson_title}`}
+                      </p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
@@ -683,6 +1067,41 @@ export default function TeacherDashboard() {
                     )
                   )}
                 </div>
+
+                {/* Useful Links Section */}
+                {teacherLinks.length > 0 && (
+                  <div className="border-t pt-6">
+                    <h4 className="font-medium mb-4 flex items-center gap-2">
+                      <LinkIcon className="w-4 h-4 text-muted-foreground" />
+                      Link Utili
+                    </h4>
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      {teacherLinks.map(link => {
+                        const IconComponent = getIconComponent(link.icon);
+                        return (
+                          <a
+                            key={link.id}
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-3 p-3 rounded-lg border bg-background hover:bg-muted/50 hover:border-primary/50 transition-colors group"
+                          >
+                            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                              <IconComponent className="w-5 h-5" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm">{link.title}</p>
+                              {link.description && (
+                                <p className="text-xs text-muted-foreground truncate">{link.description}</p>
+                              )}
+                            </div>
+                            <ExternalLink className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          </a>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

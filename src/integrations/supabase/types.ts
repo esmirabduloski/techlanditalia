@@ -530,6 +530,44 @@ export type Database = {
           },
         ]
       }
+      group_lesson_schedule: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          lesson_date: string
+          lesson_number: number
+          lesson_title: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          lesson_date: string
+          lesson_number: number
+          lesson_title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          lesson_date?: string
+          lesson_number?: number
+          lesson_title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_lesson_schedule_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "student_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_students: {
         Row: {
           group_id: string

@@ -8,8 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { 
-  Loader2, ArrowLeft, Users, Calendar, ChevronRight, MessageCircle, Plus, Send, Trash2, Check, X
+  Loader2, ArrowLeft, Users, Calendar, ChevronRight, MessageCircle, Plus, Send, Trash2, Check, X, AlertCircle
 } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { format, addDays, isBefore, isToday, startOfDay } from "date-fns";
@@ -72,6 +73,16 @@ export default function TeacherGroupDetail() {
   const [isCommentDialogOpen, setIsCommentDialogOpen] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [isSavingComment, setIsSavingComment] = useState(false);
+  
+  // Attendance dialog
+  const [isAttendanceDialogOpen, setIsAttendanceDialogOpen] = useState(false);
+  const [selectedAttendance, setSelectedAttendance] = useState<{
+    studentId: string;
+    studentName: string;
+    lessonNumber: number;
+    currentStatus: string | undefined;
+  } | null>(null);
+  const [pendingStatus, setPendingStatus] = useState<string>('present');
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -281,28 +292,34 @@ export default function TeacherGroupDetail() {
     return lesson?.lesson_title || `Lezione ${lastLesson}`;
   };
 
-  const toggleAttendance = async (studentId: string, lessonNumber: number) => {
+  const openAttendanceDialog = (studentId: string, studentName: string, lessonNumber: number) => {
     // Check if lesson is available
     if (!availableLessons.includes(lessonNumber)) {
-      toast({ 
-        title: 'Non disponibile', 
-        description: 'Puoi segnare la presenza solo per le lezioni passate o odierne',
-        variant: 'destructive'
-      });
-      return;
+      return; // Silently ignore - button should be disabled anyway
     }
-
+    
     const currentStatus = students.find(s => s.student_id === studentId)?.attendance[lessonNumber];
-    const newStatus = currentStatus === 'present' ? 'absent' : 'present';
+    setSelectedAttendance({
+      studentId,
+      studentName,
+      lessonNumber,
+      currentStatus
+    });
+    setPendingStatus(currentStatus || 'present');
+    setIsAttendanceDialogOpen(true);
+  };
+
+  const saveAttendance = async () => {
+    if (!selectedAttendance) return;
 
     try {
       const { error } = await supabase
         .from('group_attendance')
         .upsert({
           group_id: groupId,
-          student_id: studentId,
-          lesson_number: lessonNumber,
-          status: newStatus,
+          student_id: selectedAttendance.studentId,
+          lesson_number: selectedAttendance.lessonNumber,
+          status: pendingStatus,
           marked_by: user!.id
         }, { onConflict: 'group_id,student_id,lesson_number' });
 
@@ -310,14 +327,17 @@ export default function TeacherGroupDetail() {
 
       // Update local state
       setStudents(prev => prev.map(s => {
-        if (s.student_id === studentId) {
+        if (s.student_id === selectedAttendance.studentId) {
           return {
             ...s,
-            attendance: { ...s.attendance, [lessonNumber]: newStatus }
+            attendance: { ...s.attendance, [selectedAttendance.lessonNumber]: pendingStatus }
           };
         }
         return s;
       }));
+
+      setIsAttendanceDialogOpen(false);
+      setSelectedAttendance(null);
     } catch (error: any) {
       toast({ title: 'Errore', description: error.message, variant: 'destructive' });
     }
@@ -570,7 +590,13 @@ export default function TeacherGroupDetail() {
                 <div className="w-4 h-4 rounded bg-red-500 flex items-center justify-center">
                   <X className="w-3 h-3 text-white" />
                 </div>
-                Assente
+                Assente (non giustificato)
+              </span>
+              <span className="flex items-center gap-1">
+                <div className="w-4 h-4 rounded bg-yellow-500 flex items-center justify-center">
+                  <AlertCircle className="w-3 h-3 text-white" />
+                </div>
+                Assente (giustificato)
               </span>
               <span className="flex items-center gap-1">
                 <div className="w-4 h-4 rounded bg-muted border" />
@@ -581,6 +607,17 @@ export default function TeacherGroupDetail() {
                 Futuro (bloccato)
               </span>
             </div>
+            
+            <div className="mt-3 p-3 bg-muted/50 rounded-lg border">
+              <p className="text-sm text-muted-foreground">
+                <strong className="text-foreground">📋 Guida:</strong>
+              </p>
+              <ul className="text-sm text-muted-foreground mt-1 space-y-1">
+                <li>• <span className="text-yellow-600 font-medium">Giallo</span>: Lo studente o genitore ha avvisato in anticipo dell'assenza. <span className="italic">Aggiungi un commento al gruppo per documentare l'avviso.</span></li>
+                <li>• <span className="text-red-600 font-medium">Rosso</span>: Lo studente era assente senza preavviso.</li>
+              </ul>
+            </div>
+            
             <p className="text-sm text-muted-foreground mt-2">
               Lezioni disponibili: {availableLessons.length} di {totalLessons}
             </p>
@@ -618,23 +655,25 @@ export default function TeacherGroupDetail() {
                           return (
                             <td key={lessonNum} className="p-1 text-center">
                               <button
-                                onClick={() => toggleAttendance(student.student_id, lessonNum)}
+                                onClick={() => isAvailable && openAttendanceDialog(student.student_id, student.full_name, lessonNum)}
                                 disabled={!isAvailable}
                                 className={cn(
                                   "w-6 h-6 rounded transition-colors flex items-center justify-center",
                                   status === 'present' && "bg-green-500 hover:bg-green-600",
                                   status === 'absent' && "bg-red-500 hover:bg-red-600",
-                                  !status && isAvailable && "bg-muted border hover:bg-muted/80",
-                                  !isAvailable && "bg-muted border-2 border-dashed border-muted-foreground/30 cursor-not-allowed"
+                                  status === 'justified' && "bg-yellow-500 hover:bg-yellow-600",
+                                  !status && isAvailable && "bg-muted border hover:bg-muted/80 cursor-pointer",
+                                  !isAvailable && "bg-muted border-2 border-dashed border-muted-foreground/30 cursor-not-allowed opacity-50"
                                 )}
                                 title={
                                   !isAvailable 
                                     ? `Lezione ${lessonNum}: Futura (non modificabile)`
-                                    : `Lezione ${lessonNum}: ${status || 'Non segnato'}`
+                                    : `Lezione ${lessonNum}: ${status === 'present' ? 'Presente' : status === 'absent' ? 'Assente' : status === 'justified' ? 'Giustificato' : 'Non segnato'}`
                                 }
                               >
                                 {status === 'present' && <Check className="w-3 h-3 text-white" />}
                                 {status === 'absent' && <X className="w-3 h-3 text-white" />}
+                                {status === 'justified' && <AlertCircle className="w-3 h-3 text-white" />}
                               </button>
                             </td>
                           );
@@ -696,6 +735,75 @@ export default function TeacherGroupDetail() {
                 <Send className="w-4 h-4 mr-2" />
               )}
               Salva
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Attendance Status Dialog */}
+      <Dialog open={isAttendanceDialogOpen} onOpenChange={setIsAttendanceDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Segna Presenza</DialogTitle>
+          </DialogHeader>
+          
+          {selectedAttendance && (
+            <div className="space-y-4 py-4">
+              <div className="text-sm">
+                <span className="text-muted-foreground">Studente:</span>{' '}
+                <span className="font-medium">{selectedAttendance.studentName}</span>
+              </div>
+              <div className="text-sm">
+                <span className="text-muted-foreground">Lezione:</span>{' '}
+                <span className="font-medium">{selectedAttendance.lessonNumber}</span>
+              </div>
+              
+              <RadioGroup value={pendingStatus} onValueChange={setPendingStatus} className="space-y-3">
+                <div className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer" onClick={() => setPendingStatus('present')}>
+                  <RadioGroupItem value="present" id="present" />
+                  <div className="flex items-center gap-2 flex-1">
+                    <div className="w-6 h-6 rounded bg-green-500 flex items-center justify-center">
+                      <Check className="w-4 h-4 text-white" />
+                    </div>
+                    <Label htmlFor="present" className="cursor-pointer font-medium">Presente</Label>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer" onClick={() => setPendingStatus('justified')}>
+                  <RadioGroupItem value="justified" id="justified" />
+                  <div className="flex items-center gap-2 flex-1">
+                    <div className="w-6 h-6 rounded bg-yellow-500 flex items-center justify-center">
+                      <AlertCircle className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <Label htmlFor="justified" className="cursor-pointer font-medium">Assente (giustificato)</Label>
+                      <p className="text-xs text-muted-foreground">Ha avvisato in anticipo</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer" onClick={() => setPendingStatus('absent')}>
+                  <RadioGroupItem value="absent" id="absent" />
+                  <div className="flex items-center gap-2 flex-1">
+                    <div className="w-6 h-6 rounded bg-red-500 flex items-center justify-center">
+                      <X className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <Label htmlFor="absent" className="cursor-pointer font-medium">Assente (non giustificato)</Label>
+                      <p className="text-xs text-muted-foreground">Non ha avvisato</p>
+                    </div>
+                  </div>
+                </div>
+              </RadioGroup>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAttendanceDialogOpen(false)}>
+              Annulla
+            </Button>
+            <Button onClick={saveAttendance}>
+              Conferma
             </Button>
           </DialogFooter>
         </DialogContent>

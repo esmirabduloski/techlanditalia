@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { AdminNav } from "@/components/admin/AdminNav";
 import { LessonCalendarManager } from "@/components/admin/LessonCalendarManager";
 import { 
-  Loader2, Plus, Users, LogOut, Home, Edit, Trash2, UsersRound, Search, Calendar
+  Loader2, Plus, Users, LogOut, Home, Edit, Trash2, UsersRound, Search, Calendar, RotateCcw
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -88,6 +88,8 @@ export default function AdminGroups() {
   const [editingGroup, setEditingGroup] = useState<StudentGroup | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [calendarGroup, setCalendarGroup] = useState<StudentGroup | null>(null);
+  const [resetAttendanceConfirm, setResetAttendanceConfirm] = useState<StudentGroup | null>(null);
+  const [isResetting, setIsResetting] = useState(false);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -334,6 +336,33 @@ export default function AdminGroups() {
     navigate('/admin/login');
   };
 
+  const handleResetAttendance = async (group: StudentGroup) => {
+    setIsResetting(true);
+    try {
+      // Delete all attendance records for this group
+      const { error } = await supabase
+        .from('group_attendance')
+        .delete()
+        .eq('group_id', group.id);
+
+      if (error) throw error;
+
+      toast({ 
+        title: 'Successo', 
+        description: `Presenze del gruppo "${group.title}" resettate con successo` 
+      });
+    } catch (error: any) {
+      toast({ 
+        title: 'Errore', 
+        description: error.message, 
+        variant: 'destructive' 
+      });
+    } finally {
+      setIsResetting(false);
+      setResetAttendanceConfirm(null);
+    }
+  };
+
   const toggleStudent = (studentId: string) => {
     setFormData(prev => ({
       ...prev,
@@ -457,6 +486,14 @@ export default function AdminGroups() {
                             title="Gestisci calendario"
                           >
                             <Calendar className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => setResetAttendanceConfirm(group)}
+                            title="Reset presenze"
+                          >
+                            <RotateCcw className="w-4 h-4 text-orange-500" />
                           </Button>
                           <Button variant="ghost" size="icon" onClick={() => openEditDialog(group)}>
                             <Edit className="w-4 h-4" />
@@ -667,6 +704,33 @@ export default function AdminGroups() {
               <AlertDialogCancel>Annulla</AlertDialogCancel>
               <AlertDialogAction onClick={() => deleteConfirm && handleDelete(deleteConfirm)}>
                 Elimina
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Reset Attendance Confirmation */}
+        <AlertDialog open={!!resetAttendanceConfirm} onOpenChange={() => setResetAttendanceConfirm(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Reset Presenze</AlertDialogTitle>
+              <AlertDialogDescription>
+                Sei sicuro di voler resettare tutte le presenze del gruppo "{resetAttendanceConfirm?.title}"? 
+                <br /><br />
+                <strong className="text-destructive">Attenzione:</strong> Questa azione eliminerà permanentemente 
+                tutti i dati delle presenze (presenti, assenti, giustificati) per questo gruppo. 
+                L'azione non può essere annullata.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isResetting}>Annulla</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={() => resetAttendanceConfirm && handleResetAttendance(resetAttendanceConfirm)}
+                disabled={isResetting}
+                className="bg-orange-500 hover:bg-orange-600"
+              >
+                {isResetting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <RotateCcw className="w-4 h-4 mr-2" />}
+                Reset Presenze
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

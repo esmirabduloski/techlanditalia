@@ -80,6 +80,7 @@ export default function TeacherGroupDetail() {
     studentId: string;
     studentName: string;
     lessonNumber: number;
+    lessonDate: string;
     currentStatus: string | undefined;
   } | null>(null);
   const [pendingStatus, setPendingStatus] = useState<string>('present');
@@ -275,14 +276,30 @@ export default function TeacherGroupDetail() {
 
   // Check if a lesson date is today or in the past (UTC)
   const isLessonAvailable = (lessonNumber: number): boolean => {
-    const lesson = lessonSchedule.find(l => l.lesson_number === lessonNumber);
+    const lesson = lessonSchedule.find((l) => l.lesson_number === lessonNumber);
     if (!lesson) return false;
 
     return isLessonDateAvailableUtc(lesson.lesson_date);
   };
 
   // Get count of available lessons for display
-  const availableLessonsCount = lessonSchedule.filter(lesson => isLessonDateAvailableUtc(lesson.lesson_date)).length;
+  const availableLessonsCount = lessonSchedule.filter((lesson) =>
+    isLessonDateAvailableUtc(lesson.lesson_date)
+  ).length;
+
+  // Debug: log the date comparison whenever schedule changes
+  useEffect(() => {
+    if (lessonSchedule.length === 0) return;
+    const utcToday = new Date().toISOString().slice(0, 10);
+    console.log('[Attendance UTC check]', {
+      utcToday,
+      sample: lessonSchedule.slice(0, 5).map((l) => ({
+        n: l.lesson_number,
+        date: l.lesson_date,
+        available: isLessonDateAvailableUtc(l.lesson_date),
+      })),
+    });
+  }, [lessonSchedule]);
 
   // Calculate last completed lesson based on attendance
   const getLastCompletedLesson = (): string => {
@@ -306,18 +323,22 @@ export default function TeacherGroupDetail() {
     return lesson?.lesson_title || `Lezione ${lastLesson}`;
   };
 
-  const openAttendanceDialog = (studentId: string, studentName: string, lessonNumber: number) => {
-    // Check if lesson is available using the date check function
-    if (!isLessonAvailable(lessonNumber)) {
-      return; // Silently ignore - button should be disabled anyway
-    }
-    
-    const currentStatus = students.find(s => s.student_id === studentId)?.attendance[lessonNumber];
+  const openAttendanceDialog = (
+    studentId: string,
+    studentName: string,
+    lessonNumber: number,
+    lessonDate: string
+  ) => {
+    // Block future lessons (UTC)
+    if (!isLessonDateAvailableUtc(lessonDate)) return;
+
+    const currentStatus = students.find((s) => s.student_id === studentId)?.attendance[lessonNumber];
     setSelectedAttendance({
       studentId,
       studentName,
       lessonNumber,
-      currentStatus
+      lessonDate,
+      currentStatus,
     });
     setPendingStatus(currentStatus || 'present');
     setIsAttendanceDialogOpen(true);
@@ -635,6 +656,15 @@ export default function TeacherGroupDetail() {
             <p className="text-sm text-muted-foreground mt-2">
               Lezioni disponibili: {availableLessonsCount} di {totalLessons}
             </p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <Badge variant="secondary">UTC oggi: {new Date().toISOString().slice(0, 10)}</Badge>
+              {lessonSchedule[0] && (
+                <Badge variant="outline">L1: {lessonSchedule[0].lesson_date}</Badge>
+              )}
+              {lessonSchedule[1] && (
+                <Badge variant="outline">L2: {lessonSchedule[1].lesson_date}</Badge>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             {students.length === 0 ? (
@@ -665,17 +695,18 @@ export default function TeacherGroupDetail() {
                         {lessonSchedule.map((lesson) => {
                           const lessonNum = lesson.lesson_number;
                           const status = student.attendance[lessonNum];
-                          const isAvailable = isLessonAvailable(lessonNum);
+                          const isAvailable = isLessonDateAvailableUtc(lesson.lesson_date);
                           return (
                             <td key={lessonNum} className="p-1 text-center">
                               <button
-                                onClick={() => openAttendanceDialog(student.student_id, student.full_name, lessonNum)}
+                                onClick={() => openAttendanceDialog(student.student_id, student.full_name, lessonNum, lesson.lesson_date)}
                                 disabled={!isAvailable}
                                 className={cn(
                                   "w-6 h-6 rounded transition-colors flex items-center justify-center",
-                                  status === 'present' && "bg-green-500 hover:bg-green-600",
-                                  status === 'absent' && "bg-red-500 hover:bg-red-600",
-                                  status === 'justified' && "bg-yellow-500 hover:bg-yellow-600",
+                                  !isAvailable && "pointer-events-none",
+                                  status === 'present' && (isAvailable ? "bg-green-500 hover:bg-green-600" : "bg-green-500 opacity-50"),
+                                  status === 'absent' && (isAvailable ? "bg-red-500 hover:bg-red-600" : "bg-red-500 opacity-50"),
+                                  status === 'justified' && (isAvailable ? "bg-yellow-500 hover:bg-yellow-600" : "bg-yellow-500 opacity-50"),
                                   !status && isAvailable && "bg-muted border hover:bg-muted/80 cursor-pointer",
                                   !isAvailable && "bg-muted border-2 border-dashed border-muted-foreground/30 cursor-not-allowed opacity-50"
                                 )}

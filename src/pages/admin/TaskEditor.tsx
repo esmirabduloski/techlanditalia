@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AdminNav } from '@/components/admin/AdminNav';
 import { useToast } from '@/hooks/use-toast';
 import { LogOut, Loader2, ArrowLeft, Save, User } from 'lucide-react';
 import RichTextEditor from '@/components/editor/RichTextEditor';
@@ -223,6 +224,10 @@ export default function TaskEditor() {
           </div>
         </div>
       </header>
+
+      <AdminNav />
+
+      {/* Main Content */}
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 py-8">

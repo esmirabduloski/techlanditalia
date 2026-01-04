@@ -5,15 +5,13 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { AdminNav } from '@/components/admin/AdminNav';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
-import {
-  Loader2, Check, X, AlertTriangle, LogOut, User, FileText, GraduationCap,
-  BookOpen, Mail, BarChart3, Eye, Calendar as CalendarIcon, ClipboardCheck, Award
-} from 'lucide-react';
+import { Loader2, Check, X, AlertTriangle, LogOut, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ScheduledLesson {
@@ -216,56 +214,7 @@ export default function AdminAttendance() {
       </header>
 
       {/* Navigation */}
-      <div className="border-b bg-background">
-        <div className="max-w-7xl mx-auto px-4">
-          <nav className="flex gap-4 overflow-x-auto">
-            <Link to="/admin" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
-              <FileText className="w-4 h-4" />
-              Blog
-            </Link>
-            <Link to="/admin/corsi" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
-              <GraduationCap className="w-4 h-4" />
-              Corsi
-            </Link>
-            <Link to="/admin/prenotazioni" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
-              <BookOpen className="w-4 h-4" />
-              Prenotazioni
-            </Link>
-            <Link to="/admin/contatti" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
-              <Mail className="w-4 h-4" />
-              Contatti
-            </Link>
-            <Link to="/admin/newsletter" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
-              <Mail className="w-4 h-4" />
-              Newsletter
-            </Link>
-            <Link to="/admin/utenti" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
-              <User className="w-4 h-4" />
-              Utenti
-            </Link>
-            <Link to="/admin/valutazioni" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
-              <Award className="w-4 h-4" />
-              Valutazioni
-            </Link>
-            <Link to="/admin/lezioni-programmate" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
-              <CalendarIcon className="w-4 h-4" />
-              Calendario
-            </Link>
-            <Link to="/admin/presenze" className="py-3 px-2 border-b-2 border-primary text-primary font-medium flex items-center gap-2 whitespace-nowrap">
-              <ClipboardCheck className="w-4 h-4" />
-              Presenze
-            </Link>
-            <Link to="/admin/statistiche" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
-              <BarChart3 className="w-4 h-4" />
-              Statistiche
-            </Link>
-            <Link to="/admin/simulatore" className="py-3 px-2 text-muted-foreground hover:text-foreground flex items-center gap-2 whitespace-nowrap">
-              <Eye className="w-4 h-4" />
-              Simulatore
-            </Link>
-          </nav>
-        </div>
-      </div>
+      <AdminNav />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">

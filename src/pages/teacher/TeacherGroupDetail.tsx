@@ -6,11 +6,22 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { 
-  Loader2, ArrowLeft, Users, Calendar, BookOpen, CheckCircle2, XCircle, Clock, ChevronRight
+  Loader2, ArrowLeft, Users, Calendar, BookOpen, ChevronRight, MessageCircle, Plus, Send, Trash2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { it } from "date-fns/locale";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 interface GroupStudent {
   id: string;
@@ -30,6 +41,14 @@ interface StudentGroup {
   start_date: string | null;
   last_lesson_title: string | null;
   max_lessons: number;
+  lesson_days: number[];
+}
+
+interface GroupComment {
+  id: string;
+  content: string;
+  created_at: string;
+  author_name: string;
 }
 
 export default function TeacherGroupDetail() {
@@ -43,6 +62,12 @@ export default function TeacherGroupDetail() {
   const [students, setStudents] = useState<GroupStudent[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [lastLessonTitle, setLastLessonTitle] = useState("");
+  
+  // Group comments
+  const [groupComments, setGroupComments] = useState<GroupComment[]>([]);
+  const [isCommentDialogOpen, setIsCommentDialogOpen] = useState(false);
+  const [newComment, setNewComment] = useState('');
+  const [isSavingComment, setIsSavingComment] = useState(false);
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -58,7 +83,7 @@ export default function TeacherGroupDetail() {
       const { data: groupData } = await supabase
         .from('student_groups')
         .select(`
-          id, title, course_id, start_date, last_lesson_title, max_lessons, teacher_id,
+          id, title, course_id, start_date, last_lesson_title, max_lessons, teacher_id, lesson_days,
           courses!inner(title, emoji)
         `)
         .eq('id', groupId)
@@ -85,7 +110,8 @@ export default function TeacherGroupDetail() {
         teacher_name: teacherProfile?.full_name || '',
         start_date: groupData.start_date,
         last_lesson_title: groupData.last_lesson_title,
-        max_lessons: groupData.max_lessons
+        max_lessons: groupData.max_lessons,
+        lesson_days: (groupData.lesson_days as number[]) || [0]
       });
       setLastLessonTitle(groupData.last_lesson_title || "");
 
@@ -123,6 +149,25 @@ export default function TeacherGroupDetail() {
 
         setStudents(studentsWithAttendance);
       }
+
+      // Fetch group comments
+      const { data: commentsData } = await supabase
+        .from('group_comments')
+        .select(`
+          id, content, created_at, author_id,
+          profiles:author_id(full_name)
+        `)
+        .eq('group_id', groupId)
+        .order('created_at', { ascending: false });
+
+      if (commentsData) {
+        setGroupComments(commentsData.map((c: any) => ({
+          id: c.id,
+          content: c.content,
+          created_at: c.created_at,
+          author_name: c.profiles?.full_name || 'Insegnante'
+        })));
+      }
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -130,7 +175,53 @@ export default function TeacherGroupDetail() {
     }
   };
 
+  // Calculate which lessons are available for attendance (today or past)
+  const getAvailableLessons = (): number[] => {
+    if (!group?.start_date || !group?.lesson_days) return [];
+
+    const startDate = new Date(group.start_date);
+    const today = new Date();
+    today.setHours(23, 59, 59, 999); // End of today
+
+    const availableLessons: number[] = [];
+    let currentDate = new Date(startDate);
+    let lessonCount = 0;
+
+    // Iterate through dates until we've covered all possible lessons or exceeded today
+    while (lessonCount < group.max_lessons) {
+      const dayOfWeek = currentDate.getDay();
+      
+      if (group.lesson_days.includes(dayOfWeek)) {
+        lessonCount++;
+        if (currentDate <= today) {
+          availableLessons.push(lessonCount);
+        }
+      }
+      
+      currentDate.setDate(currentDate.getDate() + 1);
+      
+      // Safety check: don't iterate forever if no lesson days are set
+      if (currentDate.getTime() - startDate.getTime() > 365 * 24 * 60 * 60 * 1000 * 2) {
+        break;
+      }
+    }
+
+    return availableLessons;
+  };
+
+  const availableLessons = getAvailableLessons();
+
   const toggleAttendance = async (studentId: string, lessonNumber: number) => {
+    // Check if lesson is available
+    if (!availableLessons.includes(lessonNumber)) {
+      toast({ 
+        title: 'Non disponibile', 
+        description: 'Puoi segnare la presenza solo per le lezioni passate o odierne',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     const currentStatus = students.find(s => s.student_id === studentId)?.attendance[lessonNumber];
     const newStatus = currentStatus === 'present' ? 'absent' : 'present';
 
@@ -179,6 +270,53 @@ export default function TeacherGroupDetail() {
     }
   };
 
+  const handleAddGroupComment = async () => {
+    if (!newComment.trim()) return;
+
+    setIsSavingComment(true);
+    try {
+      const { error } = await supabase
+        .from('group_comments')
+        .insert({
+          group_id: groupId,
+          author_id: user!.id,
+          content: newComment.trim()
+        });
+
+      if (error) throw error;
+
+      toast({ title: 'Commento aggiunto' });
+      setNewComment('');
+      setIsCommentDialogOpen(false);
+      fetchData();
+    } catch (error: any) {
+      toast({ title: 'Errore', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsSavingComment(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    try {
+      const { error } = await supabase
+        .from('group_comments')
+        .delete()
+        .eq('id', commentId);
+
+      if (error) throw error;
+
+      toast({ title: 'Commento eliminato' });
+      fetchData();
+    } catch (error: any) {
+      toast({ title: 'Errore', description: error.message, variant: 'destructive' });
+    }
+  };
+
+  const getDayName = (dayNum: number) => {
+    const days = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+    return days[dayNum];
+  };
+
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -216,7 +354,7 @@ export default function TeacherGroupDetail() {
         {/* Group Info Card */}
         <Card className="mb-6">
           <CardContent className="pt-6">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
               <div>
                 <p className="text-sm text-muted-foreground">Gruppo</p>
                 <p className="text-lg font-semibold">{group.title}</p>
@@ -233,6 +371,16 @@ export default function TeacherGroupDetail() {
                   <Calendar className="w-4 h-4" />
                   {group.start_date ? new Date(group.start_date).toLocaleDateString('it-IT') : '-'}
                 </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Giorni Lezione</p>
+                <div className="flex gap-1 mt-1">
+                  {group.lesson_days.map(day => (
+                    <Badge key={day} variant="secondary" className="text-xs">
+                      {getDayName(day)}
+                    </Badge>
+                  ))}
+                </div>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Studenti</p>
@@ -260,6 +408,48 @@ export default function TeacherGroupDetail() {
           </CardContent>
         </Card>
 
+        {/* Group Comments */}
+        <Card className="mb-6">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <MessageCircle className="w-5 h-5" />
+              Note del Gruppo
+            </CardTitle>
+            <Button onClick={() => setIsCommentDialogOpen(true)} size="sm">
+              <Plus className="w-4 h-4 mr-2" />
+              Aggiungi Nota
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {groupComments.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                Nessuna nota per questo gruppo
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {groupComments.map(comment => (
+                  <div key={comment.id} className="p-3 bg-muted rounded-lg">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0"
+                        onClick={() => handleDeleteComment(comment.id)}
+                      >
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {comment.author_name} • {format(new Date(comment.created_at), "d MMM yyyy 'alle' HH:mm", { locale: it })}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Attendance Grid */}
         <Card>
           <CardHeader>
@@ -267,7 +457,7 @@ export default function TeacherGroupDetail() {
               <Users className="w-5 h-5" />
               Registro Presenze
             </CardTitle>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
               <span className="flex items-center gap-1">
                 <div className="w-4 h-4 rounded bg-green-500" />
                 Presente
@@ -280,7 +470,16 @@ export default function TeacherGroupDetail() {
                 <div className="w-4 h-4 rounded bg-muted border" />
                 Non segnato
               </span>
+              <span className="flex items-center gap-1">
+                <div className="w-4 h-4 rounded bg-muted border-2 border-dashed border-muted-foreground/30" />
+                Futuro (bloccato)
+              </span>
             </div>
+            {group.start_date && (
+              <p className="text-sm text-muted-foreground mt-2">
+                Lezioni disponibili: {availableLessons.length} di {totalLessons}
+              </p>
+            )}
           </CardHeader>
           <CardContent>
             {students.length === 0 ? (
@@ -311,17 +510,24 @@ export default function TeacherGroupDetail() {
                         {Array.from({ length: totalLessons }, (_, i) => {
                           const lessonNum = i + 1;
                           const status = student.attendance[lessonNum];
+                          const isAvailable = availableLessons.includes(lessonNum);
                           return (
                             <td key={lessonNum} className="p-1 text-center">
                               <button
                                 onClick={() => toggleAttendance(student.student_id, lessonNum)}
+                                disabled={!isAvailable}
                                 className={cn(
                                   "w-6 h-6 rounded transition-colors",
                                   status === 'present' && "bg-green-500 hover:bg-green-600",
                                   status === 'absent' && "bg-red-500 hover:bg-red-600",
-                                  !status && "bg-muted border hover:bg-muted/80"
+                                  !status && isAvailable && "bg-muted border hover:bg-muted/80",
+                                  !isAvailable && "bg-muted border-2 border-dashed border-muted-foreground/30 cursor-not-allowed"
                                 )}
-                                title={`Lezione ${lessonNum}: ${status || 'Non segnato'}`}
+                                title={
+                                  !isAvailable 
+                                    ? `Lezione ${lessonNum}: Futura (non modificabile)`
+                                    : `Lezione ${lessonNum}: ${status || 'Non segnato'}`
+                                }
                               />
                             </td>
                           );
@@ -344,6 +550,44 @@ export default function TeacherGroupDetail() {
           </CardContent>
         </Card>
       </main>
+
+      {/* Add Comment Dialog */}
+      <Dialog open={isCommentDialogOpen} onOpenChange={setIsCommentDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Aggiungi Nota al Gruppo</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Nota</Label>
+              <Textarea
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="Scrivi una nota generale per questo gruppo..."
+                rows={4}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCommentDialogOpen(false)}>
+              Annulla
+            </Button>
+            <Button 
+              onClick={handleAddGroupComment} 
+              disabled={isSavingComment || !newComment.trim()}
+            >
+              {isSavingComment ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : (
+                <Send className="w-4 h-4 mr-2" />
+              )}
+              Salva
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

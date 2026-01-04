@@ -495,6 +495,41 @@ export type Database = {
           },
         ]
       }
+      group_comments: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          group_id: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          group_id: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          group_id?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_comments_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "student_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_students: {
         Row: {
           group_id: string
@@ -1093,6 +1128,7 @@ export type Database = {
           created_at: string | null
           id: string
           last_lesson_title: string | null
+          lesson_days: number[] | null
           max_lessons: number | null
           start_date: string | null
           teacher_id: string | null
@@ -1104,6 +1140,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           last_lesson_title?: string | null
+          lesson_days?: number[] | null
           max_lessons?: number | null
           start_date?: string | null
           teacher_id?: string | null
@@ -1115,6 +1152,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           last_lesson_title?: string | null
+          lesson_days?: number[] | null
           max_lessons?: number | null
           start_date?: string | null
           teacher_id?: string | null

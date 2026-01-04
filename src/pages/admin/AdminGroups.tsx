@@ -92,6 +92,7 @@ export default function AdminGroups() {
     teacher_id: '__none__',
     start_date: '',
     max_lessons: 32,
+    lesson_days: [0] as number[], // Default Sunday
     selected_students: [] as string[]
   });
   const [isSaving, setIsSaving] = useState(false);
@@ -202,6 +203,7 @@ export default function AdminGroups() {
       teacher_id: '__none__',
       start_date: '',
       max_lessons: 32,
+      lesson_days: [0],
       selected_students: []
     });
     setStudentSearch('');
@@ -209,7 +211,13 @@ export default function AdminGroups() {
   };
 
   const openEditDialog = async (group: StudentGroup) => {
-    // Fetch current students in group
+    // Fetch current students and group details with lesson_days
+    const { data: groupDetails } = await supabase
+      .from('student_groups')
+      .select('lesson_days')
+      .eq('id', group.id)
+      .single();
+
     const { data: groupStudents } = await supabase
       .from('group_students')
       .select('student_id')
@@ -222,6 +230,7 @@ export default function AdminGroups() {
       teacher_id: group.teacher_id || '__none__',
       start_date: group.start_date || '',
       max_lessons: group.max_lessons,
+      lesson_days: (groupDetails?.lesson_days as number[]) || [0],
       selected_students: groupStudents?.map(gs => gs.student_id) || []
     });
     setStudentSearch('');
@@ -245,7 +254,8 @@ export default function AdminGroups() {
             course_id: formData.course_id,
             teacher_id: formData.teacher_id === '__none__' ? null : formData.teacher_id,
             start_date: formData.start_date || null,
-            max_lessons: formData.max_lessons
+            max_lessons: formData.max_lessons,
+            lesson_days: formData.lesson_days
           })
           .eq('id', editingGroup.id);
 
@@ -274,7 +284,8 @@ export default function AdminGroups() {
             course_id: formData.course_id,
             teacher_id: formData.teacher_id === '__none__' ? null : formData.teacher_id,
             start_date: formData.start_date || null,
-            max_lessons: formData.max_lessons
+            max_lessons: formData.max_lessons,
+            lesson_days: formData.lesson_days
           })
           .select()
           .single();
@@ -534,6 +545,48 @@ export default function AdminGroups() {
                     Usa 40 per Minecraft, 32 per altri corsi
                   </p>
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Giorni Lezione (seleziona uno o più giorni)</Label>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { value: 0, label: 'Dom' },
+                    { value: 1, label: 'Lun' },
+                    { value: 2, label: 'Mar' },
+                    { value: 3, label: 'Mer' },
+                    { value: 4, label: 'Gio' },
+                    { value: 5, label: 'Ven' },
+                    { value: 6, label: 'Sab' }
+                  ].map(day => (
+                    <Button
+                      key={day.value}
+                      type="button"
+                      variant={formData.lesson_days.includes(day.value) ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        setFormData(prev => {
+                          const isSelected = prev.lesson_days.includes(day.value);
+                          // Don't allow removing the last day
+                          if (isSelected && prev.lesson_days.length === 1) return prev;
+                          return {
+                            ...prev,
+                            lesson_days: isSelected
+                              ? prev.lesson_days.filter(d => d !== day.value)
+                              : [...prev.lesson_days, day.value].sort((a, b) => a - b)
+                          };
+                        });
+                      }}
+                    >
+                      {day.label}
+                    </Button>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {formData.lesson_days.length > 1 
+                    ? `${formData.lesson_days.length} lezioni a settimana`
+                    : '1 lezione a settimana'}
+                </p>
               </div>
 
               <div className="space-y-2">

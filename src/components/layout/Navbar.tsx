@@ -68,7 +68,7 @@ export function Navbar() {
               <Button variant="ghost" asChild>
                 <Link to="/auth">Accedi</Link>
               </Button>
-            ) : !isInAreaRiservata ? (
+            ) : !isInAreaRiservata && !isTeacher ? (
               <Button variant="ghost" asChild>
                 <Link to="/area-riservata" className="flex items-center gap-2">
                   <User className="w-4 h-4" />
@@ -120,7 +120,7 @@ export function Navbar() {
                   <Button variant="outline" asChild>
                     <Link to="/auth" onClick={() => setIsOpen(false)}>Accedi</Link>
                   </Button>
-                ) : !isInAreaRiservata ? (
+                ) : !isInAreaRiservata && !isTeacher ? (
                   <Button variant="outline" asChild>
                     <Link to="/area-riservata" onClick={() => setIsOpen(false)} className="flex items-center gap-2">
                       <User className="w-4 h-4" />

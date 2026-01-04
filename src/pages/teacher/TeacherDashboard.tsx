@@ -13,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 import { 
-  Loader2, User, BookOpen, Users, UsersRound, LogOut, Home, Phone, Mail, Clock,
+  Loader2, User, BookOpen, Users, UsersRound, LogOut, Phone, Mail, Clock,
   ChevronRight, GraduationCap, Plus, Trash2, Edit2, Bell, Check, CheckCheck,
   BarChart3, CalendarDays, ExternalLink, TrendingUp, TrendingDown, AlertTriangle,
   Link as LinkIcon, Book, FileText, Calendar, Video, MessageCircle, HelpCircle, Settings, Star, Globe
@@ -702,12 +702,6 @@ export default function TeacherDashboard() {
               </PopoverContent>
             </Popover>
 
-            <Link to="/area-riservata">
-              <Button variant="outline" size="sm">
-                <Home className="w-4 h-4 mr-2" />
-                Area Riservata
-              </Button>
-            </Link>
             <span className="text-sm text-muted-foreground hidden sm:block">{user?.email}</span>
             <Button variant="outline" size="sm" onClick={handleSignOut}>
               <LogOut className="w-4 h-4 mr-2" />

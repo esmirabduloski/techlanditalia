@@ -329,20 +329,29 @@ export default function TeacherDashboard() {
         endTime: slot.endTime
       }));
       
+      let error;
       if (teacherProfile) {
-        await supabase
+        const result = await supabase
           .from('teacher_profiles')
           .update({ availability: availabilityData as unknown as any })
           .eq('user_id', user!.id);
+        error = result.error;
       } else {
-        await supabase
+        const result = await supabase
           .from('teacher_profiles')
           .insert([{ user_id: user!.id, availability: availabilityData as unknown as any }]);
+        error = result.error;
       }
+      
+      if (error) {
+        throw error;
+      }
+      
       toast({ title: 'Salvato', description: 'Disponibilità aggiornata' });
       setIsEditingAvailability(false);
-      fetchData();
+      await fetchData();
     } catch (error: any) {
+      console.error('Error saving availability:', error);
       toast({ title: 'Errore', description: error.message, variant: 'destructive' });
     } finally {
       setIsSaving(false);

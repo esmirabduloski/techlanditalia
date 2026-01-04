@@ -256,19 +256,29 @@ export default function TeacherGroupDetail() {
     }
   };
 
-  // Get available lessons based on schedule
-  const getAvailableLessons = (): number[] => {
-    const today = startOfDay(new Date());
+  // Check if a lesson date is today or in the past
+  const isLessonAvailable = (lessonNumber: number): boolean => {
+    const lesson = lessonSchedule.find(l => l.lesson_number === lessonNumber);
+    if (!lesson) return false;
     
-    return lessonSchedule
-      .filter(lesson => {
-        const lessonDate = startOfDay(new Date(lesson.lesson_date));
-        return isBefore(lessonDate, today) || isToday(lessonDate);
-      })
-      .map(lesson => lesson.lesson_number);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const lessonDate = new Date(lesson.lesson_date);
+    lessonDate.setHours(0, 0, 0, 0);
+    
+    // Lesson is available if its date is <= today
+    return lessonDate.getTime() <= today.getTime();
   };
 
-  const availableLessons = getAvailableLessons();
+  // Get count of available lessons for display
+  const availableLessonsCount = lessonSchedule.filter(lesson => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const lessonDate = new Date(lesson.lesson_date);
+    lessonDate.setHours(0, 0, 0, 0);
+    return lessonDate.getTime() <= today.getTime();
+  }).length;
 
   // Calculate last completed lesson based on attendance
   const getLastCompletedLesson = (): string => {
@@ -293,8 +303,8 @@ export default function TeacherGroupDetail() {
   };
 
   const openAttendanceDialog = (studentId: string, studentName: string, lessonNumber: number) => {
-    // Check if lesson is available
-    if (!availableLessons.includes(lessonNumber)) {
+    // Check if lesson is available using the date check function
+    if (!isLessonAvailable(lessonNumber)) {
       return; // Silently ignore - button should be disabled anyway
     }
     
@@ -619,7 +629,7 @@ export default function TeacherGroupDetail() {
             </div>
             
             <p className="text-sm text-muted-foreground mt-2">
-              Lezioni disponibili: {availableLessons.length} di {totalLessons}
+              Lezioni disponibili: {availableLessonsCount} di {totalLessons}
             </p>
           </CardHeader>
           <CardContent>
@@ -629,13 +639,13 @@ export default function TeacherGroupDetail() {
                 <p className="text-muted-foreground">Nessuno studente in questo gruppo</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
+              <div className="overflow-x-auto max-w-full" style={{ scrollbarWidth: 'thin' }}>
+                <table className="w-auto min-w-full">
                   <thead>
                     <tr>
-                      <th className="text-left p-2 min-w-[150px] sticky left-0 bg-background">Studente</th>
-                      {lessonSchedule.slice(0, 16).map((lesson) => (
-                        <th key={lesson.lesson_number} className="p-1 text-center text-xs min-w-[32px]" title={format(new Date(lesson.lesson_date), 'd/M')}>
+                      <th className="text-left p-2 min-w-[150px] sticky left-0 bg-background z-10">Studente</th>
+                      {lessonSchedule.map((lesson) => (
+                        <th key={lesson.lesson_number} className="p-1 text-center text-xs min-w-[36px]" title={format(new Date(lesson.lesson_date), 'd/M/yyyy')}>
                           {lesson.lesson_number}
                         </th>
                       ))}
@@ -645,17 +655,17 @@ export default function TeacherGroupDetail() {
                   <tbody>
                     {students.map(student => (
                       <tr key={student.student_id} className="border-t">
-                        <td className="p-2 font-medium sticky left-0 bg-background">
+                        <td className="p-2 font-medium sticky left-0 bg-background z-10">
                           {student.full_name}
                         </td>
-                        {lessonSchedule.slice(0, 16).map((lesson) => {
+                        {lessonSchedule.map((lesson) => {
                           const lessonNum = lesson.lesson_number;
                           const status = student.attendance[lessonNum];
-                          const isAvailable = availableLessons.includes(lessonNum);
+                          const isAvailable = isLessonAvailable(lessonNum);
                           return (
                             <td key={lessonNum} className="p-1 text-center">
                               <button
-                                onClick={() => isAvailable && openAttendanceDialog(student.student_id, student.full_name, lessonNum)}
+                                onClick={() => openAttendanceDialog(student.student_id, student.full_name, lessonNum)}
                                 disabled={!isAvailable}
                                 className={cn(
                                   "w-6 h-6 rounded transition-colors flex items-center justify-center",
@@ -667,8 +677,8 @@ export default function TeacherGroupDetail() {
                                 )}
                                 title={
                                   !isAvailable 
-                                    ? `Lezione ${lessonNum}: Futura (non modificabile)`
-                                    : `Lezione ${lessonNum}: ${status === 'present' ? 'Presente' : status === 'absent' ? 'Assente' : status === 'justified' ? 'Giustificato' : 'Non segnato'}`
+                                    ? `Lezione ${lessonNum} (${format(new Date(lesson.lesson_date), 'd/M')}): Futura - non modificabile`
+                                    : `Lezione ${lessonNum} (${format(new Date(lesson.lesson_date), 'd/M')}): ${status === 'present' ? 'Presente' : status === 'absent' ? 'Assente' : status === 'justified' ? 'Giustificato' : 'Non segnato'}`
                                 }
                               >
                                 {status === 'present' && <Check className="w-3 h-3 text-white" />}
@@ -691,11 +701,9 @@ export default function TeacherGroupDetail() {
                     ))}
                   </tbody>
                 </table>
-                {lessonSchedule.length > 16 && (
-                  <p className="text-xs text-muted-foreground mt-2 text-center">
-                    Mostrando le prime 16 lezioni. Totale: {lessonSchedule.length} lezioni.
-                  </p>
-                )}
+                <p className="text-xs text-muted-foreground mt-2 text-center">
+                  Scorri orizzontalmente per vedere tutte le {lessonSchedule.length} lezioni →
+                </p>
               </div>
             )}
           </CardContent>

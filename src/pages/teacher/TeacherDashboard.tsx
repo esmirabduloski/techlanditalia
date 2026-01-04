@@ -564,7 +564,12 @@ export default function TeacherDashboard() {
                         placeholder="+39 xxx xxx xxxx"
                       />
                       <Button onClick={handleSavePhone} disabled={isSaving}>
-                        {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salva'}
+                        {isSaving ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                            Salvando...
+                          </>
+                        ) : 'Salva'}
                       </Button>
                     </div>
                   </div>
@@ -605,7 +610,12 @@ export default function TeacherDashboard() {
                           Annulla
                         </Button>
                         <Button size="sm" onClick={handleSaveAvailability} disabled={isSaving}>
-                          {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salva'}
+                          {isSaving ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                              Salvando...
+                            </>
+                          ) : 'Salva'}
                         </Button>
                       </div>
                     )}

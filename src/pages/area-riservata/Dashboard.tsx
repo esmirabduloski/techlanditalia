@@ -48,6 +48,13 @@ export default function Dashboard() {
     }
   }, [user, authLoading, navigate]);
 
+  // Redirect teachers to their dedicated dashboard
+  useEffect(() => {
+    if (!authLoading && !teacherLoading && user && isTeacher) {
+      navigate('/insegnante', { replace: true });
+    }
+  }, [user, authLoading, teacherLoading, isTeacher, navigate]);
+
   // Check if onboarding should be shown
   useEffect(() => {
     if (profile && profile.onboarding_completed === false && !isTeacher) {

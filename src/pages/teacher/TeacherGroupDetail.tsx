@@ -258,9 +258,11 @@ export default function TeacherGroupDetail() {
 
   // Returns true if a lesson date is today (UTC) or in the past (UTC)
   const isLessonDateAvailableUtc = (lessonDateStr: string): boolean => {
-    // lessonDateStr expected format: yyyy-MM-dd
-    const parts = lessonDateStr.split('-').map(Number);
-    if (parts.length !== 3 || parts.some(n => Number.isNaN(n))) return false;
+    // Expected: yyyy-MM-dd (sometimes it can come as ISO with time -> we keep the date part)
+    const normalized = (lessonDateStr || "").trim().slice(0, 10);
+
+    const parts = normalized.split("-").map(Number);
+    if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return false;
 
     const [year, month, day] = parts;
 

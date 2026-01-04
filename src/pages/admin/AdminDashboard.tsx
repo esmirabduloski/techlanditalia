@@ -148,6 +148,10 @@ export default function AdminDashboard() {
           <div>
             <h1 className="text-3xl font-bold">Gestione Blog</h1>
             <p className="text-muted-foreground mt-1">{posts.length} articoli totali</p>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <Badge variant="secondary">UTC oggi: {new Date().toISOString().slice(0, 10)}</Badge>
+              <Badge variant="outline">Locale: {new Date().toLocaleString('it-IT')}</Badge>
+            </div>
           </div>
           <Button asChild>
             <Link to="/admin/blog/nuovo">

@@ -483,6 +483,10 @@ export default function TeacherDashboard() {
           <p className="text-muted-foreground mt-1">
             Gestisci i tuoi corsi, gruppi e studenti
           </p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <Badge variant="secondary">UTC oggi: {new Date().toISOString().slice(0, 10)}</Badge>
+            <Badge variant="outline">Locale: {new Date().toLocaleString('it-IT')}</Badge>
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">

@@ -675,14 +675,18 @@ export default function TeacherGroupDetail() {
                           {lesson.lesson_number}
                         </th>
                       ))}
-                      <th className="p-2 text-center min-w-[80px]">Dettaglio</th>
                     </tr>
                   </thead>
                   <tbody>
                     {students.map(student => (
                       <tr key={student.student_id} className="border-t">
                         <td className="p-2 font-medium sticky left-0 bg-background z-10">
-                          {student.full_name}
+                          <button
+                            onClick={() => navigate(`/insegnante/studente/${student.student_id}`)}
+                            className="text-left hover:text-primary hover:underline transition-colors"
+                          >
+                            {student.full_name}
+                          </button>
                         </td>
                         {lessonSchedule.map((lesson) => {
                           const lessonNum = lesson.lesson_number;
@@ -715,15 +719,6 @@ export default function TeacherGroupDetail() {
                             </td>
                           );
                         })}
-                        <td className="p-2 text-center">
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => navigate(`/insegnante/studente/${student.student_id}`)}
-                          >
-                            <ChevronRight className="w-4 h-4" />
-                          </Button>
-                        </td>
                       </tr>
                     ))}
                   </tbody>

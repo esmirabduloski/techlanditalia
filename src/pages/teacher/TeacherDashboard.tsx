@@ -273,19 +273,28 @@ export default function TeacherDashboard() {
   const handleSavePhone = async () => {
     setIsSaving(true);
     try {
+      let error;
       if (teacherProfile) {
-        await supabase
+        const result = await supabase
           .from('teacher_profiles')
           .update({ phone })
           .eq('user_id', user!.id);
+        error = result.error;
       } else {
-        await supabase
+        const result = await supabase
           .from('teacher_profiles')
           .insert({ user_id: user!.id, phone });
+        error = result.error;
       }
+      
+      if (error) {
+        throw error;
+      }
+      
       toast({ title: 'Salvato', description: 'Telefono aggiornato' });
-      fetchData();
+      await fetchData();
     } catch (error: any) {
+      console.error('Error saving phone:', error);
       toast({ title: 'Errore', description: error.message, variant: 'destructive' });
     } finally {
       setIsSaving(false);

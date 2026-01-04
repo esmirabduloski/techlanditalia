@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { 
   FileText, GraduationCap, BookOpen, Mail, User, BarChart3, 
-  Award, Eye, Calendar, ClipboardCheck, Users, Newspaper, UsersRound, CalendarClock
+  Award, Eye, Calendar, ClipboardCheck, Users, Newspaper, UsersRound, CalendarClock, Link as LinkIcon
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
@@ -27,6 +27,7 @@ const navItems: NavItem[] = [
   { to: '/admin/disponibilita', label: 'Disponibilità', icon: CalendarClock },
   { to: '/admin/valutazioni', label: 'Valutazioni', icon: Award },
   { to: '/admin/statistiche', label: 'Statistiche', icon: BarChart3 },
+  { to: '/admin/link-insegnanti', label: 'Link', icon: LinkIcon },
   { to: '/admin/simulatore', label: 'Simulatore', icon: Eye },
 ];
 

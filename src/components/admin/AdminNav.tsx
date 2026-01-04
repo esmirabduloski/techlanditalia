@@ -57,9 +57,9 @@ export function AdminNav() {
   };
 
   return (
-    <div className="border-b bg-background">
+    <div className="border-b bg-background sticky top-[73px] z-40">
       <div className="max-w-7xl mx-auto px-4">
-        <nav className="flex gap-4 overflow-x-auto">
+        <nav className="flex gap-2 sm:gap-4 overflow-x-auto scrollbar-hide pb-px" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {navItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.to);

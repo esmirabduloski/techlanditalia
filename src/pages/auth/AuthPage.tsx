@@ -49,13 +49,30 @@ export default function AuthPage() {
 
   // Redirect authenticated users
   useEffect(() => {
-    if (!authLoading && user && !showNewPasswordForm) {
-      if (isAdmin) {
-        navigate('/admin');
-      } else {
-        navigate('/area-riservata');
+    const checkRoleAndRedirect = async () => {
+      if (!authLoading && user && !showNewPasswordForm) {
+        if (isAdmin) {
+          navigate('/admin');
+          return;
+        }
+        
+        // Check if user is a teacher
+        const { data: teacherRole } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .eq('role', 'teacher')
+          .maybeSingle();
+        
+        if (teacherRole) {
+          navigate('/insegnante');
+        } else {
+          navigate('/area-riservata');
+        }
       }
-    }
+    };
+    
+    checkRoleAndRedirect();
   }, [user, isAdmin, authLoading, showNewPasswordForm, navigate]);
 
   // Check if user came from password reset link

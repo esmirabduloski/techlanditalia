@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
+import { AdminNav } from '@/components/admin/AdminNav';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { z } from 'zod';
 
@@ -205,6 +206,10 @@ export default function BlogEditor() {
           </div>
         </div>
       </header>
+
+      <AdminNav />
+
+      {/* Editor */}
 
       {/* Editor */}
       <main className="max-w-4xl mx-auto px-4 py-8">

@@ -5,12 +5,23 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { 
-  Loader2, ArrowLeft, User, BookOpen, Users, MessageCircle, Mail, Calendar
+  Loader2, ArrowLeft, User, BookOpen, Users, MessageCircle, Mail, Calendar, Plus, Send
 } from "lucide-react";
 import { AvatarDisplay } from "@/components/gamification/AvatarSelector";
 import { LevelBadge, getLevelFromPoints } from "@/components/gamification/LevelBadge";
 import { StudentCommentsSection } from "@/components/dashboard/StudentCommentsSection";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface StudentProfile {
   id: string;
@@ -46,12 +57,20 @@ export default function TeacherStudentDetail() {
   const { studentId } = useParams();
   const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   
   const [isLoading, setIsLoading] = useState(true);
   const [student, setStudent] = useState<StudentProfile | null>(null);
   const [parent, setParent] = useState<Parent | null>(null);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [groups, setGroups] = useState<GroupMembership[]>([]);
+  
+  // Comment dialog state
+  const [isCommentDialogOpen, setIsCommentDialogOpen] = useState(false);
+  const [commentContent, setCommentContent] = useState('');
+  const [commentVisibility, setCommentVisibility] = useState<string[]>(['parent', 'teacher']);
+  const [isSavingComment, setIsSavingComment] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -146,6 +165,42 @@ export default function TeacherStudentDetail() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleAddComment = async () => {
+    if (!commentContent.trim() || !user || !studentId) return;
+
+    setIsSavingComment(true);
+    try {
+      const { error } = await supabase
+        .from('student_comments')
+        .insert({
+          student_id: studentId,
+          author_id: user.id,
+          content: commentContent.trim(),
+          visibility: commentVisibility
+        });
+
+      if (error) throw error;
+
+      toast({ title: 'Commento aggiunto', description: 'Il commento è stato salvato con successo' });
+      setCommentContent('');
+      setCommentVisibility(['parent', 'teacher']);
+      setIsCommentDialogOpen(false);
+      setRefreshKey(prev => prev + 1);
+    } catch (error: any) {
+      toast({ title: 'Errore', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsSavingComment(false);
+    }
+  };
+
+  const toggleVisibility = (value: string) => {
+    setCommentVisibility(prev => 
+      prev.includes(value)
+        ? prev.filter(v => v !== value)
+        : [...prev, value]
+    );
   };
 
   if (authLoading || isLoading) {
@@ -299,19 +354,94 @@ export default function TeacherStudentDetail() {
 
             {/* Comments */}
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   <MessageCircle className="w-5 h-5" />
                   Commenti
                 </CardTitle>
+                <Button onClick={() => setIsCommentDialogOpen(true)} size="sm">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Aggiungi Commento
+                </Button>
               </CardHeader>
               <CardContent>
-                <StudentCommentsSection studentId={student.id} viewMode="parent" />
+                <StudentCommentsSection key={refreshKey} studentId={student.id} viewMode="parent" />
               </CardContent>
             </Card>
           </div>
         </div>
       </main>
+
+      {/* Add Comment Dialog */}
+      <Dialog open={isCommentDialogOpen} onOpenChange={setIsCommentDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Aggiungi Commento per {student?.full_name}</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Commento</Label>
+              <Textarea
+                value={commentContent}
+                onChange={(e) => setCommentContent(e.target.value)}
+                placeholder="Scrivi un commento sullo studente..."
+                rows={4}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Visibilità</Label>
+              <div className="flex flex-wrap gap-4">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="vis-parent"
+                    checked={commentVisibility.includes('parent')}
+                    onCheckedChange={() => toggleVisibility('parent')}
+                  />
+                  <label htmlFor="vis-parent" className="text-sm">Genitore</label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="vis-teacher"
+                    checked={commentVisibility.includes('teacher')}
+                    onCheckedChange={() => toggleVisibility('teacher')}
+                  />
+                  <label htmlFor="vis-teacher" className="text-sm">Insegnanti</label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="vis-student"
+                    checked={commentVisibility.includes('student')}
+                    onCheckedChange={() => toggleVisibility('student')}
+                  />
+                  <label htmlFor="vis-student" className="text-sm">Studente</label>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Seleziona chi può vedere questo commento
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCommentDialogOpen(false)}>
+              Annulla
+            </Button>
+            <Button 
+              onClick={handleAddComment} 
+              disabled={isSavingComment || !commentContent.trim()}
+            >
+              {isSavingComment ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : (
+                <Send className="w-4 h-4 mr-2" />
+              )}
+              Invia
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

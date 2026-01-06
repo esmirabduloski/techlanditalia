@@ -12,9 +12,13 @@ declare global {
   }
 }
 
-const DEFAULT_CODE = '# Scrivi il tuo codice Python qui\nprint("Ciao, mondo!")\n';
+interface PythonCompilerProps {
+  defaultCode?: string;
+}
 
-export function PythonCompiler() {
+const FALLBACK_CODE = '# Scrivi il tuo codice Python qui\nprint("Ciao, mondo!")\n';
+
+export function PythonCompiler({ defaultCode }: PythonCompilerProps) {
   const { courseId, lessonNumber, taskNumber } = useParams();
   const [lessonId, setLessonId] = useState<string | null>(null);
   const [taskId, setTaskId] = useState<string | null>(null);
@@ -57,11 +61,13 @@ export function PythonCompiler() {
     fetchIds();
   }, [courseId, lessonNumber, taskNumber]);
 
+  const effectiveDefaultCode = defaultCode || FALLBACK_CODE;
+
   const { code, setCode, isLoading: isLoadingDraft, isSaving, lastSaved, resetCode, saveDraft } = useCodeDraft({
     lessonId: lessonId || undefined,
     taskId: taskId || undefined,
     codeType: 'python',
-    defaultCode: DEFAULT_CODE,
+    defaultCode: effectiveDefaultCode,
   });
 
   useEffect(() => {

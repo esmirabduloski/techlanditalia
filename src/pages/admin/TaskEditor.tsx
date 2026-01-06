@@ -34,6 +34,10 @@ interface TaskData {
   slides_url: string;
   points_reward: number;
   task_number: number;
+  default_python_code: string;
+  default_html_code: string;
+  default_css_code: string;
+  default_js_code: string;
 }
 
 export default function TaskEditor() {
@@ -53,6 +57,10 @@ export default function TaskEditor() {
     slides_url: '',
     points_reward: 10,
     task_number: 1,
+    default_python_code: '',
+    default_html_code: '',
+    default_css_code: '',
+    default_js_code: '',
   });
 
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
@@ -111,6 +119,10 @@ export default function TaskEditor() {
           slides_url: taskData.slides_url || '',
           points_reward: taskData.points_reward || 10,
           task_number: taskData.task_number || 1,
+          default_python_code: (taskData as any).default_python_code || '',
+          default_html_code: (taskData as any).default_html_code || '',
+          default_css_code: (taskData as any).default_css_code || '',
+          default_js_code: (taskData as any).default_js_code || '',
         });
       }
     } else {
@@ -142,7 +154,7 @@ export default function TaskEditor() {
 
     setIsSaving(true);
 
-    const taskPayload = {
+    const taskPayload: any = {
       lesson_id: lessonId,
       title: formData.title,
       description: formData.description || null,
@@ -151,6 +163,10 @@ export default function TaskEditor() {
       slides_url: formData.slides_url || null,
       points_reward: formData.points_reward,
       task_number: formData.task_number,
+      default_python_code: formData.default_python_code || null,
+      default_html_code: formData.default_html_code || null,
+      default_css_code: formData.default_css_code || null,
+      default_js_code: formData.default_js_code || null,
     };
 
     try {
@@ -341,6 +357,71 @@ export default function TaskEditor() {
                   <p className="text-xs text-muted-foreground">
                     Incolla il link della presentazione Google Slides per incorporarla nel task.
                   </p>
+                </div>
+              )}
+
+              {/* Codice predefinito per compilatori - solo per tipo Misto */}
+              {formData.content_type === 'mixed' && (
+                <div className="space-y-6 border-t pt-6">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">🖥️ Codice Predefinito Compilatori</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Inserisci il codice che verrà caricato automaticamente nel compilatore quando lo studente apre questa task.
+                    </p>
+                  </div>
+
+                  {/* Python Code */}
+                  <div className="space-y-2">
+                    <Label htmlFor="default_python_code">🐍 Codice Python Predefinito</Label>
+                    <Textarea
+                      id="default_python_code"
+                      value={formData.default_python_code}
+                      onChange={(e) => setFormData(prev => ({ ...prev, default_python_code: e.target.value }))}
+                      placeholder="# Scrivi il codice Python iniziale..."
+                      rows={6}
+                      className="font-mono text-sm"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Questo codice verrà mostrato nel compilatore Python quando lo studente apre la task.
+                    </p>
+                  </div>
+
+                  {/* Web Code */}
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="default_html_code">📄 HTML Predefinito</Label>
+                      <Textarea
+                        id="default_html_code"
+                        value={formData.default_html_code}
+                        onChange={(e) => setFormData(prev => ({ ...prev, default_html_code: e.target.value }))}
+                        placeholder="<h1>Titolo</h1>..."
+                        rows={8}
+                        className="font-mono text-sm"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="default_css_code">🎨 CSS Predefinito</Label>
+                      <Textarea
+                        id="default_css_code"
+                        value={formData.default_css_code}
+                        onChange={(e) => setFormData(prev => ({ ...prev, default_css_code: e.target.value }))}
+                        placeholder="body { ... }"
+                        rows={8}
+                        className="font-mono text-sm"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="default_js_code">⚡ JavaScript Predefinito</Label>
+                      <Textarea
+                        id="default_js_code"
+                        value={formData.default_js_code}
+                        onChange={(e) => setFormData(prev => ({ ...prev, default_js_code: e.target.value }))}
+                        placeholder="console.log('Hello!');"
+                        rows={8}
+                        className="font-mono text-sm"
+                      />
+                    </div>
+                  </div>
                 </div>
               )}
             </CardContent>

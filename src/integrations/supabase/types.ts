@@ -755,6 +755,10 @@ export type Database = {
           content: string | null
           content_type: string | null
           created_at: string
+          default_css_code: string | null
+          default_html_code: string | null
+          default_js_code: string | null
+          default_python_code: string | null
           description: string | null
           id: string
           lesson_id: string
@@ -767,6 +771,10 @@ export type Database = {
           content?: string | null
           content_type?: string | null
           created_at?: string
+          default_css_code?: string | null
+          default_html_code?: string | null
+          default_js_code?: string | null
+          default_python_code?: string | null
           description?: string | null
           id?: string
           lesson_id: string
@@ -779,6 +787,10 @@ export type Database = {
           content?: string | null
           content_type?: string | null
           created_at?: string
+          default_css_code?: string | null
+          default_html_code?: string | null
+          default_js_code?: string | null
+          default_python_code?: string | null
           description?: string | null
           id?: string
           lesson_id?: string

@@ -13,7 +13,13 @@ interface UploadedFile {
   url: string;
 }
 
-const DEFAULT_HTML = `<!DOCTYPE html>
+interface WebCompilerProps {
+  defaultHtmlCode?: string;
+  defaultCssCode?: string;
+  defaultJsCode?: string;
+}
+
+const FALLBACK_HTML = `<!DOCTYPE html>
 <html>
 <head>
   <link rel="stylesheet" href="style.css">
@@ -24,7 +30,7 @@ const DEFAULT_HTML = `<!DOCTYPE html>
 </body>
 </html>`;
 
-const DEFAULT_CSS = `body {
+const FALLBACK_CSS = `body {
   font-family: Arial, sans-serif;
   padding: 20px;
   background-color: #f0f0f0;
@@ -38,9 +44,9 @@ p {
   color: #666;
 }`;
 
-const DEFAULT_JS = '// JavaScript opzionale\nconsole.log("Hello from JavaScript!");';
+const FALLBACK_JS = '// JavaScript opzionale\nconsole.log("Hello from JavaScript!");';
 
-export function WebCompiler() {
+export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode }: WebCompilerProps) {
   const { courseId, lessonNumber, taskNumber } = useParams();
   const [lessonId, setLessonId] = useState<string | null>(null);
   const [taskId, setTaskId] = useState<string | null>(null);
@@ -86,26 +92,30 @@ export function WebCompiler() {
     fetchIds();
   }, [courseId, lessonNumber, taskNumber]);
 
+  const effectiveDefaultHtml = defaultHtmlCode || FALLBACK_HTML;
+  const effectiveDefaultCss = defaultCssCode || FALLBACK_CSS;
+  const effectiveDefaultJs = defaultJsCode || FALLBACK_JS;
+
   // Use code drafts for each file type
   const htmlDraft = useCodeDraft({
     lessonId: lessonId || undefined,
     taskId: taskId || undefined,
     codeType: 'html',
-    defaultCode: DEFAULT_HTML,
+    defaultCode: effectiveDefaultHtml,
   });
 
   const cssDraft = useCodeDraft({
     lessonId: lessonId || undefined,
     taskId: taskId || undefined,
     codeType: 'css',
-    defaultCode: DEFAULT_CSS,
+    defaultCode: effectiveDefaultCss,
   });
 
   const jsDraft = useCodeDraft({
     lessonId: lessonId || undefined,
     taskId: taskId || undefined,
     codeType: 'js',
-    defaultCode: DEFAULT_JS,
+    defaultCode: effectiveDefaultJs,
   });
 
   useEffect(() => {

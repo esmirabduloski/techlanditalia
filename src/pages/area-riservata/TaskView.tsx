@@ -33,6 +33,10 @@ interface Task {
   content_type: string | null;
   slides_url: string | null;
   points_reward: number;
+  default_python_code: string | null;
+  default_html_code: string | null;
+  default_css_code: string | null;
+  default_js_code: string | null;
 }
 
 const PYTHON_COURSES = ['python-base', 'python-ai'];
@@ -200,8 +204,14 @@ export default function TaskView() {
 
           {/* Right Panel - Compiler */}
           <ResizablePanel defaultSize={50} minSize={30}>
-            {isPythonCourse && <PythonCompiler />}
-            {isWebCourse && <WebCompiler />}
+            {isPythonCourse && <PythonCompiler defaultCode={task.default_python_code || undefined} />}
+            {isWebCourse && (
+              <WebCompiler 
+                defaultHtmlCode={task.default_html_code || undefined}
+                defaultCssCode={task.default_css_code || undefined}
+                defaultJsCode={task.default_js_code || undefined}
+              />
+            )}
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>

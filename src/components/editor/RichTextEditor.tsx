@@ -85,6 +85,15 @@ export default function RichTextEditor({ content, onChange }: RichTextEditorProp
       attributes: {
         class: 'prose prose-sm max-w-none min-h-[300px] p-4 focus:outline-none',
       },
+      handleKeyDown: (_view, event) => {
+        // Previeni che Enter si propaghi al form padre
+        if (event.key === 'Enter') {
+          event.stopPropagation();
+          // Ritorna false per permettere a Tiptap di gestire normalmente l'Enter
+          return false;
+        }
+        return false;
+      },
     },
   });
 

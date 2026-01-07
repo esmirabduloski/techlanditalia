@@ -204,12 +204,13 @@ export default function TaskView() {
 
           {/* Right Panel - Compiler */}
           <ResizablePanel defaultSize={50} minSize={30}>
-            {isPythonCourse && <PythonCompiler defaultCode={task.default_python_code || undefined} />}
+            {isPythonCourse && <PythonCompiler defaultCode={task.default_python_code || undefined} taskId={task.id} />}
             {isWebCourse && (
               <WebCompiler 
                 defaultHtmlCode={task.default_html_code || undefined}
                 defaultCssCode={task.default_css_code || undefined}
                 defaultJsCode={task.default_js_code || undefined}
+                taskId={task.id}
               />
             )}
           </ResizablePanel>

@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Play, Upload, Trash2, Copy, FolderOpen, X, Loader2, Save, Check } from 'lucide-react';
@@ -17,6 +16,7 @@ interface WebCompilerProps {
   defaultHtmlCode?: string;
   defaultCssCode?: string;
   defaultJsCode?: string;
+  taskId?: string;
 }
 
 const FALLBACK_HTML = `<!DOCTYPE html>
@@ -46,10 +46,7 @@ p {
 
 const FALLBACK_JS = '// JavaScript opzionale\nconsole.log("Hello from JavaScript!");';
 
-export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode }: WebCompilerProps) {
-  const { courseId, lessonNumber, taskNumber } = useParams();
-  const [lessonId, setLessonId] = useState<string | null>(null);
-  const [taskId, setTaskId] = useState<string | null>(null);
+export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, taskId }: WebCompilerProps) {
   const [activeTab, setActiveTab] = useState<string>('html');
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isUploading, setIsUploading] = useState<boolean>(false);
@@ -59,61 +56,25 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode }: 
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Fetch lesson/task IDs
-  useEffect(() => {
-    const fetchIds = async () => {
-      if (!courseId || !lessonNumber) return;
-
-      const { data: lessonData } = await supabase
-        .from('lessons')
-        .select('id')
-        .eq('course_id', courseId)
-        .eq('lesson_number', parseInt(lessonNumber))
-        .maybeSingle();
-
-      if (lessonData) {
-        if (taskNumber) {
-          const { data: taskData } = await supabase
-            .from('lesson_tasks')
-            .select('id')
-            .eq('lesson_id', lessonData.id)
-            .eq('task_number', parseInt(taskNumber))
-            .maybeSingle();
-          
-          if (taskData) {
-            setTaskId(taskData.id);
-          }
-        } else {
-          setLessonId(lessonData.id);
-        }
-      }
-    };
-
-    fetchIds();
-  }, [courseId, lessonNumber, taskNumber]);
-
   const effectiveDefaultHtml = defaultHtmlCode || FALLBACK_HTML;
   const effectiveDefaultCss = defaultCssCode || FALLBACK_CSS;
   const effectiveDefaultJs = defaultJsCode || FALLBACK_JS;
 
-  // Use code drafts for each file type
+  // Use code drafts for each file type - ora usa solo taskId
   const htmlDraft = useCodeDraft({
-    lessonId: lessonId || undefined,
-    taskId: taskId || undefined,
+    taskId,
     codeType: 'html',
     defaultCode: effectiveDefaultHtml,
   });
 
   const cssDraft = useCodeDraft({
-    lessonId: lessonId || undefined,
-    taskId: taskId || undefined,
+    taskId,
     codeType: 'css',
     defaultCode: effectiveDefaultCss,
   });
 
   const jsDraft = useCodeDraft({
-    lessonId: lessonId || undefined,
-    taskId: taskId || undefined,
+    taskId,
     codeType: 'js',
     defaultCode: effectiveDefaultJs,
   });

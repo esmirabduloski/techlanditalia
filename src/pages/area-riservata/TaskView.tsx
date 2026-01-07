@@ -158,12 +158,13 @@ export default function TaskView() {
     );
   }
 
-  const isSplitLayout = SPLIT_LAYOUT_COURSES.includes(course.slug);
   const isPythonCourse = PYTHON_COURSES.includes(course.slug);
   const isWebCourse = WEB_COURSES.includes(course.slug);
+  const isMistoType = task.content_type === 'misto';
+  const showCompiler = (isPythonCourse || isWebCourse) && isMistoType;
 
-  // Split layout for Python and Web courses
-  if (isSplitLayout) {
+  // Split layout only when task is of type "misto" and course supports compiler
+  if (showCompiler) {
     return (
       <div className="h-screen flex flex-col bg-background">
         <ResizablePanelGroup direction="horizontal" className="flex-1">

@@ -160,8 +160,8 @@ export default function TaskView() {
 
   const isPythonCourse = PYTHON_COURSES.includes(course.slug);
   const isWebCourse = WEB_COURSES.includes(course.slug);
-  const isMistoType = task.content_type === 'misto';
-  const showCompiler = (isPythonCourse || isWebCourse) && isMistoType;
+  const isMixedType = task.content_type === 'mixed';
+  const showCompiler = (isPythonCourse || isWebCourse) && isMixedType;
 
   // Split layout only when task is of type "misto" and course supports compiler
   if (showCompiler) {

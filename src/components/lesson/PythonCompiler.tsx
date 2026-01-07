@@ -1,10 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Play, Loader2, Trash2, RotateCcw, Save, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCodeDraft } from '@/hooks/useCodeDraft';
-import { supabase } from '@/integrations/supabase/client';
 
 declare global {
   interface Window {
@@ -14,58 +12,22 @@ declare global {
 
 interface PythonCompilerProps {
   defaultCode?: string;
+  taskId?: string;
 }
 
 const FALLBACK_CODE = '# Scrivi il tuo codice Python qui\nprint("Ciao, mondo!")\n';
 
-export function PythonCompiler({ defaultCode }: PythonCompilerProps) {
-  const { courseId, lessonNumber, taskNumber } = useParams();
-  const [lessonId, setLessonId] = useState<string | null>(null);
-  const [taskId, setTaskId] = useState<string | null>(null);
+export function PythonCompiler({ defaultCode, taskId }: PythonCompilerProps) {
   const [output, setOutput] = useState<string>('');
   const [isLoadingPyodide, setIsLoadingPyodide] = useState<boolean>(true);
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const pyodideRef = useRef<any>(null);
   const { toast } = useToast();
 
-  // Fetch lesson/task IDs
-  useEffect(() => {
-    const fetchIds = async () => {
-      if (!courseId || !lessonNumber) return;
-
-      const { data: lessonData } = await supabase
-        .from('lessons')
-        .select('id')
-        .eq('course_id', courseId)
-        .eq('lesson_number', parseInt(lessonNumber))
-        .maybeSingle();
-
-      if (lessonData) {
-        if (taskNumber) {
-          const { data: taskData } = await supabase
-            .from('lesson_tasks')
-            .select('id')
-            .eq('lesson_id', lessonData.id)
-            .eq('task_number', parseInt(taskNumber))
-            .maybeSingle();
-          
-          if (taskData) {
-            setTaskId(taskData.id);
-          }
-        } else {
-          setLessonId(lessonData.id);
-        }
-      }
-    };
-
-    fetchIds();
-  }, [courseId, lessonNumber, taskNumber]);
-
   const effectiveDefaultCode = defaultCode || FALLBACK_CODE;
 
   const { code, setCode, isLoading: isLoadingDraft, isSaving, lastSaved, resetCode, saveDraft } = useCodeDraft({
-    lessonId: lessonId || undefined,
-    taskId: taskId || undefined,
+    taskId,
     codeType: 'python',
     defaultCode: effectiveDefaultCode,
   });

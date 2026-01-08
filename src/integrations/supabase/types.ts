@@ -608,6 +608,10 @@ export type Database = {
         Row: {
           attachments: Json | null
           created_at: string
+          default_css_code: string | null
+          default_html_code: string | null
+          default_js_code: string | null
+          default_python_code: string | null
           description: string | null
           due_date: string | null
           id: string
@@ -619,6 +623,10 @@ export type Database = {
         Insert: {
           attachments?: Json | null
           created_at?: string
+          default_css_code?: string | null
+          default_html_code?: string | null
+          default_js_code?: string | null
+          default_python_code?: string | null
           description?: string | null
           due_date?: string | null
           id?: string
@@ -630,6 +638,10 @@ export type Database = {
         Update: {
           attachments?: Json | null
           created_at?: string
+          default_css_code?: string | null
+          default_html_code?: string | null
+          default_js_code?: string | null
+          default_python_code?: string | null
           description?: string | null
           due_date?: string | null
           id?: string

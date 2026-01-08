@@ -33,6 +33,8 @@ import LessonEditor from "./pages/admin/LessonEditor";
 import AdminTasks from "./pages/admin/AdminTasks";
 import TaskEditor from "./pages/admin/TaskEditor";
 import AdminHomework from "./pages/admin/AdminHomework";
+import HomeworkEditor from "./pages/admin/HomeworkEditor";
+import HomeworkView from "./pages/area-riservata/HomeworkView";
 import AdminNewsletter from "./pages/admin/AdminNewsletter";
 import AdminStudentComments from "./pages/admin/AdminStudentComments";
 import AdminGrading from "./pages/admin/AdminGrading";
@@ -86,7 +88,8 @@ const App = () => (
                 <Route path="/area-riservata/corso/:courseId" element={<CourseProgress />} />
                 <Route path="/area-riservata/corso/:courseId/lezione/:lessonNumber" element={<LessonView />} />
                 <Route path="/area-riservata/corso/:courseId/lezione/:lessonNumber/task/:taskNumber" element={<TaskView />} />
-                <Route path="/area-riservata/compito/:homeworkId" element={<HomeworkDetail />} />
+                <Route path="/area-riservata/compito/:homeworkId" element={<HomeworkView />} />
+                <Route path="/area-riservata/compito-dettaglio/:homeworkId" element={<HomeworkDetail />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/corsi" element={<AdminCourses />} />
@@ -97,6 +100,8 @@ const App = () => (
                 <Route path="/admin/corsi/:courseId/lezioni/:lessonId/task/nuovo" element={<TaskEditor />} />
                 <Route path="/admin/corsi/:courseId/lezioni/:lessonId/task/:taskId/modifica" element={<TaskEditor />} />
                 <Route path="/admin/corsi/:courseId/lezioni/:lessonId/compiti" element={<AdminHomework />} />
+                <Route path="/admin/corsi/:courseId/lezioni/:lessonId/compiti/nuovo" element={<HomeworkEditor />} />
+                <Route path="/admin/corsi/:courseId/lezioni/:lessonId/compiti/:homeworkId/modifica" element={<HomeworkEditor />} />
                 <Route path="/admin/prenotazioni" element={<AdminBookings />} />
                 <Route path="/admin/contatti" element={<AdminContatti />} />
                 <Route path="/admin/blog/nuovo" element={<BlogEditor />} />

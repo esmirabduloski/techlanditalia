@@ -26,9 +26,10 @@ import {
   Redo,
   Code,
   Video,
-  Loader2
+  Loader2,
+  FolderOpen
 } from 'lucide-react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -39,6 +40,21 @@ import {
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+// Available storage buckets for upload
+const STORAGE_BUCKETS = [
+  { id: 'python-lesson-material', name: 'Python - Materiale Lezioni', public: true },
+  { id: 'roblox-lesson-material', name: 'Roblox - Materiale Lezioni', public: true },
+  { id: 'web-compiler-assets', name: 'Web - Assets Compilatore', public: true },
+  { id: 'homework-attachments', name: 'Compiti - Allegati', public: true },
+];
 
 // Custom Video Extension for MP4/MOV videos
 const VideoExtension = Node.create({
@@ -108,26 +124,32 @@ export default function RichTextEditor({ content, onChange }: RichTextEditorProp
   const [linkUrl, setLinkUrl] = useState('');
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  
+  // Drag and drop upload dialog state
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [selectedBucket, setSelectedBucket] = useState(STORAGE_BUCKETS[0].id);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const editorRef = useRef<any>(null);
 
   // Upload file to Supabase storage
-  const uploadFile = useCallback(async (file: File): Promise<string | null> => {
+  const uploadFile = useCallback(async (file: File, bucket: string): Promise<string | null> => {
     try {
       const fileExt = file.name.split('.').pop()?.toLowerCase();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
       const filePath = `editor-uploads/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('lesson-images')
+        .from(bucket)
         .upload(filePath, file);
 
       if (uploadError) {
         console.error('Upload error:', uploadError);
-        toast.error('Errore durante il caricamento del file');
+        toast.error(`Errore durante il caricamento: ${uploadError.message}`);
         return null;
       }
 
       const { data: { publicUrl } } = supabase.storage
-        .from('lesson-images')
+        .from(bucket)
         .getPublicUrl(filePath);
 
       return publicUrl;
@@ -138,11 +160,14 @@ export default function RichTextEditor({ content, onChange }: RichTextEditorProp
     }
   }, []);
 
-  // Handle file drop or paste
-  const handleFileDrop = useCallback(async (files: FileList, editor: any) => {
-    setIsUploading(true);
+  // Process pending files after bucket selection
+  const processPendingFiles = useCallback(async () => {
+    if (!editorRef.current || pendingFiles.length === 0) return;
     
-    for (const file of Array.from(files)) {
+    setIsUploading(true);
+    setUploadDialogOpen(false);
+    
+    for (const file of pendingFiles) {
       const isImage = file.type.startsWith('image/');
       const isVideo = file.type.startsWith('video/') || 
                       file.name.toLowerCase().endsWith('.mov') || 
@@ -153,19 +178,43 @@ export default function RichTextEditor({ content, onChange }: RichTextEditorProp
         continue;
       }
 
-      const url = await uploadFile(file);
+      const url = await uploadFile(file, selectedBucket);
       if (url) {
         if (isImage) {
-          editor.chain().focus().setImage({ src: url }).run();
+          editorRef.current.chain().focus().setImage({ src: url }).run();
         } else if (isVideo) {
-          editor.chain().focus().setVideo({ src: url }).run();
+          editorRef.current.chain().focus().setVideo({ src: url }).run();
         }
         toast.success('File caricato con successo');
       }
     }
     
+    setPendingFiles([]);
     setIsUploading(false);
-  }, [uploadFile]);
+  }, [pendingFiles, selectedBucket, uploadFile]);
+
+  // Handle file drop - show dialog for bucket selection
+  const handleFileDrop = useCallback((files: FileList) => {
+    const validFiles: File[] = [];
+    
+    for (const file of Array.from(files)) {
+      const isImage = file.type.startsWith('image/');
+      const isVideo = file.type.startsWith('video/') || 
+                      file.name.toLowerCase().endsWith('.mov') || 
+                      file.name.toLowerCase().endsWith('.mp4');
+
+      if (isImage || isVideo) {
+        validFiles.push(file);
+      } else {
+        toast.error(`Tipo file non supportato: ${file.name}`);
+      }
+    }
+    
+    if (validFiles.length > 0) {
+      setPendingFiles(validFiles);
+      setUploadDialogOpen(true);
+    }
+  }, []);
 
   const editor = useEditor({
     extensions: [
@@ -237,6 +286,13 @@ export default function RichTextEditor({ content, onChange }: RichTextEditorProp
     }
   }, [content, editor]);
 
+  // Store editor reference for use in upload dialog
+  useEffect(() => {
+    if (editor) {
+      editorRef.current = editor;
+    }
+  }, [editor]);
+
   // Handle drop events on the editor container
   useEffect(() => {
     if (!editor) return;
@@ -244,19 +300,19 @@ export default function RichTextEditor({ content, onChange }: RichTextEditorProp
     const editorElement = document.querySelector('.ProseMirror');
     if (!editorElement) return;
 
-    const handleDrop = async (e: DragEvent) => {
+    const handleDrop = (e: DragEvent) => {
       if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
         e.preventDefault();
         e.stopPropagation();
-        await handleFileDrop(e.dataTransfer.files, editor);
+        handleFileDrop(e.dataTransfer.files);
       }
     };
 
-    const handlePaste = async (e: ClipboardEvent) => {
+    const handlePaste = (e: ClipboardEvent) => {
       if (e.clipboardData?.files && e.clipboardData.files.length > 0) {
         e.preventDefault();
         e.stopPropagation();
-        await handleFileDrop(e.clipboardData.files, editor);
+        handleFileDrop(e.clipboardData.files);
       }
     };
 
@@ -576,6 +632,59 @@ export default function RichTextEditor({ content, onChange }: RichTextEditorProp
       <div className="px-4 py-2 text-xs text-muted-foreground border-t">
         💡 Trascina immagini o video (MP4, MOV) direttamente nell'editor per caricarli automaticamente
       </div>
+
+      {/* Upload folder selection dialog */}
+      <Dialog open={uploadDialogOpen} onOpenChange={(open) => {
+        setUploadDialogOpen(open);
+        if (!open) {
+          setPendingFiles([]);
+        }
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FolderOpen className="w-5 h-5" />
+              Scegli Cartella di Destinazione
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>File da caricare:</Label>
+              <div className="text-sm text-muted-foreground bg-muted p-2 rounded-md">
+                {pendingFiles.map((file, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    {file.type.startsWith('image/') ? (
+                      <ImageIcon className="w-4 h-4" />
+                    ) : (
+                      <Video className="w-4 h-4" />
+                    )}
+                    <span>{file.name}</span>
+                    <span className="text-xs">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Cartella di destinazione</Label>
+              <Select value={selectedBucket} onValueChange={setSelectedBucket}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleziona una cartella" />
+                </SelectTrigger>
+                <SelectContent>
+                  {STORAGE_BUCKETS.map((bucket) => (
+                    <SelectItem key={bucket.id} value={bucket.id}>
+                      {bucket.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={processPendingFiles} className="w-full">
+              Carica File
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

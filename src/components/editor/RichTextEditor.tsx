@@ -130,6 +130,7 @@ export default function RichTextEditor({ content, onChange }: RichTextEditorProp
   const [selectedBucket, setSelectedBucket] = useState(STORAGE_BUCKETS[0].id);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const editorRef = useRef<any>(null);
+  const savedSelectionRef = useRef<{ from: number; to: number } | null>(null);
 
   // Upload file to Supabase storage
   const uploadFile = useCallback(async (file: File, bucket: string): Promise<string | null> => {
@@ -180,21 +181,33 @@ export default function RichTextEditor({ content, onChange }: RichTextEditorProp
 
       const url = await uploadFile(file, selectedBucket);
       if (url) {
+        // Restore cursor position to where the file was dropped
+        if (savedSelectionRef.current) {
+          editorRef.current.chain().focus().setTextSelection(savedSelectionRef.current.from).run();
+        }
+        
         if (isImage) {
-          editorRef.current.chain().focus().setImage({ src: url }).run();
+          editorRef.current.chain().insertContentAt(
+            savedSelectionRef.current?.from ?? editorRef.current.state.selection.from,
+            { type: 'image', attrs: { src: url } }
+          ).run();
         } else if (isVideo) {
-          editorRef.current.chain().focus().setVideo({ src: url }).run();
+          editorRef.current.chain().insertContentAt(
+            savedSelectionRef.current?.from ?? editorRef.current.state.selection.from,
+            { type: 'video', attrs: { src: url } }
+          ).run();
         }
         toast.success('File caricato con successo');
       }
     }
     
     setPendingFiles([]);
+    savedSelectionRef.current = null;
     setIsUploading(false);
   }, [pendingFiles, selectedBucket, uploadFile]);
 
   // Handle file drop - show dialog for bucket selection
-  const handleFileDrop = useCallback((files: FileList) => {
+  const handleFileDrop = useCallback((files: FileList, dropPosition?: number) => {
     const validFiles: File[] = [];
     
     for (const file of Array.from(files)) {
@@ -211,6 +224,15 @@ export default function RichTextEditor({ content, onChange }: RichTextEditorProp
     }
     
     if (validFiles.length > 0) {
+      // Save the drop position for later insertion
+      if (dropPosition !== undefined) {
+        savedSelectionRef.current = { from: dropPosition, to: dropPosition };
+      } else if (editorRef.current) {
+        savedSelectionRef.current = { 
+          from: editorRef.current.state.selection.from, 
+          to: editorRef.current.state.selection.to 
+        };
+      }
       setPendingFiles(validFiles);
       setUploadDialogOpen(true);
     }
@@ -304,7 +326,13 @@ export default function RichTextEditor({ content, onChange }: RichTextEditorProp
       if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
         e.preventDefault();
         e.stopPropagation();
-        handleFileDrop(e.dataTransfer.files);
+        
+        // Get the drop position in the document
+        const view = editor.view;
+        const pos = view.posAtCoords({ left: e.clientX, top: e.clientY });
+        const dropPosition = pos?.pos ?? editor.state.selection.from;
+        
+        handleFileDrop(e.dataTransfer.files, dropPosition);
       }
     };
 

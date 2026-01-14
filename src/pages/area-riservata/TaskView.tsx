@@ -32,6 +32,7 @@ interface Task {
   content: string | null;
   content_type: string | null;
   slides_url: string | null;
+  scratch_url: string | null;
   points_reward: number;
   default_python_code: string | null;
   default_html_code: string | null;
@@ -161,7 +162,89 @@ export default function TaskView() {
   const isPythonCourse = PYTHON_COURSES.includes(course.slug);
   const isWebCourse = WEB_COURSES.includes(course.slug);
   const isMixedType = task.content_type === 'mixed';
+  const isScratchType = task.content_type === 'scratch';
   const showCompiler = (isPythonCourse || isWebCourse) && isMixedType;
+  const showScratch = isScratchType && task.scratch_url;
+
+  // Helper function to extract proper Scratch embed URL
+  const getScratchEmbedUrl = (url: string): string => {
+    // If already an embed URL, return as-is
+    if (url.includes('/embed')) {
+      return url;
+    }
+    // Extract project ID and create embed URL
+    const match = url.match(/scratch\.mit\.edu\/projects\/(\d+)/);
+    if (match) {
+      return `https://scratch.mit.edu/projects/${match[1]}/embed`;
+    }
+    return url;
+  };
+
+  // Split layout for Scratch games
+  if (showScratch) {
+    return (
+      <div className="h-screen flex flex-col bg-background">
+        <ResizablePanelGroup direction="horizontal" className="flex-1">
+          {/* Left Panel - Task Content */}
+          <ResizablePanel defaultSize={40} minSize={25}>
+            <div className="h-full overflow-y-auto">
+              <LessonContent
+                title={task.title}
+                description={task.description}
+                content={task.content}
+                contentType={task.content_type || 'text'}
+                videoUrl={null}
+                slidesUrl={null}
+                images={[]}
+              />
+              <div className="px-6 pb-6">
+                {taskCompleted && (
+                  <Badge variant="outline" className="mb-4 text-primary border-primary">
+                    <CheckCircle2 className="w-4 h-4 mr-1" />
+                    Task completato
+                  </Badge>
+                )}
+                <TaskNavigation
+                  courseId={course.id}
+                  lessonNumber={lesson.lesson_number}
+                  currentTaskNumber={task.task_number}
+                  totalTasks={totalTasks}
+                  onPrevious={task.task_number > 1 ? () => navigateToTask(task.task_number - 1) : undefined}
+                  onNext={task.task_number < totalTasks ? () => navigateToTask(task.task_number + 1) : undefined}
+                  onComplete={handleNavigateToCourse}
+                />
+              </div>
+            </div>
+          </ResizablePanel>
+
+          {/* Resize Handle */}
+          <ResizableHandle withHandle />
+
+          {/* Right Panel - Scratch Game */}
+          <ResizablePanel defaultSize={60} minSize={30}>
+            <div className="h-full flex flex-col bg-muted/30">
+              <div className="p-4 border-b bg-background">
+                <h3 className="font-semibold flex items-center gap-2">
+                  🐱 Scratch - Gioca e Impara
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Clicca sulla bandierina verde per iniziare il gioco!
+                </p>
+              </div>
+              <div className="flex-1 p-4">
+                <iframe
+                  src={getScratchEmbedUrl(task.scratch_url!)}
+                  className="w-full h-full rounded-lg border shadow-sm"
+                  allowFullScreen
+                  title="Scratch Game"
+                />
+              </div>
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      </div>
+    );
+  }
 
   // Split layout only when task is of type "misto" and course supports compiler
   if (showCompiler) {

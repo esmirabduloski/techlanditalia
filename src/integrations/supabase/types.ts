@@ -775,6 +775,7 @@ export type Database = {
           id: string
           lesson_id: string
           points_reward: number
+          scratch_url: string | null
           slides_url: string | null
           task_number: number
           title: string
@@ -791,6 +792,7 @@ export type Database = {
           id?: string
           lesson_id: string
           points_reward?: number
+          scratch_url?: string | null
           slides_url?: string | null
           task_number: number
           title: string
@@ -807,6 +809,7 @@ export type Database = {
           id?: string
           lesson_id?: string
           points_reward?: number
+          scratch_url?: string | null
           slides_url?: string | null
           task_number?: number
           title?: string

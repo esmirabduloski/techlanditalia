@@ -32,6 +32,7 @@ interface TaskData {
   content: string;
   content_type: string;
   slides_url: string;
+  scratch_url: string;
   points_reward: number;
   task_number: number;
   default_python_code: string;
@@ -55,6 +56,7 @@ export default function TaskEditor() {
     content: '',
     content_type: 'text',
     slides_url: '',
+    scratch_url: '',
     points_reward: 10,
     task_number: 1,
     default_python_code: '',
@@ -117,6 +119,7 @@ export default function TaskEditor() {
           content: taskData.content || '',
           content_type: taskData.content_type || 'text',
           slides_url: taskData.slides_url || '',
+          scratch_url: (taskData as any).scratch_url || '',
           points_reward: taskData.points_reward || 10,
           task_number: taskData.task_number || 1,
           default_python_code: (taskData as any).default_python_code || '',
@@ -161,6 +164,7 @@ export default function TaskEditor() {
       content: formData.content || null,
       content_type: formData.content_type,
       slides_url: formData.slides_url || null,
+      scratch_url: formData.scratch_url || null,
       points_reward: formData.points_reward,
       task_number: formData.task_number,
       default_python_code: formData.default_python_code || null,
@@ -327,7 +331,8 @@ export default function TaskEditor() {
                   <SelectContent>
                     <SelectItem value="text">Testo</SelectItem>
                     <SelectItem value="slides">Presentazione</SelectItem>
-                    <SelectItem value="mixed">Misto</SelectItem>
+                    <SelectItem value="mixed">Misto (Compilatore)</SelectItem>
+                    <SelectItem value="scratch">Scratch (Gioco)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -357,6 +362,37 @@ export default function TaskEditor() {
                   <p className="text-xs text-muted-foreground">
                     Incolla il link della presentazione Google Slides per incorporarla nel task.
                   </p>
+                </div>
+              )}
+
+              {/* Scratch URL - solo per tipo Scratch */}
+              {formData.content_type === 'scratch' && (
+                <div className="space-y-2 border-t pt-6">
+                  <h3 className="text-lg font-semibold mb-4">🐱 Gioco Scratch</h3>
+                  <Label htmlFor="scratch_url">URL Progetto Scratch</Label>
+                  <Input
+                    id="scratch_url"
+                    value={formData.scratch_url}
+                    onChange={(e) => setFormData(prev => ({ ...prev, scratch_url: e.target.value }))}
+                    placeholder="https://scratch.mit.edu/projects/1266169747/embed"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Incolla l'URL di embed del progetto Scratch. Puoi ottenerlo dalla pagina del progetto cliccando su "Incorpora" e copiando l'URL dal tag iframe (es: https://scratch.mit.edu/projects/NUMERO/embed).
+                  </p>
+                  
+                  {formData.scratch_url && (
+                    <div className="mt-4 border rounded-lg p-4 bg-muted/30">
+                      <p className="text-sm font-medium mb-2">Anteprima:</p>
+                      <div className="aspect-[485/402] max-w-md">
+                        <iframe
+                          src={formData.scratch_url}
+                          className="w-full h-full rounded-lg border"
+                          allowFullScreen
+                          title="Scratch Preview"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

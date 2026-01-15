@@ -385,9 +385,16 @@ export default function TaskEditor() {
                       <p className="text-sm font-medium mb-2">Anteprima:</p>
                       <div className="aspect-[485/402] max-w-md">
                         <iframe
-                          src={formData.scratch_url}
+                          src={(() => {
+                            const url = formData.scratch_url;
+                            if (url.includes('/embed')) return url;
+                            const match = url.match(/scratch\.mit\.edu\/projects\/(\d+)/);
+                            if (match) return `https://scratch.mit.edu/projects/${match[1]}/embed`;
+                            return url;
+                          })()}
                           className="w-full h-full rounded-lg border"
                           allowFullScreen
+                          allowTransparency
                           title="Scratch Preview"
                         />
                       </div>

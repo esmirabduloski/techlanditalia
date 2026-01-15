@@ -166,13 +166,18 @@ export default function TaskView() {
   const showCompiler = (isPythonCourse || isWebCourse) && isMixedType;
   const showScratch = isScratchType && task.scratch_url;
 
-  // Helper function to extract proper Scratch embed URL
-  const getScratchEmbedUrl = (url: string): string => {
-    // If already an embed URL, return as-is
-    if (url.includes('/embed')) {
+  // Helper function to check if Scratch URL is for editor mode
+  const isScratchEditorMode = (url: string): boolean => {
+    return url.includes('/editor');
+  };
+
+  // Helper function to get proper Scratch URL
+  const getScratchUrl = (url: string): string => {
+    // If it's already a valid embed or editor URL, return as-is
+    if (url.includes('/embed') || url.includes('/editor')) {
       return url;
     }
-    // Extract project ID and create embed URL
+    // Extract project ID and create embed URL (default)
     const match = url.match(/scratch\.mit\.edu\/projects\/(\d+)/);
     if (match) {
       return `https://scratch.mit.edu/projects/${match[1]}/embed`;
@@ -182,11 +187,13 @@ export default function TaskView() {
 
   // Split layout for Scratch games
   if (showScratch) {
+    const isEditorMode = isScratchEditorMode(task.scratch_url!);
+    
     return (
       <div className="h-screen flex flex-col bg-background">
         <ResizablePanelGroup direction="horizontal" className="flex-1">
           {/* Left Panel - Task Content */}
-          <ResizablePanel defaultSize={40} minSize={25}>
+          <ResizablePanel defaultSize={isEditorMode ? 30 : 40} minSize={20}>
             <div className="h-full overflow-y-auto">
               <LessonContent
                 title={task.title}
@@ -220,23 +227,25 @@ export default function TaskView() {
           {/* Resize Handle */}
           <ResizableHandle withHandle />
 
-          {/* Right Panel - Scratch Game */}
-          <ResizablePanel defaultSize={60} minSize={30}>
+          {/* Right Panel - Scratch Game or Editor */}
+          <ResizablePanel defaultSize={isEditorMode ? 70 : 60} minSize={30}>
             <div className="h-full flex flex-col bg-muted/30">
               <div className="p-4 border-b bg-background">
                 <h3 className="font-semibold flex items-center gap-2">
-                  🐱 Scratch - Gioca e Impara
+                  🐱 Scratch - {isEditorMode ? 'Editor' : 'Gioca e Impara'}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Clicca sulla bandierina verde per iniziare il gioco!
+                  {isEditorMode 
+                    ? 'Esplora e modifica il codice del progetto! Clicca sulla bandierina verde per testare.' 
+                    : 'Clicca sulla bandierina verde per iniziare il gioco!'}
                 </p>
               </div>
               <div className="flex-1 p-4">
                 <iframe
-                  src={getScratchEmbedUrl(task.scratch_url!)}
+                  src={getScratchUrl(task.scratch_url!)}
                   className="w-full h-full rounded-lg border shadow-sm"
                   allowFullScreen
-                  title="Scratch Game"
+                  title={isEditorMode ? "Scratch Editor" : "Scratch Game"}
                 />
               </div>
             </div>

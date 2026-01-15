@@ -367,23 +367,61 @@ export default function TaskEditor() {
 
               {/* Scratch URL - solo per tipo Scratch */}
               {formData.content_type === 'scratch' && (
-                <div className="space-y-2 border-t pt-6">
+                <div className="space-y-4 border-t pt-6">
                   <h3 className="text-lg font-semibold mb-4">🐱 Gioco Scratch</h3>
-                  <Label htmlFor="scratch_url">URL Progetto Scratch</Label>
-                  <Input
-                    id="scratch_url"
-                    value={formData.scratch_url}
-                    onChange={(e) => setFormData(prev => ({ ...prev, scratch_url: e.target.value }))}
-                    placeholder="https://scratch.mit.edu/projects/1266169747/embed"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Incolla l'URL di embed del progetto Scratch. Puoi ottenerlo dalla pagina del progetto cliccando su "Incorpora" e copiando l'URL dal tag iframe (es: https://scratch.mit.edu/projects/NUMERO/embed).
-                  </p>
+                  
+                  {/* Scratch Mode Selection */}
+                  <div className="space-y-2">
+                    <Label>Modalità Scratch</Label>
+                    <Select
+                      value={formData.scratch_url?.includes('/editor') ? 'editor' : 'game'}
+                      onValueChange={(value) => {
+                        // Update URL based on mode selection
+                        if (formData.scratch_url) {
+                          const match = formData.scratch_url.match(/scratch\.mit\.edu\/projects\/(\d+)/);
+                          if (match) {
+                            const projectId = match[1];
+                            const newUrl = value === 'editor' 
+                              ? `https://scratch.mit.edu/projects/${projectId}/editor/`
+                              : `https://scratch.mit.edu/projects/${projectId}/embed`;
+                            setFormData(prev => ({ ...prev, scratch_url: newUrl }));
+                          }
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="game">🎮 Solo Gioco (embed)</SelectItem>
+                        <SelectItem value="editor">🔧 Editor Completo (modificabile)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      <strong>Solo Gioco:</strong> Lo studente può solo giocare.<br />
+                      <strong>Editor Completo:</strong> Lo studente può modificare il codice e vedere come funziona.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="scratch_url">URL Progetto Scratch</Label>
+                    <Input
+                      id="scratch_url"
+                      value={formData.scratch_url}
+                      onChange={(e) => setFormData(prev => ({ ...prev, scratch_url: e.target.value }))}
+                      placeholder="https://scratch.mit.edu/projects/1266169747"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Incolla l'URL del progetto Scratch. Puoi usare qualsiasi formato (es: https://scratch.mit.edu/projects/NUMERO).
+                    </p>
+                  </div>
                   
                   {formData.scratch_url && (
                     <div className="mt-4 border rounded-lg p-4 bg-muted/30">
-                      <p className="text-sm font-medium mb-2">Anteprima:</p>
-                      <div className="aspect-[485/402] max-w-md">
+                      <p className="text-sm font-medium mb-2">
+                        Anteprima ({formData.scratch_url.includes('/editor') ? 'Editor Completo' : 'Solo Gioco'}):
+                      </p>
+                      <div className={formData.scratch_url.includes('/editor') ? "aspect-video max-w-2xl" : "aspect-[485/402] max-w-md"}>
                         <iframe
                           src={formData.scratch_url}
                           className="w-full h-full rounded-lg border"

@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Play, RotateCcw, ExternalLink, Loader2 } from 'lucide-react';
+import { RotateCcw, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface TurtleCompilerProps {
@@ -26,67 +26,48 @@ for _ in range(4):
 turtle.done()`;
 
 export function TurtleCompiler({ defaultCode }: TurtleCompilerProps) {
-  const [code, setCode] = useState(defaultCode || FALLBACK_CODE);
-  const [trinketUrl, setTrinketUrl] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [key, setKey] = useState(0);
   const { toast } = useToast();
 
-  const generateTrinketUrl = () => {
-    // Trinket allows embedding Python code via URL parameters
-    // We use the turtle template
+  const code = defaultCode || FALLBACK_CODE;
+
+  // Generate the Trinket embed URL with the code pre-loaded
+  const trinketUrl = useMemo(() => {
     const encodedCode = encodeURIComponent(code);
     return `https://trinket.io/tools/1.0/jekyll/embed/python#code=${encodedCode}`;
-  };
-
-  const runCode = () => {
-    setIsLoading(true);
-    // Generate new URL with current code
-    const url = generateTrinketUrl();
-    setTrinketUrl(null);
-    // Small delay to force iframe reload
-    setTimeout(() => {
-      setTrinketUrl(url);
-      setIsLoading(false);
-    }, 100);
-  };
+  }, [code, key]);
 
   const resetCode = () => {
-    setCode(defaultCode || FALLBACK_CODE);
-    setTrinketUrl(null);
+    // Force iframe reload by changing key
+    setKey(prev => prev + 1);
     toast({
-      title: 'Codice ripristinato',
-      description: 'Il codice è stato riportato alla versione iniziale.',
+      title: 'Compilatore ricaricato',
+      description: 'Il compilatore Turtle è stato ricaricato con il codice originale.',
     });
   };
 
   const openInTrinket = () => {
-    // Open Trinket in a new tab with the code
     window.open('https://trinket.io/python/new', '_blank');
   };
 
   return (
     <div className="flex flex-col h-full bg-card border-l border-border">
       {/* Header */}
-      <div className="p-4 border-b bg-background">
-        <h3 className="font-semibold flex items-center gap-2">
-          🐢 Python Turtle
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          Scrivi il codice e clicca Esegui per vedere la grafica turtle!
-        </p>
-      </div>
-
-      {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/50">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-foreground">🐢 Turtle Graphics</span>
+      <div className="flex items-center justify-between px-4 py-3 border-b bg-background">
+        <div>
+          <h3 className="font-semibold flex items-center gap-2">
+            🐢 Python Turtle
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Modifica il codice e clicca ▶ Run per eseguire
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
             size="sm"
             onClick={resetCode}
-            title="Resetta codice"
+            title="Ricarica compilatore"
           >
             <RotateCcw className="w-4 h-4" />
           </Button>
@@ -98,56 +79,20 @@ export function TurtleCompiler({ defaultCode }: TurtleCompilerProps) {
           >
             <ExternalLink className="w-4 h-4" />
           </Button>
-          <Button
-            size="sm"
-            onClick={runCode}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin mr-1" />
-            ) : (
-              <Play className="w-4 h-4 mr-1" />
-            )}
-            Esegui
-          </Button>
         </div>
       </div>
 
-      {/* Code Editor */}
-      <div className="flex-1 overflow-hidden flex flex-col">
-        <div className="h-1/2 min-h-[200px] border-b">
-          <textarea
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            className="w-full h-full p-4 font-mono text-sm bg-background text-foreground resize-none focus:outline-none"
-            placeholder="Scrivi il tuo codice Python con turtle..."
-            spellCheck={false}
-          />
-        </div>
-
-        {/* Output / Preview */}
-        <div className="h-1/2 min-h-[250px] bg-muted/30">
-          <div className="px-4 py-2 border-b border-border bg-muted/50">
-            <span className="text-xs font-medium text-muted-foreground">Output Grafico</span>
-          </div>
-          <div className="h-[calc(100%-32px)] p-2">
-            {trinketUrl ? (
-              <iframe
-                src={trinketUrl}
-                className="w-full h-full rounded-lg border bg-white"
-                title="Turtle Output"
-                sandbox="allow-scripts allow-same-origin"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-muted-foreground rounded-lg border bg-muted/20">
-                <div className="text-center">
-                  <p className="text-lg mb-2">🐢</p>
-                  <p>Clicca "Esegui" per vedere il risultato</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+      {/* Full Trinket Embed - Code editor + output in one */}
+      <div className="flex-1 min-h-0">
+        <iframe
+          key={key}
+          src={trinketUrl}
+          className="w-full h-full"
+          title="Python Turtle Compiler"
+          frameBorder="0"
+          allowFullScreen
+          sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+        />
       </div>
     </div>
   );

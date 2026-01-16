@@ -7,6 +7,8 @@ import { Layout } from '@/components/layout/Layout';
 import { LessonContent } from '@/components/lesson/LessonContent';
 import { TaskNavigation } from '@/components/lesson/TaskNavigation';
 import { PythonCompiler } from '@/components/lesson/PythonCompiler';
+import { TurtleCompiler } from '@/components/lesson/TurtleCompiler';
+import { PgzeroCompiler } from '@/components/lesson/PgzeroCompiler';
 import { WebCompiler } from '@/components/lesson/WebCompiler';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { Loader2, CheckCircle2 } from 'lucide-react';
@@ -38,6 +40,7 @@ interface Task {
   default_html_code: string | null;
   default_css_code: string | null;
   default_js_code: string | null;
+  python_env: string | null;
 }
 
 const PYTHON_COURSES = ['python-base', 'python-ai'];
@@ -288,7 +291,15 @@ export default function TaskView() {
 
           {/* Right Panel - Compiler */}
           <ResizablePanel defaultSize={50} minSize={30}>
-            {isPythonCourse && <PythonCompiler defaultCode={task.default_python_code || undefined} taskId={task.id} />}
+            {isPythonCourse && (
+              task.python_env === 'turtle' ? (
+                <TurtleCompiler defaultCode={task.default_python_code || undefined} />
+              ) : task.python_env === 'pgzero' ? (
+                <PgzeroCompiler defaultCode={task.default_python_code || undefined} />
+              ) : (
+                <PythonCompiler defaultCode={task.default_python_code || undefined} taskId={task.id} />
+              )
+            )}
             {isWebCourse && (
               <WebCompiler 
                 defaultHtmlCode={task.default_html_code || undefined}

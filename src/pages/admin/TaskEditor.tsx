@@ -39,6 +39,7 @@ interface TaskData {
   default_html_code: string;
   default_css_code: string;
   default_js_code: string;
+  python_env: string;
 }
 
 export default function TaskEditor() {
@@ -63,6 +64,7 @@ export default function TaskEditor() {
     default_html_code: '',
     default_css_code: '',
     default_js_code: '',
+    python_env: 'standard',
   });
 
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
@@ -126,6 +128,7 @@ export default function TaskEditor() {
           default_html_code: (taskData as any).default_html_code || '',
           default_css_code: (taskData as any).default_css_code || '',
           default_js_code: (taskData as any).default_js_code || '',
+          python_env: (taskData as any).python_env || 'standard',
         });
       }
     } else {
@@ -171,6 +174,7 @@ export default function TaskEditor() {
       default_html_code: formData.default_html_code || null,
       default_css_code: formData.default_css_code || null,
       default_js_code: formData.default_js_code || null,
+      python_env: formData.python_env || 'standard',
     };
 
     try {
@@ -413,6 +417,27 @@ export default function TaskEditor() {
                     </p>
                   </div>
 
+                  {/* Python Environment Selection */}
+                  <div className="space-y-2">
+                    <Label>🐍 Ambiente Python</Label>
+                    <Select
+                      value={formData.python_env}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, python_env: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="standard">Standard (Pyodide) - Calcoli, algoritmi</SelectItem>
+                        <SelectItem value="turtle">🐢 Turtle - Grafica tartaruga</SelectItem>
+                        <SelectItem value="pgzero">🎮 Pygame Zero - Giochi</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Scegli l'ambiente Python in base al tipo di codice che lo studente dovrà scrivere.
+                    </p>
+                  </div>
+
                   {/* Python Code */}
                   <div className="space-y-2">
                     <Label htmlFor="default_python_code">🐍 Codice Python Predefinito</Label>
@@ -420,12 +445,20 @@ export default function TaskEditor() {
                       id="default_python_code"
                       value={formData.default_python_code}
                       onChange={(e) => setFormData(prev => ({ ...prev, default_python_code: e.target.value }))}
-                      placeholder="# Scrivi il codice Python iniziale..."
-                      rows={6}
+                      placeholder={
+                        formData.python_env === 'turtle' 
+                          ? "import turtle\nt = turtle.Turtle()\nt.forward(100)..."
+                          : formData.python_env === 'pgzero'
+                          ? "# Pygame Zero\nWIDTH = 400\nHEIGHT = 300\n\ndef draw():\n    screen.fill('blue')..."
+                          : "# Scrivi il codice Python iniziale..."
+                      }
+                      rows={8}
                       className="font-mono text-sm"
                     />
                     <p className="text-xs text-muted-foreground">
-                      Questo codice verrà mostrato nel compilatore Python quando lo studente apre la task.
+                      {formData.python_env === 'turtle' && "💡 Turtle: usa 'import turtle' per disegnare grafica con la tartaruga."}
+                      {formData.python_env === 'pgzero' && "💡 Pygame Zero: definisci draw() e update() per creare giochi interattivi."}
+                      {formData.python_env === 'standard' && "💡 Standard: per calcoli, algoritmi, input/output testuale."}
                     </p>
                   </div>
 

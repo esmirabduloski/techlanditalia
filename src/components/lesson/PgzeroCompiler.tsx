@@ -1,25 +1,18 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Play, RotateCcw, ExternalLink, Loader2, Maximize2 } from 'lucide-react';
+import { Copy, ExternalLink, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 
 interface PgzeroCompilerProps {
   defaultCode?: string;
 }
 
 const FALLBACK_CODE = `# Pygame Zero - Gioco semplice
-# Questo codice funziona con Pygame Zero (pgzrun)
+# Copia questo codice in main.py nell'editor Replit
 
 WIDTH = 400
 HEIGHT = 300
 
-# Variabili di gioco
 player_x = 200
 player_y = 150
 speed = 5
@@ -27,7 +20,7 @@ speed = 5
 def draw():
     screen.fill("darkblue")
     screen.draw.filled_circle((player_x, player_y), 20, "yellow")
-    screen.draw.text("Usa le frecce per muoverti!", (50, 20), fontsize=20, color="white")
+    screen.draw.text("Usa le frecce!", (50, 20), fontsize=20, color="white")
 
 def update():
     global player_x, player_y
@@ -39,185 +32,116 @@ def update():
     if keyboard.up and player_y > 20:
         player_y -= speed
     if keyboard.down and player_y < HEIGHT - 20:
-        player_y += speed
-
-# Per eseguire: pgzrun nome_file.py`;
+        player_y += speed`;
 
 export function PgzeroCompiler({ defaultCode }: PgzeroCompilerProps) {
-  const [code, setCode] = useState(defaultCode || FALLBACK_CODE);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const code = defaultCode || FALLBACK_CODE;
+  const [copied, setCopied] = useState(false);
   const { toast } = useToast();
 
-  const runCode = () => {
-    setIsLoading(true);
-    // Open the dialog to show the game
-    setTimeout(() => {
-      setIsDialogOpen(true);
-      setIsLoading(false);
-    }, 100);
-  };
-
-  const resetCode = () => {
-    setCode(defaultCode || FALLBACK_CODE);
-    toast({
-      title: 'Codice ripristinato',
-      description: 'Il codice è stato riportato alla versione iniziale.',
-    });
+  const copyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      toast({
+        title: '✅ Codice copiato!',
+        description: 'Incollalo in main.py nell\'editor Replit a destra.',
+      });
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast({
+        title: 'Errore',
+        description: 'Non è stato possibile copiare il codice.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const openInReplit = () => {
-    // Open Replit Pygame Zero template in a new tab
-    window.open('https://replit.com/new/pygame', '_blank');
-  };
-
-  // Create a Replit embed URL with the code
-  // Note: Replit's embed doesn't support code injection, so we use their pygame template
-  const getReplitEmbedUrl = () => {
-    // We can use a public pygame-zero focused repl template
-    return 'https://replit.com/@templates/Pygame?embed=true';
+    window.open('https://replit.com/@esmir1475/Pygame', '_blank');
   };
 
   return (
-    <div className="flex flex-col h-full bg-card border-l border-border">
+    <div className="flex flex-col h-full bg-card">
       {/* Header */}
-      <div className="p-4 border-b bg-background">
-        <h3 className="font-semibold flex items-center gap-2">
-          🎮 Python Pygame Zero
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          Scrivi giochi con Pygame Zero! Clicca Esegui per aprire l'ambiente di gioco.
-        </p>
-      </div>
-
-      {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/50">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-foreground">🎮 Pygame Zero</span>
-        </div>
-        <div className="flex items-center gap-2">
+      <div className="px-4 py-3 border-b bg-gradient-to-r from-purple-500/10 to-pink-500/10">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold flex items-center gap-2 text-foreground">
+              🎮 Pygame Zero
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Copia il codice → Incollalo in main.py → Clicca Run
+            </p>
+          </div>
           <Button
-            variant="ghost"
-            size="sm"
-            onClick={resetCode}
-            title="Resetta codice"
-          >
-            <RotateCcw className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={openInReplit}
-            title="Apri in Replit"
+            className="gap-1.5"
           >
-            <ExternalLink className="w-4 h-4" />
-          </Button>
-          <Button
-            size="sm"
-            onClick={runCode}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin mr-1" />
-            ) : (
-              <Play className="w-4 h-4 mr-1" />
-            )}
-            Esegui Gioco
+            <ExternalLink className="w-3.5 h-3.5" />
+            Apri in Replit
           </Button>
         </div>
       </div>
 
-      {/* Code Editor */}
-      <div className="flex-1 overflow-hidden flex flex-col">
-        <div className="flex-1 min-h-0">
-          <textarea
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            className="w-full h-full p-4 font-mono text-sm bg-background text-foreground resize-none focus:outline-none"
-            placeholder="Scrivi il tuo codice Pygame Zero..."
-            spellCheck={false}
-          />
-        </div>
-
-        {/* Instructions */}
-        <div className="border-t border-border bg-muted/30 p-4">
-          <div className="text-sm text-muted-foreground space-y-2">
-            <p className="font-medium text-foreground">📝 Come usare Pygame Zero:</p>
-            <ol className="list-decimal list-inside space-y-1 ml-2">
-              <li>Scrivi il tuo codice qui sopra</li>
-              <li>Clicca "Esegui Gioco" per aprire l'ambiente di esecuzione</li>
-              <li>Copia il codice nell'editor Replit e premi Run</li>
-            </ol>
-            <p className="text-xs mt-3 text-muted-foreground/80">
-              💡 Pygame Zero richiede un ambiente con finestra grafica. Usa Replit per eseguire i giochi!
+      {/* Main content - Split view */}
+      <div className="flex-1 flex min-h-0">
+        {/* Code Panel */}
+        <div className="w-2/5 flex flex-col border-r border-border">
+          <div className="px-3 py-2 border-b bg-muted/50 flex items-center justify-between">
+            <span className="text-sm font-medium">📝 Il tuo codice</span>
+            <Button
+              variant={copied ? "default" : "ghost"}
+              size="sm"
+              onClick={copyCode}
+              className="gap-1.5 h-7"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-3.5 h-3.5" />
+                  Copiato!
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3.5 h-3.5" />
+                  Copia
+                </>
+              )}
+            </Button>
+          </div>
+          <div className="flex-1 overflow-auto">
+            <pre className="p-4 font-mono text-xs leading-relaxed text-foreground whitespace-pre-wrap">
+              {code}
+            </pre>
+          </div>
+          <div className="px-3 py-2 border-t bg-muted/30">
+            <p className="text-xs text-muted-foreground">
+              💡 <strong>Istruzioni:</strong> Copia questo codice, incollalo nel file <code className="bg-muted px-1 rounded">main.py</code> dell'editor Replit, poi clicca il pulsante verde <strong>Run</strong>.
             </p>
           </div>
         </div>
-      </div>
 
-      {/* Game Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-4xl h-[80vh]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              🎮 Pygame Zero - Ambiente di Esecuzione
-            </DialogTitle>
-          </DialogHeader>
-          <div className="flex-1 flex flex-col gap-4">
-            <div className="bg-muted p-4 rounded-lg">
-              <p className="text-sm text-muted-foreground mb-2">
-                Il tuo codice è pronto! Per eseguirlo:
-              </p>
-              <ol className="list-decimal list-inside text-sm space-y-1">
-                <li>Copia il codice qui sotto</li>
-                <li>Incollalo nell'editor Replit qui accanto</li>
-                <li>Clicca il pulsante "Run" verde</li>
-              </ol>
-            </div>
-            
-            {/* Code display */}
-            <div className="flex-1 flex gap-4">
-              <div className="w-1/2">
-                <p className="text-sm font-medium mb-2">Il tuo codice:</p>
-                <pre className="bg-muted p-4 rounded-lg text-xs font-mono overflow-auto h-[200px] whitespace-pre-wrap">
-                  {code}
-                </pre>
-                <Button
-                  className="mt-2 w-full"
-                  variant="outline"
-                  onClick={() => {
-                    navigator.clipboard.writeText(code);
-                    toast({
-                      title: 'Codice copiato!',
-                      description: 'Ora incollalo nell\'editor Replit.',
-                    });
-                  }}
-                >
-                  📋 Copia Codice
-                </Button>
-              </div>
-              
-              <div className="w-1/2">
-                <p className="text-sm font-medium mb-2">Editor Replit:</p>
-                <iframe
-                  src="https://replit.com/@replit/Pygame?embed=true"
-                  className="w-full h-[250px] rounded-lg border"
-                  title="Replit Pygame"
-                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-                />
-                <Button
-                  className="mt-2 w-full"
-                  variant="default"
-                  onClick={openInReplit}
-                >
-                  <Maximize2 className="w-4 h-4 mr-2" />
-                  Apri in Replit (schermo intero)
-                </Button>
-              </div>
-            </div>
+        {/* Replit Embed */}
+        <div className="flex-1 flex flex-col">
+          <div className="px-3 py-2 border-b bg-muted/50">
+            <span className="text-sm font-medium">🚀 Editor Replit</span>
           </div>
-        </DialogContent>
-      </Dialog>
+          <div className="flex-1 min-h-0">
+            <iframe
+              src="https://replit.com/@esmir1475/Pygame?embed=true"
+              width="100%"
+              height="100%"
+              frameBorder="0"
+              allowFullScreen
+              title="Pygame Zero - Replit"
+              className="bg-background"
+              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

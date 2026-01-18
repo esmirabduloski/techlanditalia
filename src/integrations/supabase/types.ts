@@ -618,6 +618,7 @@ export type Database = {
           instructions: string | null
           lesson_id: string
           points_reward: number
+          python_env: string | null
           title: string
         }
         Insert: {
@@ -633,6 +634,7 @@ export type Database = {
           instructions?: string | null
           lesson_id: string
           points_reward?: number
+          python_env?: string | null
           title: string
         }
         Update: {
@@ -648,6 +650,7 @@ export type Database = {
           instructions?: string | null
           lesson_id?: string
           points_reward?: number
+          python_env?: string | null
           title?: string
         }
         Relationships: [

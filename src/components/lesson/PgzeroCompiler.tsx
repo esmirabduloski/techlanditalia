@@ -45,7 +45,7 @@ export function PgzeroCompiler({ defaultCode }: PgzeroCompilerProps) {
       setCopied(true);
       toast({
         title: '✅ Codice copiato!',
-        description: 'Incollalo in main.py nell\'editor Replit a destra.',
+        description: 'Ora apri Replit e incollalo in main.py',
       });
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -63,84 +63,62 @@ export function PgzeroCompiler({ defaultCode }: PgzeroCompilerProps) {
 
   return (
     <div className="flex flex-col h-full bg-card">
-      {/* Header */}
-      <div className="px-4 py-3 border-b bg-gradient-to-r from-purple-500/10 to-pink-500/10">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-semibold flex items-center gap-2 text-foreground">
-              🎮 Pygame Zero
-            </h3>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Copia il codice → Incollalo in main.py → Clicca Run
-            </p>
-          </div>
+      {/* Header with instructions */}
+      <div className="px-4 py-4 border-b bg-gradient-to-r from-purple-500/10 to-pink-500/10">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold flex items-center gap-2 text-foreground text-lg">
+            🎮 Pygame Zero
+          </h3>
+        </div>
+        
+        {/* Main instruction */}
+        <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 mb-3">
+          <p className="text-sm font-medium text-foreground">
+            📋 <strong>COPIA</strong> questo codice con il bottone qui sotto, poi <strong>INCOLLALO in REPLIT</strong> nel file <code className="bg-muted px-1.5 py-0.5 rounded text-xs">main.py</code>
+          </p>
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex gap-3">
           <Button
-            variant="outline"
-            size="sm"
-            onClick={openInReplit}
-            className="gap-1.5"
+            variant={copied ? "default" : "outline"}
+            onClick={copyCode}
+            className="gap-2"
           >
-            <ExternalLink className="w-3.5 h-3.5" />
-            Apri in Replit
+            {copied ? (
+              <>
+                <Check className="w-4 h-4" />
+                Copiato!
+              </>
+            ) : (
+              <>
+                <Copy className="w-4 h-4" />
+                Copia Codice
+              </>
+            )}
+          </Button>
+          <Button
+            onClick={openInReplit}
+            className="gap-2"
+          >
+            <ExternalLink className="w-4 h-4" />
+            Apri Replit
           </Button>
         </div>
       </div>
 
-      {/* Main content - Split view */}
-      <div className="flex-1 flex min-h-0">
-        {/* Code Panel */}
-        <div className="w-2/5 flex flex-col border-r border-border">
-          <div className="px-3 py-2 border-b bg-muted/50 flex items-center justify-between">
-            <span className="text-sm font-medium">📝 Il tuo codice</span>
-            <Button
-              variant={copied ? "default" : "ghost"}
-              size="sm"
-              onClick={copyCode}
-              className="gap-1.5 h-7"
-            >
-              {copied ? (
-                <>
-                  <Check className="w-3.5 h-3.5" />
-                  Copiato!
-                </>
-              ) : (
-                <>
-                  <Copy className="w-3.5 h-3.5" />
-                  Copia
-                </>
-              )}
-            </Button>
-          </div>
-          <div className="flex-1 overflow-auto">
-            <pre className="p-4 font-mono text-xs leading-relaxed text-foreground whitespace-pre-wrap">
-              {code}
-            </pre>
-          </div>
-          <div className="px-3 py-2 border-t bg-muted/30">
-            <p className="text-xs text-muted-foreground">
-              💡 <strong>Istruzioni:</strong> Copia questo codice, incollalo nel file <code className="bg-muted px-1 rounded">main.py</code> dell'editor Replit, poi clicca il pulsante verde <strong>Run</strong>.
-            </p>
-          </div>
-        </div>
+      {/* Code display */}
+      <div className="flex-1 overflow-auto">
+        <pre className="p-4 font-mono text-sm leading-relaxed text-foreground whitespace-pre-wrap bg-muted/30">
+          {code}
+        </pre>
+      </div>
 
-        {/* Replit Embed */}
-        <div className="flex-1 flex flex-col">
-          <div className="px-3 py-2 border-b bg-muted/50">
-            <span className="text-sm font-medium">🚀 Editor Replit</span>
-          </div>
-          <div className="flex-1 min-h-0">
-            <iframe
-              src="https://replit.com/@esmir1475/Pygame?embed=true"
-              width="100%"
-              height="100%"
-              frameBorder="0"
-              allowFullScreen
-              title="Pygame Zero - Replit"
-              className="bg-background"
-              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
-            />
-          </div>
-        </div>
+      {/* Footer instruction */}
+      <div className="px-4 py-3 border-t bg-muted/30">
+        <p className="text-sm text-muted-foreground">
+          💡 <strong>Istruzioni:</strong> 1) Copia il codice → 2) Clicca "Apri Replit" → 3) Incolla in <code className="bg-muted px-1 rounded">main.py</code> → 4) Clicca <strong>Run</strong>
+        </p>
       </div>
     </div>
   );

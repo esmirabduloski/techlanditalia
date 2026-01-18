@@ -13,6 +13,7 @@ import { AdminNav } from '@/components/admin/AdminNav';
 import { useToast } from '@/hooks/use-toast';
 import { LogOut, Loader2, ArrowLeft, Save, User, Upload, X, FileText, Calendar } from 'lucide-react';
 import RichTextEditor from '@/components/editor/RichTextEditor';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useRef } from 'react';
 
 interface Course {
@@ -46,6 +47,7 @@ interface HomeworkFormData {
   default_html_code: string;
   default_css_code: string;
   default_js_code: string;
+  python_env: string;
 }
 
 const PYTHON_COURSES = ['python-base', 'python-ai'];
@@ -73,6 +75,7 @@ export default function HomeworkEditor() {
     default_html_code: '',
     default_css_code: '',
     default_js_code: '',
+    python_env: 'standard',
   });
 
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
@@ -136,6 +139,7 @@ export default function HomeworkEditor() {
           default_html_code: (homeworkData as any).default_html_code || '',
           default_css_code: (homeworkData as any).default_css_code || '',
           default_js_code: (homeworkData as any).default_js_code || '',
+          python_env: (homeworkData as any).python_env || 'standard',
         });
       }
     }
@@ -229,6 +233,7 @@ export default function HomeworkEditor() {
       default_html_code: formData.default_html_code || null,
       default_css_code: formData.default_css_code || null,
       default_js_code: formData.default_js_code || null,
+      python_env: isPythonCourse ? formData.python_env : null,
     };
 
     try {
@@ -463,16 +468,45 @@ export default function HomeworkEditor() {
                   </div>
 
                   {isPythonCourse && (
-                    <div className="space-y-2">
-                      <Label htmlFor="default_python_code">🐍 Codice Python Predefinito</Label>
-                      <Textarea
-                        id="default_python_code"
-                        value={formData.default_python_code}
-                        onChange={(e) => setFormData(prev => ({ ...prev, default_python_code: e.target.value }))}
-                        placeholder="# Scrivi il codice Python iniziale..."
-                        rows={8}
-                        className="font-mono text-sm"
-                      />
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="python_env">🐍 Ambiente Python</Label>
+                        <Select
+                          value={formData.python_env}
+                          onValueChange={(value) => setFormData(prev => ({ ...prev, python_env: value }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleziona ambiente" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="standard">Standard (Python base)</SelectItem>
+                            <SelectItem value="turtle">🐢 Turtle (Grafica)</SelectItem>
+                            <SelectItem value="pgzero">🎮 Pygame Zero (Giochi)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">
+                          {formData.python_env === 'turtle' && 'Usa Trinket per eseguire codice con import turtle'}
+                          {formData.python_env === 'pgzero' && 'Lo studente copierà il codice e lo incollerà in Replit'}
+                          {formData.python_env === 'standard' && 'Compilatore Python standard per codice base'}
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="default_python_code">🐍 Codice Python Predefinito</Label>
+                        <Textarea
+                          id="default_python_code"
+                          value={formData.default_python_code}
+                          onChange={(e) => setFormData(prev => ({ ...prev, default_python_code: e.target.value }))}
+                          placeholder={
+                            formData.python_env === 'turtle' 
+                              ? "import turtle\n\nt = turtle.Turtle()\nt.forward(100)..." 
+                              : formData.python_env === 'pgzero'
+                              ? "# Pygame Zero\nWIDTH = 400\nHEIGHT = 300\n\ndef draw():\n    screen.fill('blue')..."
+                              : "# Scrivi il codice Python iniziale..."
+                          }
+                          rows={8}
+                          className="font-mono text-sm"
+                        />
+                      </div>
                     </div>
                   )}
 

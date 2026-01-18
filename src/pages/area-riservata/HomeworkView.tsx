@@ -5,6 +5,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Layout } from '@/components/layout/Layout';
 import { LessonContent } from '@/components/lesson/LessonContent';
 import { PythonCompiler } from '@/components/lesson/PythonCompiler';
+import { TurtleCompiler } from '@/components/lesson/TurtleCompiler';
+import { PgzeroCompiler } from '@/components/lesson/PgzeroCompiler';
 import { WebCompiler } from '@/components/lesson/WebCompiler';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { Button } from '@/components/ui/button';
@@ -32,6 +34,8 @@ interface HomeworkDetails {
   default_html_code: string | null;
   default_css_code: string | null;
   default_js_code: string | null;
+  python_env: string | null;
+  replit_url: string | null;
   lesson: {
     id: string;
     title: string;
@@ -124,6 +128,8 @@ export default function HomeworkView() {
         default_html_code: (homeworkData as any).default_html_code || null,
         default_css_code: (homeworkData as any).default_css_code || null,
         default_js_code: (homeworkData as any).default_js_code || null,
+        python_env: (homeworkData as any).python_env || null,
+        replit_url: (homeworkData as any).replit_url || null,
         lesson: {
           id: lesson.id,
           title: lesson.title,
@@ -386,10 +392,16 @@ export default function HomeworkView() {
           {/* Right Panel - Compiler */}
           <ResizablePanel defaultSize={50} minSize={30}>
             {isPythonCourse && (
-              <PythonCompiler 
-                defaultCode={homework.default_python_code || undefined} 
-                taskId={`homework-${homework.id}`}
-              />
+              homework.python_env === 'turtle' ? (
+                <TurtleCompiler defaultCode={homework.default_python_code || undefined} />
+              ) : homework.python_env === 'pgzero' ? (
+                <PgzeroCompiler defaultCode={homework.default_python_code || undefined} replitUrl={homework.replit_url || undefined} />
+              ) : (
+                <PythonCompiler 
+                  defaultCode={homework.default_python_code || undefined} 
+                  taskId={`homework-${homework.id}`}
+                />
+              )
             )}
             {isWebCourse && (
               <WebCompiler 

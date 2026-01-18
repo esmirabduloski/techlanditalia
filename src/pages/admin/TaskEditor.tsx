@@ -40,6 +40,7 @@ interface TaskData {
   default_css_code: string;
   default_js_code: string;
   python_env: string;
+  replit_url: string;
 }
 
 export default function TaskEditor() {
@@ -65,6 +66,7 @@ export default function TaskEditor() {
     default_css_code: '',
     default_js_code: '',
     python_env: 'standard',
+    replit_url: '',
   });
 
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
@@ -129,6 +131,7 @@ export default function TaskEditor() {
           default_css_code: (taskData as any).default_css_code || '',
           default_js_code: (taskData as any).default_js_code || '',
           python_env: (taskData as any).python_env || 'standard',
+          replit_url: (taskData as any).replit_url || '',
         });
       }
     } else {
@@ -175,6 +178,7 @@ export default function TaskEditor() {
       default_css_code: formData.default_css_code || null,
       default_js_code: formData.default_js_code || null,
       python_env: formData.python_env || 'standard',
+      replit_url: formData.python_env === 'pgzero' ? (formData.replit_url || null) : null,
     };
 
     try {
@@ -437,6 +441,23 @@ export default function TaskEditor() {
                       Scegli l'ambiente Python in base al tipo di codice che lo studente dovrà scrivere.
                     </p>
                   </div>
+
+                  {/* Replit URL - solo per Pygame Zero */}
+                  {formData.python_env === 'pgzero' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="replit_url">🔗 Link Replit (per bottone "Apri Replit")</Label>
+                      <Input
+                        id="replit_url"
+                        value={formData.replit_url}
+                        onChange={(e) => setFormData(prev => ({ ...prev, replit_url: e.target.value }))}
+                        placeholder="https://replit.com/@username/progetto"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Inserisci il link del progetto Replit che verrà aperto quando lo studente clicca "Apri Replit".
+                        Se lasciato vuoto, verrà usato il progetto predefinito.
+                      </p>
+                    </div>
+                  )}
 
                   {/* Python Code */}
                   <div className="space-y-2">

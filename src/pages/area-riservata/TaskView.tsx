@@ -41,6 +41,7 @@ interface Task {
   default_css_code: string | null;
   default_js_code: string | null;
   python_env: string | null;
+  replit_url: string | null;
 }
 
 const PYTHON_COURSES = ['python-base', 'python-ai'];
@@ -295,7 +296,7 @@ export default function TaskView() {
               task.python_env === 'turtle' ? (
                 <TurtleCompiler defaultCode={task.default_python_code || undefined} />
               ) : task.python_env === 'pgzero' ? (
-                <PgzeroCompiler defaultCode={task.default_python_code || undefined} />
+                <PgzeroCompiler defaultCode={task.default_python_code || undefined} replitUrl={task.replit_url || undefined} />
               ) : (
                 <PythonCompiler defaultCode={task.default_python_code || undefined} taskId={task.id} />
               )

@@ -48,6 +48,7 @@ interface HomeworkFormData {
   default_css_code: string;
   default_js_code: string;
   python_env: string;
+  replit_url: string;
 }
 
 const PYTHON_COURSES = ['python-base', 'python-ai'];
@@ -76,6 +77,7 @@ export default function HomeworkEditor() {
     default_css_code: '',
     default_js_code: '',
     python_env: 'standard',
+    replit_url: '',
   });
 
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
@@ -140,6 +142,7 @@ export default function HomeworkEditor() {
           default_css_code: (homeworkData as any).default_css_code || '',
           default_js_code: (homeworkData as any).default_js_code || '',
           python_env: (homeworkData as any).python_env || 'standard',
+          replit_url: (homeworkData as any).replit_url || '',
         });
       }
     }
@@ -234,6 +237,7 @@ export default function HomeworkEditor() {
       default_css_code: formData.default_css_code || null,
       default_js_code: formData.default_js_code || null,
       python_env: isPythonCourse ? formData.python_env : null,
+      replit_url: isPythonCourse && formData.python_env === 'pgzero' ? (formData.replit_url || null) : null,
     };
 
     try {
@@ -490,6 +494,23 @@ export default function HomeworkEditor() {
                           {formData.python_env === 'standard' && 'Compilatore Python standard per codice base'}
                         </p>
                       </div>
+
+                      {/* Replit URL - solo per Pygame Zero */}
+                      {formData.python_env === 'pgzero' && (
+                        <div className="space-y-2">
+                          <Label htmlFor="replit_url">🔗 Link Replit (per bottone "Apri Replit")</Label>
+                          <Input
+                            id="replit_url"
+                            value={formData.replit_url}
+                            onChange={(e) => setFormData(prev => ({ ...prev, replit_url: e.target.value }))}
+                            placeholder="https://replit.com/@username/progetto"
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Inserisci il link del progetto Replit che verrà aperto quando lo studente clicca "Apri Replit".
+                            Se lasciato vuoto, verrà usato il progetto predefinito.
+                          </p>
+                        </div>
+                      )}
                       <div className="space-y-2">
                         <Label htmlFor="default_python_code">🐍 Codice Python Predefinito</Label>
                         <Textarea

@@ -619,6 +619,7 @@ export type Database = {
           lesson_id: string
           points_reward: number
           python_env: string | null
+          replit_url: string | null
           title: string
         }
         Insert: {
@@ -635,6 +636,7 @@ export type Database = {
           lesson_id: string
           points_reward?: number
           python_env?: string | null
+          replit_url?: string | null
           title: string
         }
         Update: {
@@ -651,6 +653,7 @@ export type Database = {
           lesson_id?: string
           points_reward?: number
           python_env?: string | null
+          replit_url?: string | null
           title?: string
         }
         Relationships: [
@@ -779,6 +782,7 @@ export type Database = {
           lesson_id: string
           points_reward: number
           python_env: string | null
+          replit_url: string | null
           scratch_url: string | null
           slides_url: string | null
           task_number: number
@@ -797,6 +801,7 @@ export type Database = {
           lesson_id: string
           points_reward?: number
           python_env?: string | null
+          replit_url?: string | null
           scratch_url?: string | null
           slides_url?: string | null
           task_number: number
@@ -815,6 +820,7 @@ export type Database = {
           lesson_id?: string
           points_reward?: number
           python_env?: string | null
+          replit_url?: string | null
           scratch_url?: string | null
           slides_url?: string | null
           task_number?: number

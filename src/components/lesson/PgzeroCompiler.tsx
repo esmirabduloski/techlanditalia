@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface PgzeroCompilerProps {
   defaultCode?: string;
+  replitUrl?: string;
 }
 
 const FALLBACK_CODE = `# Pygame Zero - Gioco semplice
@@ -34,8 +35,9 @@ def update():
     if keyboard.down and player_y < HEIGHT - 20:
         player_y += speed`;
 
-export function PgzeroCompiler({ defaultCode }: PgzeroCompilerProps) {
+export function PgzeroCompiler({ defaultCode, replitUrl }: PgzeroCompilerProps) {
   const code = defaultCode || FALLBACK_CODE;
+  const replitLink = replitUrl || 'https://replit.com/@esmir1475/Pygame';
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
 
@@ -58,7 +60,7 @@ export function PgzeroCompiler({ defaultCode }: PgzeroCompilerProps) {
   };
 
   const openInReplit = () => {
-    window.open('https://replit.com/@esmir1475/Pygame', '_blank');
+    window.open(replitLink, '_blank');
   };
 
   return (

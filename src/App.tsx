@@ -56,6 +56,7 @@ import TeacherStudentDetail from "./pages/teacher/TeacherStudentDetail";
 import AdminGroups from "./pages/admin/AdminGroups";
 import AdminTeacherCalendar from "./pages/admin/AdminTeacherCalendar";
 import AdminTeacherLinks from "./pages/admin/AdminTeacherLinks";
+import ScrollToTop from "./components/ScrollToTop";
 
 const queryClient = new QueryClient();
 
@@ -68,6 +69,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <AnalyticsProvider>
+              <ScrollToTop />
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/corsi" element={<Corsi />} />

@@ -117,6 +117,12 @@ export default function TaskEditor() {
         .maybeSingle();
 
       if (taskData) {
+        // Transform #pgzero to #pgzero main.py if not already present
+        let pythonCode = (taskData as any).default_python_code || '';
+        if (pythonCode) {
+          pythonCode = pythonCode.replace(/^(#\s*pgzero)(?!\s+main\.py)/im, '#pgzero main.py');
+        }
+        
         setFormData({
           title: taskData.title || '',
           description: taskData.description || '',
@@ -126,7 +132,7 @@ export default function TaskEditor() {
           scratch_url: (taskData as any).scratch_url || '',
           points_reward: taskData.points_reward || 10,
           task_number: taskData.task_number || 1,
-          default_python_code: (taskData as any).default_python_code || '',
+          default_python_code: pythonCode,
           default_html_code: (taskData as any).default_html_code || '',
           default_css_code: (taskData as any).default_css_code || '',
           default_js_code: (taskData as any).default_js_code || '',

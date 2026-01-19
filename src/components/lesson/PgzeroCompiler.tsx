@@ -37,8 +37,8 @@ def update():
 
 export function PgzeroCompiler({ defaultCode, replitUrl }: PgzeroCompilerProps) {
   const rawCode = defaultCode || FALLBACK_CODE;
-  // Replace "#pgzero" with "#pgzero main.py" in the first line
-  const code = rawCode.replace(/^#\s*pgzero\s*$/im, '#pgzero main.py');
+  // Replace "#pgzero" with "#pgzero main.py" in the first line (only if not already present)
+  const code = rawCode.replace(/^(#\s*pgzero)(?!\s+main\.py)/im, '#pgzero main.py');
   const replitLink = replitUrl || 'https://replit.com/@esmir1475/Pygame';
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();

@@ -36,7 +36,9 @@ def update():
         player_y += speed`;
 
 export function PgzeroCompiler({ defaultCode, replitUrl }: PgzeroCompilerProps) {
-  const code = defaultCode || FALLBACK_CODE;
+  const rawCode = defaultCode || FALLBACK_CODE;
+  // Replace "#pgzero" with "#pgzero main.py" in the first line
+  const code = rawCode.replace(/^#\s*pgzero\s*$/im, '#pgzero main.py');
   const replitLink = replitUrl || 'https://replit.com/@esmir1475/Pygame';
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();

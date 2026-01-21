@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Play, Loader2, Trash2, RotateCcw, Save, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCodeDraft } from '@/hooks/useCodeDraft';
+import { CodeEditor } from './CodeEditor';
 
 declare global {
   interface Window {
@@ -175,18 +176,18 @@ sys.stderr = StringIO()
 
       {/* Code Editor */}
       <div className="flex-1 overflow-hidden flex flex-col">
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 bg-[#1e1e1e]">
           {isLoadingDraft ? (
             <div className="w-full h-full flex items-center justify-center">
               <Loader2 className="w-6 h-6 animate-spin text-primary" />
             </div>
           ) : (
-            <textarea
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              className="w-full h-full p-4 font-mono text-sm bg-background text-foreground resize-none focus:outline-none"
+            <CodeEditor
+              code={code}
+              onChange={setCode}
+              language="python"
+              className="h-full"
               placeholder="Scrivi il tuo codice Python..."
-              spellCheck={false}
             />
           )}
         </div>

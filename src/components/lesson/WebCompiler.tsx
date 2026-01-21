@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Play, Upload, Trash2, Copy, FolderOpen, X, Loader2, Save, Check, Maximize2, Minimize2, ExternalLink, Plus, FileCode, FileText, Image as ImageIcon } from 'lucide-react';
+import { Upload, Trash2, Copy, FolderOpen, X, Loader2, Save, Check, Maximize2, Minimize2, ExternalLink, Plus, FileCode, FileText, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -97,7 +97,6 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
   const [showFileManager, setShowFileManager] = useState<boolean>(false);
   const [isPreviewFullscreen, setIsPreviewFullscreen] = useState<boolean>(false);
   const [additionalJsFiles, setAdditionalJsFiles] = useState<JsFile[]>([]);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -124,10 +123,6 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
     codeType: 'js',
     defaultCode: effectiveDefaultJs,
   });
-
-  useEffect(() => {
-    updatePreview();
-  }, [htmlDraft.code, cssDraft.code, jsDraft.code, additionalJsFiles, uploadedFiles]);
 
   const generatePreviewHtml = () => {
     // Build CSS includes from uploaded files
@@ -160,13 +155,6 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
       </body>
       </html>
     `;
-  };
-
-  const updatePreview = () => {
-    if (!iframeRef.current) return;
-    const combinedHtml = generatePreviewHtml();
-    const blob = new Blob([combinedHtml], { type: 'text/html' });
-    iframeRef.current.src = URL.createObjectURL(blob);
   };
 
   const openPreviewInNewTab = () => {
@@ -394,6 +382,20 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
     html: uploadedFiles.filter(f => f.type === 'html'),
   };
 
+  // Generate preview URL for iframe
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+
+  // Update preview URL when code changes
+  useEffect(() => {
+    const combinedHtml = generatePreviewHtml();
+    const blob = new Blob([combinedHtml], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    setPreviewUrl(url);
+    
+    // Cleanup old blob URL
+    return () => URL.revokeObjectURL(url);
+  }, [htmlDraft.code, cssDraft.code, jsDraft.code, additionalJsFiles, uploadedFiles]);
+
   // Fullscreen preview mode
   if (isPreviewFullscreen) {
     return (
@@ -420,7 +422,7 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
           </div>
         </div>
         <iframe
-          ref={iframeRef}
+          src={previewUrl}
           title="Preview"
           className="flex-1 w-full bg-white"
           sandbox="allow-scripts"
@@ -473,13 +475,6 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
             title="Apri preview in nuova scheda"
           >
             <ExternalLink className="w-4 h-4" />
-          </Button>
-          <Button
-            size="sm"
-            onClick={updatePreview}
-          >
-            <Play className="w-4 h-4 mr-1" />
-            Aggiorna
           </Button>
         </div>
       </div>
@@ -697,7 +692,7 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
             </div>
           </div>
           <iframe
-            ref={iframeRef}
+            src={previewUrl}
             title="Preview"
             className="w-full h-[calc(100%-32px)] bg-white"
             sandbox="allow-scripts"

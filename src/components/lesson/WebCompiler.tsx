@@ -310,7 +310,11 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
       if (path) {
         await supabase.storage.from('web-compiler-assets').remove([decodeURIComponent(path)]);
       }
+      // Remove from state and save to DB
+      const updatedFiles = uploadedFiles.filter(f => f.url !== file.url);
       webFilesDrafts.removeUploadedFile(file.url);
+      // Save updated list to database
+      await webFilesDrafts.saveDraft(updatedFiles, additionalJsFiles);
       toast({
         title: 'File rimosso',
       });

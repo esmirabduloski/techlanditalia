@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Play, Upload, Trash2, Copy, FolderOpen, X, Loader2, Save, Check } from 'lucide-react';
+import { Play, Upload, Trash2, Copy, FolderOpen, X, Loader2, Save, Check, Maximize2, Minimize2, ExternalLink, Plus, FileCode, FileText, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -10,6 +10,13 @@ import { useCodeDraft } from '@/hooks/useCodeDraft';
 interface UploadedFile {
   name: string;
   url: string;
+  type: 'image' | 'css' | 'js' | 'html';
+}
+
+interface JsFile {
+  id: string;
+  name: string;
+  code: string;
 }
 
 interface WebCompilerProps {
@@ -46,11 +53,50 @@ p {
 
 const FALLBACK_JS = '// JavaScript opzionale\nconsole.log("Hello from JavaScript!");';
 
+// File types configuration
+const ALLOWED_EXTENSIONS = {
+  image: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'],
+  css: ['css'],
+  js: ['js'],
+  html: ['html', 'htm']
+};
+
+const ALLOWED_MIME_TYPES = {
+  image: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'],
+  css: ['text/css'],
+  js: ['text/javascript', 'application/javascript'],
+  html: ['text/html']
+};
+
+const getFileType = (extension: string): 'image' | 'css' | 'js' | 'html' | null => {
+  for (const [type, extensions] of Object.entries(ALLOWED_EXTENSIONS)) {
+    if (extensions.includes(extension.toLowerCase())) {
+      return type as 'image' | 'css' | 'js' | 'html';
+    }
+  }
+  return null;
+};
+
+const getFileIcon = (type: 'image' | 'css' | 'js' | 'html') => {
+  switch (type) {
+    case 'image':
+      return <ImageIcon className="w-4 h-4 text-green-500" />;
+    case 'css':
+      return <FileCode className="w-4 h-4 text-blue-500" />;
+    case 'js':
+      return <FileCode className="w-4 h-4 text-yellow-500" />;
+    case 'html':
+      return <FileText className="w-4 h-4 text-orange-500" />;
+  }
+};
+
 export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, taskId }: WebCompilerProps) {
   const [activeTab, setActiveTab] = useState<string>('html');
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [showFileManager, setShowFileManager] = useState<boolean>(false);
+  const [isPreviewFullscreen, setIsPreviewFullscreen] = useState<boolean>(false);
+  const [additionalJsFiles, setAdditionalJsFiles] = useState<JsFile[]>([]);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -60,7 +106,7 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
   const effectiveDefaultCss = defaultCssCode || FALLBACK_CSS;
   const effectiveDefaultJs = defaultJsCode || FALLBACK_JS;
 
-  // Use code drafts for each file type - ora usa solo taskId
+  // Use code drafts for each file type
   const htmlDraft = useCodeDraft({
     taskId,
     codeType: 'html',
@@ -81,33 +127,54 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
 
   useEffect(() => {
     updatePreview();
-  }, [htmlDraft.code, cssDraft.code, jsDraft.code]);
+  }, [htmlDraft.code, cssDraft.code, jsDraft.code, additionalJsFiles, uploadedFiles]);
 
-  const updatePreview = () => {
-    if (!iframeRef.current) return;
+  const generatePreviewHtml = () => {
+    // Build CSS includes from uploaded files
+    const cssIncludes = uploadedFiles
+      .filter(f => f.type === 'css')
+      .map(f => `<link rel="stylesheet" href="${f.url}">`)
+      .join('\n');
 
-    const combinedHtml = `
+    // Build JS includes from uploaded files
+    const jsIncludes = uploadedFiles
+      .filter(f => f.type === 'js')
+      .map(f => `<script src="${f.url}"></script>`)
+      .join('\n');
+
+    // Combine all additional JS code
+    const additionalJsCode = additionalJsFiles.map(f => f.code).join('\n\n');
+
+    return `
       <!DOCTYPE html>
       <html>
       <head>
         <style>${cssDraft.code}</style>
+        ${cssIncludes}
       </head>
       <body>
         ${htmlDraft.code.replace(/<!DOCTYPE html>|<\/?html>|<\/?head>|<\/?body>|<link[^>]*>/gi, '')}
+        ${jsIncludes}
         <script>${jsDraft.code}</script>
+        <script>${additionalJsCode}</script>
       </body>
       </html>
     `;
+  };
 
+  const updatePreview = () => {
+    if (!iframeRef.current) return;
+    const combinedHtml = generatePreviewHtml();
     const blob = new Blob([combinedHtml], { type: 'text/html' });
     iframeRef.current.src = URL.createObjectURL(blob);
   };
 
-  // Allowed image types for web compiler
-  const ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
-  const ALLOWED_IMAGE_MIME_TYPES = [
-    'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'
-  ];
+  const openPreviewInNewTab = () => {
+    const combinedHtml = generatePreviewHtml();
+    const blob = new Blob([combinedHtml], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+  };
 
   const getFileExtension = (fileName: string): string => {
     const parts = fileName.toLowerCase().split('.');
@@ -136,20 +203,23 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
     try {
       for (const file of Array.from(files)) {
         const extension = getFileExtension(file.name);
-        if (!ALLOWED_IMAGE_EXTENSIONS.includes(extension)) {
+        const fileType = getFileType(extension);
+        
+        if (!fileType) {
           toast({
             variant: 'destructive',
             title: 'Tipo di file non consentito',
-            description: `Solo immagini sono consentite. .${extension} non è supportato`,
+            description: `Solo immagini, CSS, JS e HTML sono consentiti. .${extension} non è supportato`,
           });
           continue;
         }
 
-        if (!ALLOWED_IMAGE_MIME_TYPES.includes(file.type)) {
+        // Validate MIME type for images
+        if (fileType === 'image' && !ALLOWED_MIME_TYPES.image.includes(file.type)) {
           toast({
             variant: 'destructive',
             title: 'Tipo di file non consentito',
-            description: 'Solo immagini sono consentite',
+            description: 'Tipo MIME non valido per immagine',
           });
           continue;
         }
@@ -163,36 +233,42 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
           continue;
         }
 
-        const fileBytes = await readFileBytes(file);
-
-        const { data: validationResult, error: validationError } = await supabase.functions.invoke(
-          'validate-file-upload',
-          {
-            body: {
-              fileName: file.name,
-              fileSize: file.size,
-              mimeType: file.type,
-              fileBytes,
-              bucket: 'web-compiler-assets'
+        // Only validate magic bytes for images
+        if (fileType === 'image') {
+          const fileBytes = await readFileBytes(file);
+          const { data: validationResult, error: validationError } = await supabase.functions.invoke(
+            'validate-file-upload',
+            {
+              body: {
+                fileName: file.name,
+                fileSize: file.size,
+                mimeType: file.type,
+                fileBytes,
+                bucket: 'web-compiler-assets'
+              }
             }
-          }
-        );
+          );
 
-        if (validationError || !validationResult.valid) {
-          console.error('Validation error:', validationError || validationResult.error);
-          toast({
-            variant: 'destructive',
-            title: 'File non valido',
-            description: validationResult?.error || 'Impossibile validare il file',
-          });
-          continue;
+          if (validationError || !validationResult.valid) {
+            console.error('Validation error:', validationError || validationResult.error);
+            toast({
+              variant: 'destructive',
+              title: 'File non valido',
+              description: validationResult?.error || 'Impossibile validare il file',
+            });
+            continue;
+          }
         }
 
         const fileName = `${user.id}/${Date.now()}-${file.name}`;
 
         const { data, error } = await supabase.storage
           .from('web-compiler-assets')
-          .upload(fileName, file);
+          .upload(fileName, file, {
+            contentType: fileType === 'css' ? 'text/css' : 
+                         fileType === 'js' ? 'application/javascript' : 
+                         fileType === 'html' ? 'text/html' : file.type
+          });
 
         if (error) {
           console.error('Upload error:', error);
@@ -211,6 +287,7 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
         setUploadedFiles(prev => [...prev, {
           name: file.name,
           url: urlData.publicUrl,
+          type: fileType,
         }]);
 
         toast({
@@ -264,6 +341,26 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
     }
   };
 
+  // Additional JS files management
+  const addJsFile = () => {
+    const newFile: JsFile = {
+      id: `js-${Date.now()}`,
+      name: `script${additionalJsFiles.length + 2}.js`,
+      code: '// Nuovo file JavaScript\n',
+    };
+    setAdditionalJsFiles(prev => [...prev, newFile]);
+    setActiveTab(newFile.id);
+  };
+
+  const updateJsFile = (id: string, code: string) => {
+    setAdditionalJsFiles(prev => prev.map(f => f.id === id ? { ...f, code } : f));
+  };
+
+  const removeJsFile = (id: string) => {
+    setAdditionalJsFiles(prev => prev.filter(f => f.id !== id));
+    setActiveTab('js');
+  };
+
   const saveAllDrafts = async () => {
     await Promise.all([
       htmlDraft.saveDraft(),
@@ -276,6 +373,7 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
     htmlDraft.resetCode();
     cssDraft.resetCode();
     jsDraft.resetCode();
+    setAdditionalJsFiles([]);
   };
 
   const isSaving = htmlDraft.isSaving || cssDraft.isSaving || jsDraft.isSaving;
@@ -287,6 +385,49 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
     const latest = new Date(Math.max(...dates.map(d => d.getTime())));
     return latest.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
   };
+
+  // Group files by type for display
+  const groupedFiles = {
+    images: uploadedFiles.filter(f => f.type === 'image'),
+    css: uploadedFiles.filter(f => f.type === 'css'),
+    js: uploadedFiles.filter(f => f.type === 'js'),
+    html: uploadedFiles.filter(f => f.type === 'html'),
+  };
+
+  // Fullscreen preview mode
+  if (isPreviewFullscreen) {
+    return (
+      <div className="fixed inset-0 z-50 bg-background flex flex-col">
+        <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/50">
+          <span className="text-sm font-medium text-foreground">Preview</span>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={openPreviewInNewTab}
+              title="Apri in nuova scheda"
+            >
+              <ExternalLink className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsPreviewFullscreen(false)}
+              title="Esci da schermo intero"
+            >
+              <Minimize2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+        <iframe
+          ref={iframeRef}
+          title="Preview"
+          className="flex-1 w-full bg-white"
+          sandbox="allow-scripts"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full bg-card border-l border-border">
@@ -326,6 +467,14 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
             <FolderOpen className="w-4 h-4" />
           </Button>
           <Button
+            variant="ghost"
+            size="sm"
+            onClick={openPreviewInNewTab}
+            title="Apri preview in nuova scheda"
+          >
+            <ExternalLink className="w-4 h-4" />
+          </Button>
+          <Button
             size="sm"
             onClick={updatePreview}
           >
@@ -358,7 +507,7 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/*,.css,.js,.html,.htm"
               multiple
               onChange={handleFileUpload}
               className="hidden"
@@ -373,40 +522,63 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
               ) : (
                 <div className="flex flex-col items-center gap-2 text-muted-foreground">
                   <Upload className="w-6 h-6" />
-                  <span className="text-sm">Carica immagini o trascina qui</span>
+                  <span className="text-sm">Carica file o trascina qui</span>
+                  <span className="text-xs">Immagini, CSS, JS, HTML</span>
                 </div>
               )}
             </label>
           </div>
 
-          {/* Uploaded Files List */}
+          {/* Uploaded Files List - Grouped by type */}
           {uploadedFiles.length > 0 && (
-            <div className="space-y-2 max-h-40 overflow-y-auto">
-              {uploadedFiles.map((file, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-2 p-2 bg-background rounded border border-border"
-                >
-                  <span className="text-sm truncate flex-1">{file.name}</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => copyUrl(file.url)}
-                    title="Copia URL"
-                  >
-                    <Copy className="w-3 h-3" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeFile(file)}
-                    className="text-destructive"
-                    title="Rimuovi"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </Button>
+            <div className="space-y-3 max-h-60 overflow-y-auto">
+              {/* Images */}
+              {groupedFiles.images.length > 0 && (
+                <div>
+                  <span className="text-xs font-medium text-muted-foreground mb-1 block">🖼️ Immagini</span>
+                  <div className="space-y-1">
+                    {groupedFiles.images.map((file, index) => (
+                      <FileItem key={index} file={file} onCopy={copyUrl} onRemove={removeFile} />
+                    ))}
+                  </div>
                 </div>
-              ))}
+              )}
+              
+              {/* CSS */}
+              {groupedFiles.css.length > 0 && (
+                <div>
+                  <span className="text-xs font-medium text-muted-foreground mb-1 block">🎨 CSS (auto-inclusi)</span>
+                  <div className="space-y-1">
+                    {groupedFiles.css.map((file, index) => (
+                      <FileItem key={index} file={file} onCopy={copyUrl} onRemove={removeFile} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* JS */}
+              {groupedFiles.js.length > 0 && (
+                <div>
+                  <span className="text-xs font-medium text-muted-foreground mb-1 block">⚡ JavaScript (auto-inclusi)</span>
+                  <div className="space-y-1">
+                    {groupedFiles.js.map((file, index) => (
+                      <FileItem key={index} file={file} onCopy={copyUrl} onRemove={removeFile} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* HTML */}
+              {groupedFiles.html.length > 0 && (
+                <div>
+                  <span className="text-xs font-medium text-muted-foreground mb-1 block">📄 HTML</span>
+                  <div className="space-y-1">
+                    {groupedFiles.html.map((file, index) => (
+                      <FileItem key={index} file={file} onCopy={copyUrl} onRemove={removeFile} />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -420,17 +592,47 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
           </div>
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-            <TabsList className="w-full justify-start rounded-none border-b border-border bg-muted/30">
-              <TabsTrigger value="html" className="data-[state=active]:bg-background">
-                HTML
-              </TabsTrigger>
-              <TabsTrigger value="css" className="data-[state=active]:bg-background">
-                CSS
-              </TabsTrigger>
-              <TabsTrigger value="js" className="data-[state=active]:bg-background">
-                JavaScript
-              </TabsTrigger>
-            </TabsList>
+            <div className="flex items-center border-b border-border bg-muted/30">
+              <TabsList className="flex-1 justify-start rounded-none bg-transparent h-auto p-0">
+                <TabsTrigger value="html" className="data-[state=active]:bg-background rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
+                  HTML
+                </TabsTrigger>
+                <TabsTrigger value="css" className="data-[state=active]:bg-background rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
+                  CSS
+                </TabsTrigger>
+                <TabsTrigger value="js" className="data-[state=active]:bg-background rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
+                  main.js
+                </TabsTrigger>
+                {additionalJsFiles.map((file) => (
+                  <TabsTrigger 
+                    key={file.id} 
+                    value={file.id} 
+                    className="data-[state=active]:bg-background rounded-none border-b-2 border-transparent data-[state=active]:border-primary group"
+                  >
+                    {file.name}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeJsFile(file.id);
+                      }}
+                      className="ml-1 opacity-0 group-hover:opacity-100 hover:text-destructive transition-opacity"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={addJsFile}
+                className="h-8 px-2"
+                title="Aggiungi file JS"
+              >
+                <Plus className="w-4 h-4" />
+                <span className="ml-1 text-xs">JS</span>
+              </Button>
+            </div>
 
             <TabsContent value="html" className="flex-1 m-0 overflow-hidden">
               <textarea
@@ -456,13 +658,43 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
                 spellCheck={false}
               />
             </TabsContent>
+            {additionalJsFiles.map((file) => (
+              <TabsContent key={file.id} value={file.id} className="flex-1 m-0 overflow-hidden">
+                <textarea
+                  value={file.code}
+                  onChange={(e) => updateJsFile(file.id, e.target.value)}
+                  className="w-full h-full p-4 font-mono text-sm bg-background text-foreground resize-none focus:outline-none"
+                  spellCheck={false}
+                />
+              </TabsContent>
+            ))}
           </Tabs>
         )}
 
         {/* Preview */}
         <div className="h-1/3 min-h-[150px] border-t border-border">
-          <div className="px-4 py-2 border-b border-border bg-muted/50">
+          <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/50">
             <span className="text-xs font-medium text-muted-foreground">Preview</span>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={openPreviewInNewTab}
+                title="Apri in nuova scheda"
+                className="h-6 w-6 p-0"
+              >
+                <ExternalLink className="w-3 h-3" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsPreviewFullscreen(true)}
+                title="Schermo intero"
+                className="h-6 w-6 p-0"
+              >
+                <Maximize2 className="w-3 h-3" />
+              </Button>
+            </div>
           </div>
           <iframe
             ref={iframeRef}
@@ -472,6 +704,38 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
           />
         </div>
       </div>
+    </div>
+  );
+}
+
+// File item component
+function FileItem({ file, onCopy, onRemove }: { 
+  file: UploadedFile; 
+  onCopy: (url: string) => void; 
+  onRemove: (file: UploadedFile) => void;
+}) {
+  return (
+    <div className="flex items-center gap-2 p-2 bg-background rounded border border-border">
+      {getFileIcon(file.type)}
+      <span className="text-sm truncate flex-1">{file.name}</span>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => onCopy(file.url)}
+        title="Copia URL"
+        className="h-6 w-6 p-0"
+      >
+        <Copy className="w-3 h-3" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => onRemove(file)}
+        className="text-destructive h-6 w-6 p-0"
+        title="Rimuovi"
+      >
+        <Trash2 className="w-3 h-3" />
+      </Button>
     </div>
   );
 }

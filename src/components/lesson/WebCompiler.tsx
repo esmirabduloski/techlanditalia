@@ -21,11 +21,18 @@ interface JsFile {
   code: string;
 }
 
+interface TaskAttachment {
+  name: string;
+  url: string;
+  type: 'image' | 'css' | 'js' | 'html';
+}
+
 interface WebCompilerProps {
   defaultHtmlCode?: string;
   defaultCssCode?: string;
   defaultJsCode?: string;
   taskId?: string;
+  taskAttachments?: TaskAttachment[];
 }
 
 const FALLBACK_HTML = `<!DOCTYPE html>
@@ -92,7 +99,7 @@ const getFileIcon = (type: 'image' | 'css' | 'js' | 'html') => {
   }
 };
 
-export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, taskId }: WebCompilerProps) {
+export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, taskId, taskAttachments = [] }: WebCompilerProps) {
   const [activeTab, setActiveTab] = useState<string>('html');
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [showFileManager, setShowFileManager] = useState<boolean>(false);
@@ -104,6 +111,9 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
   // Web files drafts (uploaded files + additional JS files)
   const webFilesDrafts = useWebFileDrafts({ taskId });
   const { uploadedFiles, additionalJsFiles } = webFilesDrafts;
+
+  // Combine task attachments with user uploaded files
+  const allFiles = [...taskAttachments, ...uploadedFiles];
 
   const effectiveDefaultHtml = defaultHtmlCode || FALLBACK_HTML;
   const effectiveDefaultCss = defaultCssCode || FALLBACK_CSS;
@@ -129,14 +139,14 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
   });
 
   const generatePreviewHtml = () => {
-    // Build CSS includes from uploaded files
-    const cssIncludes = uploadedFiles
+    // Build CSS includes from all files (task attachments + uploaded)
+    const cssIncludes = allFiles
       .filter(f => f.type === 'css')
       .map(f => `<link rel="stylesheet" href="${f.url}">`)
       .join('\n');
 
-    // Build JS includes from uploaded files
-    const jsIncludes = uploadedFiles
+    // Build JS includes from all files (task attachments + uploaded)
+    const jsIncludes = allFiles
       .filter(f => f.type === 'js')
       .map(f => `<script src="${f.url}"></script>`)
       .join('\n');
@@ -383,13 +393,19 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
     return latest.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
   };
 
-  // Group files by type for display
+  // Group files by type for display - include both task attachments and user uploads
   const groupedFiles = {
+    taskImages: taskAttachments.filter(f => f.type === 'image'),
+    taskCss: taskAttachments.filter(f => f.type === 'css'),
+    taskJs: taskAttachments.filter(f => f.type === 'js'),
+    taskHtml: taskAttachments.filter(f => f.type === 'html'),
     images: uploadedFiles.filter(f => f.type === 'image'),
     css: uploadedFiles.filter(f => f.type === 'css'),
     js: uploadedFiles.filter(f => f.type === 'js'),
     html: uploadedFiles.filter(f => f.type === 'html'),
   };
+
+  const hasTaskAttachments = taskAttachments.length > 0;
 
   // Generate preview URL for iframe
   const [previewUrl, setPreviewUrl] = useState<string>('');
@@ -403,7 +419,7 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
     
     // Cleanup old blob URL
     return () => URL.revokeObjectURL(url);
-  }, [htmlDraft.code, cssDraft.code, jsDraft.code, additionalJsFiles, uploadedFiles]);
+  }, [htmlDraft.code, cssDraft.code, jsDraft.code, additionalJsFiles, uploadedFiles, taskAttachments]);
 
   // Fullscreen preview mode
   if (isPreviewFullscreen) {
@@ -533,13 +549,70 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
             </label>
           </div>
 
-          {/* Uploaded Files List - Grouped by type */}
+          {/* Task Attachments - Read Only */}
+          {hasTaskAttachments && (
+            <div className="space-y-3 mb-4 pb-4 border-b border-border">
+              <span className="text-xs font-medium text-primary block">📌 Materiali della lezione</span>
+              
+              {/* Task Images */}
+              {groupedFiles.taskImages.length > 0 && (
+                <div>
+                  <span className="text-xs text-muted-foreground mb-1 block">🖼️ Immagini</span>
+                  <div className="space-y-1">
+                    {groupedFiles.taskImages.map((file, index) => (
+                      <TaskFileItem key={index} file={file} onCopy={copyUrl} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Task CSS */}
+              {groupedFiles.taskCss.length > 0 && (
+                <div>
+                  <span className="text-xs text-muted-foreground mb-1 block">🎨 CSS (auto-inclusi)</span>
+                  <div className="space-y-1">
+                    {groupedFiles.taskCss.map((file, index) => (
+                      <TaskFileItem key={index} file={file} onCopy={copyUrl} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Task JS */}
+              {groupedFiles.taskJs.length > 0 && (
+                <div>
+                  <span className="text-xs text-muted-foreground mb-1 block">⚡ JavaScript (auto-inclusi)</span>
+                  <div className="space-y-1">
+                    {groupedFiles.taskJs.map((file, index) => (
+                      <TaskFileItem key={index} file={file} onCopy={copyUrl} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Task HTML */}
+              {groupedFiles.taskHtml.length > 0 && (
+                <div>
+                  <span className="text-xs text-muted-foreground mb-1 block">📄 HTML</span>
+                  <div className="space-y-1">
+                    {groupedFiles.taskHtml.map((file, index) => (
+                      <TaskFileItem key={index} file={file} onCopy={copyUrl} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* User Uploaded Files List - Grouped by type */}
           {uploadedFiles.length > 0 && (
             <div className="space-y-3 max-h-60 overflow-y-auto">
+              <span className="text-xs font-medium text-muted-foreground block">📁 I tuoi file</span>
+              
               {/* Images */}
               {groupedFiles.images.length > 0 && (
                 <div>
-                  <span className="text-xs font-medium text-muted-foreground mb-1 block">🖼️ Immagini</span>
+                  <span className="text-xs text-muted-foreground mb-1 block">🖼️ Immagini</span>
                   <div className="space-y-1">
                     {groupedFiles.images.map((file, index) => (
                       <FileItem key={index} file={file} onCopy={copyUrl} onRemove={removeFile} />
@@ -551,7 +624,7 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
               {/* CSS */}
               {groupedFiles.css.length > 0 && (
                 <div>
-                  <span className="text-xs font-medium text-muted-foreground mb-1 block">🎨 CSS (auto-inclusi)</span>
+                  <span className="text-xs text-muted-foreground mb-1 block">🎨 CSS (auto-inclusi)</span>
                   <div className="space-y-1">
                     {groupedFiles.css.map((file, index) => (
                       <FileItem key={index} file={file} onCopy={copyUrl} onRemove={removeFile} />
@@ -563,7 +636,7 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
               {/* JS */}
               {groupedFiles.js.length > 0 && (
                 <div>
-                  <span className="text-xs font-medium text-muted-foreground mb-1 block">⚡ JavaScript (auto-inclusi)</span>
+                  <span className="text-xs text-muted-foreground mb-1 block">⚡ JavaScript (auto-inclusi)</span>
                   <div className="space-y-1">
                     {groupedFiles.js.map((file, index) => (
                       <FileItem key={index} file={file} onCopy={copyUrl} onRemove={removeFile} />
@@ -575,7 +648,7 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
               {/* HTML */}
               {groupedFiles.html.length > 0 && (
                 <div>
-                  <span className="text-xs font-medium text-muted-foreground mb-1 block">📄 HTML</span>
+                  <span className="text-xs text-muted-foreground mb-1 block">📄 HTML</span>
                   <div className="space-y-1">
                     {groupedFiles.html.map((file, index) => (
                       <FileItem key={index} file={file} onCopy={copyUrl} onRemove={removeFile} />
@@ -712,7 +785,7 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
   );
 }
 
-// File item component
+// File item component for user uploaded files (with remove button)
 function FileItem({ file, onCopy, onRemove }: { 
   file: UploadedFile; 
   onCopy: (url: string) => void; 
@@ -739,6 +812,28 @@ function FileItem({ file, onCopy, onRemove }: {
         title="Rimuovi"
       >
         <Trash2 className="w-3 h-3" />
+      </Button>
+    </div>
+  );
+}
+
+// File item component for task attachments (read-only, no remove button)
+function TaskFileItem({ file, onCopy }: { 
+  file: { name: string; url: string; type: 'image' | 'css' | 'js' | 'html' }; 
+  onCopy: (url: string) => void;
+}) {
+  return (
+    <div className="flex items-center gap-2 p-2 bg-primary/5 rounded border border-primary/20">
+      {getFileIcon(file.type)}
+      <span className="text-sm truncate flex-1">{file.name}</span>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => onCopy(file.url)}
+        title="Copia URL"
+        className="h-6 w-6 p-0"
+      >
+        <Copy className="w-3 h-3" />
       </Button>
     </div>
   );

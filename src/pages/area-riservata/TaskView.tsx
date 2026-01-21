@@ -26,6 +26,12 @@ interface Lesson {
   title: string;
 }
 
+interface TaskAttachment {
+  name: string;
+  url: string;
+  type: 'image' | 'css' | 'js' | 'html';
+}
+
 interface Task {
   id: string;
   task_number: number;
@@ -42,6 +48,7 @@ interface Task {
   default_js_code: string | null;
   python_env: string | null;
   replit_url: string | null;
+  attachments: TaskAttachment[];
 }
 
 const PYTHON_COURSES = ['python-base', 'python-ai'];
@@ -115,7 +122,20 @@ export default function TaskView() {
           .maybeSingle();
 
         if (taskData) {
-          setTask(taskData);
+          // Parse attachments from JSONB
+          let attachments: TaskAttachment[] = [];
+          try {
+            const rawAttachments = (taskData as any).attachments;
+            if (Array.isArray(rawAttachments)) {
+              attachments = rawAttachments;
+            } else if (typeof rawAttachments === 'string') {
+              attachments = JSON.parse(rawAttachments);
+            }
+          } catch (e) {
+            console.error('Error parsing attachments:', e);
+          }
+          
+          setTask({ ...taskData, attachments });
         }
       }
     } catch (error) {
@@ -307,6 +327,7 @@ export default function TaskView() {
                 defaultCssCode={task.default_css_code || undefined}
                 defaultJsCode={task.default_js_code || undefined}
                 taskId={task.id}
+                taskAttachments={task.attachments}
               />
             )}
           </ResizablePanel>

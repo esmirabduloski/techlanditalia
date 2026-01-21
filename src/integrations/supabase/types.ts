@@ -770,6 +770,7 @@ export type Database = {
       }
       lesson_tasks: {
         Row: {
+          attachments: Json | null
           content: string | null
           content_type: string | null
           created_at: string
@@ -789,6 +790,7 @@ export type Database = {
           title: string
         }
         Insert: {
+          attachments?: Json | null
           content?: string | null
           content_type?: string | null
           created_at?: string
@@ -808,6 +810,7 @@ export type Database = {
           title: string
         }
         Update: {
+          attachments?: Json | null
           content?: string | null
           content_type?: string | null
           created_at?: string

@@ -13,6 +13,13 @@ import { AdminNav } from '@/components/admin/AdminNav';
 import { useToast } from '@/hooks/use-toast';
 import { LogOut, Loader2, ArrowLeft, Save, User } from 'lucide-react';
 import RichTextEditor from '@/components/editor/RichTextEditor';
+import { TaskAttachmentUpload } from '@/components/admin/TaskAttachmentUpload';
+
+interface Attachment {
+  name: string;
+  url: string;
+  type: 'image' | 'css' | 'js' | 'html';
+}
 
 interface Course {
   id: string;
@@ -41,6 +48,7 @@ interface TaskData {
   default_js_code: string;
   python_env: string;
   replit_url: string;
+  attachments: Attachment[];
 }
 
 export default function TaskEditor() {
@@ -67,6 +75,7 @@ export default function TaskEditor() {
     default_js_code: '',
     python_env: 'standard',
     replit_url: '',
+    attachments: [],
   });
 
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
@@ -123,6 +132,19 @@ export default function TaskEditor() {
           pythonCode = pythonCode.replace(/^(#\s*pgzero)(?!\s+main\.py)/im, '#pgzero main.py');
         }
         
+        // Parse attachments from JSONB
+        let attachments: Attachment[] = [];
+        try {
+          const rawAttachments = (taskData as any).attachments;
+          if (Array.isArray(rawAttachments)) {
+            attachments = rawAttachments;
+          } else if (typeof rawAttachments === 'string') {
+            attachments = JSON.parse(rawAttachments);
+          }
+        } catch (e) {
+          console.error('Error parsing attachments:', e);
+        }
+        
         setFormData({
           title: taskData.title || '',
           description: taskData.description || '',
@@ -138,6 +160,7 @@ export default function TaskEditor() {
           default_js_code: (taskData as any).default_js_code || '',
           python_env: (taskData as any).python_env || 'standard',
           replit_url: (taskData as any).replit_url || '',
+          attachments,
         });
       }
     } else {
@@ -185,6 +208,7 @@ export default function TaskEditor() {
       default_js_code: formData.default_js_code || null,
       python_env: formData.python_env || 'standard',
       replit_url: formData.python_env === 'pgzero' ? (formData.replit_url || null) : null,
+      attachments: formData.attachments,
     };
 
     try {
@@ -524,6 +548,18 @@ export default function TaskEditor() {
                         className="font-mono text-sm"
                       />
                     </div>
+                  </div>
+
+                  {/* Attachments Section */}
+                  <div className="space-y-2 border-t pt-6">
+                    <h4 className="text-md font-semibold mb-4">📎 Allegati Task</h4>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Carica file che saranno visibili nel File Manager dello studente (immagini, CSS, JS).
+                    </p>
+                    <TaskAttachmentUpload
+                      attachments={formData.attachments}
+                      onAttachmentsChange={(attachments) => setFormData(prev => ({ ...prev, attachments }))}
+                    />
                   </div>
                 </div>
               )}

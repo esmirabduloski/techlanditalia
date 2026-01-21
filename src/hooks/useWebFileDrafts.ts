@@ -139,11 +139,19 @@ export function useWebFileDrafts({ taskId }: UseWebFileDraftsOptions) {
   };
 
   const addUploadedFile = (file: UploadedFile) => {
-    setUploadedFiles(prev => [...prev, file]);
+    setUploadedFiles(prev => {
+      const newFiles = [...prev, file];
+      // Auto-save when adding files
+      saveDraft(newFiles, additionalJsFiles);
+      return newFiles;
+    });
   };
 
-  const removeUploadedFile = (fileUrl: string) => {
-    setUploadedFiles(prev => prev.filter(f => f.url !== fileUrl));
+  const removeUploadedFile = async (fileUrl: string) => {
+    const newFiles = uploadedFiles.filter(f => f.url !== fileUrl);
+    setUploadedFiles(newFiles);
+    // Immediately save to persist the deletion
+    await saveDraft(newFiles, additionalJsFiles);
   };
 
   const addJsFile = (file: JsFile) => {

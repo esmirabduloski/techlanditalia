@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useCodeDraft } from '@/hooks/useCodeDraft';
 import { useWebFileDrafts } from '@/hooks/useWebFileDrafts';
+import { CodeEditor } from './CodeEditor';
 
 interface UploadedFile {
   name: string;
@@ -637,37 +638,37 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
               </Button>
             </div>
 
-            <TabsContent value="html" className="flex-1 m-0 overflow-hidden">
-              <textarea
-                value={htmlDraft.code}
-                onChange={(e) => htmlDraft.setCode(e.target.value)}
-                className="w-full h-full p-4 font-mono text-sm bg-background text-foreground resize-none focus:outline-none"
-                spellCheck={false}
+            <TabsContent value="html" className="flex-1 m-0 overflow-hidden bg-[#1e1e1e]">
+              <CodeEditor
+                code={htmlDraft.code}
+                onChange={htmlDraft.setCode}
+                language="html"
+                className="h-full"
               />
             </TabsContent>
-            <TabsContent value="css" className="flex-1 m-0 overflow-hidden">
-              <textarea
-                value={cssDraft.code}
-                onChange={(e) => cssDraft.setCode(e.target.value)}
-                className="w-full h-full p-4 font-mono text-sm bg-background text-foreground resize-none focus:outline-none"
-                spellCheck={false}
+            <TabsContent value="css" className="flex-1 m-0 overflow-hidden bg-[#1e1e1e]">
+              <CodeEditor
+                code={cssDraft.code}
+                onChange={cssDraft.setCode}
+                language="css"
+                className="h-full"
               />
             </TabsContent>
-            <TabsContent value="js" className="flex-1 m-0 overflow-hidden">
-              <textarea
-                value={jsDraft.code}
-                onChange={(e) => jsDraft.setCode(e.target.value)}
-                className="w-full h-full p-4 font-mono text-sm bg-background text-foreground resize-none focus:outline-none"
-                spellCheck={false}
+            <TabsContent value="js" className="flex-1 m-0 overflow-hidden bg-[#1e1e1e]">
+              <CodeEditor
+                code={jsDraft.code}
+                onChange={jsDraft.setCode}
+                language="javascript"
+                className="h-full"
               />
             </TabsContent>
             {additionalJsFiles.map((file) => (
-              <TabsContent key={file.id} value={file.id} className="flex-1 m-0 overflow-hidden">
-                <textarea
-                  value={file.code}
-                  onChange={(e) => updateJsFile(file.id, e.target.value)}
-                  className="w-full h-full p-4 font-mono text-sm bg-background text-foreground resize-none focus:outline-none"
-                  spellCheck={false}
+              <TabsContent key={file.id} value={file.id} className="flex-1 m-0 overflow-hidden bg-[#1e1e1e]">
+                <CodeEditor
+                  code={file.code}
+                  onChange={(code) => updateJsFile(file.id, code)}
+                  language="javascript"
+                  className="h-full"
                 />
               </TabsContent>
             ))}

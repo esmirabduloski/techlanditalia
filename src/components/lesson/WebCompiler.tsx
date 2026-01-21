@@ -27,6 +27,7 @@ interface TaskAttachment {
   type: 'image' | 'css' | 'js' | 'html';
 }
 
+
 interface WebCompilerProps {
   defaultHtmlCode?: string;
   defaultCssCode?: string;
@@ -104,6 +105,9 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [showFileManager, setShowFileManager] = useState<boolean>(false);
   const [isPreviewFullscreen, setIsPreviewFullscreen] = useState<boolean>(false);
+  const [taskCssContent, setTaskCssContent] = useState<string>('');
+  const [taskJsFiles, setTaskJsFiles] = useState<{ id: string; name: string; content: string }[]>([]);
+  const [isLoadingTaskFiles, setIsLoadingTaskFiles] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -115,8 +119,57 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
   // Combine task attachments with user uploaded files
   const allFiles = [...taskAttachments, ...uploadedFiles];
 
+  // Load task CSS/JS file content on mount
+  useEffect(() => {
+    const loadTaskFileContents = async () => {
+      if (taskAttachments.length === 0) return;
+      
+      setIsLoadingTaskFiles(true);
+      
+      try {
+        // Load CSS content (only first one if multiple)
+        const cssFile = taskAttachments.find(f => f.type === 'css');
+        if (cssFile) {
+          const response = await fetch(cssFile.url);
+          if (response.ok) {
+            const content = await response.text();
+            setTaskCssContent(content);
+          }
+        }
+        
+        // Load JS files content
+        const jsFiles = taskAttachments.filter(f => f.type === 'js');
+        const loadedJsFiles = await Promise.all(
+          jsFiles.map(async (file, index) => {
+            try {
+              const response = await fetch(file.url);
+              if (response.ok) {
+                const content = await response.text();
+                return { id: `task-js-${index}`, name: file.name, content };
+              }
+            } catch (e) {
+              console.error('Error loading JS file:', file.name, e);
+            }
+            return { id: `task-js-${index}`, name: file.name, content: `// Errore nel caricamento di ${file.name}` };
+          })
+        );
+        setTaskJsFiles(loadedJsFiles);
+      } catch (error) {
+        console.error('Error loading task file contents:', error);
+      } finally {
+        setIsLoadingTaskFiles(false);
+      }
+    };
+    
+    loadTaskFileContents();
+  }, [taskAttachments]);
+
+  // Build effective default CSS (task CSS + default)
+  const effectiveDefaultCss = taskCssContent 
+    ? `${taskCssContent}\n\n/* --- Il tuo CSS --- */\n${defaultCssCode || FALLBACK_CSS}`
+    : (defaultCssCode || FALLBACK_CSS);
+
   const effectiveDefaultHtml = defaultHtmlCode || FALLBACK_HTML;
-  const effectiveDefaultCss = defaultCssCode || FALLBACK_CSS;
   const effectiveDefaultJs = defaultJsCode || FALLBACK_JS;
 
   // Use code drafts for each file type
@@ -139,19 +192,22 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
   });
 
   const generatePreviewHtml = () => {
-    // Build CSS includes from all files (task attachments + uploaded)
-    const cssIncludes = allFiles
+    // Build CSS includes only from user uploaded files (task CSS is already in the cssDraft)
+    const cssIncludes = uploadedFiles
       .filter(f => f.type === 'css')
       .map(f => `<link rel="stylesheet" href="${f.url}">`)
       .join('\n');
 
-    // Build JS includes from all files (task attachments + uploaded)
-    const jsIncludes = allFiles
+    // Build JS includes only from user uploaded files
+    const jsIncludes = uploadedFiles
       .filter(f => f.type === 'js')
       .map(f => `<script src="${f.url}"></script>`)
       .join('\n');
 
-    // Combine all additional JS code
+    // Task JS files content (already loaded)
+    const taskJsCode = taskJsFiles.map(f => f.content).join('\n\n');
+
+    // Combine all additional JS code from user
     const additionalJsCode = additionalJsFiles.map(f => f.code).join('\n\n');
 
     return `
@@ -164,6 +220,7 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
       <body>
         ${htmlDraft.code.replace(/<!DOCTYPE html>|<\/?html>|<\/?head>|<\/?body>|<link[^>]*>/gi, '')}
         ${jsIncludes}
+        <script>${taskJsCode}</script>
         <script>${jsDraft.code}</script>
         <script>${additionalJsCode}</script>
       </body>
@@ -214,6 +271,19 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
             description: `Solo immagini, CSS, JS e HTML sono consentiti. .${extension} non è supportato`,
           });
           continue;
+        }
+
+        // Check CSS limit (only 1 CSS file allowed)
+        if (fileType === 'css') {
+          const existingCssCount = uploadedFiles.filter(f => f.type === 'css').length;
+          if (existingCssCount >= 1) {
+            toast({
+              variant: 'destructive',
+              title: 'Limite CSS raggiunto',
+              description: 'È consentito solo 1 file CSS. Rimuovi quello esistente prima di caricarne un altro.',
+            });
+            continue;
+          }
         }
 
         // Validate MIME type for images
@@ -321,16 +391,18 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
       if (path) {
         await supabase.storage.from('web-compiler-assets').remove([decodeURIComponent(path)]);
       }
-      // Remove from state and save to DB
-      const updatedFiles = uploadedFiles.filter(f => f.url !== file.url);
-      webFilesDrafts.removeUploadedFile(file.url);
-      // Save updated list to database
-      await webFilesDrafts.saveDraft(updatedFiles, additionalJsFiles);
+      // Remove from state and save to DB (removeUploadedFile now auto-saves)
+      await webFilesDrafts.removeUploadedFile(file.url);
       toast({
         title: 'File rimosso',
       });
     } catch (error) {
       console.error('Error removing file:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Errore',
+        description: 'Impossibile rimuovere il file',
+      });
     }
   };
 
@@ -384,7 +456,7 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
   };
 
   const isSaving = htmlDraft.isSaving || cssDraft.isSaving || jsDraft.isSaving || webFilesDrafts.isSaving;
-  const isLoading = htmlDraft.isLoading || cssDraft.isLoading || jsDraft.isLoading || webFilesDrafts.isLoading;
+  const isLoading = htmlDraft.isLoading || cssDraft.isLoading || jsDraft.isLoading || webFilesDrafts.isLoading || isLoadingTaskFiles;
 
   const formatLastSaved = () => {
     const dates = [htmlDraft.lastSaved, cssDraft.lastSaved, jsDraft.lastSaved, webFilesDrafts.lastSaved].filter(Boolean) as Date[];
@@ -419,7 +491,7 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
     
     // Cleanup old blob URL
     return () => URL.revokeObjectURL(url);
-  }, [htmlDraft.code, cssDraft.code, jsDraft.code, additionalJsFiles, uploadedFiles, taskAttachments]);
+  }, [htmlDraft.code, cssDraft.code, jsDraft.code, additionalJsFiles, uploadedFiles, taskJsFiles]);
 
   // Fullscreen preview mode
   if (isPreviewFullscreen) {
@@ -680,6 +752,18 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
                 <TabsTrigger value="js" className="data-[state=active]:bg-background rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
                   main.js
                 </TabsTrigger>
+                {/* Task JS files (read-only tabs) */}
+                {taskJsFiles.map((file) => (
+                  <TabsTrigger 
+                    key={file.id} 
+                    value={file.id} 
+                    className="data-[state=active]:bg-background rounded-none border-b-2 border-transparent data-[state=active]:border-primary/70 text-primary/70"
+                    title="File della lezione (sola lettura)"
+                  >
+                    📌 {file.name}
+                  </TabsTrigger>
+                ))}
+                {/* User's additional JS files */}
                 {additionalJsFiles.map((file) => (
                   <TabsTrigger 
                     key={file.id} 
@@ -735,6 +819,21 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
                 className="h-full"
               />
             </TabsContent>
+            {/* Task JS files content (read-only) */}
+            {taskJsFiles.map((file) => (
+              <TabsContent key={file.id} value={file.id} className="flex-1 m-0 overflow-hidden bg-[#1e1e1e] relative">
+                <div className="absolute top-2 right-4 z-10 px-2 py-1 bg-primary/20 text-primary text-xs rounded">
+                  📌 Sola lettura
+                </div>
+                <CodeEditor
+                  code={file.content}
+                  onChange={() => {}} // Read-only, no changes allowed
+                  language="javascript"
+                  className="h-full pointer-events-none opacity-90"
+                />
+              </TabsContent>
+            ))}
+            {/* User's additional JS files */}
             {additionalJsFiles.map((file) => (
               <TabsContent key={file.id} value={file.id} className="flex-1 m-0 overflow-hidden bg-[#1e1e1e]">
                 <CodeEditor

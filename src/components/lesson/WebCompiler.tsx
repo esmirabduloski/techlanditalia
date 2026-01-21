@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useCodeDraft } from '@/hooks/useCodeDraft';
+import { useWebFileDrafts } from '@/hooks/useWebFileDrafts';
 
 interface UploadedFile {
   name: string;
@@ -92,14 +93,16 @@ const getFileIcon = (type: 'image' | 'css' | 'js' | 'html') => {
 
 export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, taskId }: WebCompilerProps) {
   const [activeTab, setActiveTab] = useState<string>('html');
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [showFileManager, setShowFileManager] = useState<boolean>(false);
   const [isPreviewFullscreen, setIsPreviewFullscreen] = useState<boolean>(false);
-  const [additionalJsFiles, setAdditionalJsFiles] = useState<JsFile[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
+
+  // Web files drafts (uploaded files + additional JS files)
+  const webFilesDrafts = useWebFileDrafts({ taskId });
+  const { uploadedFiles, additionalJsFiles } = webFilesDrafts;
 
   const effectiveDefaultHtml = defaultHtmlCode || FALLBACK_HTML;
   const effectiveDefaultCss = defaultCssCode || FALLBACK_CSS;
@@ -272,11 +275,11 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
           .from('web-compiler-assets')
           .getPublicUrl(fileName);
 
-        setUploadedFiles(prev => [...prev, {
+        webFilesDrafts.addUploadedFile({
           name: file.name,
           url: urlData.publicUrl,
           type: fileType,
-        }]);
+        });
 
         toast({
           title: 'File caricato',
@@ -307,7 +310,7 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
       if (path) {
         await supabase.storage.from('web-compiler-assets').remove([decodeURIComponent(path)]);
       }
-      setUploadedFiles(prev => prev.filter(f => f.url !== file.url));
+      webFilesDrafts.removeUploadedFile(file.url);
       toast({
         title: 'File rimosso',
       });
@@ -336,16 +339,16 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
       name: `script${additionalJsFiles.length + 2}.js`,
       code: '// Nuovo file JavaScript\n',
     };
-    setAdditionalJsFiles(prev => [...prev, newFile]);
+    webFilesDrafts.addJsFile(newFile);
     setActiveTab(newFile.id);
   };
 
   const updateJsFile = (id: string, code: string) => {
-    setAdditionalJsFiles(prev => prev.map(f => f.id === id ? { ...f, code } : f));
+    webFilesDrafts.updateJsFile(id, code);
   };
 
   const removeJsFile = (id: string) => {
-    setAdditionalJsFiles(prev => prev.filter(f => f.id !== id));
+    webFilesDrafts.removeJsFile(id);
     setActiveTab('js');
   };
 
@@ -354,6 +357,7 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
       htmlDraft.saveDraft(),
       cssDraft.saveDraft(),
       jsDraft.saveDraft(),
+      webFilesDrafts.saveDraft(),
     ]);
   };
 
@@ -361,14 +365,14 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
     htmlDraft.resetCode();
     cssDraft.resetCode();
     jsDraft.resetCode();
-    setAdditionalJsFiles([]);
+    webFilesDrafts.resetFiles();
   };
 
-  const isSaving = htmlDraft.isSaving || cssDraft.isSaving || jsDraft.isSaving;
-  const isLoading = htmlDraft.isLoading || cssDraft.isLoading || jsDraft.isLoading;
+  const isSaving = htmlDraft.isSaving || cssDraft.isSaving || jsDraft.isSaving || webFilesDrafts.isSaving;
+  const isLoading = htmlDraft.isLoading || cssDraft.isLoading || jsDraft.isLoading || webFilesDrafts.isLoading;
 
   const formatLastSaved = () => {
-    const dates = [htmlDraft.lastSaved, cssDraft.lastSaved, jsDraft.lastSaved].filter(Boolean) as Date[];
+    const dates = [htmlDraft.lastSaved, cssDraft.lastSaved, jsDraft.lastSaved, webFilesDrafts.lastSaved].filter(Boolean) as Date[];
     if (dates.length === 0) return null;
     const latest = new Date(Math.max(...dates.map(d => d.getTime())));
     return latest.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });

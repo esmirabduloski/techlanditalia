@@ -59,6 +59,7 @@ export function TaskAttachmentUpload({ attachments, onAttachmentsChange }: TaskA
     if (!files || files.length === 0) return;
 
     setIsUploading(true);
+    const newAttachments: Attachment[] = [];
 
     try {
       for (const file of Array.from(files)) {
@@ -83,7 +84,7 @@ export function TaskAttachmentUpload({ attachments, onAttachmentsChange }: TaskA
           continue;
         }
 
-        const fileName = `task-attachments/${Date.now()}-${file.name}`;
+        const fileName = `task-attachments/${Date.now()}-${Math.random().toString(36).substring(7)}-${file.name}`;
 
         const { data, error } = await supabase.storage
           .from('web-compiler-assets')
@@ -107,17 +108,19 @@ export function TaskAttachmentUpload({ attachments, onAttachmentsChange }: TaskA
           .from('web-compiler-assets')
           .getPublicUrl(fileName);
 
-        const newAttachment: Attachment = {
+        newAttachments.push({
           name: file.name,
           url: urlData.publicUrl,
           type: fileType,
-        };
+        });
+      }
 
-        onAttachmentsChange([...attachments, newAttachment]);
-
+      // Update all attachments at once after the loop
+      if (newAttachments.length > 0) {
+        onAttachmentsChange([...attachments, ...newAttachments]);
         toast({
-          title: 'File caricato',
-          description: `${file.name} caricato con successo`,
+          title: 'File caricati',
+          description: `${newAttachments.length} file caricati con successo`,
         });
       }
     } catch (error) {

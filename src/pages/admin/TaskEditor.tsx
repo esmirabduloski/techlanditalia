@@ -18,7 +18,7 @@ import { TaskAttachmentUpload } from '@/components/admin/TaskAttachmentUpload';
 interface Attachment {
   name: string;
   url: string;
-  type: 'image' | 'css' | 'js' | 'html';
+  type: 'image' | 'css' | 'js' | 'html' | 'audio' | 'video';
 }
 
 interface Course {

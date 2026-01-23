@@ -2,12 +2,12 @@ import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Upload, Trash2, Copy, Image as ImageIcon, FileCode, FileText, Loader2, ExternalLink } from 'lucide-react';
+import { Upload, Trash2, Copy, Image as ImageIcon, FileCode, FileText, Loader2, ExternalLink, Music, Video } from 'lucide-react';
 
 interface Attachment {
   name: string;
   url: string;
-  type: 'image' | 'css' | 'js' | 'html';
+  type: 'image' | 'css' | 'js' | 'html' | 'audio' | 'video';
 }
 
 interface TaskAttachmentUploadProps {
@@ -19,19 +19,21 @@ const ALLOWED_EXTENSIONS = {
   image: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'],
   css: ['css'],
   js: ['js'],
-  html: ['html', 'htm']
+  html: ['html', 'htm'],
+  audio: ['mp3', 'wav', 'ogg'],
+  video: ['mp4', 'webm']
 };
 
-const getFileType = (extension: string): 'image' | 'css' | 'js' | 'html' | null => {
+const getFileType = (extension: string): 'image' | 'css' | 'js' | 'html' | 'audio' | 'video' | null => {
   for (const [type, extensions] of Object.entries(ALLOWED_EXTENSIONS)) {
     if (extensions.includes(extension.toLowerCase())) {
-      return type as 'image' | 'css' | 'js' | 'html';
+      return type as 'image' | 'css' | 'js' | 'html' | 'audio' | 'video';
     }
   }
   return null;
 };
 
-const getFileIcon = (type: 'image' | 'css' | 'js' | 'html') => {
+const getFileIcon = (type: 'image' | 'css' | 'js' | 'html' | 'audio' | 'video') => {
   switch (type) {
     case 'image':
       return <ImageIcon className="w-4 h-4 text-green-500" />;
@@ -41,6 +43,10 @@ const getFileIcon = (type: 'image' | 'css' | 'js' | 'html') => {
       return <FileCode className="w-4 h-4 text-yellow-500" />;
     case 'html':
       return <FileText className="w-4 h-4 text-orange-500" />;
+    case 'audio':
+      return <Music className="w-4 h-4 text-purple-500" />;
+    case 'video':
+      return <Video className="w-4 h-4 text-pink-500" />;
   }
 };
 
@@ -70,29 +76,32 @@ export function TaskAttachmentUpload({ attachments, onAttachmentsChange }: TaskA
           toast({
             variant: 'destructive',
             title: 'Tipo di file non consentito',
-            description: `Solo immagini, CSS, JS e HTML sono consentiti. .${extension} non è supportato`,
+            description: `Solo immagini, CSS, JS, HTML, MP3 e MP4 sono consentiti. .${extension} non è supportato`,
           });
           continue;
         }
 
-        if (file.size > 10 * 1024 * 1024) {
+        const maxSize = (fileType === 'video' || fileType === 'audio') ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+        if (file.size > maxSize) {
           toast({
             variant: 'destructive',
             title: 'File troppo grande',
-            description: `${file.name} supera il limite di 10MB`,
+            description: `${file.name} supera il limite di ${maxSize / (1024 * 1024)}MB`,
           });
           continue;
         }
 
         const fileName = `task-attachments/${Date.now()}-${Math.random().toString(36).substring(7)}-${file.name}`;
 
+        const contentType = fileType === 'css' ? 'text/css' : 
+                           fileType === 'js' ? 'application/javascript' : 
+                           fileType === 'html' ? 'text/html' :
+                           fileType === 'audio' ? 'audio/mpeg' :
+                           fileType === 'video' ? 'video/mp4' : file.type;
+
         const { data, error } = await supabase.storage
           .from('web-compiler-assets')
-          .upload(fileName, file, {
-            contentType: fileType === 'css' ? 'text/css' : 
-                         fileType === 'js' ? 'application/javascript' : 
-                         fileType === 'html' ? 'text/html' : file.type
-          });
+          .upload(fileName, file, { contentType });
 
         if (error) {
           console.error('Upload error:', error);
@@ -161,6 +170,8 @@ export function TaskAttachmentUpload({ attachments, onAttachmentsChange }: TaskA
     css: attachments.filter(f => f.type === 'css'),
     js: attachments.filter(f => f.type === 'js'),
     html: attachments.filter(f => f.type === 'html'),
+    audio: attachments.filter(f => f.type === 'audio'),
+    video: attachments.filter(f => f.type === 'video'),
   };
 
   return (
@@ -186,7 +197,7 @@ export function TaskAttachmentUpload({ attachments, onAttachmentsChange }: TaskA
           ref={fileInputRef}
           type="file"
           className="hidden"
-          accept=".jpg,.jpeg,.png,.gif,.webp,.svg,.css,.js,.html,.htm"
+          accept=".jpg,.jpeg,.png,.gif,.webp,.svg,.css,.js,.html,.htm,.mp3,.wav,.ogg,.mp4,.webm"
           multiple
           onChange={handleFileUpload}
         />
@@ -210,7 +221,7 @@ export function TaskAttachmentUpload({ attachments, onAttachmentsChange }: TaskA
               </button>
             </p>
             <p className="text-xs text-muted-foreground">
-              Immagini, CSS, JS, HTML - Max 10MB per file
+              Immagini, CSS, JS, HTML, MP3, MP4 - Max 10MB (50MB per audio/video)
             </p>
           </div>
         )}
@@ -270,13 +281,13 @@ export function TaskAttachmentUpload({ attachments, onAttachmentsChange }: TaskA
             </div>
           )}
 
-          {[...groupedFiles.css, ...groupedFiles.js, ...groupedFiles.html].length > 0 && (
+          {[...groupedFiles.css, ...groupedFiles.js, ...groupedFiles.html, ...groupedFiles.audio, ...groupedFiles.video].length > 0 && (
             <div>
               <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                <FileCode className="w-3 h-3" /> File Codice
+                <FileCode className="w-3 h-3" /> File Codice e Media
               </p>
               <div className="space-y-1">
-                {[...groupedFiles.css, ...groupedFiles.js, ...groupedFiles.html].map((file) => (
+                {[...groupedFiles.css, ...groupedFiles.js, ...groupedFiles.html, ...groupedFiles.audio, ...groupedFiles.video].map((file) => (
                   <div 
                     key={file.url} 
                     className="flex items-center justify-between p-2 bg-muted/50 rounded-md group"

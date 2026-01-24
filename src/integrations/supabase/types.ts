@@ -666,6 +666,45 @@ export type Database = {
           },
         ]
       }
+      homework_group_deadlines: {
+        Row: {
+          created_at: string
+          due_date: string
+          group_id: string
+          homework_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          due_date: string
+          group_id: string
+          homework_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          due_date?: string
+          group_id?: string
+          homework_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homework_group_deadlines_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "student_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "homework_group_deadlines_homework_id_fkey"
+            columns: ["homework_id"]
+            isOneToOne: false
+            referencedRelation: "homework"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       homework_submissions: {
         Row: {
           feedback_at: string | null

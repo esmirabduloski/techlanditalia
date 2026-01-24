@@ -60,6 +60,13 @@ export function HomeworkSection() {
 
       const courseIds = enrollments.map((e) => e.course_id);
 
+      // Get student's group to determine group-specific deadlines
+      const { data: studentGroup } = await supabase
+        .from("group_students")
+        .select("group_id")
+        .eq("student_id", user.id)
+        .maybeSingle();
+
       // Get lessons for enrolled courses
       const { data: lessons } = await supabase
         .from("lessons")
@@ -86,6 +93,19 @@ export function HomeworkSection() {
         return;
       }
 
+      // Get group-specific deadlines if student is in a group
+      let groupDeadlinesMap = new Map<string, string>();
+      if (studentGroup?.group_id) {
+        const { data: groupDeadlines } = await supabase
+          .from("homework_group_deadlines")
+          .select("homework_id, due_date")
+          .eq("group_id", studentGroup.group_id);
+        
+        groupDeadlinesMap = new Map(
+          groupDeadlines?.map((d) => [d.homework_id, d.due_date]) || []
+        );
+      }
+
       // Get student's submissions
       const { data: submissions } = await supabase
         .from("homework_submissions")
@@ -102,6 +122,9 @@ export function HomeworkSection() {
         const course = lesson?.courses as { title: string; emoji: string } | null;
         const attachments = Array.isArray(h.attachments) ? (h.attachments as unknown as Attachment[]) : [];
         
+        // Use group-specific deadline if available, otherwise fall back to global due_date
+        const effectiveDueDate = groupDeadlinesMap.get(h.id) || h.due_date;
+        
         return {
           id: h.id,
           title: h.title,
@@ -109,7 +132,7 @@ export function HomeworkSection() {
           instructions: h.instructions,
           points_reward: h.points_reward,
           attachments,
-          due_date: h.due_date,
+          due_date: effectiveDueDate,
           lesson_title: lesson?.title || "Lezione",
           course_title: course?.title || "Corso",
           course_emoji: course?.emoji || "📚",
@@ -119,10 +142,14 @@ export function HomeworkSection() {
         };
       });
 
-      // Sort: pending first, then by course
+      // Sort: pending first, then by due date (earliest first), then by course
       homeworkWithDetails.sort((a, b) => {
         if (a.is_submitted !== b.is_submitted) {
           return a.is_submitted ? 1 : -1;
+        }
+        // Sort by due date (earliest first) for pending homework
+        if (!a.is_submitted && a.due_date && b.due_date) {
+          return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
         }
         return a.course_title.localeCompare(b.course_title);
       });

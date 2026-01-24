@@ -66,6 +66,13 @@ export function useHomeworkDeadlineNotifications() {
 
       const courseIds = enrollments.map(e => e.course_id);
 
+      // Get student's group to determine group-specific deadlines
+      const { data: studentGroup } = await supabase
+        .from('group_students')
+        .select('group_id')
+        .eq('student_id', user.id)
+        .maybeSingle();
+
       // Get lessons for enrolled courses
       const { data: lessons } = await supabase
         .from('lessons')
@@ -76,14 +83,26 @@ export function useHomeworkDeadlineNotifications() {
 
       const lessonIds = lessons.map(l => l.id);
 
-      // Get homework with due dates
+      // Get homework (with or without global due dates)
       const { data: homeworkData } = await supabase
         .from('homework')
         .select('id, title, due_date, lesson_id')
-        .in('lesson_id', lessonIds)
-        .not('due_date', 'is', null);
+        .in('lesson_id', lessonIds);
 
       if (!homeworkData) return;
+
+      // Get group-specific deadlines if student is in a group
+      let groupDeadlinesMap = new Map<string, string>();
+      if (studentGroup?.group_id) {
+        const { data: groupDeadlines } = await supabase
+          .from('homework_group_deadlines')
+          .select('homework_id, due_date')
+          .eq('group_id', studentGroup.group_id);
+        
+        groupDeadlinesMap = new Map(
+          groupDeadlines?.map((d) => [d.homework_id, d.due_date]) || []
+        );
+      }
 
       // Get student's submissions
       const { data: submissions } = await supabase
@@ -103,7 +122,13 @@ export function useHomeworkDeadlineNotifications() {
         // Skip dismissed notifications
         if (dismissedIds.has(hw.id)) continue;
 
-        const dueDate = new Date(hw.due_date!);
+        // Use group-specific deadline if available, otherwise fall back to global due_date
+        const effectiveDueDate = groupDeadlinesMap.get(hw.id) || hw.due_date;
+        
+        // Skip if no deadline at all
+        if (!effectiveDueDate) continue;
+
+        const dueDate = new Date(effectiveDueDate);
         const hoursRemaining = (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60);
 
         // Only show notifications for homework due within 72 hours and not expired

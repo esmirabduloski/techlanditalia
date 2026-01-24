@@ -36,9 +36,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { 
-  LogOut, Loader2, ChevronRight, Plus, Sparkles, Pencil, Trash2, User, BookOpen, GraduationCap
+  LogOut, Loader2, ChevronRight, Plus, Sparkles, Pencil, Trash2, User, BookOpen, GraduationCap, Eye, EyeOff
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Switch } from '@/components/ui/switch';
 
 interface Course {
   id: string;
@@ -50,6 +51,7 @@ interface Course {
   description: string | null;
   age_range: string | null;
   duration: string | null;
+  is_visible: boolean;
 }
 
 interface CourseFormData {
@@ -249,6 +251,25 @@ export default function AdminCourses() {
     }
 
     setIsSaving(false);
+  };
+
+  const handleToggleVisibility = async (course: Course) => {
+    const newVisibility = !course.is_visible;
+    
+    const { error } = await supabase
+      .from('courses')
+      .update({ is_visible: newVisibility })
+      .eq('id', course.id);
+
+    if (error) {
+      console.error('Error toggling visibility:', error);
+      toast.error('Errore durante la modifica della visibilità');
+    } else {
+      setCourses(courses.map(c => 
+        c.id === course.id ? { ...c, is_visible: newVisibility } : c
+      ));
+      toast.success(newVisibility ? 'Corso ora visibile' : 'Corso nascosto');
+    }
   };
 
   const handleDeleteCourse = async () => {
@@ -563,12 +584,20 @@ export default function AdminCourses() {
         {/* Courses Grid */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {courses.map((course) => (
-            <Card key={course.id} className="hover:shadow-md transition-shadow group">
+            <Card key={course.id} className={`hover:shadow-md transition-shadow group ${!course.is_visible ? 'opacity-60' : ''}`}>
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-3">
                   <span className="text-3xl">{course.emoji}</span>
                   <div className="flex-1 min-w-0">
-                    <CardTitle className="text-lg truncate">{course.title}</CardTitle>
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-lg truncate">{course.title}</CardTitle>
+                      {!course.is_visible && (
+                        <Badge variant="secondary" className="text-xs">
+                          <EyeOff className="w-3 h-3 mr-1" />
+                          Nascosto
+                        </Badge>
+                      )}
+                    </div>
                     <CardDescription className="truncate">{course.slug}</CardDescription>
                   </div>
                   <Button
@@ -593,6 +622,25 @@ export default function AdminCourses() {
                     Età: {course.age_range}
                   </p>
                 )}
+                
+                {/* Visibility Toggle */}
+                <div className="flex items-center justify-between py-2 mb-2 border-t border-b border-border/50">
+                  <div className="flex items-center gap-2 text-sm">
+                    {course.is_visible ? (
+                      <Eye className="w-4 h-4 text-tech-green" />
+                    ) : (
+                      <EyeOff className="w-4 h-4 text-muted-foreground" />
+                    )}
+                    <span className={course.is_visible ? 'text-tech-green' : 'text-muted-foreground'}>
+                      {course.is_visible ? 'Visibile' : 'Nascosto'}
+                    </span>
+                  </div>
+                  <Switch
+                    checked={course.is_visible}
+                    onCheckedChange={() => handleToggleVisibility(course)}
+                  />
+                </div>
+
                 <div className="space-y-2">
                   <Button asChild variant="default" className="w-full">
                     <Link to={`/admin/corsi/${course.id}/lezioni`}>

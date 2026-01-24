@@ -356,6 +356,7 @@ export type Database = {
           duration: string | null
           emoji: string
           id: string
+          is_visible: boolean
           level: string
           slug: string
           title: string
@@ -368,6 +369,7 @@ export type Database = {
           duration?: string | null
           emoji?: string
           id?: string
+          is_visible?: boolean
           level?: string
           slug: string
           title: string
@@ -380,6 +382,7 @@ export type Database = {
           duration?: string | null
           emoji?: string
           id?: string
+          is_visible?: boolean
           level?: string
           slug?: string
           title?: string

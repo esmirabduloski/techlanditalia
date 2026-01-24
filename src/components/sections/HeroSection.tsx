@@ -87,8 +87,8 @@ export function HeroSection() {
               <div className="aspect-square max-w-lg mx-auto rounded-3xl bg-gradient-hero p-1">
                 <div className="w-full h-full rounded-3xl bg-card flex items-center justify-center overflow-hidden">
                   <OptimizedImage 
-                    src="https://images.unsplash.com/photo-1488590528505-98d2b5aba04b" 
-                    alt="Bambini che imparano a programmare durante un corso di coding online"
+                    src="https://images.unsplash.com/photo-1511512578047-dfb367046420?w=800" 
+                    alt="Corsi di Roblox e Minecraft per bambini - impara a creare videogiochi"
                     className="w-full h-full object-cover"
                     priority={true}
                     sizes="(max-width: 1024px) 0vw, 50vw"
@@ -98,27 +98,39 @@ export function HeroSection() {
               </div>
             </div>
             
-            {/* Floating elements */}
-            <div className="absolute top-10 -left-10 p-4 rounded-2xl bg-card shadow-tech-lg animate-bounce-slow" style={{ animationDelay: "0.5s" }}>
+            {/* Floating elements - positioned in front */}
+            <div className="absolute top-6 -left-6 z-20 p-3 rounded-2xl bg-card/95 backdrop-blur-sm shadow-tech-lg animate-bounce-slow border border-border/50" style={{ animationDelay: "0.5s" }}>
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-tech-teal/20 flex items-center justify-center">
-                  <span className="text-2xl">🎮</span>
+                <div className="w-11 h-11 rounded-xl bg-orange-500/20 flex items-center justify-center">
+                  <span className="text-xl">🐱</span>
                 </div>
                 <div>
-                  <p className="font-semibold text-sm">Game Dev</p>
-                  <p className="text-xs text-muted-foreground">Crea i tuoi giochi</p>
+                  <p className="font-semibold text-sm">Scratch</p>
+                  <p className="text-xs text-muted-foreground">Primi passi nel coding</p>
                 </div>
               </div>
             </div>
             
-            <div className="absolute bottom-20 -right-5 p-4 rounded-2xl bg-card shadow-tech-lg animate-bounce-slow" style={{ animationDelay: "1s" }}>
+            <div className="absolute top-1/3 -right-4 z-20 p-3 rounded-2xl bg-card/95 backdrop-blur-sm shadow-tech-lg animate-bounce-slow border border-border/50" style={{ animationDelay: "1s" }}>
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-tech-cyan/20 flex items-center justify-center">
-                  <span className="text-2xl">🌐</span>
+                <div className="w-11 h-11 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                  <span className="text-xl">🐍</span>
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">Python</p>
+                  <p className="text-xs text-muted-foreground">Programmazione reale</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="absolute bottom-12 -left-2 z-20 p-3 rounded-2xl bg-card/95 backdrop-blur-sm shadow-tech-lg animate-bounce-slow border border-border/50" style={{ animationDelay: "1.5s" }}>
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-tech-cyan/20 flex items-center justify-center">
+                  <span className="text-xl">🌐</span>
                 </div>
                 <div>
                   <p className="font-semibold text-sm">Web Dev</p>
-                  <p className="text-xs text-muted-foreground">Costruisci siti web</p>
+                  <p className="text-xs text-muted-foreground">Crea siti web</p>
                 </div>
               </div>
             </div>

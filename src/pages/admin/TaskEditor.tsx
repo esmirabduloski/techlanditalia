@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,10 +11,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { useToast } from '@/hooks/use-toast';
-import { LogOut, Loader2, ArrowLeft, Save, User } from 'lucide-react';
+import { LogOut, Loader2, ArrowLeft, Save, User, Clock } from 'lucide-react';
 import RichTextEditor from '@/components/editor/RichTextEditor';
 import { TaskAttachmentUpload } from '@/components/admin/TaskAttachmentUpload';
-
+import { useTaskEditorDraft } from '@/hooks/useTaskEditorDraft';
 interface Attachment {
   name: string;
   url: string;
@@ -59,6 +59,7 @@ export default function TaskEditor() {
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const dataLoadedFromDbRef = useRef(false);
   
   const [formData, setFormData] = useState<TaskData>({
     title: '',
@@ -82,6 +83,14 @@ export default function TaskEditor() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Draft management
+  const { loadDraft, saveDraft, clearDraft, hasDraft, lastSaved } = useTaskEditorDraft({
+    courseId,
+    lessonId,
+    taskId,
+    isEditing,
+  });
+
   useEffect(() => {
     if (!authLoading && (!user || !isAdmin)) {
       navigate('/admin/login');
@@ -93,6 +102,13 @@ export default function TaskEditor() {
       fetchData();
     }
   }, [user, isAdmin, courseId, lessonId, taskId]);
+
+  // Auto-save draft when formData changes (after initial load)
+  useEffect(() => {
+    if (dataLoadedFromDbRef.current && formData.title) {
+      saveDraft(formData);
+    }
+  }, [formData, saveDraft]);
 
   const fetchData = async () => {
     // Fetch course
@@ -116,6 +132,9 @@ export default function TaskEditor() {
     if (lessonData) {
       setLesson(lessonData);
     }
+
+    // Check for saved draft first (for new tasks only)
+    const savedDraft = loadDraft();
 
     // If editing, fetch task
     if (taskId) {
@@ -145,7 +164,7 @@ export default function TaskEditor() {
           console.error('Error parsing attachments:', e);
         }
         
-        setFormData({
+        const dbData: TaskData = {
           title: taskData.title || '',
           description: taskData.description || '',
           content: taskData.content || '',
@@ -161,9 +180,32 @@ export default function TaskEditor() {
           python_env: (taskData as any).python_env || 'standard',
           replit_url: (taskData as any).replit_url || '',
           attachments,
-        });
+        };
+
+        // If there's a saved draft, prefer it over DB data (user was editing and switched tabs)
+        if (savedDraft && savedDraft.title) {
+          setFormData(savedDraft);
+          toast({
+            title: 'Bozza ripristinata',
+            description: 'Sono state recuperate le modifiche non salvate.',
+          });
+        } else {
+          setFormData(dbData);
+        }
       }
     } else {
+      // New task: load draft if exists
+      if (savedDraft && savedDraft.title) {
+        setFormData(prev => ({
+          ...savedDraft,
+          task_number: prev.task_number, // Keep task_number from DB
+        }));
+        toast({
+          title: 'Bozza ripristinata',
+          description: 'Sono state recuperate le modifiche non salvate.',
+        });
+      }
+
       // Get next task number
       const { data: tasksData } = await supabase
         .from('lesson_tasks')
@@ -179,6 +221,7 @@ export default function TaskEditor() {
       setFormData(prev => ({ ...prev, task_number: nextNumber }));
     }
 
+    dataLoadedFromDbRef.current = true;
     setIsLoading(false);
   };
 
@@ -228,6 +271,9 @@ export default function TaskEditor() {
         if (error) throw error;
         toast({ title: 'Successo', description: 'Task creato' });
       }
+
+      // Clear draft on successful save
+      clearDraft();
 
       navigate(`/admin/corsi/${courseId}/lezioni/${lessonId}/task`);
     } catch (error: any) {
@@ -304,10 +350,20 @@ export default function TaskEditor() {
         <form onSubmit={handleSubmit}>
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle>{isEditing ? 'Modifica Task' : 'Nuovo Task'}</CardTitle>
-              <CardDescription>
-                {course.emoji} {course.title} - L{lesson.lesson_number}: {lesson.title}
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>{isEditing ? 'Modifica Task' : 'Nuovo Task'}</CardTitle>
+                  <CardDescription>
+                    {course.emoji} {course.title} - L{lesson.lesson_number}: {lesson.title}
+                  </CardDescription>
+                </div>
+                {lastSaved && (
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Clock className="w-3 h-3" />
+                    <span>Bozza salvata alle {lastSaved.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Basic Info */}

@@ -1,137 +1,74 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Users, ArrowRight, Filter } from "lucide-react";
+import { Clock, Users, ArrowRight, Filter, Loader2 } from "lucide-react";
 import { SEOHead, generateBreadcrumbSchema } from "@/components/seo/SEOHead";
 import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
+import { supabase } from "@/integrations/supabase/client";
 
-const allCourses = [
-  {
-    id: "abc-creativita-digitale",
-    title: "L'ABC della creatività digitale",
-    description: "Un corso per bambini incentrato sulle basi del design digitale e dell'alfabetizzazione informatica con editor grafici, Canva e Google Docs.",
-    age: "5-7",
-    ageLabel: "5-7 anni",
-    level: "Principiante",
-    duration: "32 lezioni",
-    emoji: "🎨",
-    tags: ["Design digitale", "Creatività", "Google Docs", "Canva", "Animazione"],
-  },
-  {
-    id: "abc-informatica",
-    title: "L'ABC dell'informatica",
-    description: "FunTech Explorers è un corso online interattivo che introduce i bambini alle componenti del computer, alle basi della programmazione a blocchi e all'uso del PC.",
-    age: "5-7",
-    ageLabel: "5-7 anni",
-    level: "Principiante",
-    duration: "32 lezioni",
-    emoji: "💻",
-    tags: ["Programmazione", "Matematica", "Creazione", "Informatica di base", "Uso del computer"],
-  },
-  {
-    id: "minecraft-education",
-    title: "Minecraft Education",
-    description: "Impara le basi della logica, della programmazione e dell'automazione attraverso l'amato ambiente di gioco di Minecraft Education con MakeCode.",
-    age: "8-9",
-    ageLabel: "8-9 anni",
-    level: "Principiante",
-    duration: "40 lezioni",
-    emoji: "⛏️",
-    tags: ["Minecraft", "MakeCode", "Programmazione a blocchi", "Automazione", "Redstone"],
-  },
-  {
-    id: "scratch",
-    title: "Programmazione visiva con Scratch",
-    description: "Con Scratch ogni bambino dà vita a giochi e personaggi, imparando la logica della programmazione a blocchi in modo intuitivo e coinvolgente.",
-    age: "8-10",
-    ageLabel: "8-10 anni",
-    level: "Principiante",
-    duration: "32 lezioni",
-    emoji: "🧩",
-    tags: ["Scratch", "Creatività", "Sviluppo di giochi", "Animazione"],
-  },
-  {
-    id: "roblox-base",
-    title: "Sviluppo giochi con Roblox",
-    description: "Crea giochi con Roblox Studio: progetta mondi e personaggi, imposta le tue regole e pubblica il tuo primo videogame online.",
-    age: "8-12",
-    ageLabel: "8+ anni",
-    level: "Principiante",
-    duration: "32 lezioni",
-    emoji: "🏗️",
-    tags: ["Roblox", "LUA", "Programmazione", "Game design"],
-  },
-  {
-    id: "roblox-avanzato",
-    title: "Roblox Avanzato",
-    description: "Un corso pensato per chi usa già Roblox Studio: affina le tue abilità e crea giochi più complessi, originali e coinvolgenti.",
-    age: "10-14",
-    ageLabel: "10-14 anni",
-    level: "Avanzato",
-    duration: "32 lezioni",
-    emoji: "🚀",
-    tags: ["Script complessi", "Programmazione avanzata", "Meccaniche di gioco"],
-  },
-  {
-    id: "web-development",
-    title: "Web Development",
-    description: "Immergiti nel mondo dello sviluppo web: impara linguaggi e stili di markup, collega siti a database, crea design e costruisci il tuo sito web.",
-    age: "13-18",
-    ageLabel: "13+ anni",
-    level: "Principiante",
-    duration: "32 lezioni",
-    emoji: "🌐",
-    tags: ["HTML", "CSS", "Sviluppo web", "Programmazione"],
-  },
-  {
-    id: "unity",
-    title: "Sviluppo giochi con Unity",
-    description: "Dai vita alle tue idee con Unity: impara a creare ambienti 3D, progettare logiche di gioco e costruire esperienze interattive come un vero sviluppatore.",
-    age: "13-18",
-    ageLabel: "13+ anni",
-    level: "Principiante",
-    duration: "32 lezioni",
-    emoji: "🎮",
-    tags: ["Programmazione", "3D", "C#", "Game Engines", "Sviluppo di giochi"],
-  },
-  {
-    id: "python-base",
-    title: "Python Base",
-    description: "Impara Python, il linguaggio scelto dagli sviluppatori di tutto il mondo, e crea giochi, app e siti web trasformando le tue idee in progetti reali.",
-    age: "13-18",
-    ageLabel: "13+ anni",
-    level: "Principiante",
-    duration: "32 lezioni",
-    emoji: "🐍",
-    tags: ["Python", "Programmazione", "Logica", "Progetti pratici"],
-  },
-  {
-    id: "python-pro-ai",
-    title: "Python PRO & AI",
-    description: "Un percorso avanzato per creare bot, siti web e progetti con IA. Con Python PRO lavori su progetti reali e partecipi a un hackathon sul clima.",
-    age: "13-18",
-    ageLabel: "13+ anni",
-    level: "Avanzato",
-    duration: "32 lezioni",
-    emoji: "🤖",
-    tags: ["API", "HTML", "Estrazione dati", "Intelligenza artificiale"],
-  },
-];
+interface Course {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  emoji: string;
+  level: string;
+  age_range: string | null;
+  duration: string | null;
+}
 
 const ageFilters = ["Tutti", "5-7", "8-9", "8-10", "8-12", "10-14", "13-18"];
 
 const levelColors: Record<string, string> = {
   Principiante: "bg-tech-green/10 text-tech-green",
   Avanzato: "bg-tech-cyan/10 text-tech-cyan",
+  base: "bg-tech-green/10 text-tech-green",
+  intermedio: "bg-tech-blue/10 text-tech-blue",
+  avanzato: "bg-tech-cyan/10 text-tech-cyan",
+};
+
+const levelLabels: Record<string, string> = {
+  base: "Principiante",
+  intermedio: "Intermedio",
+  avanzato: "Avanzato",
 };
 
 export default function Corsi() {
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [ageFilter, setAgeFilter] = useState("Tutti");
 
-  const filteredCourses = allCourses.filter((course) => {
-    if (ageFilter !== "Tutti" && course.age !== ageFilter) return false;
+  useEffect(() => {
+    const fetchCourses = async () => {
+      const { data, error } = await supabase
+        .from('courses')
+        .select('id, slug, title, description, emoji, level, age_range, duration')
+        .eq('is_visible', true)
+        .order('title');
+
+      if (!error && data) {
+        setCourses(data);
+      }
+      setIsLoading(false);
+    };
+
+    fetchCourses();
+  }, []);
+
+  // Extract age range for filtering (e.g., "8-12 anni" -> "8-12")
+  const getAgeKey = (ageRange: string | null) => {
+    if (!ageRange) return null;
+    const match = ageRange.match(/(\d+-\d+)/);
+    return match ? match[1] : null;
+  };
+
+  const filteredCourses = courses.filter((course) => {
+    if (ageFilter !== "Tutti") {
+      const courseAge = getAgeKey(course.age_range);
+      if (courseAge !== ageFilter) return false;
+    }
     return true;
   });
 
@@ -145,14 +82,14 @@ export default function Corsi() {
     "@type": "ItemList",
     "name": "Corsi di Programmazione per Bambini e Ragazzi TECHLAND",
     "description": "Tutti i corsi di coding e programmazione per bambini e ragazzi dai 6 ai 18 anni",
-    "itemListElement": allCourses.map((course, index) => ({
+    "itemListElement": courses.map((course, index) => ({
       "@type": "ListItem",
       "position": index + 1,
       "item": {
         "@type": "Course",
         "name": course.title,
         "description": course.description,
-        "url": `https://techlanditalia.it/corsi/${course.id}`,
+        "url": `https://techlanditalia.it/corsi/${course.slug}`,
         "provider": {
           "@type": "EducationalOrganization",
           "name": "TECHLAND"
@@ -160,6 +97,16 @@ export default function Corsi() {
       }
     }))
   };
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -226,7 +173,7 @@ export default function Corsi() {
             {filteredCourses.map((course) => (
               <Link
                 key={course.id}
-                to={`/corsi/${course.id}`}
+                to={`/corsi/${course.slug}`}
                 className="tech-card tech-card-hover p-6 group"
               >
                 <div className="flex items-start justify-between mb-4">
@@ -234,7 +181,7 @@ export default function Corsi() {
                     {course.emoji}
                   </div>
                   <Badge variant="outline" className={levelColors[course.level]}>
-                    {course.level}
+                    {levelLabels[course.level] || course.level}
                   </Badge>
                 </div>
                 
@@ -247,22 +194,18 @@ export default function Corsi() {
                 </p>
                 
                 <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
-                  <div className="flex items-center gap-1">
-                    <Users className="w-4 h-4" />
-                    <span>{course.ageLabel}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
-                    <span>{course.duration}</span>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-1 mb-4">
-                  {course.tags.slice(0, 3).map((tag) => (
-                    <Badge key={tag} variant="secondary" className="text-xs">
-                      {tag}
-                    </Badge>
-                  ))}
+                  {course.age_range && (
+                    <div className="flex items-center gap-1">
+                      <Users className="w-4 h-4" />
+                      <span>{course.age_range}</span>
+                    </div>
+                  )}
+                  {course.duration && (
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-4 h-4" />
+                      <span>{course.duration}</span>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="pt-4 border-t border-border/50">

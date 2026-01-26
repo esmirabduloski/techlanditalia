@@ -153,7 +153,7 @@ export function HeroSection() {
             <div className="absolute -bottom-6 left-24 z-20 p-3 rounded-2xl bg-card/95 backdrop-blur-sm shadow-tech-lg animate-bounce-slow border border-border/50" style={{ animationDelay: "0.7s" }}>
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-green-600/20 flex items-center justify-center">
-                  <img src="https://static.wikia.nocookie.net/minecraft_gamepedia/images/9/90/Steve_%28texture%29_JE5.png" alt="Minecraft Steve" className="w-8 h-8 pixelated" style={{ imageRendering: 'pixelated' }} />
+                  <span className="text-3xl">⛏️</span>
                 </div>
                 <div>
                   <p className="font-semibold text-sm">Minecraft</p>

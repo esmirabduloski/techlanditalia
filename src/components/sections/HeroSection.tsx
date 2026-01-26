@@ -28,15 +28,26 @@ export function HeroSection() {
             </h1>
 
             <p className="text-lg md:text-xl text-muted-foreground max-w-xl">
-              Scopri i nostri corsi di coding per bambini e ragazzi dai 6 ai 18 anni: Scratch, Roblox, Minecraft,
-              Python, Unity e molto altro. Lezioni online in piccoli gruppi con docenti esperti.
+              Scopri i nostri corsi di coding per bambini e ragazzi dai 6 ai 18 anni: Scratch, Roblox, Minecraft, Python, Unity e molto altro. Lezioni online in piccoli gruppi con docenti esperti.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button variant="hero" size="xl" asChild data-track-cta="hero_booking_primary">
-                <Link to="/prenota">Prenota lezione gratuita</Link>
+              <Button 
+                variant="hero" 
+                size="xl" 
+                asChild
+                data-track-cta="hero_booking_primary"
+              >
+                <Link to="/prenota">
+                  Prenota lezione gratuita
+                </Link>
               </Button>
-              <Button variant="outline" size="xl" asChild data-track-cta="hero_courses_secondary">
+              <Button 
+                variant="outline" 
+                size="xl" 
+                asChild
+                data-track-cta="hero_courses_secondary"
+              >
                 <Link to="/corsi" className="gap-2">
                   <Play className="w-5 h-5" />
                   Scopri i corsi
@@ -49,7 +60,7 @@ export function HeroSection() {
               <div className="text-center sm:text-left">
                 <div className="flex items-center justify-center sm:justify-start gap-2 text-tech-green mb-1">
                   <Users className="w-5 h-5" />
-                  <span className="text-2xl font-bold">1.200+</span>
+                  <span className="text-2xl font-bold">15.000+</span>
                 </div>
                 <p className="text-sm text-muted-foreground">Studenti formati</p>
               </div>
@@ -75,8 +86,8 @@ export function HeroSection() {
             <div className="relative z-10 animate-float">
               <div className="aspect-square max-w-lg mx-auto rounded-3xl bg-gradient-hero p-1">
                 <div className="w-full h-full rounded-3xl bg-card flex items-center justify-center overflow-hidden">
-                  <img
-                    src={heroImage}
+                  <img 
+                    src={heroImage} 
                     alt="Corsi di Roblox, Minecraft, Scratch, Python e Web per bambini e ragazzi"
                     className="w-full h-full object-cover"
                     loading="eager"
@@ -84,15 +95,26 @@ export function HeroSection() {
                 </div>
               </div>
             </div>
-
-            {/* Floating elements - positioned in front */}
-            <div
-              className="absolute top-6 -left-6 z-20 p-3 rounded-2xl bg-card/95 backdrop-blur-sm shadow-tech-lg animate-bounce-slow border border-border/50"
-              style={{ animationDelay: "0.5s" }}
-            >
+            
+            {/* Floating elements - positioned in front, away from main image */}
+            {/* Roblox - top right corner */}
+            <div className="absolute -top-4 right-8 z-20 p-3 rounded-2xl bg-card/95 backdrop-blur-sm shadow-tech-lg animate-bounce-slow border border-border/50" style={{ animationDelay: "0.2s" }}>
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-red-500/20 flex items-center justify-center">
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Roblox_player_icon_black.svg" alt="Roblox" className="w-7 h-7" />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">Roblox</p>
+                  <p className="text-xs text-muted-foreground">Crea giochi 3D</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Scratch - top left corner */}
+            <div className="absolute -top-2 -left-8 z-20 p-3 rounded-2xl bg-card/95 backdrop-blur-sm shadow-tech-lg animate-bounce-slow border border-border/50" style={{ animationDelay: "0.5s" }}>
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-orange-500/20 flex items-center justify-center">
-                  <span className="text-xl">🐱</span>
+                  <span className="text-3xl">🐱</span>
                 </div>
                 <div>
                   <p className="font-semibold text-sm">Scratch</p>
@@ -100,14 +122,12 @@ export function HeroSection() {
                 </div>
               </div>
             </div>
-
-            <div
-              className="absolute top-1/3 -right-4 z-20 p-3 rounded-2xl bg-card/95 backdrop-blur-sm shadow-tech-lg animate-bounce-slow border border-border/50"
-              style={{ animationDelay: "1s" }}
-            >
+            
+            {/* Python - middle right */}
+            <div className="absolute bottom-8 right-2 z-20 p-3 rounded-2xl bg-card/95 backdrop-blur-sm shadow-tech-lg animate-bounce-slow border border-border/50" style={{ animationDelay: "1s" }}>
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-blue-500/20 flex items-center justify-center">
-                  <span className="text-xl">🐍</span>
+                  <span className="text-3xl">🐍</span>
                 </div>
                 <div>
                   <p className="font-semibold text-sm">Python</p>
@@ -115,11 +135,9 @@ export function HeroSection() {
                 </div>
               </div>
             </div>
-
-            <div
-              className="absolute bottom-12 -left-2 z-20 p-3 rounded-2xl bg-card/95 backdrop-blur-sm shadow-tech-lg animate-bounce-slow border border-border/50"
-              style={{ animationDelay: "1.5s" }}
-            >
+            
+            {/* Web Dev - bottom left corner */}
+            <div className="absolute bottom-16 -left-4 z-20 p-3 rounded-2xl bg-card/95 backdrop-blur-sm shadow-tech-lg animate-bounce-slow border border-border/50" style={{ animationDelay: "1.5s" }}>
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-tech-cyan/20 flex items-center justify-center">
                   <span className="text-xl">🌐</span>
@@ -127,6 +145,19 @@ export function HeroSection() {
                 <div>
                   <p className="font-semibold text-sm">Web Dev</p>
                   <p className="text-xs text-muted-foreground">Crea siti web</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Minecraft - bottom left, near Web Dev */}
+            <div className="absolute -bottom-6 left-24 z-20 p-3 rounded-2xl bg-card/95 backdrop-blur-sm shadow-tech-lg animate-bounce-slow border border-border/50" style={{ animationDelay: "0.7s" }}>
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-green-600/20 flex items-center justify-center">
+                  <img src="https://static.wikia.nocookie.net/minecraft_gamepedia/images/9/90/Steve_%28texture%29_JE5.png" alt="Minecraft Steve" className="w-8 h-8 pixelated" style={{ imageRendering: 'pixelated' }} />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">Minecraft</p>
+                  <p className="text-xs text-muted-foreground">Programma con i blocchi</p>
                 </div>
               </div>
             </div>

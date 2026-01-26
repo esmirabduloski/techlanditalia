@@ -124,14 +124,14 @@ export function HeroSection() {
             </div>
             
             {/* Python - middle right */}
-            <div className="absolute top-1/3 -right-8 z-20 p-3 rounded-2xl bg-card/95 backdrop-blur-sm shadow-tech-lg animate-bounce-slow border border-border/50" style={{ animationDelay: "1s" }}>
+            <div className="absolute -bottom-4 -right-4 z-20 p-3 rounded-2xl bg-card/95 backdrop-blur-sm shadow-tech-lg animate-bounce-slow border border-border/50" style={{ animationDelay: "1s" }}>
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-blue-500/20 flex items-center justify-center">
                   <span className="text-3xl">🐍</span>
                 </div>
                 <div>
                   <p className="font-semibold text-sm">Python</p>
-                  <p className="text-xs text-muted-foreground">Programmazione reale</p>
+                  <p className="text-xs text-muted-foreground">Crea giochi 2D</p>
                 </div>
               </div>
             </div>

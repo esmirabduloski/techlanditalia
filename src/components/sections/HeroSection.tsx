@@ -137,7 +137,7 @@ export function HeroSection() {
             </div>
             
             {/* Web Dev - bottom left corner */}
-            <div className="absolute -bottom-2 -left-4 z-20 p-3 rounded-2xl bg-card/95 backdrop-blur-sm shadow-tech-lg animate-bounce-slow border border-border/50" style={{ animationDelay: "1.5s" }}>
+            <div className="absolute bottom-16 -left-4 z-20 p-3 rounded-2xl bg-card/95 backdrop-blur-sm shadow-tech-lg animate-bounce-slow border border-border/50" style={{ animationDelay: "1.5s" }}>
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-tech-cyan/20 flex items-center justify-center">
                   <span className="text-xl">🌐</span>

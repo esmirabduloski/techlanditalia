@@ -109,25 +109,12 @@ export function HeroSection() {
                 </div>
               </div>
             </div>
-
-            {/* Minecraft - bottom right corner */}
-            <div className="absolute -bottom-4 right-4 z-20 p-3 rounded-2xl bg-card/95 backdrop-blur-sm shadow-tech-lg animate-bounce-slow border border-border/50" style={{ animationDelay: "0.7s" }}>
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-xl bg-green-600/20 flex items-center justify-center">
-                  <img src="https://www.minecraft.net/etc.clientlibs/minecraft/clientlibs/main/resources/favicon-32x32.png" alt="Minecraft" className="w-7 h-7" />
-                </div>
-                <div>
-                  <p className="font-semibold text-sm">Minecraft</p>
-                  <p className="text-xs text-muted-foreground">Programma con i blocchi</p>
-                </div>
-              </div>
-            </div>
             
             {/* Scratch - top left corner */}
             <div className="absolute -top-2 -left-8 z-20 p-3 rounded-2xl bg-card/95 backdrop-blur-sm shadow-tech-lg animate-bounce-slow border border-border/50" style={{ animationDelay: "0.5s" }}>
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-orange-500/20 flex items-center justify-center">
-                  <span className="text-xl">🐱</span>
+                  <span className="text-3xl">🐱</span>
                 </div>
                 <div>
                   <p className="font-semibold text-sm">Scratch</p>
@@ -140,7 +127,7 @@ export function HeroSection() {
             <div className="absolute top-1/3 -right-8 z-20 p-3 rounded-2xl bg-card/95 backdrop-blur-sm shadow-tech-lg animate-bounce-slow border border-border/50" style={{ animationDelay: "1s" }}>
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-blue-500/20 flex items-center justify-center">
-                  <span className="text-xl">🐍</span>
+                  <span className="text-3xl">🐍</span>
                 </div>
                 <div>
                   <p className="font-semibold text-sm">Python</p>
@@ -158,6 +145,19 @@ export function HeroSection() {
                 <div>
                   <p className="font-semibold text-sm">Web Dev</p>
                   <p className="text-xs text-muted-foreground">Crea siti web</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Minecraft - bottom left, near Web Dev */}
+            <div className="absolute -bottom-6 left-24 z-20 p-3 rounded-2xl bg-card/95 backdrop-blur-sm shadow-tech-lg animate-bounce-slow border border-border/50" style={{ animationDelay: "0.7s" }}>
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-green-600/20 flex items-center justify-center">
+                  <img src="https://static.wikia.nocookie.net/minecraft_gamepedia/images/9/90/Steve_%28texture%29_JE5.png" alt="Minecraft Steve" className="w-8 h-8 pixelated" style={{ imageRendering: 'pixelated' }} />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">Minecraft</p>
+                  <p className="text-xs text-muted-foreground">Programma con i blocchi</p>
                 </div>
               </div>
             </div>

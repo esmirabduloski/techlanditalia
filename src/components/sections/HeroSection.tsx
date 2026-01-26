@@ -96,8 +96,35 @@ export function HeroSection() {
               </div>
             </div>
             
-            {/* Floating elements - positioned in front */}
-            <div className="absolute top-6 -left-6 z-20 p-3 rounded-2xl bg-card/95 backdrop-blur-sm shadow-tech-lg animate-bounce-slow border border-border/50" style={{ animationDelay: "0.5s" }}>
+            {/* Floating elements - positioned in front, away from main image */}
+            {/* Roblox - top right corner */}
+            <div className="absolute -top-4 right-8 z-20 p-3 rounded-2xl bg-card/95 backdrop-blur-sm shadow-tech-lg animate-bounce-slow border border-border/50" style={{ animationDelay: "0.2s" }}>
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-red-500/20 flex items-center justify-center">
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Roblox_player_icon_black.svg" alt="Roblox" className="w-7 h-7" />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">Roblox</p>
+                  <p className="text-xs text-muted-foreground">Crea giochi 3D</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Minecraft - bottom right corner */}
+            <div className="absolute -bottom-4 right-4 z-20 p-3 rounded-2xl bg-card/95 backdrop-blur-sm shadow-tech-lg animate-bounce-slow border border-border/50" style={{ animationDelay: "0.7s" }}>
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-green-600/20 flex items-center justify-center">
+                  <img src="https://www.minecraft.net/etc.clientlibs/minecraft/clientlibs/main/resources/favicon-32x32.png" alt="Minecraft" className="w-7 h-7" />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">Minecraft</p>
+                  <p className="text-xs text-muted-foreground">Programma con i blocchi</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Scratch - top left corner */}
+            <div className="absolute -top-2 -left-8 z-20 p-3 rounded-2xl bg-card/95 backdrop-blur-sm shadow-tech-lg animate-bounce-slow border border-border/50" style={{ animationDelay: "0.5s" }}>
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-orange-500/20 flex items-center justify-center">
                   <span className="text-xl">🐱</span>
@@ -109,7 +136,8 @@ export function HeroSection() {
               </div>
             </div>
             
-            <div className="absolute top-1/3 -right-4 z-20 p-3 rounded-2xl bg-card/95 backdrop-blur-sm shadow-tech-lg animate-bounce-slow border border-border/50" style={{ animationDelay: "1s" }}>
+            {/* Python - middle right */}
+            <div className="absolute top-1/3 -right-8 z-20 p-3 rounded-2xl bg-card/95 backdrop-blur-sm shadow-tech-lg animate-bounce-slow border border-border/50" style={{ animationDelay: "1s" }}>
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-blue-500/20 flex items-center justify-center">
                   <span className="text-xl">🐍</span>
@@ -121,7 +149,8 @@ export function HeroSection() {
               </div>
             </div>
             
-            <div className="absolute bottom-12 -left-2 z-20 p-3 rounded-2xl bg-card/95 backdrop-blur-sm shadow-tech-lg animate-bounce-slow border border-border/50" style={{ animationDelay: "1.5s" }}>
+            {/* Web Dev - bottom left corner */}
+            <div className="absolute -bottom-2 -left-4 z-20 p-3 rounded-2xl bg-card/95 backdrop-blur-sm shadow-tech-lg animate-bounce-slow border border-border/50" style={{ animationDelay: "1.5s" }}>
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-tech-cyan/20 flex items-center justify-center">
                   <span className="text-xl">🌐</span>

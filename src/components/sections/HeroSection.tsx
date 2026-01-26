@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { OptimizedImage } from "@/components/ui/optimized-image";
 import { Play, Sparkles, Users, Award, Shield } from "lucide-react";
+import heroImage from "@/assets/home_page_techland.jpeg";
 
 export function HeroSection() {
   return (
@@ -86,13 +86,11 @@ export function HeroSection() {
             <div className="relative z-10 animate-float">
               <div className="aspect-square max-w-lg mx-auto rounded-3xl bg-gradient-hero p-1">
                 <div className="w-full h-full rounded-3xl bg-card flex items-center justify-center overflow-hidden">
-                  <OptimizedImage 
-                    src="https://images.unsplash.com/photo-1511512578047-dfb367046420?w=800" 
-                    alt="Corsi di Roblox e Minecraft per bambini - impara a creare videogiochi"
+                  <img 
+                    src={heroImage} 
+                    alt="Corsi di Roblox, Minecraft, Scratch, Python e Web per bambini e ragazzi"
                     className="w-full h-full object-cover"
-                    priority={true}
-                    sizes="(max-width: 1024px) 0vw, 50vw"
-                    aspectRatio="square"
+                    loading="eager"
                   />
                 </div>
               </div>

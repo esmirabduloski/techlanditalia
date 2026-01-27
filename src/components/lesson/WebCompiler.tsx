@@ -210,6 +210,14 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
     // Combine all additional JS code from user
     const additionalJsCode = additionalJsFiles.map(f => f.code).join('\n\n');
 
+    // Extract any script tags from user HTML to preserve them
+    const userHtmlContent = htmlDraft.code
+      .replace(/<!DOCTYPE html>/gi, '')
+      .replace(/<\/?html[^>]*>/gi, '')
+      .replace(/<\/?head[^>]*>/gi, '')
+      .replace(/<\/?body[^>]*>/gi, '')
+      .replace(/<link[^>]*>/gi, '');
+
     return `
       <!DOCTYPE html>
       <html>
@@ -218,7 +226,7 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
         ${cssIncludes}
       </head>
       <body>
-        ${htmlDraft.code.replace(/<!DOCTYPE html>|<\/?html>|<\/?head>|<\/?body>|<link[^>]*>/gi, '')}
+        ${userHtmlContent}
         ${jsIncludes}
         <script>${taskJsCode}</script>
         <script>${jsDraft.code}</script>

@@ -135,9 +135,11 @@ export default function RichTextEditor({ content, onChange }: RichTextEditorProp
   // Upload file to Supabase storage
   const uploadFile = useCallback(async (file: File, bucket: string): Promise<string | null> => {
     try {
+      // Keep original filename for SEO, add unique suffix before extension
       const fileExt = file.name.split('.').pop()?.toLowerCase();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const filePath = `editor-uploads/${fileName}`;
+      const baseName = file.name.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9-_]/g, '-');
+      const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(7)}`;
+      const filePath = `editor-uploads/${baseName}-${uniqueId}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from(bucket)

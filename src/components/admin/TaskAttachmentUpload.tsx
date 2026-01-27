@@ -91,7 +91,11 @@ export function TaskAttachmentUpload({ attachments, onAttachmentsChange }: TaskA
           continue;
         }
 
-        const fileName = `task-attachments/${Date.now()}-${Math.random().toString(36).substring(7)}-${file.name}`;
+        // Keep original filename for SEO, add unique suffix before extension
+        const fileExt = file.name.split('.').pop();
+        const baseName = file.name.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9-_]/g, '-');
+        const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(7)}`;
+        const fileName = `task-attachments/${baseName}-${uniqueId}.${fileExt}`;
 
         const contentType = fileType === 'css' ? 'text/css' : 
                            fileType === 'js' ? 'application/javascript' : 

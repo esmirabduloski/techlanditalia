@@ -332,7 +332,11 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
           }
         }
 
-        const fileName = `${user.id}/${Date.now()}-${file.name}`;
+        // Keep original filename for SEO, add unique suffix before extension
+        const fileExt = file.name.split('.').pop();
+        const baseName = file.name.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9-_]/g, '-');
+        const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(7)}`;
+        const fileName = `${user.id}/${baseName}-${uniqueId}.${fileExt}`;
 
         const { data, error } = await supabase.storage
           .from('web-compiler-assets')

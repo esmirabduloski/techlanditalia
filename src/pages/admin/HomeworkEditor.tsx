@@ -159,8 +159,11 @@ export default function HomeworkEditor() {
 
     try {
       for (const file of Array.from(files)) {
+        // Keep original filename for SEO, add unique suffix before extension
         const fileExt = file.name.split('.').pop();
-        const fileName = `${lessonId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const baseName = file.name.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9-_]/g, '-');
+        const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(7)}`;
+        const fileName = `${lessonId}/${baseName}-${uniqueId}.${fileExt}`;
 
         const { data, error } = await supabase.storage
           .from('homework-attachments')

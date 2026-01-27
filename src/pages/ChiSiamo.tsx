@@ -4,7 +4,7 @@ import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
 import { Button } from "@/components/ui/button";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { Link } from "react-router-dom";
-import { Users, Award, Target, Heart, Sparkles, GraduationCap } from "lucide-react";
+import { Users, Award, Heart, GraduationCap, Target, Globe, Gamepad2, Brain, Sprout, Handshake, Home } from "lucide-react";
 
 const stats = [
   { value: "15.000+", label: "Studenti formati", icon: Users },
@@ -15,27 +15,47 @@ const stats = [
 
 const values = [
   {
-    icon: Target,
-    title: "Missione",
-    description: "Preparare i giovani alle competenze digitali del futuro, rendendo la programmazione accessibile, divertente e sicura per tutti.",
+    emoji: "👦",
+    title: "Il ragazzo al centro",
+    description: "Percorsi pensati sulle esigenze, l'età e i talenti di ogni bambino e ragazzo.",
   },
   {
-    icon: Sparkles,
-    title: "Visione",
-    description: "Un mondo dove ogni bambino ha la possibilità di diventare creatore di tecnologia, non solo consumatore.",
+    emoji: "🎮",
+    title: "Imparare divertendosi",
+    description: "Lezioni coinvolgenti che trasformano il coding in un'esperienza stimolante e mai noiosa.",
   },
   {
-    icon: Heart,
-    title: "Valori",
-    description: "Creatività, inclusività, sicurezza e divertimento. Crediamo che imparare debba essere un'avventura entusiasmante.",
+    emoji: "🧠",
+    title: "Educazione prima del codice",
+    description: "Il coding come strumento per sviluppare logica, creatività e pensiero critico.",
+  },
+  {
+    emoji: "👩‍🏫",
+    title: "Docenti qualificati",
+    description: "Insegnanti esperti nel lavorare con bambini e ragazzi, in piccoli gruppi.",
+  },
+  {
+    emoji: "🌱",
+    title: "Crescita graduale",
+    description: "Progressi passo dopo passo, nel rispetto dei tempi di apprendimento di ciascuno.",
+  },
+  {
+    emoji: "🤝",
+    title: "Inclusione e rispetto",
+    description: "Un ambiente sicuro, positivo e accessibile, dove tutti possono sentirsi a proprio agio.",
+  },
+  {
+    emoji: "🏠",
+    title: "Famiglie coinvolte",
+    description: "Trasparenza e dialogo costante con i genitori durante tutto il percorso.",
   },
 ];
 
 const team = [
-  { name: "Marco Rossi", role: "Fondatore & CEO", avatar: "MR" },
-  { name: "Laura Bianchi", role: "Direttrice Didattica", avatar: "LB" },
-  { name: "Alessandro Verdi", role: "Head of Technology", avatar: "AV" },
-  { name: "Chiara Neri", role: "Head of Operations", avatar: "CN" },
+  { name: "Esmir", role: "Fondatore & CEO", initials: "ES" },
+  { name: "Alessia", role: "Insegnante", initials: "AL" },
+  { name: "Vittorio", role: "Insegnante", initials: "VI" },
+  { name: "Adele", role: "Insegnante", initials: "AD" },
 ];
 
 // Schema.org per Organization
@@ -108,8 +128,81 @@ export default function ChiSiamo() {
         </div>
       </section>
 
-      {/* Story */}
+      {/* Mission */}
       <section className="tech-section">
+        <div className="tech-container">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-8">
+              <span className="text-5xl mb-4 block">🎯</span>
+              <h2 className="text-3xl md:text-4xl font-bold mb-6">Missione</h2>
+            </div>
+            <div className="space-y-6 text-lg text-muted-foreground">
+              <p className="text-xl text-foreground font-medium text-center">
+                La nostra missione è accompagnare bambini e ragazzi dai 6 ai 18 anni a diventare protagonisti del proprio futuro digitale.
+              </p>
+              <p>
+                In Techland Italia trasformiamo la tecnologia in uno strumento di crescita personale: attraverso corsi di coding online, pratici e divertenti, aiutiamo ogni ragazzo a scoprire il proprio talento, sviluppare pensiero critico, creatività e sicurezza in sé stesso.
+              </p>
+              <p className="font-medium text-foreground">
+                Non insegniamo solo a programmare.
+              </p>
+              <p>
+                Alleniamo competenze fondamentali per la vita e per la scuola di oggi: problem solving, disciplina, collaborazione, autonomia e resilienza.
+              </p>
+              <p>
+                Così i ragazzi non imparano solo cosa fare con il computer, ma come affrontare il mondo che cambia.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Vision */}
+      <section className="tech-section bg-muted/30">
+        <div className="tech-container">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-8">
+              <span className="text-5xl mb-4 block">🌍</span>
+              <h2 className="text-3xl md:text-4xl font-bold mb-6">Visione</h2>
+            </div>
+            <div className="space-y-6 text-lg text-muted-foreground">
+              <p className="text-xl text-foreground font-medium text-center">
+                Immaginiamo un futuro in cui ogni bambino e ragazzo abbia le competenze per creare, non subire, la tecnologia.
+              </p>
+              <p>
+                Vogliamo contribuire a una generazione consapevole, capace di usare il codice per esprimere idee, risolvere problemi reali e costruire progetti con impatto positivo sulla propria vita e sulla società.
+              </p>
+              <p>
+                Sogniamo un'educazione digitale accessibile, inclusiva e di qualità, che riduca il divario educativo e prepari i ragazzi non solo alle professioni di domani, ma a diventare cittadini competenti, curiosi e responsabili del mondo digitale.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Values */}
+      <section className="tech-section">
+        <div className="tech-container">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">I nostri valori</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              I principi che guidano ogni nostra scelta e ogni nostra azione.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {values.map((value) => (
+              <div key={value.title} className="tech-card tech-card-hover p-6 text-center">
+                <span className="text-4xl mb-4 block">{value.emoji}</span>
+                <h3 className="text-xl font-semibold mb-3">{value.title}</h3>
+                <p className="text-muted-foreground text-sm">{value.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Story */}
+      <section className="tech-section bg-muted/30">
         <div className="tech-container">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
@@ -143,23 +236,6 @@ export default function ChiSiamo() {
         </div>
       </section>
 
-      {/* Mission, Vision, Values */}
-      <section className="tech-section bg-muted/30">
-        <div className="tech-container">
-          <div className="grid md:grid-cols-3 gap-8">
-            {values.map((value) => (
-              <div key={value.title} className="tech-card p-8 text-center">
-                <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-primary/10 flex items-center justify-center">
-                  <value.icon className="w-8 h-8 text-primary" />
-                </div>
-                <h3 className="text-2xl font-semibold mb-4">{value.title}</h3>
-                <p className="text-muted-foreground">{value.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Team */}
       <section className="tech-section">
         <div className="tech-container">
@@ -170,11 +246,11 @@ export default function ChiSiamo() {
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl mx-auto">
             {team.map((member) => (
               <div key={member.name} className="tech-card tech-card-hover p-6 text-center">
                 <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-hero flex items-center justify-center text-primary-foreground font-bold text-xl">
-                  {member.avatar}
+                  {member.initials}
                 </div>
                 <h4 className="font-semibold text-lg">{member.name}</h4>
                 <p className="text-muted-foreground text-sm">{member.role}</p>

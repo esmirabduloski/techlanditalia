@@ -78,7 +78,7 @@ const organizationSchema = {
     "Scuola di programmazione e coding per bambini e ragazzi dai 6 ai 18 anni. Corsi online di Roblox, Minecraft, Python, Scratch e sviluppo web.",
   url: "https://techlanditalia.it",
   logo: "https://techlanditalia.it/favicon.ico",
-  foundingDate: "2023",
+  foundingDate: "2021",
   numberOfEmployees: "50+",
   areaServed: "IT",
   contactPoint: {
@@ -223,14 +223,14 @@ export default function ChiSiamo() {
               <h2 className="text-3xl md:text-4xl font-bold mb-6">La nostra storia</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
-                  TECHLAND è nata nel 2019 da un'idea semplice: rendere la programmazione accessibile ai bambini
+                  TECHLAND è nata nel 2021 da un'idea semplice: rendere la programmazione accessibile ai bambini
                   italiani. I nostri fondatori, professionisti del settore tech con figli, hanno visto la difficoltà nel
                   trovare corsi di qualità per i più giovani.
                 </p>
                 <p>
-                  Abbiamo iniziato con una piccola classe di 5 bambini. Oggi formiamo oltre 15.000 studenti ogni anno,
-                  ma la nostra missione resta la stessa: trasformare la curiosità per la tecnologia in competenze
-                  concrete per il futuro.
+                  Abbiamo iniziato con una piccola classe di 5 bambini. Ad oggi abbiamo formato oltre 1.200 studenti, ma
+                  la nostra missione resta la stessa: trasformare la curiosità per la tecnologia in competenze concrete
+                  per il futuro.
                 </p>
                 <p>
                   Ogni corso è progettato con attenzione pedagogica, ogni docente è formato per insegnare ai giovani,

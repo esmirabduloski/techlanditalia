@@ -124,7 +124,7 @@ export default function ChiSiamo() {
       {/* Stats */}
       <section className="py-12 border-b border-border/50">
         <div className="tech-container">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-8">
             {stats.map((stat) => (
               <div key={stat.label} className="text-center">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary/10 flex items-center justify-center">

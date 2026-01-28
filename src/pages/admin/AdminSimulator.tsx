@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { 
-  Loader2, Eye, User, Users, GraduationCap, LogOut, Search, Home 
+  Loader2, Eye, User, Users, GraduationCap, LogOut, Search, Home, BookOpen 
 } from "lucide-react";
 import { BadgesDisplay } from "@/components/gamification/BadgesDisplay";
 import { LevelBadge, PointsDisplay, getLevelFromPoints } from "@/components/gamification/LevelBadge";
@@ -35,13 +35,21 @@ interface Parent {
   children: Student[];
 }
 
+interface Teacher {
+  id: string;
+  full_name: string;
+  email: string | null;
+  groups: { id: string; title: string; course_title: string }[];
+}
+
 export default function AdminSimulator() {
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   
-  const [viewMode, setViewMode] = useState<'student' | 'parent'>('student');
+  const [viewMode, setViewMode] = useState<'student' | 'parent' | 'teacher'>('student');
   const [students, setStudents] = useState<Student[]>([]);
   const [parents, setParents] = useState<Parent[]>([]);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -83,6 +91,41 @@ export default function AdminSimulator() {
       }));
 
       setParents(parentsWithChildren);
+
+      // Fetch all teachers (users with teacher role in user_roles)
+      const { data: teacherRoles } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'teacher');
+
+      const teacherIds = (teacherRoles || []).map(r => r.user_id);
+
+      if (teacherIds.length > 0) {
+        const { data: teacherProfiles } = await supabase
+          .from('profiles')
+          .select('id, full_name, email')
+          .in('id', teacherIds)
+          .order('full_name');
+
+        // Fetch groups for each teacher
+        const { data: groupsData } = await supabase
+          .from('student_groups')
+          .select('id, title, teacher_id, courses(title)')
+          .in('teacher_id', teacherIds);
+
+        const teachersWithGroups: Teacher[] = (teacherProfiles || []).map(teacher => ({
+          ...teacher,
+          groups: (groupsData || [])
+            .filter(g => g.teacher_id === teacher.id)
+            .map(g => ({
+              id: g.id,
+              title: g.title,
+              course_title: (g.courses as any)?.title || 'N/A'
+            }))
+        }));
+
+        setTeachers(teachersWithGroups);
+      }
       
       if (studentsData && studentsData.length > 0) {
         setSelectedUserId(studentsData[0].id);
@@ -115,6 +158,14 @@ export default function AdminSimulator() {
            p.full_name.toLowerCase().includes(query);
   });
 
+  // Filter teachers by name or email
+  const filteredTeachers = teachers.filter(t => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (t.email?.toLowerCase().includes(query)) || 
+           t.full_name.toLowerCase().includes(query);
+  });
+
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -127,6 +178,7 @@ export default function AdminSimulator() {
 
   const selectedStudent = students.find(s => s.id === selectedUserId);
   const selectedParent = parents.find(p => p.id === selectedUserId);
+  const selectedTeacher = teachers.find(t => t.id === selectedUserId);
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -167,22 +219,24 @@ export default function AdminSimulator() {
             Simulatore Vista
           </h1>
           <p className="text-muted-foreground mt-1">
-            Visualizza come appare la dashboard per studenti e genitori
+            Visualizza come appare la dashboard per studenti, genitori e insegnanti
           </p>
         </div>
 
         <Card className="border-primary/30 bg-gradient-to-br from-card to-primary/5">
           <CardContent className="pt-6 space-y-4">
             <Tabs value={viewMode} onValueChange={(v) => {
-              setViewMode(v as 'student' | 'parent');
+              setViewMode(v as 'student' | 'parent' | 'teacher');
               setSearchQuery('');
               if (v === 'student' && students.length > 0) {
                 setSelectedUserId(students[0].id);
               } else if (v === 'parent' && parents.length > 0) {
                 setSelectedUserId(parents[0].id);
+              } else if (v === 'teacher' && teachers.length > 0) {
+                setSelectedUserId(teachers[0].id);
               }
             }}>
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="student" className="gap-2">
                   <GraduationCap className="w-4 h-4" />
                   Vista Studente
@@ -190,6 +244,10 @@ export default function AdminSimulator() {
                 <TabsTrigger value="parent" className="gap-2">
                   <Users className="w-4 h-4" />
                   Vista Genitore
+                </TabsTrigger>
+                <TabsTrigger value="teacher" className="gap-2">
+                  <BookOpen className="w-4 h-4" />
+                  Vista Insegnante
                 </TabsTrigger>
               </TabsList>
 
@@ -339,6 +397,94 @@ export default function AdminSimulator() {
                             <StudentCommentsSection studentId={child.id} viewMode="parent" />
                           </div>
                         ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="teacher" className="space-y-4 mt-4">
+                <div className="flex gap-3">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Cerca per nome o email..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                    <SelectTrigger className="w-[250px]">
+                      <SelectValue placeholder="Seleziona insegnante" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {filteredTeachers.map(teacher => (
+                        <SelectItem key={teacher.id} value={teacher.id}>
+                          {teacher.full_name} ({teacher.groups.length} gruppi)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {teachers.length === 0 ? (
+                  <Card className="border-dashed">
+                    <CardContent className="py-8 text-center">
+                      <BookOpen className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-muted-foreground">
+                        Nessun insegnante trovato nel sistema
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : selectedTeacher && (
+                  <div className="space-y-6 mt-4 p-4 border rounded-lg bg-background">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                        <BookOpen className="w-6 h-6 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold">{selectedTeacher.full_name}</h3>
+                        {selectedTeacher.email && (
+                          <p className="text-sm text-muted-foreground">{selectedTeacher.email}</p>
+                        )}
+                        <p className="text-sm text-muted-foreground">
+                          {selectedTeacher.groups.length} {selectedTeacher.groups.length === 1 ? 'gruppo' : 'gruppi'} assegnati
+                        </p>
+                      </div>
+                      <Link to="/insegnante" className="ml-auto">
+                        <Button variant="outline" size="sm">
+                          <Eye className="w-4 h-4 mr-2" />
+                          Apri Dashboard
+                        </Button>
+                      </Link>
+                    </div>
+
+                    {selectedTeacher.groups.length === 0 ? (
+                      <Card className="border-dashed">
+                        <CardContent className="py-8 text-center">
+                          <Users className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
+                          <p className="text-muted-foreground">
+                            Nessun gruppo assegnato a questo insegnante
+                          </p>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <div className="space-y-4">
+                        <h4 className="font-semibold">Gruppi Assegnati</h4>
+                        <div className="grid gap-3">
+                          {selectedTeacher.groups.map(group => (
+                            <Card key={group.id}>
+                              <CardContent className="py-3 flex items-center justify-between">
+                                <div>
+                                  <p className="font-medium">{group.title}</p>
+                                  <p className="text-sm text-muted-foreground">{group.course_title}</p>
+                                </div>
+                                <Badge variant="secondary">Gruppo</Badge>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>

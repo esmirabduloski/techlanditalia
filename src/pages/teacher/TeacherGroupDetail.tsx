@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -59,7 +60,8 @@ interface GroupComment {
 
 export default function TeacherGroupDetail() {
   const { groupId } = useParams();
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, isAdmin } = useAuth();
+  const { effectiveUserId, isImpersonating } = useEffectiveUserId();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -91,9 +93,13 @@ export default function TeacherGroupDetail() {
     } else if (!authLoading && !user) {
       navigate('/auth');
     }
-  }, [user, authLoading, groupId]);
+  }, [user, authLoading, groupId, effectiveUserId]);
 
   const fetchData = async () => {
+    if (!effectiveUserId) return;
+    
+    const teacherId = effectiveUserId;
+    
     try {
       // Fetch group with course and teacher info
       const { data: groupData } = await supabase
@@ -105,16 +111,17 @@ export default function TeacherGroupDetail() {
         .eq('id', groupId)
         .single();
 
-      if (!groupData || groupData.teacher_id !== user!.id) {
+      // Allow access if admin OR if teacher owns the group
+      if (!groupData || (groupData.teacher_id !== teacherId && !isAdmin)) {
         navigate('/insegnante');
         return;
       }
 
-      // Get teacher name
+      // Get teacher name (use the actual teacher of the group, not the current user)
       const { data: teacherProfile } = await supabase
         .from('profiles')
         .select('full_name')
-        .eq('id', user!.id)
+        .eq('id', groupData.teacher_id)
         .single();
 
       setGroup({
@@ -348,6 +355,7 @@ export default function TeacherGroupDetail() {
     if (!selectedAttendance) return;
 
     try {
+      // Use real user ID for marking attendance (who actually did it)
       const { error } = await supabase
         .from('group_attendance')
         .upsert({
@@ -355,7 +363,7 @@ export default function TeacherGroupDetail() {
           student_id: selectedAttendance.studentId,
           lesson_number: selectedAttendance.lessonNumber,
           status: pendingStatus,
-          marked_by: user!.id
+          marked_by: user!.id // Always use real user ID for audit
         }, { onConflict: 'group_id,student_id,lesson_number' });
 
       if (error) throw error;
@@ -383,11 +391,12 @@ export default function TeacherGroupDetail() {
 
     setIsSavingComment(true);
     try {
+      // Use real user ID for authorship
       const { data, error } = await supabase
         .from('group_comments')
         .insert({
           group_id: groupId,
-          author_id: user!.id,
+          author_id: user!.id, // Always use real user ID for audit
           content: newComment.trim()
         })
         .select('id, content, created_at')

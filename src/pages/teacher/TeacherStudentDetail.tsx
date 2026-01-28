@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -138,7 +139,8 @@ interface GroupMembership {
 
 export default function TeacherStudentDetail() {
   const { studentId } = useParams();
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, isAdmin } = useAuth();
+  const { effectiveUserId, isImpersonating } = useEffectiveUserId();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -161,31 +163,38 @@ export default function TeacherStudentDetail() {
     } else if (!authLoading && !user) {
       navigate('/auth');
     }
-  }, [user, authLoading, studentId]);
+  }, [user, authLoading, studentId, effectiveUserId]);
 
   const fetchData = async () => {
+    if (!effectiveUserId) return;
+    
+    const teacherId = effectiveUserId;
+    
     try {
       // Verify teacher has access to this student (student is in one of their groups)
-      const { data: teacherGroups } = await supabase
-        .from('student_groups')
-        .select('id')
-        .eq('teacher_id', user!.id);
+      // Admin can bypass this check
+      if (!isAdmin) {
+        const { data: teacherGroups } = await supabase
+          .from('student_groups')
+          .select('id')
+          .eq('teacher_id', teacherId);
 
-      if (!teacherGroups || teacherGroups.length === 0) {
-        navigate('/insegnante');
-        return;
-      }
+        if (!teacherGroups || teacherGroups.length === 0) {
+          navigate('/insegnante');
+          return;
+        }
 
-      const { data: studentInGroup } = await supabase
-        .from('group_students')
-        .select('group_id')
-        .eq('student_id', studentId)
-        .in('group_id', teacherGroups.map(g => g.id))
-        .limit(1);
+        const { data: studentInGroup } = await supabase
+          .from('group_students')
+          .select('group_id')
+          .eq('student_id', studentId)
+          .in('group_id', teacherGroups.map(g => g.id))
+          .limit(1);
 
-      if (!studentInGroup || studentInGroup.length === 0) {
-        navigate('/insegnante');
-        return;
+        if (!studentInGroup || studentInGroup.length === 0) {
+          navigate('/insegnante');
+          return;
+        }
       }
 
       // Fetch student profile

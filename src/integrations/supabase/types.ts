@@ -621,6 +621,7 @@ export type Database = {
           instructions: string | null
           lesson_id: string
           points_reward: number
+          preview_only: boolean
           python_env: string | null
           replit_url: string | null
           title: string
@@ -638,6 +639,7 @@ export type Database = {
           instructions?: string | null
           lesson_id: string
           points_reward?: number
+          preview_only?: boolean
           python_env?: string | null
           replit_url?: string | null
           title: string
@@ -655,6 +657,7 @@ export type Database = {
           instructions?: string | null
           lesson_id?: string
           points_reward?: number
+          preview_only?: boolean
           python_env?: string | null
           replit_url?: string | null
           title?: string

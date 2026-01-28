@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { LogOut, Loader2, ArrowLeft, Save, User, Upload, X, FileText, Calendar } from 'lucide-react';
 import RichTextEditor from '@/components/editor/RichTextEditor';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useRef } from 'react';
 
 interface Course {
@@ -49,6 +50,7 @@ interface HomeworkFormData {
   default_js_code: string;
   python_env: string;
   replit_url: string;
+  preview_only: boolean;
 }
 
 const PYTHON_COURSES = ['python-base', 'python-ai'];
@@ -78,6 +80,7 @@ export default function HomeworkEditor() {
     default_js_code: '',
     python_env: 'standard',
     replit_url: '',
+    preview_only: false,
   });
 
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
@@ -143,6 +146,7 @@ export default function HomeworkEditor() {
           default_js_code: (homeworkData as any).default_js_code || '',
           python_env: (homeworkData as any).python_env || 'standard',
           replit_url: (homeworkData as any).replit_url || '',
+          preview_only: (homeworkData as any).preview_only || false,
         });
       }
     }
@@ -241,6 +245,7 @@ export default function HomeworkEditor() {
       default_js_code: formData.default_js_code || null,
       python_env: isPythonCourse ? formData.python_env : null,
       replit_url: isPythonCourse && formData.python_env === 'pgzero' ? (formData.replit_url || null) : null,
+      preview_only: isWebCourse ? formData.preview_only : false,
     };
 
     try {
@@ -535,39 +540,59 @@ export default function HomeworkEditor() {
                   )}
 
                   {isWebCourse && (
-                    <div className="grid gap-4 md:grid-cols-3">
-                      <div className="space-y-2">
-                        <Label htmlFor="default_html_code">📄 HTML Predefinito</Label>
-                        <Textarea
-                          id="default_html_code"
-                          value={formData.default_html_code}
-                          onChange={(e) => setFormData(prev => ({ ...prev, default_html_code: e.target.value }))}
-                          placeholder="<h1>Titolo</h1>..."
-                          rows={8}
-                          className="font-mono text-sm"
+                    <div className="space-y-6">
+                      {/* Preview Only Checkbox */}
+                      <div className="flex items-start space-x-3 p-4 rounded-lg border border-primary/20 bg-primary/5">
+                        <Checkbox
+                          id="preview_only"
+                          checked={formData.preview_only}
+                          onCheckedChange={(checked) => setFormData(prev => ({ ...prev, preview_only: checked === true }))}
                         />
+                        <div className="space-y-1">
+                          <Label htmlFor="preview_only" className="font-medium cursor-pointer">
+                            👁️ Solo Preview (nascondi codice)
+                          </Label>
+                          <p className="text-xs text-muted-foreground">
+                            Se attivo, lo studente vedrà solo l'anteprima del risultato HTML/CSS/JS senza poter vedere o modificare il codice.
+                            Utile per form embedded (es. Tally.so, Google Forms) o contenuti interattivi.
+                          </p>
+                        </div>
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="default_css_code">🎨 CSS Predefinito</Label>
-                        <Textarea
-                          id="default_css_code"
-                          value={formData.default_css_code}
-                          onChange={(e) => setFormData(prev => ({ ...prev, default_css_code: e.target.value }))}
-                          placeholder="body { ... }"
-                          rows={8}
-                          className="font-mono text-sm"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="default_js_code">⚡ JavaScript Predefinito</Label>
-                        <Textarea
-                          id="default_js_code"
-                          value={formData.default_js_code}
-                          onChange={(e) => setFormData(prev => ({ ...prev, default_js_code: e.target.value }))}
-                          placeholder="console.log('Hello!');"
-                          rows={8}
-                          className="font-mono text-sm"
-                        />
+                      
+                      <div className="grid gap-4 md:grid-cols-3">
+                        <div className="space-y-2">
+                          <Label htmlFor="default_html_code">📄 HTML Predefinito</Label>
+                          <Textarea
+                            id="default_html_code"
+                            value={formData.default_html_code}
+                            onChange={(e) => setFormData(prev => ({ ...prev, default_html_code: e.target.value }))}
+                            placeholder="<h1>Titolo</h1>..."
+                            rows={8}
+                            className="font-mono text-sm"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="default_css_code">🎨 CSS Predefinito</Label>
+                          <Textarea
+                            id="default_css_code"
+                            value={formData.default_css_code}
+                            onChange={(e) => setFormData(prev => ({ ...prev, default_css_code: e.target.value }))}
+                            placeholder="body { ... }"
+                            rows={8}
+                            className="font-mono text-sm"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="default_js_code">⚡ JavaScript Predefinito</Label>
+                          <Textarea
+                            id="default_js_code"
+                            value={formData.default_js_code}
+                            onChange={(e) => setFormData(prev => ({ ...prev, default_js_code: e.target.value }))}
+                            placeholder="console.log('Hello!');"
+                            rows={8}
+                            className="font-mono text-sm"
+                          />
+                        </div>
                       </div>
                     </div>
                   )}

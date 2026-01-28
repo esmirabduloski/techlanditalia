@@ -534,7 +534,7 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
           src={previewUrl}
           title="Preview"
           className="flex-1 w-full bg-white"
-          sandbox="allow-scripts"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
         />
       </div>
     );
@@ -888,7 +888,7 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
             src={previewUrl}
             title="Preview"
             className="w-full h-[calc(100%-32px)] bg-white"
-            sandbox="allow-scripts"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
           />
         </div>
       </div>

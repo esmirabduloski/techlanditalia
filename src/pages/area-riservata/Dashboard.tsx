@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useStudentProgress } from '@/hooks/useStudentProgress';
 import { useStudentStreaks } from '@/hooks/useStudentStreaks';
 import { useTeacherRole } from '@/hooks/useTeacherRole';
+import { useImpersonation } from '@/contexts/ImpersonationContext';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,8 +34,9 @@ interface CourseProgress {
 
 export default function Dashboard() {
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
-  const { profile, enrollments, lessonProgress, taskProgress, isLoading: dataLoading } = useStudentProgress();
-  const { streaks, attendance, stats, bonuses, loading: streaksLoading } = useStudentStreaks(user?.id);
+  const { isImpersonating, impersonatedUser } = useImpersonation();
+  const { profile, enrollments, lessonProgress, taskProgress, isLoading: dataLoading, effectiveUserId } = useStudentProgress();
+  const { streaks, attendance, stats, bonuses, loading: streaksLoading } = useStudentStreaks(effectiveUserId);
   const { isTeacher, isLoading: teacherLoading } = useTeacherRole();
   const { celebration, isVisible: showCelebration, hideCelebration } = useCelebration();
   const navigate = useNavigate();
@@ -43,35 +45,39 @@ export default function Dashboard() {
   const [teacherLessonsCount, setTeacherLessonsCount] = useState(0);
 
   useEffect(() => {
+    // Skip redirect if impersonating
+    if (isImpersonating) return;
     if (!authLoading && !user) {
       navigate('/auth');
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, isImpersonating]);
 
-  // Redirect teachers to their dedicated dashboard
+  // Redirect teachers to their dedicated dashboard (skip if impersonating)
   useEffect(() => {
+    if (isImpersonating) return;
     if (!authLoading && !teacherLoading && user && isTeacher) {
       navigate('/insegnante', { replace: true });
     }
-  }, [user, authLoading, teacherLoading, isTeacher, navigate]);
+  }, [user, authLoading, teacherLoading, isTeacher, navigate, isImpersonating]);
 
-  // Check if onboarding should be shown
+  // Check if onboarding should be shown (skip if impersonating)
   useEffect(() => {
+    if (isImpersonating) return;
     if (profile && profile.onboarding_completed === false && !isTeacher) {
       setShowOnboarding(true);
     }
-  }, [profile, isTeacher]);
+  }, [profile, isTeacher, isImpersonating]);
 
   // Fetch teacher lessons count (lezioni insegnate)
   useEffect(() => {
     const fetchTeacherLessons = async () => {
-      if (!isTeacher || !user) return;
+      if (!isTeacher || !effectiveUserId) return;
 
       // Count unique lesson numbers from group_attendance marked by this teacher
       const { data: attendanceData } = await supabase
         .from('group_attendance')
         .select('lesson_number, group_id')
-        .eq('marked_by', user.id);
+        .eq('marked_by', effectiveUserId);
 
       if (attendanceData) {
         // Count unique lesson_number per group
@@ -81,7 +87,7 @@ export default function Dashboard() {
     };
 
     fetchTeacherLessons();
-  }, [isTeacher, user]);
+  }, [isTeacher, effectiveUserId]);
 
   // Fetch task counts and completed tasks for all enrolled courses
   useEffect(() => {
@@ -405,9 +411,9 @@ export default function Dashboard() {
           )}
 
           {/* Badges Section - Hide for teachers */}
-          {user && !isTeacher && (
+          {effectiveUserId && !isTeacher && (
             <div className="mb-8">
-              <BadgesDisplay userId={user.id} showAll={true} />
+              <BadgesDisplay userId={effectiveUserId} showAll={true} />
             </div>
           )}
 
@@ -419,9 +425,9 @@ export default function Dashboard() {
           )}
 
           {/* Student Comments Section - Hide for teachers */}
-          {user && !isTeacher && (
+          {effectiveUserId && !isTeacher && (
             <div className="mb-8">
-              <StudentCommentsSection />
+              <StudentCommentsSection studentId={effectiveUserId} />
             </div>
           )}
 

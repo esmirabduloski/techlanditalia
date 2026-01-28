@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "next-themes";
 import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
+import { ImpersonationProvider } from "@/contexts/ImpersonationContext";
+import { ImpersonationBanner } from "@/components/admin/ImpersonationBanner";
 import Index from "./pages/Index";
 import Corsi from "./pages/Corsi";
 import CorsoDettaglio from "./pages/CorsoDettaglio";
@@ -64,71 +66,74 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AnalyticsProvider>
-              <ScrollToTop />
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/corsi" element={<Corsi />} />
-                <Route path="/corsi/:id" element={<CorsoDettaglio />} />
-                <Route path="/chi-siamo" element={<ChiSiamo />} />
-                <Route path="/blog" element={<Blog />} />
-                <Route path="/blog/:slug" element={<BlogArticle />} />
-                <Route path="/prenota" element={<Prenota />} />
-                <Route path="/faq" element={<FAQ />} />
-                <Route path="/privacy" element={<Privacy />} />
-                <Route path="/termini" element={<Termini />} />
-                <Route path="/cookie" element={<Cookie />} />
-                <Route path="/contatti" element={<Contatti />} />
-                <Route path="/lavora-con-noi" element={<LavoraConNoi />} />
-                <Route path="/auth" element={<AuthPage />} />
-                <Route path="/area-riservata" element={<AreaRiservataDashboard />} />
-                <Route path="/area-riservata/profilo" element={<AreaRiservataProfile />} />
-                <Route path="/area-riservata/corso/:courseId" element={<CourseProgress />} />
-                <Route path="/area-riservata/corso/:courseId/lezione/:lessonNumber" element={<LessonView />} />
-                <Route path="/area-riservata/corso/:courseId/lezione/:lessonNumber/task/:taskNumber" element={<TaskView />} />
-                <Route path="/area-riservata/compito/:homeworkId" element={<HomeworkView />} />
-                <Route path="/area-riservata/compito-dettaglio/:homeworkId" element={<HomeworkDetail />} />
-                <Route path="/admin/login" element={<AdminLogin />} />
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/admin/corsi" element={<AdminCourses />} />
-                <Route path="/admin/corsi/:courseId/lezioni" element={<AdminLessons />} />
-                <Route path="/admin/corsi/:courseId/lezioni/nuova" element={<LessonEditor />} />
-                <Route path="/admin/corsi/:courseId/lezioni/:lessonId/modifica" element={<LessonEditor />} />
-                <Route path="/admin/corsi/:courseId/lezioni/:lessonId/task" element={<AdminTasks />} />
-                <Route path="/admin/corsi/:courseId/lezioni/:lessonId/task/nuovo" element={<TaskEditor />} />
-                <Route path="/admin/corsi/:courseId/lezioni/:lessonId/task/:taskId/modifica" element={<TaskEditor />} />
-                <Route path="/admin/corsi/:courseId/lezioni/:lessonId/compiti" element={<AdminHomework />} />
-                <Route path="/admin/corsi/:courseId/lezioni/:lessonId/compiti/nuovo" element={<HomeworkEditor />} />
-                <Route path="/admin/corsi/:courseId/lezioni/:lessonId/compiti/:homeworkId/modifica" element={<HomeworkEditor />} />
-                <Route path="/admin/prenotazioni" element={<AdminBookings />} />
-                <Route path="/admin/contatti" element={<AdminContatti />} />
-                <Route path="/admin/blog/nuovo" element={<BlogEditor />} />
-                <Route path="/admin/blog/:id/modifica" element={<BlogEditor />} />
-                <Route path="/admin/utenti" element={<AdminUsers />} />
-                <Route path="/admin/commenti" element={<AdminStudentComments />} />
-                <Route path="/admin/valutazioni" element={<AdminGrading />} />
-                <Route path="/admin/statistiche" element={<AdminStats />} />
-                <Route path="/admin/newsletter" element={<AdminNewsletter />} />
-                <Route path="/admin/simulatore" element={<AdminSimulator />} />
-                <Route path="/admin/lezioni-programmate" element={<AdminScheduledLessons />} />
-                <Route path="/admin/presenze" element={<AdminAttendance />} />
-                <Route path="/admin/analytics" element={<AdminAnalytics />} />
-                <Route path="/admin/gruppi" element={<AdminGroups />} />
-                <Route path="/admin/disponibilita" element={<AdminTeacherCalendar />} />
-                <Route path="/admin/link-insegnanti" element={<AdminTeacherLinks />} />
-                <Route path="/insegnante" element={<TeacherDashboard />} />
-                <Route path="/insegnante/corso/:courseId" element={<TeacherCourseDetail />} />
-                <Route path="/insegnante/gruppo/:groupId" element={<TeacherGroupDetail />} />
-                <Route path="/insegnante/studente/:studentId" element={<TeacherStudentDetail />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </AnalyticsProvider>
-          </BrowserRouter>
-      </TooltipProvider>
+        <ImpersonationProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <ImpersonationBanner />
+              <AnalyticsProvider>
+                <ScrollToTop />
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/corsi" element={<Corsi />} />
+                  <Route path="/corsi/:id" element={<CorsoDettaglio />} />
+                  <Route path="/chi-siamo" element={<ChiSiamo />} />
+                  <Route path="/blog" element={<Blog />} />
+                  <Route path="/blog/:slug" element={<BlogArticle />} />
+                  <Route path="/prenota" element={<Prenota />} />
+                  <Route path="/faq" element={<FAQ />} />
+                  <Route path="/privacy" element={<Privacy />} />
+                  <Route path="/termini" element={<Termini />} />
+                  <Route path="/cookie" element={<Cookie />} />
+                  <Route path="/contatti" element={<Contatti />} />
+                  <Route path="/lavora-con-noi" element={<LavoraConNoi />} />
+                  <Route path="/auth" element={<AuthPage />} />
+                  <Route path="/area-riservata" element={<AreaRiservataDashboard />} />
+                  <Route path="/area-riservata/profilo" element={<AreaRiservataProfile />} />
+                  <Route path="/area-riservata/corso/:courseId" element={<CourseProgress />} />
+                  <Route path="/area-riservata/corso/:courseId/lezione/:lessonNumber" element={<LessonView />} />
+                  <Route path="/area-riservata/corso/:courseId/lezione/:lessonNumber/task/:taskNumber" element={<TaskView />} />
+                  <Route path="/area-riservata/compito/:homeworkId" element={<HomeworkView />} />
+                  <Route path="/area-riservata/compito-dettaglio/:homeworkId" element={<HomeworkDetail />} />
+                  <Route path="/admin/login" element={<AdminLogin />} />
+                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/admin/corsi" element={<AdminCourses />} />
+                  <Route path="/admin/corsi/:courseId/lezioni" element={<AdminLessons />} />
+                  <Route path="/admin/corsi/:courseId/lezioni/nuova" element={<LessonEditor />} />
+                  <Route path="/admin/corsi/:courseId/lezioni/:lessonId/modifica" element={<LessonEditor />} />
+                  <Route path="/admin/corsi/:courseId/lezioni/:lessonId/task" element={<AdminTasks />} />
+                  <Route path="/admin/corsi/:courseId/lezioni/:lessonId/task/nuovo" element={<TaskEditor />} />
+                  <Route path="/admin/corsi/:courseId/lezioni/:lessonId/task/:taskId/modifica" element={<TaskEditor />} />
+                  <Route path="/admin/corsi/:courseId/lezioni/:lessonId/compiti" element={<AdminHomework />} />
+                  <Route path="/admin/corsi/:courseId/lezioni/:lessonId/compiti/nuovo" element={<HomeworkEditor />} />
+                  <Route path="/admin/corsi/:courseId/lezioni/:lessonId/compiti/:homeworkId/modifica" element={<HomeworkEditor />} />
+                  <Route path="/admin/prenotazioni" element={<AdminBookings />} />
+                  <Route path="/admin/contatti" element={<AdminContatti />} />
+                  <Route path="/admin/blog/nuovo" element={<BlogEditor />} />
+                  <Route path="/admin/blog/:id/modifica" element={<BlogEditor />} />
+                  <Route path="/admin/utenti" element={<AdminUsers />} />
+                  <Route path="/admin/commenti" element={<AdminStudentComments />} />
+                  <Route path="/admin/valutazioni" element={<AdminGrading />} />
+                  <Route path="/admin/statistiche" element={<AdminStats />} />
+                  <Route path="/admin/newsletter" element={<AdminNewsletter />} />
+                  <Route path="/admin/simulatore" element={<AdminSimulator />} />
+                  <Route path="/admin/lezioni-programmate" element={<AdminScheduledLessons />} />
+                  <Route path="/admin/presenze" element={<AdminAttendance />} />
+                  <Route path="/admin/analytics" element={<AdminAnalytics />} />
+                  <Route path="/admin/gruppi" element={<AdminGroups />} />
+                  <Route path="/admin/disponibilita" element={<AdminTeacherCalendar />} />
+                  <Route path="/admin/link-insegnanti" element={<AdminTeacherLinks />} />
+                  <Route path="/insegnante" element={<TeacherDashboard />} />
+                  <Route path="/insegnante/corso/:courseId" element={<TeacherCourseDetail />} />
+                  <Route path="/insegnante/gruppo/:groupId" element={<TeacherGroupDetail />} />
+                  <Route path="/insegnante/studente/:studentId" element={<TeacherStudentDetail />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </AnalyticsProvider>
+            </BrowserRouter>
+        </TooltipProvider>
+      </ImpersonationProvider>
     </AuthProvider>
   </ThemeProvider>
   </QueryClientProvider>

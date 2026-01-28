@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useImpersonation, ImpersonatedRole } from "@/contexts/ImpersonationContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,12 +11,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { 
-  Loader2, Eye, User, Users, GraduationCap, LogOut, Search, Home, BookOpen 
+  Loader2, Eye, User, Users, GraduationCap, LogOut, Search, Home, BookOpen, UserCheck 
 } from "lucide-react";
 import { BadgesDisplay } from "@/components/gamification/BadgesDisplay";
 import { LevelBadge, PointsDisplay, getLevelFromPoints } from "@/components/gamification/LevelBadge";
 import { AvatarDisplay } from "@/components/gamification/AvatarSelector";
 import { StudentCommentsSection } from "@/components/dashboard/StudentCommentsSection";
+import { toast } from "sonner";
 
 interface Student {
   id: string;
@@ -44,6 +46,7 @@ interface Teacher {
 
 export default function AdminSimulator() {
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
+  const { startImpersonation } = useImpersonation();
   const navigate = useNavigate();
   
   const [viewMode, setViewMode] = useState<'student' | 'parent' | 'teacher'>('student');
@@ -142,6 +145,26 @@ export default function AdminSimulator() {
     navigate('/admin/login');
   };
 
+  const handleImpersonate = (userId: string, fullName: string, role: ImpersonatedRole, email?: string | null) => {
+    startImpersonation({
+      id: userId,
+      fullName,
+      role,
+      email
+    });
+    
+    toast.success(`Impersonando ${fullName}`, {
+      description: "Verrai reindirizzato alla sua dashboard"
+    });
+
+    // Navigate to appropriate dashboard
+    if (role === 'student' || role === 'parent') {
+      navigate('/area-riservata');
+    } else if (role === 'teacher') {
+      navigate('/insegnante');
+    }
+  };
+
   // Filter students by username
   const filteredStudents = students.filter(s => {
     if (!searchQuery) return true;
@@ -219,7 +242,7 @@ export default function AdminSimulator() {
             Simulatore Vista
           </h1>
           <p className="text-muted-foreground mt-1">
-            Visualizza come appare la dashboard per studenti, genitori e insegnanti
+            Visualizza e impersona studenti, genitori e insegnanti per testare le loro dashboard
           </p>
         </div>
 
@@ -284,13 +307,25 @@ export default function AdminSimulator() {
                         level={getLevelFromPoints(selectedStudent.total_points).level} 
                         size="lg" 
                       />
-                      <div>
+                      <div className="flex-1">
                         <h3 className="text-xl font-bold">{selectedStudent.full_name}</h3>
                         {selectedStudent.username && (
                           <p className="text-sm text-muted-foreground">@{selectedStudent.username}</p>
                         )}
                         <LevelBadge points={selectedStudent.total_points} size="md" showProgress />
                       </div>
+                      <Button 
+                        onClick={() => handleImpersonate(
+                          selectedStudent.id, 
+                          selectedStudent.full_name, 
+                          'student',
+                          selectedStudent.email
+                        )}
+                        className="bg-amber-500 hover:bg-amber-600 text-white"
+                      >
+                        <UserCheck className="w-4 h-4 mr-2" />
+                        Impersona
+                      </Button>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -348,7 +383,7 @@ export default function AdminSimulator() {
                       <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                         <Users className="w-6 h-6 text-primary" />
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <h3 className="text-xl font-bold">{selectedParent.full_name}</h3>
                         {selectedParent.email && (
                           <p className="text-sm text-muted-foreground">{selectedParent.email}</p>
@@ -357,6 +392,18 @@ export default function AdminSimulator() {
                           {selectedParent.children.length} {selectedParent.children.length === 1 ? 'figlio' : 'figli'} registrati
                         </p>
                       </div>
+                      <Button 
+                        onClick={() => handleImpersonate(
+                          selectedParent.id, 
+                          selectedParent.full_name, 
+                          'parent',
+                          selectedParent.email
+                        )}
+                        className="bg-amber-500 hover:bg-amber-600 text-white"
+                      >
+                        <UserCheck className="w-4 h-4 mr-2" />
+                        Impersona
+                      </Button>
                     </div>
 
                     {selectedParent.children.length === 0 ? (
@@ -443,7 +490,7 @@ export default function AdminSimulator() {
                       <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                         <BookOpen className="w-6 h-6 text-primary" />
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <h3 className="text-xl font-bold">{selectedTeacher.full_name}</h3>
                         {selectedTeacher.email && (
                           <p className="text-sm text-muted-foreground">{selectedTeacher.email}</p>
@@ -452,12 +499,18 @@ export default function AdminSimulator() {
                           {selectedTeacher.groups.length} {selectedTeacher.groups.length === 1 ? 'gruppo' : 'gruppi'} assegnati
                         </p>
                       </div>
-                      <Link to="/insegnante" className="ml-auto">
-                        <Button variant="outline" size="sm">
-                          <Eye className="w-4 h-4 mr-2" />
-                          Apri Dashboard
-                        </Button>
-                      </Link>
+                      <Button 
+                        onClick={() => handleImpersonate(
+                          selectedTeacher.id, 
+                          selectedTeacher.full_name, 
+                          'teacher',
+                          selectedTeacher.email
+                        )}
+                        className="bg-amber-500 hover:bg-amber-600 text-white"
+                      >
+                        <UserCheck className="w-4 h-4 mr-2" />
+                        Impersona
+                      </Button>
                     </div>
 
                     {selectedTeacher.groups.length === 0 ? (

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { useImpersonation } from '@/contexts/ImpersonationContext';
 
 interface Profile {
   id: string;
@@ -51,7 +52,14 @@ interface TaskProgress {
 }
 
 export function useStudentProgress() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
+  const { isImpersonating, impersonatedUser } = useImpersonation();
+  
+  // Use impersonated user ID if admin is impersonating
+  const effectiveUserId = isAdmin && isImpersonating && impersonatedUser
+    ? impersonatedUser.id
+    : user?.id;
+  
   const [profile, setProfile] = useState<Profile | null>(null);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [lessonProgress, setLessonProgress] = useState<LessonProgress[]>([]);
@@ -60,22 +68,23 @@ export function useStudentProgress() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
+    if (effectiveUserId) {
       fetchStudentData();
     } else {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [effectiveUserId]);
 
   const fetchStudentData = async () => {
-    if (!user) return;
+    if (!effectiveUserId) return;
 
+    setIsLoading(true);
     try {
       // Fetch profile
       const { data: profileData } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user.id)
+        .eq('id', effectiveUserId)
         .maybeSingle();
 
       if (profileData) {
@@ -100,7 +109,7 @@ export function useStudentProgress() {
             description
           )
         `)
-        .eq('student_id', user.id)
+        .eq('student_id', effectiveUserId)
         .eq('status', 'active');
 
       if (enrollmentsData) {
@@ -118,7 +127,7 @@ export function useStudentProgress() {
       const { data: progressData } = await supabase
         .from('lesson_progress')
         .select('*')
-        .eq('student_id', user.id);
+        .eq('student_id', effectiveUserId);
 
       if (progressData) {
         setLessonProgress(progressData as LessonProgress[]);
@@ -128,7 +137,7 @@ export function useStudentProgress() {
       const { data: submissionsData } = await supabase
         .from('homework_submissions')
         .select('*')
-        .eq('student_id', user.id);
+        .eq('student_id', effectiveUserId);
 
       if (submissionsData) {
         setHomeworkSubmissions(submissionsData as HomeworkSubmission[]);
@@ -138,7 +147,7 @@ export function useStudentProgress() {
       const { data: taskProgressData } = await supabase
         .from('task_progress')
         .select('*')
-        .eq('student_id', user.id);
+        .eq('student_id', effectiveUserId);
 
       if (taskProgressData) {
         setTaskProgress(taskProgressData as TaskProgress[]);
@@ -151,13 +160,13 @@ export function useStudentProgress() {
   };
 
   const updateAvatar = async (avatarId: number) => {
-    if (!user) return false;
+    if (!effectiveUserId) return false;
 
     try {
       const { error } = await supabase
         .from('profiles')
         .update({ avatar_id: avatarId })
-        .eq('id', user.id);
+        .eq('id', effectiveUserId);
 
       if (!error) {
         setProfile(prev => prev ? { ...prev, avatar_id: avatarId } : null);
@@ -171,13 +180,13 @@ export function useStudentProgress() {
 
   // Points are automatically calculated by database trigger - no client value accepted
   const completeLesson = async (lessonId: string) => {
-    if (!user) return false;
+    if (!effectiveUserId) return false;
 
     try {
       const { error } = await supabase
         .from('lesson_progress')
         .insert({
-          student_id: user.id,
+          student_id: effectiveUserId,
           lesson_id: lessonId,
           // points_earned is set by database trigger from lessons.points_reward
         });
@@ -194,7 +203,7 @@ export function useStudentProgress() {
 
   // Points are automatically calculated by database trigger - no client value accepted
   const submitHomework = async (homeworkId: string, fileUrl?: string, fileName?: string, fileType?: string) => {
-    if (!user) return false;
+    if (!effectiveUserId) return false;
 
     try {
       const insertData: {
@@ -204,7 +213,7 @@ export function useStudentProgress() {
         file_name?: string;
         file_type?: string;
       } = {
-        student_id: user.id,
+        student_id: effectiveUserId,
         homework_id: homeworkId,
       };
 
@@ -227,7 +236,7 @@ export function useStudentProgress() {
   };
 
   const completeTask = async (taskId: string) => {
-    if (!user) return false;
+    if (!effectiveUserId) return false;
 
     // Check if already completed
     if (taskProgress.some(p => p.task_id === taskId)) {
@@ -238,7 +247,7 @@ export function useStudentProgress() {
       const { error } = await supabase
         .from('task_progress')
         .insert({
-          student_id: user.id,
+          student_id: effectiveUserId,
           task_id: taskId,
         });
 
@@ -269,5 +278,7 @@ export function useStudentProgress() {
     completeTask,
     isTaskCompleted,
     refetch: fetchStudentData,
+    effectiveUserId,
+    isImpersonating: isAdmin && isImpersonating,
   };
 }

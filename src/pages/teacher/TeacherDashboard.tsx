@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useImpersonation } from "@/contexts/ImpersonationContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -119,9 +120,15 @@ const getIconComponent = (iconName: string) => {
 };
 
 export default function TeacherDashboard() {
-  const { user, isLoading: authLoading, signOut } = useAuth();
+  const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
+  const { isImpersonating, impersonatedUser } = useImpersonation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  // Use impersonated user ID if admin is impersonating a teacher
+  const effectiveUserId = isAdmin && isImpersonating && impersonatedUser?.role === 'teacher'
+    ? impersonatedUser.id
+    : user?.id;
   
   const [isTeacher, setIsTeacher] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -146,12 +153,19 @@ export default function TeacherDashboard() {
   const [statsLoading, setStatsLoading] = useState(true);
 
   useEffect(() => {
+    // If impersonating a teacher, skip normal auth checks
+    if (isAdmin && isImpersonating && impersonatedUser?.role === 'teacher') {
+      setIsTeacher(true);
+      fetchData();
+      return;
+    }
+    
     if (!authLoading && user) {
       checkTeacherRole();
     } else if (!authLoading && !user) {
       navigate('/auth');
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, isAdmin, isImpersonating, impersonatedUser]);
 
   const checkTeacherRole = async () => {
     try {
@@ -177,12 +191,14 @@ export default function TeacherDashboard() {
   };
 
   const fetchData = async () => {
+    if (!effectiveUserId) return;
+    
     try {
       // Fetch user profile
       const { data: profileData } = await supabase
         .from('profiles')
         .select('full_name, email')
-        .eq('id', user!.id)
+        .eq('id', effectiveUserId)
         .single();
       
       setProfile(profileData);
@@ -191,7 +207,7 @@ export default function TeacherDashboard() {
       const { data: teacherData } = await supabase
         .from('teacher_profiles')
         .select('*')
-        .eq('user_id', user!.id)
+        .eq('user_id', effectiveUserId)
         .maybeSingle();
 
       if (teacherData) {
@@ -213,7 +229,7 @@ export default function TeacherDashboard() {
       const { data: teacherCourses } = await supabase
         .from('teacher_courses')
         .select('course_id')
-        .eq('teacher_id', user!.id);
+        .eq('teacher_id', effectiveUserId);
 
       if (teacherCourses && teacherCourses.length > 0) {
         const courseIds = teacherCourses.map(tc => tc.course_id);
@@ -232,7 +248,7 @@ export default function TeacherDashboard() {
           id, title, course_id, start_date, last_lesson_title, max_lessons,
           courses!inner(title, emoji)
         `)
-        .eq('teacher_id', user!.id);
+        .eq('teacher_id', effectiveUserId);
 
       let fetchedGroups: StudentGroup[] = [];
       if (groupsData) {
@@ -265,7 +281,7 @@ export default function TeacherDashboard() {
       const { data: notificationsData } = await supabase
         .from('teacher_notifications')
         .select('*')
-        .eq('teacher_id', user!.id)
+        .eq('teacher_id', effectiveUserId)
         .order('created_at', { ascending: false })
         .limit(20);
       
@@ -434,7 +450,7 @@ export default function TeacherDashboard() {
 
   // Subscribe to realtime notifications
   useEffect(() => {
-    if (!user || !isTeacher) return;
+    if (!effectiveUserId || !isTeacher) return;
 
     const channel = supabase
       .channel('teacher-notifications')
@@ -444,7 +460,7 @@ export default function TeacherDashboard() {
           event: 'INSERT',
           schema: 'public',
           table: 'teacher_notifications',
-          filter: `teacher_id=eq.${user.id}`
+          filter: `teacher_id=eq.${effectiveUserId}`
         },
         (payload) => {
           const newNotification = payload.new as TeacherNotification;
@@ -460,7 +476,7 @@ export default function TeacherDashboard() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, isTeacher, toast]);
+  }, [effectiveUserId, isTeacher, toast]);
 
   const markNotificationAsRead = async (id: string) => {
     await supabase
@@ -474,10 +490,12 @@ export default function TeacherDashboard() {
   };
 
   const markAllNotificationsAsRead = async () => {
+    if (!effectiveUserId) return;
+    
     await supabase
       .from('teacher_notifications')
       .update({ is_read: true })
-      .eq('teacher_id', user!.id)
+      .eq('teacher_id', effectiveUserId)
       .eq('is_read', false);
     
     setNotifications(prev => 
@@ -488,6 +506,8 @@ export default function TeacherDashboard() {
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
   const handleSavePhone = async () => {
+    if (!effectiveUserId) return;
+    
     setIsSaving(true);
     try {
       let error;
@@ -495,12 +515,12 @@ export default function TeacherDashboard() {
         const result = await supabase
           .from('teacher_profiles')
           .update({ phone })
-          .eq('user_id', user!.id);
+          .eq('user_id', effectiveUserId);
         error = result.error;
       } else {
         const result = await supabase
           .from('teacher_profiles')
-          .insert({ user_id: user!.id, phone });
+          .insert({ user_id: effectiveUserId, phone });
         error = result.error;
       }
       

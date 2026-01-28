@@ -36,6 +36,7 @@ interface HomeworkDetails {
   default_js_code: string | null;
   python_env: string | null;
   replit_url: string | null;
+  preview_only: boolean;
   lesson: {
     id: string;
     title: string;
@@ -130,6 +131,7 @@ export default function HomeworkView() {
         default_js_code: (homeworkData as any).default_js_code || null,
         python_env: (homeworkData as any).python_env || null,
         replit_url: (homeworkData as any).replit_url || null,
+        preview_only: (homeworkData as any).preview_only || false,
         lesson: {
           id: lesson.id,
           title: lesson.title,
@@ -290,6 +292,51 @@ export default function HomeworkView() {
   const isPythonCourse = PYTHON_COURSES.includes(homework.lesson.course.slug);
   const isWebCourse = WEB_COURSES.includes(homework.lesson.course.slug);
   const hasCompiler = isPythonCourse || isWebCourse;
+
+  // Preview-only mode for Web courses with preview_only flag
+  if (isWebCourse && homework.preview_only) {
+    return (
+      <div className="h-screen flex flex-col bg-background">
+        {/* Top bar */}
+        <div className="flex items-center justify-between px-4 py-3 border-b bg-background">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={() => navigate(`/area-riservata/corso/${homework.lesson.course.id}`)}>
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>{homework.lesson.course.emoji}</span>
+                <span>{homework.lesson.course.title}</span>
+                <span>·</span>
+                <span>Lezione {homework.lesson.lesson_number}</span>
+              </div>
+              <h1 className="font-semibold">{homework.title}</h1>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            {getStatusBadge()}
+            <Badge variant="secondary" className="gap-1">
+              <Trophy className="w-3 h-3" />
+              {homework.points_reward} punti
+            </Badge>
+            {homework.due_date && (
+              <span className="text-sm text-muted-foreground flex items-center gap-1">
+                <Calendar className="w-4 h-4" />
+                {formatDate(homework.due_date)}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Full-screen preview iframe */}
+        <PreviewOnlyFrame
+          htmlCode={homework.default_html_code || ''}
+          cssCode={homework.default_css_code || ''}
+          jsCode={homework.default_js_code || ''}
+        />
+      </div>
+    );
+  }
 
   // Compiler layout for Python/Web courses
   if (hasCompiler) {
@@ -497,5 +544,62 @@ function HomeworkSubmitButton({
       )}
       {isAlreadySubmitted ? 'Aggiorna consegna' : 'INVIA'}
     </Button>
+  );
+}
+
+// Preview-only iframe component for embedded forms/content
+function PreviewOnlyFrame({ 
+  htmlCode, 
+  cssCode, 
+  jsCode 
+}: { 
+  htmlCode: string; 
+  cssCode: string; 
+  jsCode: string; 
+}) {
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+
+  useEffect(() => {
+    const generateHtml = () => {
+      const userHtmlContent = htmlCode
+        .replace(/<!DOCTYPE html>/gi, '')
+        .replace(/<\/?html[^>]*>/gi, '')
+        .replace(/<\/?head[^>]*>/gi, '')
+        .replace(/<\/?body[^>]*>/gi, '')
+        .replace(/<link[^>]*>/gi, '');
+
+      return `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>${cssCode}</style>
+        </head>
+        <body>
+          ${userHtmlContent}
+          <script>${jsCode}</script>
+        </body>
+        </html>
+      `;
+    };
+
+    const combinedHtml = generateHtml();
+    const blob = new Blob([combinedHtml], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    setPreviewUrl(url);
+
+    return () => URL.revokeObjectURL(url);
+  }, [htmlCode, cssCode, jsCode]);
+
+  if (!previewUrl) return null;
+
+  return (
+    <iframe
+      src={previewUrl}
+      title="Preview"
+      className="flex-1 w-full bg-white"
+      sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+    />
   );
 }

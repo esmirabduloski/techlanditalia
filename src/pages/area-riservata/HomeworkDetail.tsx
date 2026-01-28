@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -71,6 +72,7 @@ export default function HomeworkDetail() {
   const { homeworkId } = useParams();
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
+  const { effectiveUserId, isImpersonating } = useEffectiveUserId();
   const { toast } = useToast();
   
   const [homework, setHomework] = useState<HomeworkDetails | null>(null);
@@ -95,13 +97,13 @@ export default function HomeworkDetail() {
   }, [user, authLoading, navigate]);
 
   useEffect(() => {
-    if (user && homeworkId) {
+    if (user && homeworkId && effectiveUserId) {
       fetchHomeworkDetails();
     }
-  }, [user, homeworkId]);
+  }, [user, homeworkId, effectiveUserId]);
 
   const fetchHomeworkDetails = async () => {
-    if (!user || !homeworkId) return;
+    if (!user || !homeworkId || !effectiveUserId) return;
     
     try {
       // Fetch homework with lesson and course details
@@ -152,12 +154,12 @@ export default function HomeworkDetail() {
         },
       });
 
-      // Fetch existing submission
+      // Fetch existing submission using effective user ID (for impersonation)
       const { data: submissionData } = await supabase
         .from("homework_submissions")
         .select("*")
         .eq("homework_id", homeworkId)
-        .eq("student_id", user.id)
+        .eq("student_id", effectiveUserId)
         .maybeSingle();
 
       if (submissionData) {
@@ -177,7 +179,7 @@ export default function HomeworkDetail() {
   };
 
   const handleSubmit = async () => {
-    if (!user || !homework) return;
+    if (!user || !homework || !effectiveUserId) return;
 
     // Validate submission
     if (submitType === "file" && !uploadedFile) {
@@ -201,9 +203,10 @@ export default function HomeworkDetail() {
     setIsSubmitting(true);
 
     try {
+      // Use effectiveUserId for student_id when submitting
       const submissionData: any = {
         homework_id: homework.id,
-        student_id: user.id,
+        student_id: effectiveUserId,
         status: "pending",
         notes: notes || null,
       };

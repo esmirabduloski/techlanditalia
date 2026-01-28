@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +30,8 @@ interface Course {
 
 export default function TeacherCourseDetail() {
   const { courseId } = useParams();
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, isAdmin } = useAuth();
+  const { effectiveUserId, isImpersonating, impersonatedRole } = useEffectiveUserId();
   const navigate = useNavigate();
   
   const [isLoading, setIsLoading] = useState(true);
@@ -43,19 +45,26 @@ export default function TeacherCourseDetail() {
     } else if (!authLoading && !user) {
       navigate('/auth');
     }
-  }, [user, authLoading, courseId]);
+  }, [user, authLoading, courseId, effectiveUserId]);
 
   const fetchData = async () => {
+    if (!effectiveUserId) return;
+    
     try {
+      // If admin is impersonating a teacher, use the impersonated teacher's ID
+      // Otherwise, use the real user's ID for teacher access check
+      const teacherId = effectiveUserId;
+      
       // Verify teacher has access to this course
       const { data: teacherCourse } = await supabase
         .from('teacher_courses')
         .select('course_id')
-        .eq('teacher_id', user!.id)
+        .eq('teacher_id', teacherId)
         .eq('course_id', courseId)
         .maybeSingle();
 
-      if (!teacherCourse) {
+      // Allow access if admin OR if teacher has course access
+      if (!teacherCourse && !isAdmin) {
         navigate('/insegnante');
         return;
       }

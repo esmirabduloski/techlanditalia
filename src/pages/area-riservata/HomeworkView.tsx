@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
 import { supabase } from '@/integrations/supabase/client';
 import { Layout } from '@/components/layout/Layout';
 import { LessonContent } from '@/components/lesson/LessonContent';
@@ -68,6 +69,7 @@ export default function HomeworkView() {
   const { homeworkId } = useParams();
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
+  const { effectiveUserId, isImpersonating } = useEffectiveUserId();
   const { toast } = useToast();
   
   const [homework, setHomework] = useState<HomeworkDetails | null>(null);
@@ -82,13 +84,13 @@ export default function HomeworkView() {
   }, [user, authLoading, navigate]);
 
   useEffect(() => {
-    if (user && homeworkId) {
+    if (user && homeworkId && effectiveUserId) {
       fetchHomeworkDetails();
     }
-  }, [user, homeworkId]);
+  }, [user, homeworkId, effectiveUserId]);
 
   const fetchHomeworkDetails = async () => {
-    if (!user || !homeworkId) return;
+    if (!user || !homeworkId || !effectiveUserId) return;
     
     try {
       const { data: homeworkData, error: homeworkError } = await supabase
@@ -145,12 +147,12 @@ export default function HomeworkView() {
         },
       });
 
-      // Fetch existing submission
+      // Fetch existing submission using effectiveUserId (for impersonation)
       const { data: submissionData } = await supabase
         .from('homework_submissions')
         .select('*')
         .eq('homework_id', homeworkId)
-        .eq('student_id', user.id)
+        .eq('student_id', effectiveUserId)
         .maybeSingle();
 
       if (submissionData) {
@@ -169,7 +171,7 @@ export default function HomeworkView() {
   };
 
   const handleSubmit = async (codeContent: string) => {
-    if (!user || !homework) return;
+    if (!user || !homework || !effectiveUserId) return;
 
     if (!codeContent.trim()) {
       toast({
@@ -183,9 +185,10 @@ export default function HomeworkView() {
     setIsSubmitting(true);
 
     try {
+      // Use effectiveUserId for student submission
       const submissionData: any = {
         homework_id: homework.id,
-        student_id: user.id,
+        student_id: effectiveUserId,
         status: 'pending',
         notes: `[CODE]\n${codeContent}`,
         file_type: 'text/code',

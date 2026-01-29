@@ -199,6 +199,7 @@ export default function Dashboard() {
   };
 
   const userRole = profile.role === 'parent' ? 'parent' : 'student';
+  const isParent = profile.role === 'parent';
 
   return (
     <Layout>
@@ -275,55 +276,66 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Stats Cards - Hide Level and Points for teachers */}
-          <div className={`grid grid-cols-1 ${isTeacher ? 'md:grid-cols-1' : 'md:grid-cols-3'} gap-4 mb-8`}>
-            {!isTeacher && (
-              <>
-                <Card className="border-primary/20 bg-gradient-to-br from-card to-primary/5">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">Livello Attuale</p>
-                        <LevelBadge points={profile.total_points} size="md" showProgress />
-                      </div>
-                      <Trophy className="w-10 h-10 text-primary/30" />
+          {/* Stats Cards - Hide for parents and teachers */}
+          {!isTeacher && !isParent && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              <Card className="border-primary/20 bg-gradient-to-br from-card to-primary/5">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Livello Attuale</p>
+                      <LevelBadge points={profile.total_points} size="md" showProgress />
                     </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-accent/20 bg-gradient-to-br from-card to-accent/5">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">Punti Totali</p>
-                        <PointsDisplay points={profile.total_points} size="lg" />
-                      </div>
-                      <Target className="w-10 h-10 text-accent/30" />
-                    </div>
-                  </CardContent>
-                </Card>
-              </>
-            )}
-
-            <Card className="border-secondary/20 bg-gradient-to-br from-card to-secondary/5">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">
-                      {isTeacher ? 'Lezioni Insegnate' : 'Lezioni Completate'}
-                    </p>
-                    <p className="text-3xl font-bold text-foreground">
-                      {isTeacher ? teacherLessonsCount : completedLessons}
-                    </p>
+                    <Trophy className="w-10 h-10 text-primary/30" />
                   </div>
-                  <BookOpen className="w-10 h-10 text-secondary/30" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                </CardContent>
+              </Card>
 
-          {/* Streaks Section - Hide for teachers */}
-          {streaks && !isTeacher && (
+              <Card className="border-accent/20 bg-gradient-to-br from-card to-accent/5">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Punti Totali</p>
+                      <PointsDisplay points={profile.total_points} size="lg" />
+                    </div>
+                    <Target className="w-10 h-10 text-accent/30" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-secondary/20 bg-gradient-to-br from-card to-secondary/5">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Lezioni Completate</p>
+                      <p className="text-3xl font-bold text-foreground">{completedLessons}</p>
+                    </div>
+                    <BookOpen className="w-10 h-10 text-secondary/30" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Teacher Stats Card */}
+          {isTeacher && (
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-8">
+              <Card className="border-secondary/20 bg-gradient-to-br from-card to-secondary/5">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Lezioni Insegnate</p>
+                      <p className="text-3xl font-bold text-foreground">{teacherLessonsCount}</p>
+                    </div>
+                    <BookOpen className="w-10 h-10 text-secondary/30" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Streaks Section - Hide for teachers and parents */}
+          {streaks && !isTeacher && !isParent && (
             <div className="mb-8">
               <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                 🔥 Le Tue Streak
@@ -345,8 +357,8 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Active Courses - Hide for teachers (they use TeacherDashboard) */}
-          {!isTeacher && (
+          {/* Active Courses - Hide for teachers and parents */}
+          {!isTeacher && !isParent && (
             <div className="mb-8">
               <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                 <Rocket className="w-5 h-5 text-primary" />
@@ -410,22 +422,22 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Badges Section - Hide for teachers */}
-          {effectiveUserId && !isTeacher && (
+          {/* Badges Section - Hide for teachers and parents */}
+          {effectiveUserId && !isTeacher && !isParent && (
             <div className="mb-8">
               <BadgesDisplay userId={effectiveUserId} showAll={true} />
             </div>
           )}
 
-          {/* Homework Section for Students - Hide for teachers */}
-          {!isTeacher && (
+          {/* Homework Section for Students - Hide for teachers and parents */}
+          {!isTeacher && !isParent && (
             <div className="mb-8">
               <HomeworkSection />
             </div>
           )}
 
-          {/* Student Comments Section - Hide for teachers */}
-          {effectiveUserId && !isTeacher && (
+          {/* Student Comments Section - Hide for teachers and parents */}
+          {effectiveUserId && !isTeacher && !isParent && (
             <div className="mb-8">
               <StudentCommentsSection studentId={effectiveUserId} />
             </div>

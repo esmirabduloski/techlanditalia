@@ -450,8 +450,8 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Parent Feedback Section - Hide for teachers */}
-          {!isTeacher && (
+          {/* Parent Feedback Section - Only for students (not teachers or parents) */}
+          {!isTeacher && !isParent && (
             <div className="mb-8">
               <ParentFeedbackSection />
             </div>

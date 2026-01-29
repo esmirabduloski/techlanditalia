@@ -40,7 +40,7 @@ import HomeworkView from "./pages/area-riservata/HomeworkView";
 import AdminNewsletter from "./pages/admin/AdminNewsletter";
 import AdminStudentComments from "./pages/admin/AdminStudentComments";
 import AdminGrading from "./pages/admin/AdminGrading";
-import AdminSimulator from "./pages/admin/AdminSimulator";
+// AdminSimulator removed - impersonation now in AdminUsers
 import AdminScheduledLessons from "./pages/admin/AdminScheduledLessons";
 import AdminAttendance from "./pages/admin/AdminAttendance";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
@@ -117,7 +117,7 @@ const App = () => (
                   <Route path="/admin/valutazioni" element={<AdminGrading />} />
                   <Route path="/admin/statistiche" element={<AdminStats />} />
                   <Route path="/admin/newsletter" element={<AdminNewsletter />} />
-                  <Route path="/admin/simulatore" element={<AdminSimulator />} />
+                  {/* Simulatore removed - impersonation now in AdminUsers */}
                   <Route path="/admin/lezioni-programmate" element={<AdminScheduledLessons />} />
                   <Route path="/admin/presenze" element={<AdminAttendance />} />
                   <Route path="/admin/analytics" element={<AdminAnalytics />} />

@@ -82,8 +82,7 @@ export function ParentChildrenSection() {
             author:author_id (full_name, role)
           `)
           .eq("student_id", child.id)
-          .order("created_at", { ascending: false })
-          .limit(5);
+          .order("created_at", { ascending: false });
 
         commentsMap[child.id] = (childComments || []).map((c: any) => ({
           id: c.id,

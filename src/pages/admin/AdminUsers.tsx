@@ -9,6 +9,7 @@ import { PasswordInput } from '@/components/ui/password-input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { AdminNav } from '@/components/admin/AdminNav';
+import { useImpersonation, ImpersonatedRole } from '@/contexts/ImpersonationContext';
 import { 
   LogOut,
   Loader2,
@@ -28,7 +29,8 @@ import {
   Clock,
   Trash2,
   Users2,
-  UserPlus
+  UserPlus,
+  Eye
 } from 'lucide-react';
 import {
   Select,
@@ -130,6 +132,37 @@ export default function AdminUsers() {
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { startImpersonation } = useImpersonation();
+
+  const handleImpersonate = (profile: Profile) => {
+    let role: ImpersonatedRole;
+    if (profile.isTeacher) {
+      role = 'teacher';
+    } else if (profile.role === 'parent') {
+      role = 'parent';
+    } else {
+      role = 'student';
+    }
+
+    startImpersonation({
+      id: profile.id,
+      fullName: profile.full_name,
+      role,
+      email: profile.email
+    });
+
+    // Navigate based on role
+    if (role === 'teacher') {
+      navigate('/insegnante');
+    } else {
+      navigate('/area-riservata');
+    }
+
+    toast({
+      title: 'Impersonazione attiva',
+      description: `Stai visualizzando come ${profile.full_name} (${role})`
+    });
+  };
 
   useEffect(() => {
     if (!authLoading && (!user || !isAdmin)) {
@@ -822,6 +855,24 @@ export default function AdminUsers() {
                                       size="sm" 
                                       onClick={(e) => { 
                                         e.stopPropagation(); 
+                                        handleImpersonate(group.parent!);
+                                      }}
+                                      className="text-primary hover:text-primary"
+                                    >
+                                      <Eye className="w-4 h-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Impersona {group.parent!.full_name}</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      onClick={(e) => { 
+                                        e.stopPropagation(); 
                                         navigate(`/admin/commenti?parent_id=${group.parent!.id}&visibility=parent_only`); 
                                       }}
                                     >
@@ -982,6 +1033,21 @@ export default function AdminUsers() {
                                       <Button 
                                         variant="outline" 
                                         size="sm" 
+                                        onClick={() => handleImpersonate(child)}
+                                        className="text-primary hover:text-primary"
+                                      >
+                                        <Eye className="w-4 h-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Impersona {child.full_name}</TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm" 
                                         onClick={() => navigate(`/admin/commenti?student_id=${child.id}`)}
                                       >
                                         <MessageCircle className="w-4 h-4" />
@@ -1069,14 +1135,35 @@ export default function AdminUsers() {
                               </div>
                             </div>
                             <div className="flex items-center gap-2 flex-shrink-0">
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                onClick={() => navigate(`/admin/commenti?student_id=${child.id}`)}
-                                title="Aggiungi commento"
-                              >
-                                <MessageCircle className="w-4 h-4" />
-                              </Button>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      onClick={() => handleImpersonate(child)}
+                                      className="text-primary hover:text-primary"
+                                    >
+                                      <Eye className="w-4 h-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Impersona {child.full_name}</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      onClick={() => navigate(`/admin/commenti?student_id=${child.id}`)}
+                                    >
+                                      <MessageCircle className="w-4 h-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Aggiungi commento</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                               <Select 
                                 value={child.role} 
                                 onValueChange={(v) => updateProfileRole(child.id, v as 'student' | 'parent')}

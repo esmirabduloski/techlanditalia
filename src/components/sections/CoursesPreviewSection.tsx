@@ -65,7 +65,7 @@ const courses = [
     color: "tech-blue",
   },
   {
-    id: "python-pro-ai",
+    id: "python-ai",
     title: "Python PRO & AI",
     description: "Crea bot, siti web e progetti con intelligenza artificiale.",
     age: "13+ anni",

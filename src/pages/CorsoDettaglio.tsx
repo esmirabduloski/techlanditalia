@@ -433,7 +433,7 @@ const coursesData: Record<string, {
       },
     ],
   },
-  "roblox-base": {
+  "roblox": {
     title: "Sviluppo giochi con Roblox",
     emoji: "🏗️",
     description: "Crea giochi con Roblox Studio: progetta mondi e personaggi, imposta le tue regole e pubblica il tuo primo videogame online.",

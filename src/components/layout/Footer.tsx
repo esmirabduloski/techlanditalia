@@ -42,7 +42,7 @@ const WhatsAppIcon = () => (
 export function Footer() {
   return (
     <footer className="bg-foreground text-background" role="contentinfo">
-      <div className="tech-container py-16">
+      <div className="tech-container py-16 px-6 md:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
           {/* Brand */}
           <div className="lg:col-span-2">

@@ -14,7 +14,7 @@ export function HeroSection() {
       </div>
 
       <div className="tech-container relative">
-        <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[calc(100vh-5rem)] pt-4 pb-12">
+        <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[calc(100vh-5rem)] pb-12">
           {/* Content */}
           <div className="space-y-8">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-tech-teal/10 text-tech-teal text-sm font-medium">

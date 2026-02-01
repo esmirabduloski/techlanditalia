@@ -45,7 +45,7 @@ const courses = [
     color: "tech-teal",
   },
   {
-    id: "roblox-base",
+    id: "roblox",
     title: "Sviluppo giochi con Roblox",
     description: "Crea giochi con Roblox Studio e pubblica il tuo primo videogame online.",
     age: "8+ anni",

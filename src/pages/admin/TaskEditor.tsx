@@ -185,10 +185,6 @@ export default function TaskEditor() {
         // If there's a saved draft, prefer it over DB data (user was editing and switched tabs)
         if (savedDraft && savedDraft.title) {
           setFormData(savedDraft);
-          toast({
-            title: 'Bozza ripristinata',
-            description: 'Sono state recuperate le modifiche non salvate.',
-          });
         } else {
           setFormData(dbData);
         }
@@ -200,10 +196,6 @@ export default function TaskEditor() {
           ...savedDraft,
           task_number: prev.task_number, // Keep task_number from DB
         }));
-        toast({
-          title: 'Bozza ripristinata',
-          description: 'Sono state recuperate le modifiche non salvate.',
-        });
       }
 
       // Get next task number

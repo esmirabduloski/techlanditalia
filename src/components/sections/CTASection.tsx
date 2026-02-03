@@ -9,7 +9,7 @@ export function CTASection() {
   const { hasEnrollments } = useHasEnrollments();
   const showTrialButton = !user || !hasEnrollments;
   return (
-    <section className="tech-section bg-gradient-hero relative overflow-hidden">
+    <section className="tech-section bg-gradient-hero relative overflow-hidden dark:border-t dark:border-border/40">
       {/* Background decoration */}
       <div className="absolute inset-0">
         <div className="absolute top-10 left-10 w-32 h-32 bg-primary-foreground/10 rounded-full blur-2xl" />

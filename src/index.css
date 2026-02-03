@@ -154,11 +154,27 @@
   }
 
   .tech-card {
-    @apply bg-card rounded-2xl border border-border/50 shadow-sm hover:shadow-md transition-all duration-300;
+    @apply bg-card rounded-2xl border border-border/50 shadow-sm transition-all duration-300;
+  }
+
+  .tech-card:hover {
+    @apply shadow-md;
+  }
+
+  .dark .tech-card:hover {
+    @apply border-primary/40 shadow-[0_8px_30px_-8px_hsl(152_60%_50%/0.25)];
   }
 
   .tech-card-hover {
-    @apply hover:-translate-y-1 hover:shadow-lg;
+    @apply hover:-translate-y-1;
+  }
+
+  .tech-card-hover:hover {
+    @apply shadow-lg;
+  }
+
+  .dark .tech-card-hover:hover {
+    @apply shadow-[0_12px_40px_-10px_hsl(152_60%_50%/0.35)] border-primary/50;
   }
 
   .tech-section {

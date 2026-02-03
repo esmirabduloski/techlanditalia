@@ -6,8 +6,8 @@ import heroImage from "@/assets/home_page_techland.jpeg";
 export function HeroSection() {
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-tech-green-light via-background to-background dark:from-background dark:via-background dark:to-background">
-      {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden">
+      {/* Background decoration - hidden in dark mode for better contrast */}
+      <div className="absolute inset-0 overflow-hidden dark:hidden">
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-tech-green/10 rounded-full blur-3xl" />
         <div className="absolute top-20 -left-20 w-72 h-72 bg-tech-teal/10 rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-tech-cyan/10 rounded-full blur-3xl" />

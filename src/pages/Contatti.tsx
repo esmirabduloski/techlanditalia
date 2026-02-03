@@ -115,7 +115,7 @@ export default function Contatti() {
       />
 
       {/* Hero Section */}
-      <section className="pt-32 pb-16 bg-gradient-to-br from-tech-cyan/10 via-primary/5 to-background">
+      <section className="pt-32 pb-16 bg-gradient-to-br from-tech-cyan/10 via-primary/5 to-background dark:from-background dark:via-background dark:to-background">
         <div className="tech-container">
           <SEOBreadcrumb items={[{ label: "Contatti" }]} className="mb-8 justify-center" />
           <div className="text-center max-w-3xl mx-auto">
@@ -248,7 +248,7 @@ export default function Contatti() {
       {/* CTA */}
       <section className="py-16">
         <div className="tech-container">
-          <div className="text-center max-w-2xl mx-auto p-8 rounded-3xl bg-gradient-to-r from-primary/10 via-tech-cyan/10 to-tech-purple/10 border border-border">
+          <div className="text-center max-w-2xl mx-auto p-8 rounded-3xl bg-gradient-to-r from-primary/10 via-tech-cyan/10 to-primary/10 dark:from-muted/20 dark:via-muted/10 dark:to-muted/20 border border-border">
             <h2 className="text-2xl font-bold mb-4">Preferisci parlare con noi?</h2>
             <p className="text-muted-foreground mb-6">Contattaci su WhatsApp per una risposta immediata!</p>
             <Button variant="cta" size="lg" asChild>

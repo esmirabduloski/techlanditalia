@@ -87,7 +87,7 @@ export default function LavoraConNoi() {
       />
       
       {/* Hero Section */}
-      <section className="pt-32 pb-16 bg-gradient-to-br from-primary/10 via-tech-cyan/5 to-background">
+      <section className="pt-32 pb-16 bg-gradient-to-br from-primary/10 via-tech-cyan/5 to-background dark:from-background dark:via-background dark:to-background">
         <div className="tech-container">
           <SEOBreadcrumb 
             items={[{ label: "Lavora Con Noi" }]} 

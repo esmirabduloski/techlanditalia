@@ -451,7 +451,7 @@ export default function Blog() {
       />
       
       {/* Hero */}
-      <section className="tech-section bg-gradient-to-b from-tech-green-light to-background">
+      <section className="tech-section bg-gradient-to-b from-tech-green-light to-background dark:from-background dark:to-background">
         <div className="tech-container">
           <SEOBreadcrumb 
             items={[{ label: "Blog Coding Bambini" }]} 

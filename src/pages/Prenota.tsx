@@ -240,7 +240,7 @@ export default function Prenota() {
         description="Prenota una lezione di prova gratuita per il tuo bambino. Scopri i nostri corsi di programmazione per bambini e ragazzi 6-18 anni. Nessun impegno!"
         canonical="/prenota"
       />
-      <section className="tech-section bg-gradient-to-b from-tech-green-light to-background">
+      <section className="tech-section bg-gradient-to-b from-tech-green-light to-background dark:from-background dark:to-background">
         <div className="tech-container">
           <SEOBreadcrumb 
             items={[{ label: "Prenota Lezione Gratuita" }]} 

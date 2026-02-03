@@ -1235,7 +1235,7 @@ export default function CorsoDettaglio() {
       />
       
       {/* Hero */}
-      <section className="py-16 md:py-24 bg-gradient-to-b from-primary/10 via-tech-green-light to-background">
+      <section className="py-16 md:py-24 bg-gradient-to-b from-primary/10 via-tech-green-light to-background dark:from-background dark:via-background dark:to-background">
         <div className="tech-container">
           <SEOBreadcrumb 
             items={[

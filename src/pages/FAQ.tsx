@@ -127,7 +127,7 @@ export default function FAQ() {
       />
       
       {/* Hero Section */}
-      <section className="relative py-20 bg-gradient-to-br from-tech-purple/10 via-tech-cyan/5 to-background overflow-hidden">
+      <section className="relative py-20 bg-gradient-to-br from-tech-green-light/10 via-tech-cyan/5 to-background dark:from-background dark:via-background dark:to-background overflow-hidden">
         <div className="absolute inset-0 bg-grid-pattern opacity-5" />
         <div className="tech-container relative">
           <SEOBreadcrumb 
@@ -182,7 +182,7 @@ export default function FAQ() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 md:py-24 bg-gradient-to-br from-primary/5 via-tech-cyan/5 to-background">
+      <section className="py-16 md:py-24 bg-gradient-to-br from-primary/5 via-tech-cyan/5 to-background dark:from-background dark:via-background dark:to-background">
         <div className="tech-container">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-6">

@@ -5,7 +5,7 @@ import heroImage from "@/assets/home_page_techland.jpeg";
 
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-tech-green-light via-background to-background">
+    <section className="relative overflow-hidden bg-gradient-to-b from-tech-green-light via-background to-background dark:from-background dark:via-background dark:to-background">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-tech-green/10 rounded-full blur-3xl" />

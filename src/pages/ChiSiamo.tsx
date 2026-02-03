@@ -106,7 +106,7 @@ export default function ChiSiamo() {
       />
 
       {/* Hero */}
-      <section className="tech-section bg-gradient-to-b from-tech-green-light to-background">
+      <section className="tech-section bg-gradient-to-b from-tech-green-light to-background dark:from-background dark:to-background">
         <div className="tech-container">
           <SEOBreadcrumb items={[{ label: "Chi Siamo" }]} className="mb-8 justify-center" />
           <div className="text-center max-w-3xl mx-auto">
@@ -282,7 +282,7 @@ export default function ChiSiamo() {
       </section>
 
       {/* Educators */}
-      <section className="tech-section bg-gradient-to-br from-tech-purple-light to-tech-orange-light">
+      <section className="tech-section bg-gradient-to-br from-tech-green-light to-tech-cyan-light dark:from-background dark:to-background">
         <div className="tech-container">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>

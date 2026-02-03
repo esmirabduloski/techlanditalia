@@ -144,7 +144,7 @@ export default function BlogArticle() {
       />
       
       {/* Hero */}
-      <section className="tech-section bg-gradient-to-b from-tech-green-light to-background">
+      <section className="tech-section bg-gradient-to-b from-tech-green-light to-background dark:from-background dark:to-background">
         <div className="tech-container">
           <div className="max-w-3xl mx-auto">
             <SEOBreadcrumb 

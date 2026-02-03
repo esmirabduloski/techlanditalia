@@ -364,7 +364,7 @@ export default function AuthPage() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-background via-tech-green-light/30 to-tech-cyan-light/30 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-background via-tech-green-light/30 to-tech-cyan-light/30 dark:from-background dark:via-background dark:to-background flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           {/* Header */}
           <div className="text-center mb-8">

@@ -227,7 +227,7 @@ export default function Dashboard() {
       {/* Deadline Notifications */}
       <DeadlineNotifications />
 
-      <div className="min-h-screen bg-gradient-to-br from-background via-tech-green-light/20 to-tech-cyan-light/20">
+      <div className="min-h-screen bg-gradient-to-br from-background via-tech-green-light/20 to-tech-cyan-light/20 dark:from-background dark:via-background dark:to-background">
         <div className="max-w-6xl mx-auto px-4 py-8">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">

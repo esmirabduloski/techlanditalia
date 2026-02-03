@@ -37,7 +37,7 @@ const parentFeatures = [
 
 export function ParentsSection() {
   return (
-    <section className="tech-section bg-gradient-to-br from-tech-green-light via-background to-tech-cyan-light dark:from-background dark:via-background dark:to-background">
+    <section className="tech-section bg-gradient-to-br from-tech-green-light via-background to-tech-cyan-light dark:from-background dark:via-background dark:to-background dark:border-t dark:border-border/40">
       <div className="tech-container">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Content */}

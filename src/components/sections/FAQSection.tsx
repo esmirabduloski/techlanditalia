@@ -42,7 +42,7 @@ const faqs = [
 
 export function FAQSection() {
   return (
-    <section className="tech-section bg-muted/30" id="faq">
+    <section className="tech-section bg-muted/30 dark:border-t dark:border-border/40" id="faq">
       <div className="tech-container">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">

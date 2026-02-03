@@ -33,7 +33,7 @@ const testimonials = [
 
 export function TestimonialsSection() {
   return (
-    <section className="tech-section bg-foreground text-background overflow-hidden">
+    <section className="tech-section bg-foreground text-background overflow-hidden dark:border-t dark:border-border/40">
       <div className="tech-container">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-background">

@@ -48,21 +48,21 @@ export function HeroSection() {
             <div className="grid grid-cols-3 gap-6 pt-8 border-t border-border/50">
               <div className="text-center sm:text-left">
                 <div className="flex items-center justify-center sm:justify-start gap-2 text-tech-green mb-1">
-                  <Users className="w-5 h-5" />
+                  <Users className="w-5 h-5 shrink-0" />
                   <span className="text-2xl font-bold">1.200+</span>
                 </div>
                 <p className="text-sm text-muted-foreground">Studenti formati</p>
               </div>
               <div className="text-center sm:text-left">
                 <div className="flex items-center justify-center sm:justify-start gap-2 text-tech-teal mb-1">
-                  <Award className="w-5 h-5" />
+                  <Award className="w-5 h-5 shrink-0" />
                   <span className="text-2xl font-bold">98%</span>
                 </div>
                 <p className="text-sm text-muted-foreground">Genitori soddisfatti</p>
               </div>
               <div className="text-center sm:text-left">
                 <div className="flex items-center justify-center sm:justify-start gap-2 text-tech-cyan mb-1">
-                  <Shield className="w-5 h-5" />
+                  <Shield className="w-5 h-5 shrink-0" />
                   <span className="text-2xl font-bold">100%</span>
                 </div>
                 <p className="text-sm text-muted-foreground">Ambiente sicuro</p>

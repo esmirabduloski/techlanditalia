@@ -1610,11 +1610,16 @@ export type Database = {
     }
     Functions: {
       generate_slug: { Args: { title: string }; Returns: string }
+      get_children_ids: { Args: { _parent_id: string }; Returns: string[] }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_parent_of: {
+        Args: { _parent_id: string; _student_id: string }
         Returns: boolean
       }
     }

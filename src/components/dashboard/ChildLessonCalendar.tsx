@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, CalendarDays, Clock } from "lucide-react";
+import { Loader2, CalendarDays, Clock, AlertCircle, RefreshCw } from "lucide-react";
 import { format, isPast, isToday, isFuture } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,7 @@ interface ChildLessonCalendarProps {
 export function ChildLessonCalendar({ childId, childName }: ChildLessonCalendarProps) {
   const [lessons, setLessons] = useState<LessonSchedule[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (childId) {
@@ -39,12 +41,21 @@ export function ChildLessonCalendar({ childId, childName }: ChildLessonCalendarP
   }, [childId]);
 
   const fetchLessonSchedule = async () => {
+    setError(null);
+    setIsLoading(true);
     try {
       // First get the groups the child is in
-      const { data: groupStudentData } = await supabase
+      const { data: groupStudentData, error: groupError } = await supabase
         .from("group_students")
         .select("group_id")
         .eq("student_id", childId);
+
+      if (groupError) {
+        console.error("Error fetching group_students:", groupError);
+        setError(`Errore di caricamento gruppi: ${groupError.message}`);
+        setIsLoading(false);
+        return;
+      }
 
       if (!groupStudentData || groupStudentData.length === 0) {
         setLessons([]);
@@ -55,7 +66,7 @@ export function ChildLessonCalendar({ childId, childName }: ChildLessonCalendarP
       const groupIds = groupStudentData.map(gs => gs.group_id);
 
       // Fetch the lesson schedule for those groups
-      const { data: scheduleData } = await supabase
+      const { data: scheduleData, error: scheduleError } = await supabase
         .from("group_lesson_schedule")
         .select(`
           id,
@@ -74,6 +85,13 @@ export function ChildLessonCalendar({ childId, childName }: ChildLessonCalendarP
         .in("group_id", groupIds)
         .order("lesson_date", { ascending: true });
 
+      if (scheduleError) {
+        console.error("Error fetching group_lesson_schedule:", scheduleError);
+        setError(`Errore di caricamento calendario: ${scheduleError.message}`);
+        setIsLoading(false);
+        return;
+      }
+
       if (scheduleData) {
         const typedLessons: LessonSchedule[] = scheduleData.map((s: any) => ({
           id: s.id,
@@ -91,8 +109,9 @@ export function ChildLessonCalendar({ childId, childName }: ChildLessonCalendarP
         }));
         setLessons(typedLessons);
       }
-    } catch (error) {
-      console.error("Error fetching lesson schedule:", error);
+    } catch (err: any) {
+      console.error("Error fetching lesson schedule:", err);
+      setError(`Errore imprevisto: ${err?.message || 'Sconosciuto'}`);
     } finally {
       setIsLoading(false);
     }
@@ -119,6 +138,29 @@ export function ChildLessonCalendar({ childId, childName }: ChildLessonCalendarP
       <Card>
         <CardContent className="py-8 flex justify-center">
           <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <CalendarDays className="h-5 w-5 text-primary" />
+            Calendario Lezioni di {childName}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center gap-3 py-4 text-center">
+            <AlertCircle className="h-8 w-8 text-destructive" />
+            <p className="text-sm text-destructive">{error}</p>
+            <Button variant="outline" size="sm" onClick={fetchLessonSchedule}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Riprova
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );

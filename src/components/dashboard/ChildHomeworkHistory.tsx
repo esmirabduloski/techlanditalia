@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, ClipboardCheck, CheckCircle2, XCircle, Minus } from "lucide-react";
+import { Loader2, ClipboardCheck, CheckCircle2, XCircle, Minus, AlertCircle, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface HomeworkStatus {
@@ -26,6 +27,7 @@ interface ChildHomeworkHistoryProps {
 export function ChildHomeworkHistory({ childId, childName }: ChildHomeworkHistoryProps) {
   const [homeworkHistory, setHomeworkHistory] = useState<Record<string, HomeworkStatus[]>>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (childId) {
@@ -34,9 +36,11 @@ export function ChildHomeworkHistory({ childId, childName }: ChildHomeworkHistor
   }, [childId]);
 
   const fetchHomeworkHistory = async () => {
+    setError(null);
+    setIsLoading(true);
     try {
       // Get child's groups
-      const { data: groupStudentData } = await supabase
+      const { data: groupStudentData, error: groupError } = await supabase
         .from("group_students")
         .select(`
           group_id,
@@ -52,6 +56,13 @@ export function ChildHomeworkHistory({ childId, childName }: ChildHomeworkHistor
           )
         `)
         .eq("student_id", childId);
+
+      if (groupError) {
+        console.error("Error fetching group_students:", groupError);
+        setError(`Errore di caricamento gruppi: ${groupError.message}`);
+        setIsLoading(false);
+        return;
+      }
 
       if (!groupStudentData || groupStudentData.length === 0) {
         setHomeworkHistory({});
@@ -133,8 +144,9 @@ export function ChildHomeworkHistory({ childId, childName }: ChildHomeworkHistor
       });
 
       setHomeworkHistory(historyByCourse);
-    } catch (error) {
-      console.error("Error fetching homework history:", error);
+    } catch (err: any) {
+      console.error("Error fetching homework history:", err);
+      setError(`Errore imprevisto: ${err?.message || 'Sconosciuto'}`);
     } finally {
       setIsLoading(false);
     }
@@ -145,6 +157,29 @@ export function ChildHomeworkHistory({ childId, childName }: ChildHomeworkHistor
       <Card>
         <CardContent className="py-8 flex justify-center">
           <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <ClipboardCheck className="h-5 w-5 text-primary" />
+            Storico Compiti di {childName}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center gap-3 py-4 text-center">
+            <AlertCircle className="h-8 w-8 text-destructive" />
+            <p className="text-sm text-destructive">{error}</p>
+            <Button variant="outline" size="sm" onClick={fetchHomeworkHistory}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Riprova
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );

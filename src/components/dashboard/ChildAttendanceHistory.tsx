@@ -2,22 +2,23 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, CalendarCheck, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { Loader2, CalendarCheck, CheckCircle2, XCircle, Clock, AlertCircle, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface AttendanceStatus {
   lessonNumber: number;
   lessonDate: string;
   lessonTitle: string | null;
-  status: 'present' | 'absent' | 'excused' | 'pending';
+  status: 'present' | 'absent' | 'justified' | 'pending';
 }
 
 interface AttendanceStats {
   total: number;
   present: number;
   absent: number;
-  excused: number;
+  justified: number;
   percentage: number;
 }
 
@@ -28,8 +29,9 @@ interface ChildAttendanceHistoryProps {
 
 export function ChildAttendanceHistory({ childId, childName }: ChildAttendanceHistoryProps) {
   const [attendanceHistory, setAttendanceHistory] = useState<Record<string, AttendanceStatus[]>>({});
-  const [stats, setStats] = useState<AttendanceStats>({ total: 0, present: 0, absent: 0, excused: 0, percentage: 0 });
+  const [stats, setStats] = useState<AttendanceStats>({ total: 0, present: 0, absent: 0, justified: 0, percentage: 0 });
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (childId) {
@@ -38,9 +40,11 @@ export function ChildAttendanceHistory({ childId, childName }: ChildAttendanceHi
   }, [childId]);
 
   const fetchAttendanceHistory = async () => {
+    setError(null);
+    setIsLoading(true);
     try {
       // Get child's groups
-      const { data: groupStudentData } = await supabase
+      const { data: groupStudentData, error: groupError } = await supabase
         .from("group_students")
         .select(`
           group_id,
@@ -55,6 +59,13 @@ export function ChildAttendanceHistory({ childId, childName }: ChildAttendanceHi
         `)
         .eq("student_id", childId);
 
+      if (groupError) {
+        console.error("Error fetching group_students:", groupError);
+        setError(`Errore di caricamento gruppi: ${groupError.message}`);
+        setIsLoading(false);
+        return;
+      }
+
       if (!groupStudentData || groupStudentData.length === 0) {
         setAttendanceHistory({});
         setIsLoading(false);
@@ -64,7 +75,7 @@ export function ChildAttendanceHistory({ childId, childName }: ChildAttendanceHi
       const groupIds = groupStudentData.map((gs: any) => gs.group_id);
 
       // Get lesson schedule for these groups
-      const { data: scheduleData } = await supabase
+      const { data: scheduleData, error: scheduleError } = await supabase
         .from("group_lesson_schedule")
         .select(`
           id,
@@ -83,12 +94,26 @@ export function ChildAttendanceHistory({ childId, childName }: ChildAttendanceHi
         .in("group_id", groupIds)
         .order("lesson_number", { ascending: true });
 
+      if (scheduleError) {
+        console.error("Error fetching group_lesson_schedule:", scheduleError);
+        setError(`Errore di caricamento calendario: ${scheduleError.message}`);
+        setIsLoading(false);
+        return;
+      }
+
       // Get attendance records for this student from group_attendance
-      const { data: attendanceData } = await supabase
+      const { data: attendanceData, error: attendanceError } = await supabase
         .from("group_attendance")
         .select("group_id, lesson_number, status")
         .eq("student_id", childId)
         .in("group_id", groupIds);
+
+      if (attendanceError) {
+        console.error("Error fetching group_attendance:", attendanceError);
+        setError(`Errore di caricamento presenze: ${attendanceError.message}`);
+        setIsLoading(false);
+        return;
+      }
 
       // Build attendance map
       const attendanceMap = new Map<string, string>();
@@ -101,7 +126,7 @@ export function ChildAttendanceHistory({ childId, childName }: ChildAttendanceHi
       const historyByCourse: Record<string, AttendanceStatus[]> = {};
       let totalPresent = 0;
       let totalAbsent = 0;
-      let totalExcused = 0;
+      let totalJustified = 0;
 
       scheduleData?.forEach((lesson: any) => {
         const courseKey = `${lesson.group.course.emoji} ${lesson.group.course.title}`;
@@ -122,9 +147,9 @@ export function ChildAttendanceHistory({ childId, childName }: ChildAttendanceHi
         } else if (attendanceStatus === 'absent') {
           status = 'absent';
           totalAbsent++;
-        } else if (attendanceStatus === 'excused') {
-          status = 'excused';
-          totalExcused++;
+        } else if (attendanceStatus === 'justified') {
+          status = 'justified';
+          totalJustified++;
         } else if (isPast) {
           // Past lesson with no record - assume absent
           status = 'absent';
@@ -139,13 +164,14 @@ export function ChildAttendanceHistory({ childId, childName }: ChildAttendanceHi
         });
       });
 
-      const total = totalPresent + totalAbsent + totalExcused;
+      const total = totalPresent + totalAbsent + totalJustified;
       const percentage = total > 0 ? Math.round((totalPresent / total) * 100) : 0;
 
-      setStats({ total, present: totalPresent, absent: totalAbsent, excused: totalExcused, percentage });
+      setStats({ total, present: totalPresent, absent: totalAbsent, justified: totalJustified, percentage });
       setAttendanceHistory(historyByCourse);
-    } catch (error) {
-      console.error("Error fetching attendance history:", error);
+    } catch (err: any) {
+      console.error("Error fetching attendance history:", err);
+      setError(`Errore imprevisto: ${err?.message || 'Sconosciuto'}`);
     } finally {
       setIsLoading(false);
     }
@@ -156,6 +182,29 @@ export function ChildAttendanceHistory({ childId, childName }: ChildAttendanceHi
       <Card>
         <CardContent className="py-8 flex justify-center">
           <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <CalendarCheck className="h-5 w-5 text-primary" />
+            Storico Presenze di {childName}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center gap-3 py-4 text-center">
+            <AlertCircle className="h-8 w-8 text-destructive" />
+            <p className="text-sm text-destructive">{error}</p>
+            <Button variant="outline" size="sm" onClick={fetchAttendanceHistory}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Riprova
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );
@@ -203,7 +252,7 @@ export function ChildAttendanceHistory({ childId, childName }: ChildAttendanceHi
             <p className="text-xs text-muted-foreground">Assenze</p>
           </div>
           <div className="text-center p-2 bg-yellow-500/10 rounded-lg">
-            <p className="text-2xl font-bold text-yellow-600">{stats.excused}</p>
+            <p className="text-2xl font-bold text-yellow-600">{stats.justified}</p>
             <p className="text-xs text-muted-foreground">Giustificate</p>
           </div>
         </div>
@@ -248,7 +297,7 @@ export function ChildAttendanceHistory({ childId, childName }: ChildAttendanceHi
                           "p-2 rounded-lg border text-center transition-colors",
                           lesson.status === 'present' && "bg-green-500/10 border-green-500/30",
                           lesson.status === 'absent' && "bg-red-500/10 border-red-500/30",
-                          lesson.status === 'excused' && "bg-yellow-500/10 border-yellow-500/30",
+                          lesson.status === 'justified' && "bg-yellow-500/10 border-yellow-500/30",
                           lesson.status === 'pending' && "bg-muted/30 border-muted"
                         )}
                         title={lesson.lessonTitle || `Lezione ${lesson.lessonNumber}`}
@@ -257,7 +306,7 @@ export function ChildAttendanceHistory({ childId, childName }: ChildAttendanceHi
                           "text-xs font-medium",
                           lesson.status === 'present' && "text-green-600",
                           lesson.status === 'absent' && "text-red-600",
-                          lesson.status === 'excused' && "text-yellow-600",
+                          lesson.status === 'justified' && "text-yellow-600",
                           lesson.status === 'pending' && "text-muted-foreground"
                         )}>
                           {lessonLabel}
@@ -268,7 +317,7 @@ export function ChildAttendanceHistory({ childId, childName }: ChildAttendanceHi
                         {lesson.status === 'absent' && (
                           <XCircle className="w-4 h-4 mx-auto mt-1 text-red-600" />
                         )}
-                        {lesson.status === 'excused' && (
+                        {lesson.status === 'justified' && (
                           <Badge className="text-[10px] mt-1 bg-yellow-500/20 text-yellow-600 border-0">
                             G
                           </Badge>

@@ -1,19 +1,19 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useStudentStreaks } from "@/hooks/useStudentStreaks";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Trophy, Users, MessageCircle, Award, Calendar } from "lucide-react";
-import { BadgesDisplay } from "@/components/gamification/BadgesDisplay";
+import { Loader2, Trophy, Users, Award } from "lucide-react";
 import { LevelBadge, PointsDisplay, getLevelFromPoints } from "@/components/gamification/LevelBadge";
 import { AvatarDisplay } from "@/components/gamification/AvatarSelector";
 import { StreakDisplay } from "@/components/dashboard/StreakDisplay";
-import { AttendanceHistory } from "@/components/dashboard/AttendanceHistory";
 import { StreakBonusesDisplay } from "@/components/dashboard/StreakBonusesDisplay";
-import { format } from "date-fns";
-import { it } from "date-fns/locale";
+import { ParentBadgesSection } from "@/components/dashboard/ParentBadgesSection";
+import { ParentCommentsSection } from "@/components/dashboard/ParentCommentsSection";
+import { ChildLessonCalendar } from "@/components/dashboard/ChildLessonCalendar";
+import { ChildHomeworkHistory } from "@/components/dashboard/ChildHomeworkHistory";
+import { ChildAttendanceHistory } from "@/components/dashboard/ChildAttendanceHistory";
+import { useStudentStreaks } from "@/hooks/useStudentStreaks";
 
 interface Child {
   id: string;
@@ -23,21 +23,9 @@ interface Child {
   total_points: number;
 }
 
-interface Comment {
-  id: string;
-  content: string;
-  visibility: string[];
-  created_at: string;
-  author: {
-    full_name: string;
-    role: string;
-  };
-}
-
 export function ParentChildrenSection() {
   const { user } = useAuth();
   const [children, setChildren] = useState<Child[]>([]);
-  const [comments, setComments] = useState<Record<string, Comment[]>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isParent, setIsParent] = useState(false);
   const [activeChild, setActiveChild] = useState<string>("");
@@ -52,7 +40,6 @@ export function ParentChildrenSection() {
     if (!user) return;
 
     try {
-      // Check if user is a parent (has children linked to them)
       const { data: childrenData } = await supabase
         .from("profiles")
         .select("id, full_name, email, avatar_id, total_points")
@@ -67,33 +54,6 @@ export function ParentChildrenSection() {
       setIsParent(true);
       setChildren(childrenData);
       setActiveChild(childrenData[0].id);
-
-      // Fetch comments for all children
-      const commentsMap: Record<string, Comment[]> = {};
-      
-      for (const child of childrenData) {
-        const { data: childComments } = await supabase
-          .from("student_comments")
-          .select(`
-            id,
-            content,
-            visibility,
-            created_at,
-            author:author_id (full_name, role)
-          `)
-          .eq("student_id", child.id)
-          .order("created_at", { ascending: false });
-
-        commentsMap[child.id] = (childComments || []).map((c: any) => ({
-          id: c.id,
-          content: c.content,
-          visibility: c.visibility,
-          created_at: c.created_at,
-          author: c.author as { full_name: string; role: string },
-        }));
-      }
-
-      setComments(commentsMap);
     } catch (error) {
       console.error("Error fetching children data:", error);
     } finally {
@@ -126,7 +86,7 @@ export function ParentChildrenSection() {
 
       {children.length > 1 ? (
         <Tabs value={activeChild} onValueChange={setActiveChild}>
-          <TabsList className="mb-4">
+          <TabsList className="mb-4 flex-wrap h-auto gap-2">
             {children.map(child => (
               <TabsTrigger key={child.id} value={child.id} className="gap-2">
                 <AvatarDisplay avatarId={child.avatar_id} level={getLevelFromPoints(child.total_points).level} size="sm" />
@@ -137,28 +97,20 @@ export function ParentChildrenSection() {
 
           {children.map(child => (
             <TabsContent key={child.id} value={child.id} className="space-y-6">
-              <ChildDashboard 
-                child={child} 
-                comments={comments[child.id] || []} 
-              />
+              <ChildDashboard child={child} />
             </TabsContent>
           ))}
         </Tabs>
       ) : (
-        activeChildData && (
-          <ChildDashboard 
-            child={activeChildData} 
-            comments={comments[activeChildData.id] || []} 
-          />
-        )
+        activeChildData && <ChildDashboard child={activeChildData} />
       )}
     </div>
   );
 }
 
-function ChildDashboard({ child, comments }: { child: Child; comments: Comment[] }) {
+function ChildDashboard({ child }: { child: Child }) {
   const level = getLevelFromPoints(child.total_points);
-  const { streaks, attendance, stats, bonuses, loading: streaksLoading } = useStudentStreaks(child.id);
+  const { streaks, bonuses, loading: streaksLoading } = useStudentStreaks(child.id);
 
   return (
     <div className="space-y-6">
@@ -220,51 +172,24 @@ function ChildDashboard({ child, comments }: { child: Child; comments: Comment[]
                 <StreakBonusesDisplay bonuses={bonuses} />
               )}
             </div>
-            <AttendanceHistory attendance={attendance} stats={stats} />
           </div>
         </div>
       )}
 
+      {/* Lesson Calendar */}
+      <ChildLessonCalendar childId={child.id} childName={child.full_name} />
+
+      {/* Attendance & Homework History side by side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <ChildAttendanceHistory childId={child.id} childName={child.full_name} />
+        <ChildHomeworkHistory childId={child.id} childName={child.full_name} />
+      </div>
+
       {/* Badges */}
-      <BadgesDisplay userId={child.id} showAll={true} title={`🏆 Badge di ${child.full_name}`} />
+      <ParentBadgesSection childId={child.id} childName={child.full_name} />
 
       {/* Teacher Comments */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold flex items-center gap-2">
-          <MessageCircle className="w-5 h-5 text-primary" />
-          Commenti degli Insegnanti
-        </h3>
-
-        {comments.length === 0 ? (
-          <Card className="border-dashed">
-            <CardContent className="py-6 text-center">
-              <MessageCircle className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">
-                Nessun commento ancora
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {comments.map((comment) => (
-              <Card key={comment.id} className="border-primary/20">
-                <CardContent className="py-4">
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <Badge variant="outline" className="text-xs">
-                      {comment.author?.full_name || 'Insegnante'}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {format(new Date(comment.created_at), "d MMM yyyy", { locale: it })}
-                    </span>
-                  </div>
-                  <p className="text-sm">{comment.content}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
+      <ParentCommentsSection childId={child.id} childName={child.full_name} />
     </div>
   );
 }

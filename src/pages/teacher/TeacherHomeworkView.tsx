@@ -52,10 +52,10 @@
  const WEB_COURSES = ['web-development'];
  
  export default function TeacherHomeworkView() {
-   const { courseId, homeworkId } = useParams();
+  const { courseSlug, homeworkId } = useParams();
    const navigate = useNavigate();
    const { user, isLoading: authLoading } = useAuth();
-   const { hasAccess, isLoading: accessLoading } = useTeacherCourseAccess(courseId);
+  const { hasAccess, isLoading: accessLoading } = useTeacherCourseAccess(courseSlug);
    
    const [homework, setHomework] = useState<HomeworkDetails | null>(null);
    const [isLoading, setIsLoading] = useState(true);
@@ -171,7 +171,7 @@
        <div className="h-screen flex flex-col bg-background">
          <div className="flex items-center justify-between px-4 py-3 border-b bg-background">
            <div className="flex items-center gap-3">
-             <Button variant="ghost" size="icon" onClick={() => navigate(`/insegnante/corso/${courseId}`)}>
+            <Button variant="ghost" size="icon" onClick={() => navigate(`/insegnante/corso/${courseSlug}`)}>
                <ArrowLeft className="w-5 h-5" />
              </Button>
              <div>
@@ -205,7 +205,7 @@
        <div className="h-screen flex flex-col bg-background">
          <div className="flex items-center justify-between px-4 py-3 border-b bg-background">
            <div className="flex items-center gap-3">
-             <Button variant="ghost" size="icon" onClick={() => navigate(`/insegnante/corso/${courseId}`)}>
+            <Button variant="ghost" size="icon" onClick={() => navigate(`/insegnante/corso/${courseSlug}`)}>
                <ArrowLeft className="w-5 h-5" />
              </Button>
              <div>
@@ -288,7 +288,7 @@
    return (
      <Layout>
        <div className="max-w-4xl mx-auto px-4 py-8">
-         <Button variant="ghost" onClick={() => navigate(`/insegnante/corso/${courseId}`)} className="mb-4">
+        <Button variant="ghost" onClick={() => navigate(`/insegnante/corso/${courseSlug}`)} className="mb-4">
            <ArrowLeft className="w-4 h-4 mr-2" />
            Torna al corso
          </Button>

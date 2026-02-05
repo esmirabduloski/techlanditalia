@@ -11,7 +11,9 @@
  import { PgzeroCompiler } from '@/components/lesson/PgzeroCompiler';
  import { WebCompiler } from '@/components/lesson/WebCompiler';
  import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
- import { Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Loader2, ArrowLeft } from 'lucide-react';
  
  interface Course {
    id: string;
@@ -53,9 +55,9 @@
  const WEB_COURSES = ['web-development'];
  
  export default function TeacherTaskView() {
-   const { courseId, lessonNumber, taskNumber } = useParams<{ courseId: string; lessonNumber: string; taskNumber: string }>();
+  const { courseSlug, lessonNumber, taskNumber } = useParams<{ courseSlug: string; lessonNumber: string; taskNumber: string }>();
    const { user, isLoading: authLoading } = useAuth();
-   const { hasAccess, isLoading: accessLoading } = useTeacherCourseAccess(courseId);
+  const { hasAccess, isLoading: accessLoading, courseId } = useTeacherCourseAccess(courseSlug);
    const navigate = useNavigate();
    
    const [course, setCourse] = useState<Course | null>(null);
@@ -77,13 +79,13 @@
    }, [hasAccess, accessLoading, user, navigate]);
  
    useEffect(() => {
-     if (courseId && lessonNumber && taskNumber && hasAccess) {
+    if (courseSlug && courseId && lessonNumber && taskNumber && hasAccess) {
        fetchData();
      }
-   }, [courseId, lessonNumber, taskNumber, hasAccess]);
+  }, [courseSlug, courseId, lessonNumber, taskNumber, hasAccess]);
  
    const fetchData = async () => {
-     if (!courseId || !lessonNumber || !taskNumber) return;
+    if (!courseSlug || !courseId || !lessonNumber || !taskNumber) return;
  
      try {
        const { data: courseData } = await supabase
@@ -144,11 +146,11 @@
    };
  
    const navigateToTask = (newTaskNumber: number) => {
-     navigate(`/insegnante/corso/${courseId}/lezione/${lessonNumber}/task/${newTaskNumber}`);
+    navigate(`/insegnante/corso/${courseSlug}/lezione/${lessonNumber}/task/${newTaskNumber}`);
    };
  
    const handleNavigateToCourse = () => {
-     navigate(`/insegnante/corso/${courseId}`);
+    navigate(`/insegnante/corso/${courseSlug}`);
    };
  
    if (authLoading || accessLoading || isLoading) {
@@ -192,6 +194,22 @@
    if (showScratch) {
      return (
        <div className="h-screen flex flex-col bg-background">
+        {/* Header with back button */}
+        <div className="flex items-center gap-3 px-4 py-3 border-b bg-background">
+          <Button variant="ghost" size="icon" onClick={handleNavigateToCourse}>
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>{course.title}</span>
+              <span>·</span>
+              <span>Lezione {lesson.lesson_number}</span>
+              <Badge variant="outline" className="ml-2">Vista Insegnante</Badge>
+            </div>
+            <h1 className="font-semibold">Task {task.task_number}: {task.title}</h1>
+          </div>
+        </div>
+
          <ResizablePanelGroup direction="horizontal" className="flex-1">
            <ResizablePanel defaultSize={40} minSize={25}>
              <div className="h-full overflow-y-auto">
@@ -213,7 +231,7 @@
                    onPrevious={task.task_number > 1 ? () => navigateToTask(task.task_number - 1) : undefined}
                    onNext={task.task_number < totalTasks ? () => navigateToTask(task.task_number + 1) : undefined}
                    onComplete={handleNavigateToCourse}
-                   basePath={`/insegnante/corso/${course.id}`}
+                  basePath={`/insegnante/corso/${courseSlug}`}
                  />
                </div>
              </div>
@@ -249,6 +267,22 @@
    if (showCompiler) {
      return (
        <div className="h-screen flex flex-col bg-background">
+        {/* Header with back button */}
+        <div className="flex items-center gap-3 px-4 py-3 border-b bg-background">
+          <Button variant="ghost" size="icon" onClick={handleNavigateToCourse}>
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>{course.title}</span>
+              <span>·</span>
+              <span>Lezione {lesson.lesson_number}</span>
+              <Badge variant="outline" className="ml-2">Vista Insegnante</Badge>
+            </div>
+            <h1 className="font-semibold">Task {task.task_number}: {task.title}</h1>
+          </div>
+        </div>
+
          <ResizablePanelGroup direction="horizontal" className="flex-1">
            <ResizablePanel defaultSize={50} minSize={30}>
              <div className="h-full overflow-y-auto">
@@ -270,7 +304,7 @@
                    onPrevious={task.task_number > 1 ? () => navigateToTask(task.task_number - 1) : undefined}
                    onNext={task.task_number < totalTasks ? () => navigateToTask(task.task_number + 1) : undefined}
                    onComplete={handleNavigateToCourse}
-                   basePath={`/insegnante/corso/${course.id}`}
+                  basePath={`/insegnante/corso/${courseSlug}`}
                  />
                </div>
              </div>
@@ -305,6 +339,11 @@
    return (
      <Layout>
        <div className="max-w-4xl mx-auto px-4 py-8">
+        <Button variant="ghost" onClick={handleNavigateToCourse} className="mb-4">
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Torna al corso
+        </Button>
+        <Badge variant="outline" className="mb-4">Vista Insegnante</Badge>
          <LessonContent
            title={task.title}
            description={task.description}
@@ -322,7 +361,7 @@
            onPrevious={task.task_number > 1 ? () => navigateToTask(task.task_number - 1) : undefined}
            onNext={task.task_number < totalTasks ? () => navigateToTask(task.task_number + 1) : undefined}
            onComplete={handleNavigateToCourse}
-           basePath={`/insegnante/corso/${course.id}`}
+          basePath={`/insegnante/corso/${courseSlug}`}
          />
        </div>
      </Layout>

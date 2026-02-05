@@ -1,155 +1,114 @@
 
+# Piano: Navigazione Lezioni/Compiti per Insegnanti
+
+## Contesto
+Attualmente `TeacherCourseDetail.tsx` mostra solo un elenco di lezioni con possibilità di scaricare slides/manuali. L'insegnante non può entrare nelle lezioni per vedere il contenuto, le task o i compiti come fa lo studente.
+
 ## Obiettivo
-Far sì che un genitore possa:
-1) fare login sempre (senza loop ricorsivi)  
-2) vedere **Calendario Lezioni**, **Storico Presenze**, **Storico Compiti** del figlio (senza errori 500 “infinite recursion” mascherati come “nessun dato”).
+Permettere all'insegnante di navigare le lezioni e i compiti **esattamente come lo studente**, con queste differenze:
+- **Tutte le lezioni sbloccate** (nessun lock progressivo)
+- **Nessuna logica punti/progressi** (non rilevante per l'insegnante)
+- **Accesso completo** a tutti i materiali del corso assegnato
+
+## Strategia
+Riutilizzare le pagine studente esistenti (`LessonView`, `TaskView`, `HomeworkView`) aggiungendo il supporto per il ruolo insegnante, invece di creare pagine duplicate. Questo evita duplicazione di codice e mantiene la consistenza.
 
 ---
 
-## Diagnosi (cosa non va oggi, con prova)
-Le 3 sezioni non si popolano perché le loro chiamate al backend falliscono con **500**.
+## Modifiche Necessarie
 
-Dai log di rete della tua sessione:
-- richiesta a `group_students` → **500**
-- messaggio: `infinite recursion detected in policy for relation "student_groups"` e anche per `"group_students"`
+### 1. Aggiornare le Route per Insegnanti (App.tsx)
+Aggiungere route dedicate per l'insegnante che puntano alle stesse view dello studente ma con un prefisso diverso:
+```
+/insegnante/corso/:courseId                 → Dettaglio corso (nuova versione)
+/insegnante/corso/:courseId/lezione/:lessonNumber    → LessonView (adattato)
+/insegnante/corso/:courseId/lezione/:lessonNumber/task/:taskNumber → TaskView (adattato)
+/insegnante/corso/:courseId/compito/:homeworkId → HomeworkView (adattato)
+```
 
-Quindi non è “mancanza di dati”: i dati esistono (nel DB ci sono:
-- il figlio collegato al genitore
-- una membership in `group_students`
-- righe in `group_lesson_schedule`
-- righe in `group_attendance`
-- almeno una riga in `homework_submissions`).
+### 2. Creare Hook `useTeacherCourseAccess`
+Un hook che verifica se l'utente (insegnante o admin) ha accesso al corso tramite `teacher_courses`:
+- Restituisce `{ hasAccess, isLoading }`
+- Usato nelle view per autorizzare l'accesso
 
-È proprio un **blocco RLS** (Row Level Security) che genera loop.
+### 3. Modificare `TeacherCourseDetail.tsx`
+Trasformare la pagina esistente in una vista simile a `CourseProgress.tsx` dello studente:
+- Tabs "Lezioni" e "Compiti"
+- Lista di lezioni **tutte sbloccate** (nessun lucchetto)
+- Ogni lezione cliccabile per entrare
+- Lista compiti accessibili direttamente
+- Rimuovere logica punti/progressi
 
----
+### 4. Modificare `LessonView.tsx`
+Aggiungere supporto per accesso insegnante:
+- Se l'URL inizia con `/insegnante/`, verificare accesso tramite `teacher_courses`
+- Rimuovere redirect ad auth se l'utente è insegnante autenticato
+- Il resto della logica rimane identico (contenuti, compiler, navigazione)
 
-## Perché si rompe “una volta il login, una volta le sezioni”
-Il problema è un “ciclo” tra policy RLS:
+### 5. Modificare `TaskView.tsx`
+Aggiungere supporto per accesso insegnante:
+- Stesso approccio di LessonView
+- Disabilitare la logica `completeTask` per insegnanti (non serve tracciare progressi)
+- Il resto rimane identico
 
-- alcune policy su **group_students** fanno `EXISTS (SELECT ... FROM student_groups ...)`
-- alcune policy su **student_groups** fanno `EXISTS (SELECT ... FROM group_students ...)`
-
-Postgres applica le policy riscrivendo la query; anche se l’utente è “genitore” e “teoricamente” la policy teacher non dovrebbe contare, il motore deve comunque comporre/esaminare i predicati e finisce nel loop.
-
-Risultato:
-- a volte il login sembra ok (perché tocca tabelle diverse)
-- appena la dashboard prova a leggere `group_students` / embed di `student_groups`, esplode in recursion → 500 → UI mostra “nessun dato”.
-
----
-
-## Strategia di correzione (robusta, senza “tira e molla”)
-Spezzare il ciclo eliminando **qualsiasi policy che interroga direttamente l’altra tabella “speculare”**.
-
-Soluzione standard e stabile:
-- introdurre **funzioni `SECURITY DEFINER`** (helper) per i controlli di appartenenza
-- riscrivere le policy usando quelle funzioni, così:
-  - le policy non contengono più sottoquery incrociate
-  - i controlli restano sicuri (non apriamo accessi “public”)
-  - spariscono i loop ricorsivi
-
----
-
-## Modifiche backend (Lovable Cloud) – dettagli
-### 1) Nuove funzioni helper (security definer)
-Creerò 3 funzioni:
-
-- `is_teacher_of_group(teacher_id, group_id)`  
-  Verifica se il teacher è assegnato al gruppo.
-
-- `is_student_in_group(student_id, group_id)`  
-  Verifica se lo studente è nel gruppo (tabella `group_students`).
-
-- `is_parent_of_group(parent_id, group_id)`  
-  Verifica se esiste un `group_students` per un figlio con `profiles.parent_id = parent_id`.
-
-Tutte con:
-- `SECURITY DEFINER`
-- `STABLE`
-- `SET search_path = public`
-
-### 2) Riscrittura policy che oggi generano il loop
-Aggiornerò queste policy:
-
-**A) `group_students`**
-- sostituire le policy “Teachers can view …” (che oggi leggono `student_groups`) con:
-  - `USING (public.is_teacher_of_group(auth.uid(), group_id))`
-
-**B) `student_groups`**
-- sostituire policy genitori e studenti (che oggi leggono `group_students`) con:
-  - genitori: `USING (public.is_parent_of_group(auth.uid(), id))`
-  - studenti: `USING (public.is_student_in_group(auth.uid(), id))`
-
-**C) `group_lesson_schedule` (consigliato per coerenza e per evitare embed rognosi)**
-- genitori: `USING (public.is_parent_of_group(auth.uid(), group_id))`
-- studenti: `USING (public.is_student_in_group(auth.uid(), group_id))`
-- insegnanti: `USING (public.is_teacher_of_group(auth.uid(), group_id))` (SELECT e UPDATE)
-
-**D) `group_attendance` (teacher ALL)**
-- teacher ALL: `USING (public.is_teacher_of_group(auth.uid(), group_id))`
-
-Questo rende tutte le query delle 3 sezioni “lineari” e senza ricorsione.
+### 6. Modificare `HomeworkView.tsx`
+Aggiungere supporto per accesso insegnante:
+- Rimuovere la possibilità di "inviare" compiti (non ha senso per l'insegnante)
+- Mantenere la visualizzazione completa delle istruzioni e del compiler
 
 ---
 
-## Modifiche frontend (per evitare “silenzio totale” e bug di mapping)
-### 1) Non nascondere gli errori
-Nei componenti:
-- `ChildLessonCalendar`
-- `ChildAttendanceHistory`
-- `ChildHomeworkHistory`
+## Dettagli Tecnici
 
-aggiungerò gestione esplicita di `error` da Supabase client:
-- se arriva un error (es. 500 recursion), mostrare un box “Errore di caricamento” + pulsante “Riprova”
-- log dettagliato in console con `error.message` e query coinvolta
+### Pattern di Rilevamento Ruolo
+Nelle view condivise, usare:
+```typescript
+const location = useLocation();
+const isTeacherView = location.pathname.startsWith('/insegnante/');
+```
 
-Così se in futuro una policy si rompe, non sembrerà “non ci sono lezioni”.
+Questo determina:
+- **isTeacherView = true**: Non mostrare badge progressi, non salvare progressi, tutte le lezioni accessibili
+- **isTeacherView = false**: Comportamento studente normale
 
-### 2) Presenze: bug di status (“justified” vs “excused”)
-Nel DB e nella dashboard insegnante lo status è:
-- `present`
-- `absent`
-- `justified`
+### Verifica Accesso per Insegnanti
+Per le route `/insegnante/...`, verificare che:
+1. L'utente sia autenticato
+2. L'utente abbia ruolo `teacher` O sia `admin`
+3. L'utente abbia il corso assegnato in `teacher_courses` (o sia admin)
 
-In `ChildAttendanceHistory` invece controlli:
-- `present`
-- `absent`
-- `excused`
-
-Quindi anche quando la query funzionerà, “justified” oggi finirebbe trattato male.
-
-Correzione:
-- accettare `justified` come “giustificato” (e aggiornare type union e rendering).
+### RLS Policies
+Le RLS policies attuali già permettono a tutti di leggere `lessons`, `lesson_tasks`, `homework` con `USING (true)`. Quindi non serve modificare le policies.
 
 ---
 
-## Piano di test end-to-end (dopo la fix)
-1) Login come genitore `esmirtutto@gmail.com`
-2) Vai su `/area-riservata`
-3) Apri tab figlio “Figlio”
-4) Verifica:
-   - **Calendario Lezioni**: mostra le lezioni (non “Nessuna lezione programmata”)
-   - **Storico Presenze**: mostra celle colorate e “Giustificato” per status `justified`
-   - **Storico Compiti**: mostra stato consegna/grade se presente
-5) Controllo tecnico:
-   - nessuna richiesta a `group_students` / `student_groups` deve più tornare 500
-6) Smoke test insegnante:
-   - pagina gruppo insegnante (mark presenze) ancora funzionante
+## File da Modificare
+
+| File | Modifica |
+|------|----------|
+| `src/App.tsx` | Aggiungere 3 nuove route per insegnante |
+| `src/pages/teacher/TeacherCourseDetail.tsx` | Riscrivere con UI simile a CourseProgress (tabs, lista cliccabile) |
+| `src/pages/area-riservata/LessonView.tsx` | Aggiungere supporto percorso insegnante |
+| `src/pages/area-riservata/TaskView.tsx` | Aggiungere supporto percorso insegnante |
+| `src/pages/area-riservata/HomeworkView.tsx` | Aggiungere supporto percorso insegnante + nascondere submit |
+| `src/hooks/useTeacherCourseAccess.ts` | Nuovo hook per verifica accesso corso insegnante |
 
 ---
 
-## Deliverable (cosa cambierò in pratica)
-- 1 migrazione DB:
-  - create/replace funzioni helper
-  - drop & recreate policy su: `group_students`, `student_groups`, `group_lesson_schedule`, `group_attendance` (solo quelle coinvolte)
-- 3 file TSX:
-  - fix mapping status presenze (`justified`)
-  - error UI + retry nelle 3 sezioni
+## Comportamento Finale Atteso
+
+1. L'insegnante va su `/insegnante`
+2. Clicca su un corso assegnato
+3. Vede lista lezioni (tutte accessibili, nessun lucchetto)
+4. Clicca su una lezione → entra nella view con contenuto/compiler
+5. Naviga tra le task della lezione
+6. Può vedere i compiti associati alle lezioni
+7. Non vede badge punti, non salva progressi
+8. Può navigare liberamente senza restrizioni
 
 ---
 
-## Note importanti (sicurezza)
-- Nessuna tabella diventa pubblica
-- I genitori vedono solo gruppi/lezioni/presenze/compiti collegati ai propri figli
-- Le funzioni security definer fanno solo “check booleani” di membership, non espongono dati sensibili
-
+## Note di Sicurezza
+- Le verifiche di accesso sono fatte sia lato frontend (UX) che lato backend (RLS)
+- Le RLS policies su `lessons`, `lesson_tasks`, `homework` sono già `USING (true)` per SELECT
+- Le tabelle di progressi (`lesson_progress`, `task_progress`, `homework_submissions`) hanno RLS che limita scrittura all'utente stesso, quindi l'insegnante non può corrompere dati studente

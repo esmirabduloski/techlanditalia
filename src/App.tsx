@@ -128,10 +128,10 @@ const App = () => (
                   <Route path="/admin/disponibilita" element={<AdminTeacherCalendar />} />
                   <Route path="/admin/link-insegnanti" element={<AdminTeacherLinks />} />
                   <Route path="/insegnante" element={<TeacherDashboard />} />
-                  <Route path="/insegnante/corso/:courseId" element={<TeacherCourseDetail />} />
-                   <Route path="/insegnante/corso/:courseId/lezione/:lessonNumber" element={<TeacherLessonView />} />
-                   <Route path="/insegnante/corso/:courseId/lezione/:lessonNumber/task/:taskNumber" element={<TeacherTaskView />} />
-                   <Route path="/insegnante/corso/:courseId/compito/:homeworkId" element={<TeacherHomeworkView />} />
+                  <Route path="/insegnante/corso/:courseSlug" element={<TeacherCourseDetail />} />
+                  <Route path="/insegnante/corso/:courseSlug/lezione/:lessonNumber" element={<TeacherLessonView />} />
+                  <Route path="/insegnante/corso/:courseSlug/lezione/:lessonNumber/task/:taskNumber" element={<TeacherTaskView />} />
+                  <Route path="/insegnante/corso/:courseSlug/compito/:homeworkId" element={<TeacherHomeworkView />} />
                   <Route path="/insegnante/gruppo/:groupId" element={<TeacherGroupDetail />} />
                   <Route path="/insegnante/studente/:studentId" element={<TeacherStudentDetail />} />
                   <Route path="*" element={<NotFound />} />

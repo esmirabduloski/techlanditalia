@@ -2,19 +2,35 @@
  import { supabase } from '@/integrations/supabase/client';
  import { useAuth } from './useAuth';
  
- export function useTeacherCourseAccess(courseId: string | undefined) {
+export function useTeacherCourseAccess(courseSlug: string | undefined) {
    const { user, isAdmin } = useAuth();
    const [hasAccess, setHasAccess] = useState(false);
    const [isLoading, setIsLoading] = useState(true);
+  const [courseId, setCourseId] = useState<string | null>(null);
  
    useEffect(() => {
      const checkAccess = async () => {
-       if (!user || !courseId) {
+      if (!user || !courseSlug) {
          setHasAccess(false);
          setIsLoading(false);
          return;
        }
  
+      // First resolve the course slug to course ID
+      const { data: courseData, error: courseError } = await supabase
+        .from('courses')
+        .select('id')
+        .eq('slug', courseSlug)
+        .maybeSingle();
+
+      if (courseError || !courseData) {
+        setHasAccess(false);
+        setIsLoading(false);
+        return;
+      }
+
+      setCourseId(courseData.id);
+
        // Admins always have access
        if (isAdmin) {
          setHasAccess(true);
@@ -27,7 +43,7 @@
          .from('teacher_courses')
          .select('id')
          .eq('teacher_id', user.id)
-         .eq('course_id', courseId)
+        .eq('course_id', courseData.id)
          .maybeSingle();
  
        if (!error && data) {
@@ -39,7 +55,7 @@
      };
  
      checkAccess();
-   }, [user, courseId, isAdmin]);
+  }, [user, courseSlug, isAdmin]);
  
-   return { hasAccess, isLoading };
+  return { hasAccess, isLoading, courseId };
  }

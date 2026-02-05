@@ -36,6 +36,7 @@ interface TeacherProfile {
 
 interface Course {
   id: string;
+  slug: string;
   title: string;
   emoji: string;
   total_lessons: number;
@@ -235,7 +236,7 @@ export default function TeacherDashboard() {
         const courseIds = teacherCourses.map(tc => tc.course_id);
         const { data: coursesData } = await supabase
           .from('courses')
-          .select('id, title, emoji, total_lessons')
+          .select('id, slug, title, emoji, total_lessons')
           .in('id', courseIds);
         
         setAssignedCourses(coursesData || []);
@@ -1136,7 +1137,7 @@ export default function TeacherDashboard() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-20">ID</TableHead>
+                        <TableHead className="w-32">Slug</TableHead>
                         <TableHead>Titolo</TableHead>
                         <TableHead className="text-center">Lezioni</TableHead>
                         <TableHead className="w-20"></TableHead>
@@ -1147,10 +1148,10 @@ export default function TeacherDashboard() {
                         <TableRow 
                           key={course.id} 
                           className="cursor-pointer hover:bg-muted/50"
-                          onClick={() => navigate(`/insegnante/corso/${course.id}`)}
+                          onClick={() => navigate(`/insegnante/corso/${course.slug}`)}
                         >
-                          <TableCell className="font-mono text-xs">
-                            {course.id.substring(0, 8)}...
+                          <TableCell className="font-mono text-xs text-muted-foreground">
+                            {course.slug}
                           </TableCell>
                           <TableCell>
                             <span className="mr-2">{course.emoji}</span>

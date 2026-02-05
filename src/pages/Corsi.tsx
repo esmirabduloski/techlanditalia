@@ -19,7 +19,7 @@ interface Course {
   duration: string | null;
 }
 
-const ageFilters = ["Tutti", "5-7", "8-9", "8-10", "8-12", "10-14", "13-18"];
+const ageFilters = ["Tutti", "5-8", "8-10", "10-14", "12-16", "14-18"];
 
 const levelColors: Record<string, string> = {
   Principiante: "bg-tech-green/10 text-tech-green",
@@ -57,17 +57,24 @@ export default function Corsi() {
     fetchCourses();
   }, []);
 
-  // Extract age range for filtering (e.g., "8-12 anni" -> "8-12")
-  const getAgeKey = (ageRange: string | null) => {
+  // Extract age range as [min, max] from strings like "8-12 anni"
+  const parseAgeRange = (ageRange: string | null): [number, number] | null => {
     if (!ageRange) return null;
-    const match = ageRange.match(/(\d+-\d+)/);
-    return match ? match[1] : null;
+    const match = ageRange.match(/(\d+)-(\d+)/);
+    return match ? [parseInt(match[1]), parseInt(match[2])] : null;
+  };
+
+  // Check if two age ranges overlap
+  const rangesOverlap = (courseRange: [number, number], filterRange: [number, number]) => {
+    return courseRange[0] <= filterRange[1] && courseRange[1] >= filterRange[0];
   };
 
   const filteredCourses = courses.filter((course) => {
     if (ageFilter !== "Tutti") {
-      const courseAge = getAgeKey(course.age_range);
-      if (courseAge !== ageFilter) return false;
+      const courseRange = parseAgeRange(course.age_range);
+      const filterRange = parseAgeRange(ageFilter + " anni");
+      if (!courseRange || !filterRange) return false;
+      if (!rangesOverlap(courseRange, filterRange)) return false;
     }
     return true;
   });

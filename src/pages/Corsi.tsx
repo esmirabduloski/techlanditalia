@@ -19,7 +19,7 @@ interface Course {
   duration: string | null;
 }
 
-const ageFilters = ["Tutti", "5-8", "8-10", "10-14", "12-16", "14-18"];
+const ageFilters = ["Tutti", "5-8", "8-10", "10-14", "12-18"];
 
 const levelColors: Record<string, string> = {
   Principiante: "bg-tech-green/10 text-tech-green",
@@ -69,15 +69,23 @@ export default function Corsi() {
     return courseRange[0] <= filterRange[1] && courseRange[1] >= filterRange[0];
   };
 
-  const filteredCourses = courses.filter((course) => {
-    if (ageFilter !== "Tutti") {
-      const courseRange = parseAgeRange(course.age_range);
-      const filterRange = parseAgeRange(ageFilter + " anni");
-      if (!courseRange || !filterRange) return false;
-      if (!rangesOverlap(courseRange, filterRange)) return false;
-    }
-    return true;
-  });
+  const filteredCourses = courses
+    .filter((course) => {
+      if (ageFilter !== "Tutti") {
+        const courseRange = parseAgeRange(course.age_range);
+        const filterRange = parseAgeRange(ageFilter + " anni");
+        if (!courseRange || !filterRange) return false;
+        if (!rangesOverlap(courseRange, filterRange)) return false;
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      const rangeA = parseAgeRange(a.age_range);
+      const rangeB = parseAgeRange(b.age_range);
+      if (!rangeA) return 1;
+      if (!rangeB) return -1;
+      return rangeA[0] - rangeB[0];
+    });
 
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: "/" },

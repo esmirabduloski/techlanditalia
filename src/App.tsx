@@ -55,6 +55,9 @@ import TeacherDashboard from "./pages/teacher/TeacherDashboard";
 import TeacherCourseDetail from "./pages/teacher/TeacherCourseDetail";
 import TeacherGroupDetail from "./pages/teacher/TeacherGroupDetail";
 import TeacherStudentDetail from "./pages/teacher/TeacherStudentDetail";
+ import TeacherLessonView from "./pages/teacher/TeacherLessonView";
+ import TeacherTaskView from "./pages/teacher/TeacherTaskView";
+ import TeacherHomeworkView from "./pages/teacher/TeacherHomeworkView";
 import AdminGroups from "./pages/admin/AdminGroups";
 import AdminTeacherCalendar from "./pages/admin/AdminTeacherCalendar";
 import AdminTeacherLinks from "./pages/admin/AdminTeacherLinks";
@@ -126,6 +129,9 @@ const App = () => (
                   <Route path="/admin/link-insegnanti" element={<AdminTeacherLinks />} />
                   <Route path="/insegnante" element={<TeacherDashboard />} />
                   <Route path="/insegnante/corso/:courseId" element={<TeacherCourseDetail />} />
+                   <Route path="/insegnante/corso/:courseId/lezione/:lessonNumber" element={<TeacherLessonView />} />
+                   <Route path="/insegnante/corso/:courseId/lezione/:lessonNumber/task/:taskNumber" element={<TeacherTaskView />} />
+                   <Route path="/insegnante/corso/:courseId/compito/:homeworkId" element={<TeacherHomeworkView />} />
                   <Route path="/insegnante/gruppo/:groupId" element={<TeacherGroupDetail />} />
                   <Route path="/insegnante/studente/:studentId" element={<TeacherStudentDetail />} />
                   <Route path="*" element={<NotFound />} />

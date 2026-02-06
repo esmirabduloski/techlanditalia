@@ -390,6 +390,7 @@ export default function HomeworkView() {
             <div className="h-full overflow-y-auto">
               <LessonContent
                 title={homework.title}
+                lessonTitle={homework.lesson.title}
                 description={homework.description}
                 content={homework.instructions}
                 contentType="text"

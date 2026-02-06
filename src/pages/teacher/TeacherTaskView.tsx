@@ -213,15 +213,16 @@ import { Loader2, ArrowLeft } from 'lucide-react';
          <ResizablePanelGroup direction="horizontal" className="flex-1">
            <ResizablePanel defaultSize={40} minSize={25}>
              <div className="h-full overflow-y-auto">
-               <LessonContent
-                 title={task.title}
-                 description={task.description}
-                 content={task.content}
-                 contentType={task.content_type || 'text'}
-                 videoUrl={null}
-                 slidesUrl={null}
-                 images={[]}
-               />
+                <LessonContent
+                  title={task.title}
+                  lessonTitle={lesson.title}
+                  description={task.description}
+                  content={task.content}
+                  contentType={task.content_type || 'text'}
+                  videoUrl={null}
+                  slidesUrl={null}
+                  images={[]}
+                />
                <div className="px-6 pb-6">
                  <TaskNavigation
                    courseId={course.id}
@@ -286,15 +287,16 @@ import { Loader2, ArrowLeft } from 'lucide-react';
          <ResizablePanelGroup direction="horizontal" className="flex-1">
            <ResizablePanel defaultSize={50} minSize={30}>
              <div className="h-full overflow-y-auto">
-               <LessonContent
-                 title={task.title}
-                 description={task.description}
-                 content={task.content}
-                 contentType={task.content_type || 'text'}
-                 videoUrl={null}
-                 slidesUrl={task.slides_url}
-                 images={[]}
-               />
+                <LessonContent
+                  title={task.title}
+                  lessonTitle={lesson.title}
+                  description={task.description}
+                  content={task.content}
+                  contentType={task.content_type || 'text'}
+                  videoUrl={null}
+                  slidesUrl={task.slides_url}
+                  images={[]}
+                />
                <div className="px-6 pb-6">
                  <TaskNavigation
                    courseId={course.id}
@@ -344,15 +346,16 @@ import { Loader2, ArrowLeft } from 'lucide-react';
           Torna al corso
         </Button>
         <Badge variant="outline" className="mb-4">Vista Insegnante</Badge>
-         <LessonContent
-           title={task.title}
-           description={task.description}
-           content={task.content}
-           contentType={task.content_type || 'text'}
-           videoUrl={null}
-           slidesUrl={task.slides_url}
-           images={[]}
-         />
+          <LessonContent
+            title={task.title}
+            lessonTitle={lesson.title}
+            description={task.description}
+            content={task.content}
+            contentType={task.content_type || 'text'}
+            videoUrl={null}
+            slidesUrl={task.slides_url}
+            images={[]}
+          />
          <TaskNavigation
            courseId={course.id}
            lessonNumber={lesson.lesson_number}

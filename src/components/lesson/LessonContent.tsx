@@ -4,6 +4,7 @@ import DOMPurify from 'dompurify';
 
 interface LessonContentProps {
   title: string;
+  lessonTitle?: string | null;
   description?: string | null;
   content?: string | null;
   contentType?: string;
@@ -14,6 +15,7 @@ interface LessonContentProps {
 
 export function LessonContent({
   title,
+  lessonTitle,
   description,
   content,
   contentType = 'text',
@@ -101,6 +103,13 @@ export function LessonContent({
       <div className="mb-6">
         <TechlandLogo />
       </div>
+
+      {/* Lesson Title */}
+      {lessonTitle && (
+        <p className="text-sm font-medium text-muted-foreground mb-1">
+          📖 {lessonTitle}
+        </p>
+      )}
 
       {/* Title */}
       <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">

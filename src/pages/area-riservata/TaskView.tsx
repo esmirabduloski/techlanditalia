@@ -212,15 +212,16 @@ export default function TaskView() {
           {/* Left Panel - Task Content */}
           <ResizablePanel defaultSize={40} minSize={25}>
             <div className="h-full overflow-y-auto">
-              <LessonContent
-                title={task.title}
-                description={task.description}
-                content={task.content}
-                contentType={task.content_type || 'text'}
-                videoUrl={null}
-                slidesUrl={null}
-                images={[]}
-              />
+                <LessonContent
+                  title={task.title}
+                  lessonTitle={lesson.title}
+                  description={task.description}
+                  content={task.content}
+                  contentType={task.content_type || 'text'}
+                  videoUrl={null}
+                  slidesUrl={null}
+                  images={[]}
+                />
               <div className="px-6 pb-6">
                 {taskCompleted && (
                   <Badge variant="outline" className="mb-4 text-primary border-primary">
@@ -278,15 +279,16 @@ export default function TaskView() {
           {/* Left Panel - Task Content */}
           <ResizablePanel defaultSize={50} minSize={30}>
             <div className="h-full overflow-y-auto">
-              <LessonContent
-                title={task.title}
-                description={task.description}
-                content={task.content}
-                contentType={task.content_type || 'text'}
-                videoUrl={null}
-                slidesUrl={task.slides_url}
-                images={[]}
-              />
+                <LessonContent
+                  title={task.title}
+                  lessonTitle={lesson.title}
+                  description={task.description}
+                  content={task.content}
+                  contentType={task.content_type || 'text'}
+                  videoUrl={null}
+                  slidesUrl={task.slides_url}
+                  images={[]}
+                />
               <div className="px-6 pb-6">
                 {taskCompleted && (
                   <Badge variant="outline" className="mb-4 text-primary border-primary">
@@ -342,6 +344,7 @@ export default function TaskView() {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <LessonContent
           title={task.title}
+          lessonTitle={lesson.title}
           description={task.description}
           content={task.content}
           contentType={task.content_type || 'text'}

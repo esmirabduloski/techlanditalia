@@ -228,15 +228,16 @@
          <ResizablePanelGroup direction="horizontal" className="flex-1">
            <ResizablePanel defaultSize={50} minSize={30}>
              <div className="h-full overflow-y-auto">
-               <LessonContent
-                 title={homework.title}
-                 description={homework.description}
-                 content={homework.instructions}
-                 contentType="text"
-                 videoUrl={null}
-                 slidesUrl={null}
-                 images={[]}
-               />
+                <LessonContent
+                  title={homework.title}
+                  lessonTitle={homework.lesson.title}
+                  description={homework.description}
+                  content={homework.instructions}
+                  contentType="text"
+                  videoUrl={null}
+                  slidesUrl={null}
+                  images={[]}
+                />
                
                {homework.attachments && homework.attachments.length > 0 && (
                  <div className="px-6 pb-6">
@@ -293,15 +294,16 @@
            Torna al corso
          </Button>
          <Badge variant="outline" className="mb-4">Vista Insegnante</Badge>
-         <LessonContent
-           title={homework.title}
-           description={homework.description}
-           content={homework.instructions}
-           contentType="text"
-           videoUrl={null}
-           slidesUrl={null}
-           images={[]}
-         />
+          <LessonContent
+            title={homework.title}
+            lessonTitle={homework.lesson.title}
+            description={homework.description}
+            content={homework.instructions}
+            contentType="text"
+            videoUrl={null}
+            slidesUrl={null}
+            images={[]}
+          />
        </div>
      </Layout>
    );

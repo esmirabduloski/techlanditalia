@@ -48,13 +48,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-// Available storage buckets for upload
-const STORAGE_BUCKETS = [
-  { id: 'python-lesson-material', name: 'Python - Materiale Lezioni', public: true },
-  { id: 'roblox-lesson-material', name: 'Roblox - Materiale Lezioni', public: true },
-  { id: 'web-compiler-assets', name: 'Web - Assets Compilatore', public: true },
-  { id: 'homework-attachments', name: 'Compiti - Allegati', public: true },
-];
+interface StorageBucket {
+  id: string;
+  name: string;
+  public: boolean;
+}
 
 // Custom Video Extension for MP4/MOV videos
 const VideoExtension = Node.create({
@@ -127,10 +125,40 @@ export default function RichTextEditor({ content, onChange }: RichTextEditorProp
   
   // Drag and drop upload dialog state
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
-  const [selectedBucket, setSelectedBucket] = useState(STORAGE_BUCKETS[0].id);
+  const [storageBuckets, setStorageBuckets] = useState<StorageBucket[]>([]);
+  const [selectedBucket, setSelectedBucket] = useState('');
+  const [bucketsLoading, setBucketsLoading] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const editorRef = useRef<any>(null);
   const savedSelectionRef = useRef<{ from: number; to: number } | null>(null);
+
+  // Fetch all storage buckets dynamically
+  const fetchBuckets = useCallback(async () => {
+    setBucketsLoading(true);
+    try {
+      const { data, error } = await supabase.storage.listBuckets();
+      if (error) {
+        console.error('Error fetching buckets:', error);
+        toast.error('Errore nel recupero delle cartelle');
+        return;
+      }
+      if (data) {
+        const buckets: StorageBucket[] = data.map((b) => ({
+          id: b.id,
+          name: b.name,
+          public: b.public,
+        }));
+        setStorageBuckets(buckets);
+        if (buckets.length > 0 && !selectedBucket) {
+          setSelectedBucket(buckets[0].id);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching buckets:', err);
+    } finally {
+      setBucketsLoading(false);
+    }
+  }, [selectedBucket]);
 
   // Upload file to Supabase storage
   const uploadFile = useCallback(async (file: File, bucket: string): Promise<string | null> => {
@@ -666,6 +694,9 @@ export default function RichTextEditor({ content, onChange }: RichTextEditorProp
       {/* Upload folder selection dialog */}
       <Dialog open={uploadDialogOpen} onOpenChange={(open) => {
         setUploadDialogOpen(open);
+        if (open) {
+          fetchBuckets();
+        }
         if (!open) {
           setPendingFiles([]);
         }
@@ -696,20 +727,27 @@ export default function RichTextEditor({ content, onChange }: RichTextEditorProp
             </div>
             <div className="space-y-2">
               <Label>Cartella di destinazione</Label>
-              <Select value={selectedBucket} onValueChange={setSelectedBucket}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona una cartella" />
-                </SelectTrigger>
-                <SelectContent>
-                  {STORAGE_BUCKETS.map((bucket) => (
-                    <SelectItem key={bucket.id} value={bucket.id}>
-                      {bucket.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {bucketsLoading ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground p-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Caricamento cartelle...
+                </div>
+              ) : (
+                <Select value={selectedBucket} onValueChange={setSelectedBucket}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleziona una cartella" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {storageBuckets.map((bucket) => (
+                      <SelectItem key={bucket.id} value={bucket.id}>
+                        {bucket.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
-            <Button onClick={processPendingFiles} className="w-full">
+            <Button onClick={processPendingFiles} className="w-full" disabled={!selectedBucket || bucketsLoading}>
               Carica File
             </Button>
           </div>

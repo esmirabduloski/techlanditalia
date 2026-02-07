@@ -123,18 +123,12 @@ interface Parent {
   email: string | null;
 }
 
-interface Enrollment {
-  id: string;
-  course_id: string;
-  status: string;
-  course_title: string;
-  course_emoji: string;
-}
-
 interface GroupMembership {
   id: string;
+  group_id: string;
   group_title: string;
   course_title: string;
+  course_emoji: string;
 }
 
 export default function TeacherStudentDetail() {
@@ -147,7 +141,7 @@ export default function TeacherStudentDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [student, setStudent] = useState<StudentProfile | null>(null);
   const [parent, setParent] = useState<Parent | null>(null);
-  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  
   const [groups, setGroups] = useState<GroupMembership[]>([]);
   
   // Comment dialog state
@@ -217,39 +211,22 @@ export default function TeacherStudentDetail() {
         setParent(parentData);
       }
 
-      // Fetch enrollments with course info
-      const { data: enrollmentsData } = await supabase
-        .from('enrollments')
-        .select(`
-          id, course_id, status,
-          courses!inner(title, emoji)
-        `)
-        .eq('student_id', studentId);
-
-      if (enrollmentsData) {
-        setEnrollments(enrollmentsData.map((e: any) => ({
-          id: e.id,
-          course_id: e.course_id,
-          status: e.status,
-          course_title: e.courses?.title,
-          course_emoji: e.courses?.emoji
-        })));
-      }
-
-      // Fetch group memberships
+      // Fetch group memberships with course info (derives courses from groups)
       const { data: groupsData } = await supabase
         .from('group_students')
         .select(`
           id, group_id,
-          student_groups!inner(title, courses!inner(title))
+          student_groups!inner(title, course_id, courses!inner(title, emoji))
         `)
         .eq('student_id', studentId);
 
       if (groupsData) {
         setGroups(groupsData.map((g: any) => ({
           id: g.id,
+          group_id: g.group_id,
           group_title: g.student_groups?.title,
-          course_title: g.student_groups?.courses?.title
+          course_title: g.student_groups?.courses?.title,
+          course_emoji: g.student_groups?.courses?.emoji
         })));
       }
     } catch (error) {
@@ -305,8 +282,13 @@ export default function TeacherStudentDetail() {
 
   if (!student) return null;
 
-  const activeEnrollments = enrollments.filter(e => e.status === 'active');
-  const completedEnrollments = enrollments.filter(e => e.status === 'completed');
+  // Derive unique courses from groups
+  const uniqueCourses = groups.reduce((acc, g) => {
+    if (!acc.find(c => c.course_title === g.course_title)) {
+      acc.push({ course_title: g.course_title, course_emoji: g.course_emoji });
+    }
+    return acc;
+  }, [] as { course_title: string; course_emoji: string }[]);
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -390,10 +372,14 @@ export default function TeacherStudentDetail() {
                 ) : (
                   <div className="space-y-2">
                     {groups.map(g => (
-                      <div key={g.id} className="p-2 bg-muted rounded">
-                        <p className="font-medium text-sm">{g.group_title}</p>
-                        <p className="text-xs text-muted-foreground">{g.course_title}</p>
-                      </div>
+                      <Link 
+                        key={g.id} 
+                        to={`/insegnante/gruppo/${g.group_id}`}
+                        className="block p-2 bg-muted rounded hover:bg-muted/80 transition-colors"
+                      >
+                        <p className="font-medium text-sm text-primary">{g.group_title}</p>
+                        <p className="text-xs text-muted-foreground">{g.course_emoji} {g.course_title}</p>
+                      </Link>
                     ))}
                   </div>
                 )}
@@ -411,34 +397,16 @@ export default function TeacherStudentDetail() {
                   Corsi
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {activeEnrollments.length > 0 && (
-                  <div>
-                    <h4 className="font-medium mb-2 text-sm text-muted-foreground">Corsi Attivi</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {activeEnrollments.map(e => (
-                        <Badge key={e.id} variant="secondary">
-                          {e.course_emoji} {e.course_title}
-                        </Badge>
-                      ))}
-                    </div>
+              <CardContent>
+                {uniqueCourses.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {uniqueCourses.map((c, i) => (
+                      <Badge key={i} variant="secondary">
+                        {c.course_emoji} {c.course_title}
+                      </Badge>
+                    ))}
                   </div>
-                )}
-                
-                {completedEnrollments.length > 0 && (
-                  <div>
-                    <h4 className="font-medium mb-2 text-sm text-muted-foreground">Corsi Completati</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {completedEnrollments.map(e => (
-                        <Badge key={e.id} variant="outline" className="text-green-600">
-                          {e.course_emoji} {e.course_title}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {enrollments.length === 0 && (
+                ) : (
                   <p className="text-sm text-muted-foreground">Nessun corso</p>
                 )}
               </CardContent>

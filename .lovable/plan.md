@@ -1,114 +1,63 @@
 
-# Piano: Navigazione Lezioni/Compiti per Insegnanti
 
-## Contesto
-Attualmente `TeacherCourseDetail.tsx` mostra solo un elenco di lezioni con possibilità di scaricare slides/manuali. L'insegnante non può entrare nelle lezioni per vedere il contenuto, le task o i compiti come fa lo studente.
+# Fix: Bottone Dashboard che sparisce per gli insegnanti
 
-## Obiettivo
-Permettere all'insegnante di navigare le lezioni e i compiti **esattamente come lo studente**, con queste differenze:
-- **Tutte le lezioni sbloccate** (nessun lock progressivo)
-- **Nessuna logica punti/progressi** (non rilevante per l'insegnante)
-- **Accesso completo** a tutti i materiali del corso assegnato
+## Problema
 
-## Strategia
-Riutilizzare le pagine studente esistenti (`LessonView`, `TaskView`, `HomeworkView`) aggiungendo il supporto per il ruolo insegnante, invece di creare pagine duplicate. Questo evita duplicazione di codice e mantiene la consistenza.
+Nella Navbar, la logica condizionale per mostrare il bottone "Dashboard" esclude completamente gli insegnanti. Quando un insegnante e' loggato e naviga alla homepage (cliccando il logo TECHLAND), non vede ne' "Accedi" ne' "Dashboard" -- resta bloccato senza modo di tornare alla propria area.
 
----
+### Codice problematico (riga 71 e 123)
 
-## Modifiche Necessarie
-
-### 1. Aggiornare le Route per Insegnanti (App.tsx)
-Aggiungere route dedicate per l'insegnante che puntano alle stesse view dello studente ma con un prefisso diverso:
-```
-/insegnante/corso/:courseId                 → Dettaglio corso (nuova versione)
-/insegnante/corso/:courseId/lezione/:lessonNumber    → LessonView (adattato)
-/insegnante/corso/:courseId/lezione/:lessonNumber/task/:taskNumber → TaskView (adattato)
-/insegnante/corso/:courseId/compito/:homeworkId → HomeworkView (adattato)
+```text
+!user ?  "Accedi"
+: !isInAreaRiservata && !isTeacher ?  "Dashboard → /area-riservata"
+: null   ← insegnante finisce qui: NESSUN BOTTONE
 ```
 
-### 2. Creare Hook `useTeacherCourseAccess`
-Un hook che verifica se l'utente (insegnante o admin) ha accesso al corso tramite `teacher_courses`:
-- Restituisce `{ hasAccess, isLoading }`
-- Usato nelle view per autorizzare l'accesso
+## Soluzione
 
-### 3. Modificare `TeacherCourseDetail.tsx`
-Trasformare la pagina esistente in una vista simile a `CourseProgress.tsx` dello studente:
-- Tabs "Lezioni" e "Compiti"
-- Lista di lezioni **tutte sbloccate** (nessun lucchetto)
-- Ogni lezione cliccabile per entrare
-- Lista compiti accessibili direttamente
-- Rimuovere logica punti/progressi
+Rivedere la logica condizionale per gestire correttamente tutti i ruoli:
 
-### 4. Modificare `LessonView.tsx`
-Aggiungere supporto per accesso insegnante:
-- Se l'URL inizia con `/insegnante/`, verificare accesso tramite `teacher_courses`
-- Rimuovere redirect ad auth se l'utente è insegnante autenticato
-- Il resto della logica rimane identico (contenuti, compiler, navigazione)
+```text
+!user ?  "Accedi"
+: isTeacher && !isInTeacherArea ?  "Dashboard → /insegnante"
+: !isTeacher && !isInAreaRiservata ?  "Dashboard → /area-riservata"
+: null  (gia' nella propria area, nascondere)
+```
 
-### 5. Modificare `TaskView.tsx`
-Aggiungere supporto per accesso insegnante:
-- Stesso approccio di LessonView
-- Disabilitare la logica `completeTask` per insegnanti (non serve tracciare progressi)
-- Il resto rimane identico
+## Modifiche
 
-### 6. Modificare `HomeworkView.tsx`
-Aggiungere supporto per accesso insegnante:
-- Rimuovere la possibilità di "inviare" compiti (non ha senso per l'insegnante)
-- Mantenere la visualizzazione completa delle istruzioni e del compiler
+### File: `src/components/layout/Navbar.tsx`
 
----
+1. **Aggiungere variabile per area insegnante**: Controllare se il path inizia con `/insegnante` oltre che `/area-riservata`
 
-## Dettagli Tecnici
-
-### Pattern di Rilevamento Ruolo
-Nelle view condivise, usare:
 ```typescript
-const location = useLocation();
-const isTeacherView = location.pathname.startsWith('/insegnante/');
+const isInAreaRiservata = location.pathname.startsWith('/area-riservata');
+const isInTeacherArea = location.pathname.startsWith('/insegnante');
 ```
 
-Questo determina:
-- **isTeacherView = true**: Non mostrare badge progressi, non salvare progressi, tutte le lezioni accessibili
-- **isTeacherView = false**: Comportamento studente normale
+2. **Rivedere la logica del bottone Desktop** (righe 67-78): Tre casi distinti:
+   - Utente non loggato: mostra "Accedi"
+   - Insegnante loggato, non nella propria area: mostra "Dashboard" che punta a `/insegnante`
+   - Studente/genitore loggato, non nella propria area: mostra "Dashboard" che punta a `/area-riservata`
+   - Utente gia' nella propria area: nessun bottone (per evitare link circolare)
 
-### Verifica Accesso per Insegnanti
-Per le route `/insegnante/...`, verificare che:
-1. L'utente sia autenticato
-2. L'utente abbia ruolo `teacher` O sia `admin`
-3. L'utente abbia il corso assegnato in `teacher_courses` (o sia admin)
+3. **Rivedere la stessa logica nel menu Mobile** (righe 119-130): Applicare lo stesso identico pattern di tre casi
 
-### RLS Policies
-Le RLS policies attuali già permettono a tutti di leggere `lessons`, `lesson_tasks`, `homework` con `USING (true)`. Quindi non serve modificare le policies.
+### Risultato atteso
 
----
+| Stato | Bottone mostrato | Link |
+|-------|-----------------|------|
+| Non loggato | "Accedi" | /auth |
+| Insegnante su homepage | "Dashboard" | /insegnante |
+| Insegnante su /insegnante | Nessuno | - |
+| Studente su homepage | "Dashboard" | /area-riservata |
+| Studente su /area-riservata | Nessuno | - |
 
-## File da Modificare
+### Dettagli tecnici
 
-| File | Modifica |
-|------|----------|
-| `src/App.tsx` | Aggiungere 3 nuove route per insegnante |
-| `src/pages/teacher/TeacherCourseDetail.tsx` | Riscrivere con UI simile a CourseProgress (tabs, lista cliccabile) |
-| `src/pages/area-riservata/LessonView.tsx` | Aggiungere supporto percorso insegnante |
-| `src/pages/area-riservata/TaskView.tsx` | Aggiungere supporto percorso insegnante |
-| `src/pages/area-riservata/HomeworkView.tsx` | Aggiungere supporto percorso insegnante + nascondere submit |
-| `src/hooks/useTeacherCourseAccess.ts` | Nuovo hook per verifica accesso corso insegnante |
+La modifica coinvolge un solo file (`Navbar.tsx`) e consiste nel:
+- Aggiungere una variabile `isInTeacherArea`
+- Sostituire la condizione `!isInAreaRiservata && !isTeacher` con una logica a tre rami che gestisce correttamente sia insegnanti che studenti
+- Applicare la stessa modifica sia nella sezione desktop che mobile del componente
 
----
-
-## Comportamento Finale Atteso
-
-1. L'insegnante va su `/insegnante`
-2. Clicca su un corso assegnato
-3. Vede lista lezioni (tutte accessibili, nessun lucchetto)
-4. Clicca su una lezione → entra nella view con contenuto/compiler
-5. Naviga tra le task della lezione
-6. Può vedere i compiti associati alle lezioni
-7. Non vede badge punti, non salva progressi
-8. Può navigare liberamente senza restrizioni
-
----
-
-## Note di Sicurezza
-- Le verifiche di accesso sono fatte sia lato frontend (UX) che lato backend (RLS)
-- Le RLS policies su `lessons`, `lesson_tasks`, `homework` sono già `USING (true)` per SELECT
-- Le tabelle di progressi (`lesson_progress`, `task_progress`, `homework_submissions`) hanno RLS che limita scrittura all'utente stesso, quindi l'insegnante non può corrompere dati studente

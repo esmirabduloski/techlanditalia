@@ -11,8 +11,9 @@ import { TurtleCompiler } from '@/components/lesson/TurtleCompiler';
 import { PgzeroCompiler } from '@/components/lesson/PgzeroCompiler';
 import { WebCompiler } from '@/components/lesson/WebCompiler';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
-import { Loader2, CheckCircle2 } from 'lucide-react';
+import { Loader2, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 interface Course {
   id: string;
@@ -208,6 +209,21 @@ export default function TaskView() {
   if (showScratch) {
     return (
       <div className="h-screen flex flex-col bg-background">
+        {/* Header with back button */}
+        <div className="flex items-center gap-3 px-4 py-3 border-b bg-background">
+          <Button variant="ghost" size="icon" onClick={handleNavigateToCourse}>
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>{course.title}</span>
+              <span>·</span>
+              <span>Lezione {lesson.lesson_number}</span>
+            </div>
+            <h1 className="font-semibold">Task {task.task_number}: {task.title}</h1>
+          </div>
+        </div>
+
         <ResizablePanelGroup direction="horizontal" className="flex-1">
           {/* Left Panel - Task Content */}
           <ResizablePanel defaultSize={40} minSize={25}>
@@ -275,6 +291,21 @@ export default function TaskView() {
   if (showCompiler) {
     return (
       <div className="h-screen flex flex-col bg-background">
+        {/* Header with back button */}
+        <div className="flex items-center gap-3 px-4 py-3 border-b bg-background">
+          <Button variant="ghost" size="icon" onClick={handleNavigateToCourse}>
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>{course.title}</span>
+              <span>·</span>
+              <span>Lezione {lesson.lesson_number}</span>
+            </div>
+            <h1 className="font-semibold">Task {task.task_number}: {task.title}</h1>
+          </div>
+        </div>
+
         <ResizablePanelGroup direction="horizontal" className="flex-1">
           {/* Left Panel - Task Content */}
           <ResizablePanel defaultSize={50} minSize={30}>
@@ -342,6 +373,10 @@ export default function TaskView() {
   return (
     <Layout>
       <div className="max-w-4xl mx-auto px-4 py-8">
+        <Button variant="ghost" onClick={handleNavigateToCourse} className="mb-4">
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Torna al corso
+        </Button>
         <LessonContent
           title={task.title}
           lessonTitle={lesson.title}

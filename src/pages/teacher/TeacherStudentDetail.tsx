@@ -131,6 +131,13 @@ interface GroupMembership {
   course_emoji: string;
 }
 
+interface EnrolledCourse {
+  course_id: string;
+  course_title: string;
+  course_emoji: string;
+  has_group: boolean;
+}
+
 export default function TeacherStudentDetail() {
   const { studentId } = useParams();
   const { user, isLoading: authLoading, isAdmin } = useAuth();
@@ -143,6 +150,7 @@ export default function TeacherStudentDetail() {
   const [parent, setParent] = useState<Parent | null>(null);
   
   const [groups, setGroups] = useState<GroupMembership[]>([]);
+  const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>([]);
   
   // Comment dialog state
   const [isCommentDialogOpen, setIsCommentDialogOpen] = useState(false);
@@ -211,7 +219,7 @@ export default function TeacherStudentDetail() {
         setParent(parentData);
       }
 
-      // Fetch group memberships with course info (derives courses from groups)
+      // Fetch group memberships with course info
       const { data: groupsData } = await supabase
         .from('group_students')
         .select(`
@@ -220,14 +228,39 @@ export default function TeacherStudentDetail() {
         `)
         .eq('student_id', studentId);
 
+      const groupsList: GroupMembership[] = [];
+      const groupCourseIds = new Set<string>();
+
       if (groupsData) {
-        setGroups(groupsData.map((g: any) => ({
-          id: g.id,
-          group_id: g.group_id,
-          group_title: g.student_groups?.title,
-          course_title: g.student_groups?.courses?.title,
-          course_emoji: g.student_groups?.courses?.emoji
-        })));
+        groupsData.forEach((g: any) => {
+          const courseId = g.student_groups?.course_id;
+          if (courseId) groupCourseIds.add(courseId);
+          groupsList.push({
+            id: g.id,
+            group_id: g.group_id,
+            group_title: g.student_groups?.title,
+            course_title: g.student_groups?.courses?.title,
+            course_emoji: g.student_groups?.courses?.emoji
+          });
+        });
+      }
+      setGroups(groupsList);
+
+      // Fetch all enrolled courses (including those without a group)
+      const { data: enrollmentsData } = await supabase
+        .from('enrollments')
+        .select('course_id, courses!inner(title, emoji)')
+        .eq('student_id', studentId)
+        .eq('status', 'active');
+
+      if (enrollmentsData) {
+        const allCourses: EnrolledCourse[] = enrollmentsData.map((e: any) => ({
+          course_id: e.course_id,
+          course_title: e.courses?.title,
+          course_emoji: e.courses?.emoji,
+          has_group: groupCourseIds.has(e.course_id)
+        }));
+        setEnrolledCourses(allCourses);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -282,13 +315,7 @@ export default function TeacherStudentDetail() {
 
   if (!student) return null;
 
-  // Derive unique courses from groups
-  const uniqueCourses = groups.reduce((acc, g) => {
-    if (!acc.find(c => c.course_title === g.course_title)) {
-      acc.push({ course_title: g.course_title, course_emoji: g.course_emoji });
-    }
-    return acc;
-  }, [] as { course_title: string; course_emoji: string }[]);
+  // No longer needed - enrolledCourses comes from enrollments table directly
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -398,11 +425,17 @@ export default function TeacherStudentDetail() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {uniqueCourses.length > 0 ? (
+                {enrolledCourses.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
-                    {uniqueCourses.map((c, i) => (
-                      <Badge key={i} variant="secondary">
+                    {enrolledCourses.map((c) => (
+                      <Badge 
+                        key={c.course_id} 
+                        variant={c.has_group ? "secondary" : "outline"}
+                      >
                         {c.course_emoji} {c.course_title}
+                        {!c.has_group && (
+                          <span className="ml-1 text-xs opacity-60">(no gruppo)</span>
+                        )}
                       </Badge>
                     ))}
                   </div>

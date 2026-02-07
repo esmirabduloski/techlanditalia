@@ -1,4 +1,3 @@
-import { TechlandLogo } from './TechlandLogo';
 import { GoogleSlidesEmbed } from './GoogleSlidesEmbed';
 import DOMPurify from 'dompurify';
 
@@ -99,11 +98,6 @@ export function LessonContent({
 
   return (
     <div className="p-6">
-      {/* Logo */}
-      <div className="mb-6">
-        <TechlandLogo />
-      </div>
-
       {/* Lesson Title */}
       {lessonTitle && (
         <p className="text-sm font-medium text-muted-foreground mb-1">

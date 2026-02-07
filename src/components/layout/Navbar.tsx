@@ -25,6 +25,7 @@ export function Navbar() {
   const { isStudent } = useStudentRole();
   const { isTeacher } = useTeacherRole();
   const isInAreaRiservata = location.pathname.startsWith('/area-riservata');
+  const isInTeacherArea = location.pathname.startsWith('/insegnante');
   
   // Mostra bottone lezione gratuita solo se non loggato o senza iscrizioni, e non è uno studente né un insegnante
   const showTrialButton = !user || (!hasEnrollments && !isStudent && !isTeacher);
@@ -68,7 +69,14 @@ export function Navbar() {
               <Button variant="ghost" asChild>
                 <Link to="/auth">Accedi</Link>
               </Button>
-            ) : !isInAreaRiservata && !isTeacher ? (
+            ) : isTeacher && !isInTeacherArea ? (
+              <Button variant="ghost" asChild>
+                <Link to="/insegnante" className="flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  Dashboard
+                </Link>
+              </Button>
+            ) : !isTeacher && !isInAreaRiservata ? (
               <Button variant="ghost" asChild>
                 <Link to="/area-riservata" className="flex items-center gap-2">
                   <User className="w-4 h-4" />
@@ -120,7 +128,14 @@ export function Navbar() {
                   <Button variant="outline" asChild>
                     <Link to="/auth" onClick={() => setIsOpen(false)}>Accedi</Link>
                   </Button>
-                ) : !isInAreaRiservata && !isTeacher ? (
+                ) : isTeacher && !isInTeacherArea ? (
+                  <Button variant="outline" asChild>
+                    <Link to="/insegnante" onClick={() => setIsOpen(false)} className="flex items-center gap-2">
+                      <User className="w-4 h-4" />
+                      Dashboard
+                    </Link>
+                  </Button>
+                ) : !isTeacher && !isInAreaRiservata ? (
                   <Button variant="outline" asChild>
                     <Link to="/area-riservata" onClick={() => setIsOpen(false)} className="flex items-center gap-2">
                       <User className="w-4 h-4" />

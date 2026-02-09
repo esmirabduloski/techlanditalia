@@ -540,6 +540,7 @@ export type Database = {
           id: string
           lesson_date: string
           lesson_number: number
+          lesson_time: string | null
           lesson_title: string | null
           updated_at: string
         }
@@ -549,6 +550,7 @@ export type Database = {
           id?: string
           lesson_date: string
           lesson_number: number
+          lesson_time?: string | null
           lesson_title?: string | null
           updated_at?: string
         }
@@ -558,6 +560,7 @@ export type Database = {
           id?: string
           lesson_date?: string
           lesson_number?: number
+          lesson_time?: string | null
           lesson_title?: string | null
           updated_at?: string
         }
@@ -1254,6 +1257,7 @@ export type Database = {
           id: string
           last_lesson_title: string | null
           lesson_days: number[] | null
+          lesson_time: string | null
           max_lessons: number | null
           start_date: string | null
           teacher_id: string | null
@@ -1266,6 +1270,7 @@ export type Database = {
           id?: string
           last_lesson_title?: string | null
           lesson_days?: number[] | null
+          lesson_time?: string | null
           max_lessons?: number | null
           start_date?: string | null
           teacher_id?: string | null
@@ -1278,6 +1283,7 @@ export type Database = {
           id?: string
           last_lesson_title?: string | null
           lesson_days?: number[] | null
+          lesson_time?: string | null
           max_lessons?: number | null
           start_date?: string | null
           teacher_id?: string | null

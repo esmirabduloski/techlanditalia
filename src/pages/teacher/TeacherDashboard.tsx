@@ -52,6 +52,7 @@ interface StudentGroup {
   last_lesson_title: string | null;
   max_lessons: number;
   student_count?: number;
+  lesson_time?: string | null;
 }
 
 interface TeacherNotification {
@@ -84,9 +85,11 @@ interface UpcomingLesson {
   id: string;
   group_id: string;
   group_title: string;
+  group_lesson_time: string | null;
   lesson_number: number;
   lesson_date: string;
   lesson_title: string | null;
+  lesson_time: string | null;
 }
 
 interface TeacherLink {
@@ -246,7 +249,7 @@ export default function TeacherDashboard() {
       const { data: groupsData } = await supabase
         .from('student_groups')
         .select(`
-          id, title, course_id, start_date, last_lesson_title, max_lessons,
+          id, title, course_id, start_date, last_lesson_title, max_lessons, lesson_time,
           courses!inner(title, emoji)
         `)
         .eq('teacher_id', effectiveUserId);
@@ -270,7 +273,8 @@ export default function TeacherDashboard() {
               start_date: g.start_date,
               last_lesson_title: g.last_lesson_title,
               max_lessons: g.max_lessons,
-              student_count: count || 0
+              student_count: count || 0,
+              lesson_time: g.lesson_time
             };
           })
         );
@@ -427,7 +431,7 @@ export default function TeacherDashboard() {
 
       const { data: lessonsData } = await supabase
         .from('group_lesson_schedule')
-        .select('id, group_id, lesson_number, lesson_date, lesson_title')
+        .select('id, group_id, lesson_number, lesson_date, lesson_title, lesson_time')
         .in('group_id', groupIds)
         .gte('lesson_date', today)
         .lte('lesson_date', next7Days)
@@ -439,7 +443,8 @@ export default function TeacherDashboard() {
           const group = groupsList.find(g => g.id === l.group_id);
           return {
             ...l,
-            group_title: group?.title || 'Gruppo'
+            group_title: group?.title || 'Gruppo',
+            group_lesson_time: group?.lesson_time || null
           };
         });
         setUpcomingLessons(lessonsWithGroups);
@@ -896,6 +901,7 @@ export default function TeacherDashboard() {
                       <p className="text-xs text-muted-foreground">
                         Lezione {lesson.lesson_number}
                         {lesson.lesson_title && ` • ${lesson.lesson_title}`}
+                        {(lesson.lesson_time || lesson.group_lesson_time) && ` • ${(lesson.lesson_time || lesson.group_lesson_time)?.substring(0, 5)}`}
                       </p>
                     </div>
                     <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
@@ -1195,6 +1201,7 @@ export default function TeacherDashboard() {
                         <TableHead>Titolo</TableHead>
                         <TableHead>Corso</TableHead>
                         <TableHead>Data Inizio</TableHead>
+                        <TableHead>Orario</TableHead>
                         <TableHead className="text-center">Studenti</TableHead>
                         <TableHead>Ultima Lezione</TableHead>
                         <TableHead className="w-20"></TableHead>
@@ -1217,6 +1224,9 @@ export default function TeacherDashboard() {
                           </TableCell>
                           <TableCell>
                             {group.start_date ? new Date(group.start_date).toLocaleDateString('it-IT') : '-'}
+                          </TableCell>
+                          <TableCell>
+                            {group.lesson_time ? group.lesson_time.substring(0, 5) : '-'}
                           </TableCell>
                           <TableCell className="text-center">
                             <Badge variant="secondary">{group.student_count}</Badge>

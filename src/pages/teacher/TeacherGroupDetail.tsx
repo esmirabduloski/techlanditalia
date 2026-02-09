@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { 
-  Loader2, ArrowLeft, Users, Calendar, ChevronRight, MessageCircle, Plus, Send, Trash2, Check, X, AlertCircle
+  Loader2, ArrowLeft, Users, Calendar, ChevronRight, MessageCircle, Plus, Send, Trash2, Check, X, AlertCircle, Clock
 } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
@@ -37,6 +37,7 @@ interface LessonSchedule {
   lesson_number: number;
   lesson_date: string;
   lesson_title: string | null;
+  lesson_time: string | null;
 }
 
 interface StudentGroup {
@@ -49,6 +50,7 @@ interface StudentGroup {
   start_date: string | null;
   max_lessons: number;
   lesson_days: number[];
+  lesson_time: string | null;
 }
 
 interface GroupComment {
@@ -105,7 +107,7 @@ export default function TeacherGroupDetail() {
       const { data: groupData } = await supabase
         .from('student_groups')
         .select(`
-          id, title, course_id, start_date, max_lessons, teacher_id, lesson_days,
+          id, title, course_id, start_date, max_lessons, teacher_id, lesson_days, lesson_time,
           courses!inner(title, emoji)
         `)
         .eq('id', groupId)
@@ -133,7 +135,8 @@ export default function TeacherGroupDetail() {
         teacher_name: teacherProfile?.full_name || '',
         start_date: groupData.start_date,
         max_lessons: groupData.max_lessons,
-        lesson_days: (groupData.lesson_days as number[]) || [0]
+        lesson_days: (groupData.lesson_days as number[]) || [0],
+        lesson_time: groupData.lesson_time
       });
 
       // Fetch lesson schedule
@@ -510,6 +513,13 @@ export default function TeacherGroupDetail() {
                 </div>
               </div>
               <div>
+                <p className="text-sm text-muted-foreground">Orario</p>
+                <p className="text-lg font-semibold flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  {group.lesson_time ? group.lesson_time.substring(0, 5) : '-'}
+                </p>
+              </div>
+              <div>
                 <p className="text-sm text-muted-foreground">Studenti</p>
                 <p className="text-lg font-semibold flex items-center gap-2">
                   <Users className="w-4 h-4" />
@@ -561,6 +571,12 @@ export default function TeacherGroupDetail() {
                       <div className="text-xs text-muted-foreground">
                         {format(lessonDate, 'd MMM yyyy', { locale: it })}
                       </div>
+                      {(lesson.lesson_time || group.lesson_time) && (
+                        <div className="text-xs text-muted-foreground flex items-center justify-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {(lesson.lesson_time || group.lesson_time)?.substring(0, 5)}
+                        </div>
+                      )}
                       <div className="text-xs mt-1">
                         {isTodayLesson && <Badge variant="default" className="text-[10px]">Oggi</Badge>}
                         {isPast && hasAttendance && <Badge variant="secondary" className="text-[10px] bg-green-100 text-green-800">Svolta</Badge>}

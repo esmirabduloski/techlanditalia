@@ -53,6 +53,7 @@ interface StudentGroup {
   max_lessons: number;
   student_count: number;
   lesson_days: number[];
+  lesson_time: string | null;
 }
 
 interface Teacher {
@@ -98,6 +99,7 @@ export default function AdminGroups() {
     start_date: '',
     max_lessons: 32,
     lesson_days: [0] as number[], // Default Sunday
+    lesson_time: '',
     selected_students: [] as string[]
   });
   const [isSaving, setIsSaving] = useState(false);
@@ -121,7 +123,7 @@ export default function AdminGroups() {
       const { data: groupsData } = await supabase
         .from('student_groups')
         .select(`
-          id, title, course_id, teacher_id, start_date, last_lesson_title, max_lessons, lesson_days,
+          id, title, course_id, teacher_id, start_date, last_lesson_title, max_lessons, lesson_days, lesson_time,
           courses!inner(title, emoji)
         `)
         .order('created_at', { ascending: false });
@@ -157,7 +159,8 @@ export default function AdminGroups() {
               last_lesson_title: g.last_lesson_title,
               max_lessons: g.max_lessons,
               student_count: count || 0,
-              lesson_days: (g.lesson_days as number[]) || [0]
+              lesson_days: (g.lesson_days as number[]) || [0],
+              lesson_time: g.lesson_time
             };
           })
         );
@@ -210,6 +213,7 @@ export default function AdminGroups() {
       start_date: '',
       max_lessons: 32,
       lesson_days: [0],
+      lesson_time: '',
       selected_students: []
     });
     setStudentSearch('');
@@ -237,6 +241,7 @@ export default function AdminGroups() {
       start_date: group.start_date || '',
       max_lessons: group.max_lessons,
       lesson_days: (groupDetails?.lesson_days as number[]) || [0],
+      lesson_time: group.lesson_time || '',
       selected_students: groupStudents?.map(gs => gs.student_id) || []
     });
     setStudentSearch('');
@@ -261,7 +266,8 @@ export default function AdminGroups() {
             teacher_id: formData.teacher_id === '__none__' ? null : formData.teacher_id,
             start_date: formData.start_date || null,
             max_lessons: formData.max_lessons,
-            lesson_days: formData.lesson_days
+            lesson_days: formData.lesson_days,
+            lesson_time: formData.lesson_time || null
           })
           .eq('id', editingGroup.id);
 
@@ -291,7 +297,8 @@ export default function AdminGroups() {
             teacher_id: formData.teacher_id === '__none__' ? null : formData.teacher_id,
             start_date: formData.start_date || null,
             max_lessons: formData.max_lessons,
-            lesson_days: formData.lesson_days
+            lesson_days: formData.lesson_days,
+            lesson_time: formData.lesson_time || null
           })
           .select()
           .single();
@@ -445,14 +452,15 @@ export default function AdminGroups() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-24">ID</TableHead>
-                    <TableHead>Titolo</TableHead>
-                    <TableHead>Insegnante</TableHead>
-                    <TableHead>Corso</TableHead>
-                    <TableHead>Data Inizio</TableHead>
-                    <TableHead className="text-center">Studenti</TableHead>
-                    <TableHead>Ultima Lezione</TableHead>
-                    <TableHead className="w-24">Azioni</TableHead>
+                     <TableHead className="w-24">ID</TableHead>
+                     <TableHead>Titolo</TableHead>
+                     <TableHead>Insegnante</TableHead>
+                     <TableHead>Corso</TableHead>
+                     <TableHead>Data Inizio</TableHead>
+                     <TableHead>Orario</TableHead>
+                     <TableHead className="text-center">Studenti</TableHead>
+                     <TableHead>Ultima Lezione</TableHead>
+                     <TableHead className="w-24">Azioni</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -468,10 +476,13 @@ export default function AdminGroups() {
                       <TableCell>
                         {group.course_emoji} {group.course_title}
                       </TableCell>
-                      <TableCell>
-                        {group.start_date ? new Date(group.start_date).toLocaleDateString('it-IT') : '-'}
-                      </TableCell>
-                      <TableCell className="text-center">
+                       <TableCell>
+                         {group.start_date ? new Date(group.start_date).toLocaleDateString('it-IT') : '-'}
+                       </TableCell>
+                       <TableCell>
+                         {group.lesson_time ? group.lesson_time.substring(0, 5) : '-'}
+                       </TableCell>
+                       <TableCell className="text-center">
                         <Badge variant="secondary">{group.student_count}</Badge>
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">
@@ -571,7 +582,7 @@ export default function AdminGroups() {
                 </div>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-3">
                 <div className="space-y-2">
                   <Label>Data Inizio</Label>
                   <Input
@@ -579,6 +590,18 @@ export default function AdminGroups() {
                     value={formData.start_date}
                     onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Orario Lezione</Label>
+                  <Input
+                    type="time"
+                    value={formData.lesson_time}
+                    onChange={(e) => setFormData(prev => ({ ...prev, lesson_time: e.target.value }))}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Orario predefinito delle lezioni
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -744,6 +767,7 @@ export default function AdminGroups() {
             startDate={calendarGroup.start_date}
             maxLessons={calendarGroup.max_lessons}
             lessonDays={calendarGroup.lesson_days}
+            defaultLessonTime={calendarGroup.lesson_time}
             open={!!calendarGroup}
             onOpenChange={(open) => !open && setCalendarGroup(null)}
           />

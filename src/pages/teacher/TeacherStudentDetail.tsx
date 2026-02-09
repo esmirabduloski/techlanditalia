@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { 
-  Loader2, ArrowLeft, User, BookOpen, Users, MessageCircle, Mail, Calendar, Plus, Send
+  Loader2, ArrowLeft, User, BookOpen, Users, MessageCircle, Mail, Calendar, Plus, Send, ChevronDown
 } from "lucide-react";
 import { AvatarDisplay } from "@/components/gamification/AvatarSelector";
 import { LevelBadge, getLevelFromPoints } from "@/components/gamification/LevelBadge";
@@ -25,10 +25,13 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 
+const COMMENTS_PER_PAGE = 5;
+
 // Component to show comments for a student from teacher's view
 function TeacherCommentsView({ studentId }: { studentId: string }) {
   const [comments, setComments] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(COMMENTS_PER_PAGE);
 
   useEffect(() => {
     fetchComments();
@@ -36,7 +39,6 @@ function TeacherCommentsView({ studentId }: { studentId: string }) {
 
   const fetchComments = async () => {
     try {
-      // First get comments
       const { data: commentsData, error } = await supabase
         .from('student_comments')
         .select('id, content, visibility, created_at, author_id')
@@ -46,7 +48,6 @@ function TeacherCommentsView({ studentId }: { studentId: string }) {
       if (error) throw error;
 
       if (commentsData && commentsData.length > 0) {
-        // Get author names separately
         const authorIds = [...new Set(commentsData.map(c => c.author_id))];
         const { data: authors } = await supabase
           .from('profiles')
@@ -88,9 +89,13 @@ function TeacherCommentsView({ studentId }: { studentId: string }) {
     );
   }
 
+  const visibleComments = comments.slice(0, visibleCount);
+  const hasMore = comments.length > visibleCount;
+  const remainingCount = comments.length - visibleCount;
+
   return (
     <div className="space-y-3">
-      {comments.map((comment) => (
+      {visibleComments.map((comment) => (
         <div key={comment.id} className="p-3 bg-muted rounded-lg">
           <div className="flex items-center gap-2 mb-2">
             <User className="w-4 h-4 text-primary" />
@@ -103,6 +108,19 @@ function TeacherCommentsView({ studentId }: { studentId: string }) {
           </p>
         </div>
       ))}
+
+      {hasMore && (
+        <div className="flex justify-center pt-2">
+          <Button
+            variant="outline"
+            onClick={() => setVisibleCount(prev => prev + COMMENTS_PER_PAGE)}
+            className="gap-2"
+          >
+            <ChevronDown className="w-4 h-4" />
+            Mostra altri ({Math.min(remainingCount, COMMENTS_PER_PAGE)} di {remainingCount})
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

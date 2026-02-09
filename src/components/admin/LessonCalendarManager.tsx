@@ -23,6 +23,7 @@ interface LessonSchedule {
   lesson_number: number;
   lesson_date: string;
   lesson_title: string | null;
+  lesson_time: string | null;
 }
 
 interface LessonCalendarManagerProps {
@@ -31,6 +32,7 @@ interface LessonCalendarManagerProps {
   startDate: string | null;
   maxLessons: number;
   lessonDays: number[];
+  defaultLessonTime: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -41,6 +43,7 @@ export function LessonCalendarManager({
   startDate,
   maxLessons,
   lessonDays,
+  defaultLessonTime,
   open,
   onOpenChange
 }: LessonCalendarManagerProps) {
@@ -49,6 +52,7 @@ export function LessonCalendarManager({
   const [isSaving, setIsSaving] = useState(false);
   const [schedule, setSchedule] = useState<LessonSchedule[]>([]);
   const [editedDates, setEditedDates] = useState<Record<number, string>>({});
+  const [editedTimes, setEditedTimes] = useState<Record<number, string>>({});
   const [page, setPage] = useState(0);
   const lessonsPerPage = 16;
 
@@ -96,7 +100,8 @@ export function LessonCalendarManager({
           group_id: groupId,
           lesson_number: lessonCount,
           lesson_date: format(currentDate, 'yyyy-MM-dd'),
-          lesson_title: `M${Math.ceil(lessonCount / 4)}L${((lessonCount - 1) % 4) + 1}`
+          lesson_title: `M${Math.ceil(lessonCount / 4)}L${((lessonCount - 1) % 4) + 1}`,
+          lesson_time: defaultLessonTime || null
         });
       }
       
@@ -117,15 +122,27 @@ export function LessonCalendarManager({
   };
 
   const handleDateChange = (lessonNumber: number, newDate: string) => {
-    setEditedDates(prev => ({
-      ...prev,
-      [lessonNumber]: newDate
-    }));
+    setEditedDates(prev => ({ ...prev, [lessonNumber]: newDate }));
+  };
+
+  const handleTimeChange = (lessonNumber: number, newTime: string) => {
+    setEditedTimes(prev => ({ ...prev, [lessonNumber]: newTime }));
+  };
+
+  const handleBulkTimeChange = (fromLessonNumber: number, newTime: string) => {
+    const newEdits: Record<number, string> = {};
+    schedule.forEach(lesson => {
+      if (lesson.lesson_number >= fromLessonNumber) {
+        newEdits[lesson.lesson_number] = newTime;
+      }
+    });
+    setEditedTimes(prev => ({ ...prev, ...newEdits }));
   };
 
   const handleSave = async () => {
-    if (Object.keys(editedDates).length === 0) return;
-
+    const hasDateChanges = Object.keys(editedDates).length > 0;
+    const hasTimeChanges = Object.keys(editedTimes).length > 0;
+    if (!hasDateChanges && !hasTimeChanges) return;
     setIsSaving(true);
     try {
       // Check for conflicts and shift dates if needed
@@ -163,17 +180,26 @@ export function LessonCalendarManager({
         currentLesson.lesson_date = edit.newDate;
       }
 
+      // Apply time changes
+      for (const lesson of updatedSchedule) {
+        const editedTime = editedTimes[lesson.lesson_number];
+        if (editedTime !== undefined) {
+          lesson.lesson_time = editedTime || null;
+        }
+      }
+
       // Save all changes to database
       for (const lesson of updatedSchedule) {
         await supabase
           .from('group_lesson_schedule')
-          .update({ lesson_date: lesson.lesson_date })
+          .update({ lesson_date: lesson.lesson_date, lesson_time: lesson.lesson_time })
           .eq('id', lesson.id);
       }
 
       setSchedule(updatedSchedule);
       setEditedDates({});
-      toast({ title: 'Calendario salvato', description: 'Le date delle lezioni sono state aggiornate' });
+      setEditedTimes({});
+      toast({ title: 'Calendario salvato', description: 'Le date e gli orari delle lezioni sono stati aggiornati' });
     } catch (error: any) {
       toast({ title: 'Errore', description: error.message, variant: 'destructive' });
     } finally {
@@ -198,6 +224,7 @@ export function LessonCalendarManager({
       // Generate new schedule
       await generateSchedule();
       setEditedDates({});
+      setEditedTimes({});
       toast({ title: 'Calendario rigenerato' });
     } catch (error: any) {
       toast({ title: 'Errore', description: error.message, variant: 'destructive' });
@@ -243,8 +270,10 @@ export function LessonCalendarManager({
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {paginatedSchedule.map(lesson => {
                 const editedDate = editedDates[lesson.lesson_number];
+                const editedTime = editedTimes[lesson.lesson_number];
                 const displayDate = editedDate || lesson.lesson_date;
-                const isEdited = !!editedDate;
+                const displayTime = editedTime !== undefined ? editedTime : (lesson.lesson_time?.substring(0, 5) || '');
+                const isEdited = !!editedDate || editedTime !== undefined;
 
                 return (
                   <Card key={lesson.id} className={isEdited ? 'ring-2 ring-primary' : ''}>
@@ -265,6 +294,30 @@ export function LessonCalendarManager({
                         onChange={(e) => handleDateChange(lesson.lesson_number, e.target.value)}
                         className="text-sm"
                       />
+                      <div className="flex items-center gap-1 mt-1">
+                        <Input
+                          type="time"
+                          value={displayTime}
+                          onChange={(e) => handleTimeChange(lesson.lesson_number, e.target.value)}
+                          className="text-sm flex-1"
+                          placeholder="--:--"
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 flex-shrink-0"
+                          title="Applica orario a tutte le lezioni successive"
+                          onClick={() => {
+                            if (displayTime) {
+                              handleBulkTimeChange(lesson.lesson_number, displayTime);
+                            }
+                          }}
+                          disabled={!displayTime}
+                        >
+                          <ChevronRight className="w-3 h-3" />
+                          <ChevronRight className="w-3 h-3 -ml-2" />
+                        </Button>
+                      </div>
                       <p className="text-xs text-muted-foreground mt-1 text-center">
                         {format(parseISO(displayDate), "EEEE d MMMM", { locale: it })}
                       </p>
@@ -311,7 +364,7 @@ export function LessonCalendarManager({
           </Button>
           <Button 
             onClick={handleSave} 
-            disabled={isSaving || Object.keys(editedDates).length === 0}
+            disabled={isSaving || (Object.keys(editedDates).length === 0 && Object.keys(editedTimes).length === 0)}
           >
             {isSaving ? (
               <Loader2 className="w-4 h-4 animate-spin mr-2" />

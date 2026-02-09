@@ -14,9 +14,11 @@ interface LessonSchedule {
   lesson_number: number;
   lesson_date: string;
   lesson_title: string | null;
+  lesson_time: string | null;
   group: {
     id: string;
     title: string;
+    lesson_time: string | null;
     course: {
       title: string;
       emoji: string;
@@ -73,9 +75,11 @@ export function ChildLessonCalendar({ childId, childName }: ChildLessonCalendarP
           lesson_number,
           lesson_date,
           lesson_title,
+          lesson_time,
           group:group_id (
             id,
             title,
+            lesson_time,
             course:course_id (
               title,
               emoji
@@ -98,9 +102,11 @@ export function ChildLessonCalendar({ childId, childName }: ChildLessonCalendarP
           lesson_number: s.lesson_number,
           lesson_date: s.lesson_date,
           lesson_title: s.lesson_title,
+          lesson_time: s.lesson_time,
           group: {
             id: s.group.id,
             title: s.group.title,
+            lesson_time: s.group.lesson_time,
             course: {
               title: s.group.course.title,
               emoji: s.group.course.emoji,
@@ -239,6 +245,9 @@ export function ChildLessonCalendar({ childId, childName }: ChildLessonCalendarP
                         <p className="text-xs text-muted-foreground flex items-center justify-center gap-1 mt-1">
                           <Clock className="w-3 h-3" />
                           {format(date, "d MMM", { locale: it })}
+                          {(lesson.lesson_time || lesson.group.lesson_time) && (
+                            <span>· {(lesson.lesson_time || lesson.group.lesson_time)?.substring(0, 5)}</span>
+                          )}
                         </p>
                         {isTodayLesson && (
                           <Badge className="text-[10px] mt-1 bg-primary text-primary-foreground">

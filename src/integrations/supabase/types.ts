@@ -1252,6 +1252,7 @@ export type Database = {
       }
       student_groups: {
         Row: {
+          archived_at: string | null
           course_id: string
           created_at: string | null
           id: string
@@ -1260,11 +1261,13 @@ export type Database = {
           lesson_time: string | null
           max_lessons: number | null
           start_date: string | null
+          status: string
           teacher_id: string | null
           title: string
           updated_at: string | null
         }
         Insert: {
+          archived_at?: string | null
           course_id: string
           created_at?: string | null
           id?: string
@@ -1273,11 +1276,13 @@ export type Database = {
           lesson_time?: string | null
           max_lessons?: number | null
           start_date?: string | null
+          status?: string
           teacher_id?: string | null
           title: string
           updated_at?: string | null
         }
         Update: {
+          archived_at?: string | null
           course_id?: string
           created_at?: string | null
           id?: string
@@ -1286,6 +1291,7 @@ export type Database = {
           lesson_time?: string | null
           max_lessons?: number | null
           start_date?: string | null
+          status?: string
           teacher_id?: string | null
           title?: string
           updated_at?: string | null

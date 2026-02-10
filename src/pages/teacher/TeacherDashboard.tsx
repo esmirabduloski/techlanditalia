@@ -249,7 +249,7 @@ export default function TeacherDashboard() {
       const { data: groupsData } = await supabase
         .from('student_groups')
         .select(`
-          id, title, course_id, start_date, last_lesson_title, max_lessons, lesson_time,
+          id, title, course_id, start_date, last_lesson_title, max_lessons, lesson_time, status,
           courses!inner(title, emoji)
         `)
         .eq('teacher_id', effectiveUserId);
@@ -274,7 +274,8 @@ export default function TeacherDashboard() {
               last_lesson_title: g.last_lesson_title,
               max_lessons: g.max_lessons,
               student_count: count || 0,
-              lesson_time: g.lesson_time
+              lesson_time: g.lesson_time,
+              status: g.status || 'active'
             };
           })
         );
@@ -1197,14 +1198,15 @@ export default function TeacherDashboard() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-24">ID</TableHead>
-                        <TableHead>Titolo</TableHead>
-                        <TableHead>Corso</TableHead>
-                        <TableHead>Data Inizio</TableHead>
-                        <TableHead>Orario</TableHead>
-                        <TableHead className="text-center">Studenti</TableHead>
-                        <TableHead>Ultima Lezione</TableHead>
-                        <TableHead className="w-20"></TableHead>
+                         <TableHead className="w-24">ID</TableHead>
+                         <TableHead>Titolo</TableHead>
+                         <TableHead>Stato</TableHead>
+                         <TableHead>Corso</TableHead>
+                         <TableHead>Data Inizio</TableHead>
+                         <TableHead>Orario</TableHead>
+                         <TableHead className="text-center">Studenti</TableHead>
+                         <TableHead>Ultima Lezione</TableHead>
+                         <TableHead className="w-20"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -1218,6 +1220,13 @@ export default function TeacherDashboard() {
                             {group.id.substring(0, 8)}...
                           </TableCell>
                           <TableCell className="font-medium">{group.title}</TableCell>
+                          <TableCell>
+                            {(group as any).status === 'archived' ? (
+                              <Badge variant="secondary">Archiviato</Badge>
+                            ) : (
+                              <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">Attivo</Badge>
+                            )}
+                          </TableCell>
                           <TableCell>
                             <span className="mr-1">{group.course_emoji}</span>
                             {group.course_title}

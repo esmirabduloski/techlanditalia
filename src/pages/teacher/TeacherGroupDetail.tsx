@@ -51,6 +51,8 @@ interface StudentGroup {
   max_lessons: number;
   lesson_days: number[];
   lesson_time: string | null;
+  status: string;
+  archived_at: string | null;
 }
 
 interface GroupComment {
@@ -107,7 +109,7 @@ export default function TeacherGroupDetail() {
       const { data: groupData } = await supabase
         .from('student_groups')
         .select(`
-          id, title, course_id, start_date, max_lessons, teacher_id, lesson_days, lesson_time,
+          id, title, course_id, start_date, max_lessons, teacher_id, lesson_days, lesson_time, status, archived_at,
           courses!inner(title, emoji)
         `)
         .eq('id', groupId)
@@ -136,7 +138,9 @@ export default function TeacherGroupDetail() {
         start_date: groupData.start_date,
         max_lessons: groupData.max_lessons,
         lesson_days: (groupData.lesson_days as number[]) || [0],
-        lesson_time: groupData.lesson_time
+        lesson_time: groupData.lesson_time,
+        status: groupData.status || 'active',
+        archived_at: groupData.archived_at
       });
 
       // Fetch lesson schedule
@@ -487,7 +491,14 @@ export default function TeacherGroupDetail() {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
               <div>
                 <p className="text-sm text-muted-foreground">Gruppo</p>
-                <p className="text-lg font-semibold">{group.title}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-lg font-semibold">{group.title}</p>
+                  {group.status === 'archived' ? (
+                    <Badge variant="secondary">Archiviato</Badge>
+                  ) : (
+                    <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">Attivo</Badge>
+                  )}
+                </div>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Corso</p>

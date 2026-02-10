@@ -19,6 +19,7 @@ interface LessonSchedule {
     id: string;
     title: string;
     lesson_time: string | null;
+    status: string;
     course: {
       title: string;
       emoji: string;
@@ -80,6 +81,7 @@ export function ChildLessonCalendar({ childId, childName }: ChildLessonCalendarP
             id,
             title,
             lesson_time,
+            status,
             course:course_id (
               title,
               emoji
@@ -107,6 +109,7 @@ export function ChildLessonCalendar({ childId, childName }: ChildLessonCalendarP
             id: s.group.id,
             title: s.group.title,
             lesson_time: s.group.lesson_time,
+            status: s.group.status || 'active',
             course: {
               title: s.group.course.title,
               emoji: s.group.course.emoji,
@@ -219,6 +222,9 @@ export function ChildLessonCalendar({ childId, childName }: ChildLessonCalendarP
                 <div className="flex items-center gap-2">
                   <span className="text-lg">{courseData.emoji}</span>
                   <h4 className="font-medium text-foreground">{courseTitle}</h4>
+                  {courseData.lessons[0]?.group.status === 'archived' && (
+                    <Badge variant="secondary" className="text-[10px]">Archiviato</Badge>
+                  )}
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                   {courseData.lessons.map((lesson) => {

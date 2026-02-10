@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { AdminNav } from "@/components/admin/AdminNav";
 import { LessonCalendarManager } from "@/components/admin/LessonCalendarManager";
 import { 
-  Loader2, Plus, Users, LogOut, Home, Edit, Trash2, UsersRound, Search, Calendar, RotateCcw
+  Loader2, Plus, Users, LogOut, Home, Edit, Trash2, UsersRound, Search, Calendar, RotateCcw, Archive
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -54,6 +54,8 @@ interface StudentGroup {
   student_count: number;
   lesson_days: number[];
   lesson_time: string | null;
+  status: string;
+  archived_at: string | null;
 }
 
 interface Teacher {
@@ -91,6 +93,9 @@ export default function AdminGroups() {
   const [calendarGroup, setCalendarGroup] = useState<StudentGroup | null>(null);
   const [resetAttendanceConfirm, setResetAttendanceConfirm] = useState<StudentGroup | null>(null);
   const [isResetting, setIsResetting] = useState(false);
+  const [archiveGroup, setArchiveGroup] = useState<StudentGroup | null>(null);
+  const [archiveDate, setArchiveDate] = useState('');
+  const [isArchiving, setIsArchiving] = useState(false);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -123,7 +128,7 @@ export default function AdminGroups() {
       const { data: groupsData } = await supabase
         .from('student_groups')
         .select(`
-          id, title, course_id, teacher_id, start_date, last_lesson_title, max_lessons, lesson_days, lesson_time,
+          id, title, course_id, teacher_id, start_date, last_lesson_title, max_lessons, lesson_days, lesson_time, status, archived_at,
           courses!inner(title, emoji)
         `)
         .order('created_at', { ascending: false });
@@ -160,7 +165,9 @@ export default function AdminGroups() {
               max_lessons: g.max_lessons,
               student_count: count || 0,
               lesson_days: (g.lesson_days as number[]) || [0],
-              lesson_time: g.lesson_time
+              lesson_time: g.lesson_time,
+              status: g.status || 'active',
+              archived_at: g.archived_at
             };
           })
         );
@@ -370,6 +377,39 @@ export default function AdminGroups() {
     }
   };
 
+  const handleArchiveGroup = async () => {
+    if (!archiveGroup || !archiveDate) return;
+    setIsArchiving(true);
+    try {
+      const { error } = await supabase
+        .from('student_groups')
+        .update({ status: 'archived', archived_at: new Date(archiveDate).toISOString() })
+        .eq('id', archiveGroup.id);
+      if (error) throw error;
+      toast({ title: 'Successo', description: `Gruppo "${archiveGroup.title}" archiviato` });
+      fetchData();
+    } catch (error: any) {
+      toast({ title: 'Errore', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsArchiving(false);
+      setArchiveGroup(null);
+    }
+  };
+
+  const handleReactivateGroup = async (groupId: string) => {
+    try {
+      const { error } = await supabase
+        .from('student_groups')
+        .update({ status: 'active', archived_at: null })
+        .eq('id', groupId);
+      if (error) throw error;
+      toast({ title: 'Successo', description: 'Gruppo riattivato' });
+      fetchData();
+    } catch (error: any) {
+      toast({ title: 'Errore', description: error.message, variant: 'destructive' });
+    }
+  };
+
   const toggleStudent = (studentId: string) => {
     setFormData(prev => ({
       ...prev,
@@ -454,13 +494,14 @@ export default function AdminGroups() {
                   <TableRow>
                      <TableHead className="w-24">ID</TableHead>
                      <TableHead>Titolo</TableHead>
+                     <TableHead>Stato</TableHead>
                      <TableHead>Insegnante</TableHead>
                      <TableHead>Corso</TableHead>
                      <TableHead>Data Inizio</TableHead>
                      <TableHead>Orario</TableHead>
                      <TableHead className="text-center">Studenti</TableHead>
                      <TableHead>Ultima Lezione</TableHead>
-                     <TableHead className="w-24">Azioni</TableHead>
+                     <TableHead className="w-28">Azioni</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -470,6 +511,13 @@ export default function AdminGroups() {
                         {group.id.substring(0, 8)}...
                       </TableCell>
                       <TableCell className="font-medium">{group.title}</TableCell>
+                      <TableCell>
+                        {group.status === 'active' ? (
+                          <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">Attivo</Badge>
+                        ) : (
+                          <Badge variant="secondary">Archiviato</Badge>
+                        )}
+                      </TableCell>
                       <TableCell>
                         {group.teacher_name || <span className="text-muted-foreground">-</span>}
                       </TableCell>
@@ -509,6 +557,28 @@ export default function AdminGroups() {
                           <Button variant="ghost" size="icon" onClick={() => openEditDialog(group)}>
                             <Edit className="w-4 h-4" />
                           </Button>
+                          {group.status === 'active' ? (
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => {
+                                setArchiveGroup(group);
+                                setArchiveDate(new Date().toISOString().split('T')[0]);
+                              }}
+                              title="Archivia gruppo"
+                            >
+                              <Archive className="w-4 h-4 text-muted-foreground" />
+                            </Button>
+                          ) : (
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handleReactivateGroup(group.id)}
+                              title="Riattiva gruppo"
+                            >
+                              <RotateCcw className="w-4 h-4 text-green-600" />
+                            </Button>
+                          )}
                           <Button variant="ghost" size="icon" onClick={() => setDeleteConfirm(group.id)}>
                             <Trash2 className="w-4 h-4 text-destructive" />
                           </Button>
@@ -754,6 +824,38 @@ export default function AdminGroups() {
               >
                 {isResetting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <RotateCcw className="w-4 h-4 mr-2" />}
                 Reset Presenze
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Archive Group Dialog */}
+        <AlertDialog open={!!archiveGroup} onOpenChange={() => setArchiveGroup(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Archivia Gruppo</AlertDialogTitle>
+              <AlertDialogDescription>
+                Stai per archiviare il gruppo "{archiveGroup?.title}". 
+                Il gruppo non verrà eliminato ma sarà contrassegnato come archiviato.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="py-4">
+              <Label>Data di Archiviazione</Label>
+              <Input
+                type="date"
+                value={archiveDate}
+                onChange={(e) => setArchiveDate(e.target.value)}
+                className="mt-2"
+              />
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isArchiving}>Annulla</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleArchiveGroup}
+                disabled={isArchiving || !archiveDate}
+              >
+                {isArchiving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Archive className="w-4 h-4 mr-2" />}
+                Archivia
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

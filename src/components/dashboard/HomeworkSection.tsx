@@ -81,11 +81,30 @@ export function HomeworkSection() {
 
       const lessonIds = lessons.map((l) => l.id);
 
-      // Get homework for these lessons
+      // Get completed lessons for this student
+      const { data: completedLessons } = await supabase
+        .from("lesson_progress")
+        .select("lesson_id")
+        .eq("student_id", user.id);
+
+      const completedLessonIds = new Set(
+        completedLessons?.map((lp) => lp.lesson_id) || []
+      );
+
+      // Only show homework for lessons the student has completed
+      const accessibleLessonIds = lessonIds.filter((id) => completedLessonIds.has(id));
+
+      if (accessibleLessonIds.length === 0) {
+        setHomework([]);
+        setIsLoading(false);
+        return;
+      }
+
+      // Get homework for completed lessons only
       const { data: homeworkData } = await supabase
         .from("homework")
         .select("*")
-        .in("lesson_id", lessonIds);
+        .in("lesson_id", accessibleLessonIds);
 
       if (!homeworkData) {
         setHomework([]);

@@ -16,6 +16,7 @@ import { HomeworkSection } from '@/components/dashboard/HomeworkSection';
 import { ParentFeedbackSection } from '@/components/dashboard/ParentFeedbackSection';
 import { StudentCommentsSection } from '@/components/dashboard/StudentCommentsSection';
 import { ParentChildrenSection } from '@/components/dashboard/ParentChildrenSection';
+import { StudentLessonSchedule } from '@/components/dashboard/StudentLessonSchedule';
 import { StreakDisplay } from '@/components/dashboard/StreakDisplay';
 import { AttendanceHistory } from '@/components/dashboard/AttendanceHistory';
 import { StreakBonusesDisplay } from '@/components/dashboard/StreakBonusesDisplay';
@@ -419,6 +420,13 @@ export default function Dashboard() {
                   })}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Lesson Schedule - Hide for teachers and parents */}
+          {effectiveUserId && !isTeacher && !isParent && (
+            <div className="mb-8">
+              <StudentLessonSchedule studentId={effectiveUserId} />
             </div>
           )}
 

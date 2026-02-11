@@ -11,7 +11,7 @@ interface AttendanceStatus {
   lessonNumber: number;
   lessonDate: string;
   lessonTitle: string | null;
-  status: 'present' | 'absent' | 'justified' | 'pending';
+  status: 'present' | 'absent' | 'excused' | 'justified' | 'pending';
 }
 
 interface AttendanceStats {
@@ -24,7 +24,7 @@ interface AttendanceStats {
 
 interface ChildAttendanceHistoryProps {
   childId: string;
-  childName: string;
+  childName?: string;
 }
 
 export function ChildAttendanceHistory({ childId, childName }: ChildAttendanceHistoryProps) {
@@ -147,7 +147,7 @@ export function ChildAttendanceHistory({ childId, childName }: ChildAttendanceHi
         } else if (attendanceStatus === 'absent') {
           status = 'absent';
           totalAbsent++;
-        } else if (attendanceStatus === 'justified') {
+        } else if (attendanceStatus === 'justified' || attendanceStatus === 'excused') {
           status = 'justified';
           totalJustified++;
         } else if (isPast) {
@@ -193,7 +193,7 @@ export function ChildAttendanceHistory({ childId, childName }: ChildAttendanceHi
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
             <CalendarCheck className="h-5 w-5 text-primary" />
-            Storico Presenze di {childName}
+            Storico Presenze{childName ? ` di ${childName}` : ''}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -216,7 +216,7 @@ export function ChildAttendanceHistory({ childId, childName }: ChildAttendanceHi
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
             <CalendarCheck className="h-5 w-5 text-primary" />
-            Storico Presenze di {childName}
+            Storico Presenze{childName ? ` di ${childName}` : ''}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -233,7 +233,7 @@ export function ChildAttendanceHistory({ childId, childName }: ChildAttendanceHi
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center gap-2">
           <CalendarCheck className="h-5 w-5 text-primary" />
-          Storico Presenze di {childName}
+          Storico Presenze{childName ? ` di ${childName}` : ''}
         </CardTitle>
       </CardHeader>
       <CardContent>

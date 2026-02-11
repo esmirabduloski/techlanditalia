@@ -18,7 +18,7 @@ import { StudentCommentsSection } from '@/components/dashboard/StudentCommentsSe
 import { ParentChildrenSection } from '@/components/dashboard/ParentChildrenSection';
 import { StudentLessonSchedule } from '@/components/dashboard/StudentLessonSchedule';
 import { StreakDisplay } from '@/components/dashboard/StreakDisplay';
-import { AttendanceHistory } from '@/components/dashboard/AttendanceHistory';
+import { ChildAttendanceHistory } from '@/components/dashboard/ChildAttendanceHistory';
 import { StreakBonusesDisplay } from '@/components/dashboard/StreakBonusesDisplay';
 import { DeadlineNotifications } from '@/components/dashboard/DeadlineNotifications';
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
@@ -37,7 +37,7 @@ export default function Dashboard() {
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const { isImpersonating, impersonatedUser } = useImpersonation();
   const { profile, enrollments, lessonProgress, taskProgress, isLoading: dataLoading, effectiveUserId } = useStudentProgress();
-  const { streaks, attendance, stats, bonuses, loading: streaksLoading } = useStudentStreaks(effectiveUserId);
+  const { streaks, bonuses, loading: streaksLoading } = useStudentStreaks(effectiveUserId);
   const { isTeacher, isLoading: teacherLoading } = useTeacherRole();
   const { celebration, isVisible: showCelebration, hideCelebration } = useCelebration();
   const navigate = useNavigate();
@@ -353,7 +353,7 @@ export default function Dashboard() {
                     <StreakBonusesDisplay bonuses={bonuses} />
                   )}
                 </div>
-                <AttendanceHistory attendance={attendance} stats={stats} />
+                <ChildAttendanceHistory childId={effectiveUserId} />
               </div>
             </div>
           )}

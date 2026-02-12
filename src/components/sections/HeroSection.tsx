@@ -79,7 +79,10 @@ export function HeroSection() {
                     src={heroImage}
                     alt="Corsi di Roblox, Minecraft, Scratch, Python e Web per bambini e ragazzi"
                     className="w-full h-full object-cover"
+                    width={504}
+                    height={504}
                     loading="eager"
+                    fetchPriority="high"
                   />
                 </div>
               </div>

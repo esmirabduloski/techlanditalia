@@ -736,12 +736,18 @@ export default function AdminUsers() {
             <Badge variant="secondary">Admin</Badge>
           </div>
           <div className="flex items-center gap-4">
-            <Link to="/area-riservata">
-              <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/insegnante">
+                <GraduationCap className="w-4 h-4 mr-2" />
+                Insegnante
+              </Link>
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/area-riservata">
                 <Home className="w-4 h-4 mr-2" />
                 Area Riservata
-              </Button>
-            </Link>
+              </Link>
+            </Button>
             <span className="text-sm text-muted-foreground hidden sm:block">{user?.email}</span>
             <Button variant="outline" size="sm" onClick={handleSignOut}>
               <LogOut className="w-4 h-4 mr-2" />
@@ -828,7 +834,7 @@ export default function AdminUsers() {
                                   <Badge variant="secondary">Genitore</Badge>
                                   {group.parent.isAdmin && <Badge className="bg-amber-500 text-white">Admin</Badge>}
                                   {group.parent.isTeacher && <Badge className="bg-tech-teal text-white">Insegnante</Badge>}
-                                  {group.parent.isParentRole && <Badge className="bg-purple-500 text-white">Ruolo Genitore</Badge>}
+                                  {group.parent.isParentRole && group.parent.role !== 'parent' && <Badge className="bg-purple-500 text-white">Ruolo Genitore</Badge>}
                                 </div>
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
                                   <span>{hasChildren ? `${group.children.length} ${group.children.length === 1 ? 'figlio' : 'figli'}` : 'Nessun figlio associato'}</span>

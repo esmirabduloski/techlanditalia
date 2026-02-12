@@ -126,6 +126,12 @@ export default function AdminDashboard() {
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground hidden sm:block">{user?.email}</span>
             <Button variant="outline" size="sm" asChild>
+              <Link to="/insegnante">
+                <User className="w-4 h-4 mr-2" />
+                Insegnante
+              </Link>
+            </Button>
+            <Button variant="outline" size="sm" asChild>
               <Link to="/area-riservata">
                 <User className="w-4 h-4 mr-2" />
                 Area Riservata

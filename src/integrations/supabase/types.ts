@@ -777,6 +777,50 @@ export type Database = {
           },
         ]
       }
+      lesson_balance_log: {
+        Row: {
+          amount: number
+          balance_after: number
+          balance_before: number
+          created_at: string
+          id: string
+          notes: string | null
+          operation_type: string
+          performed_by: string | null
+          student_id: string
+        }
+        Insert: {
+          amount: number
+          balance_after: number
+          balance_before: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          operation_type: string
+          performed_by?: string | null
+          student_id: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          balance_before?: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          operation_type?: string
+          performed_by?: string | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_balance_log_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lesson_progress: {
         Row: {
           completed_at: string
@@ -1034,6 +1078,7 @@ export type Database = {
           email: string | null
           full_name: string
           id: string
+          lesson_balance: number
           onboarding_completed: boolean | null
           parent_id: string | null
           role: string
@@ -1047,6 +1092,7 @@ export type Database = {
           email?: string | null
           full_name: string
           id: string
+          lesson_balance?: number
           onboarding_completed?: boolean | null
           parent_id?: string | null
           role: string
@@ -1060,6 +1106,7 @@ export type Database = {
           email?: string | null
           full_name?: string
           id?: string
+          lesson_balance?: number
           onboarding_completed?: boolean | null
           parent_id?: string | null
           role?: string

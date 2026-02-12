@@ -30,8 +30,10 @@ import {
   Trash2,
   Users2,
   UserPlus,
-  Eye
+  Eye,
+  CreditCard
 } from 'lucide-react';
+import { LessonBalanceManager } from '@/components/admin/LessonBalanceManager';
 import {
   Select,
   SelectContent,
@@ -67,6 +69,7 @@ interface Profile {
   parent_id: string | null;
   avatar_id: number;
   total_points: number;
+  lesson_balance: number;
   created_at: string;
   email?: string;
   isAdmin?: boolean;
@@ -129,6 +132,7 @@ export default function AdminUsers() {
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; userId: string; userName: string }>({ open: false, userId: '', userName: '' });
   const [assignChildrenDialog, setAssignChildrenDialog] = useState<{ open: boolean; parentId: string; parentName: string }>({ open: false, parentId: '', parentName: '' });
   const [selectedChildrenToAssign, setSelectedChildrenToAssign] = useState<string[]>([]);
+  const [balanceDialog, setBalanceDialog] = useState<{ open: boolean; userId: string; userName: string; balance: number }>({ open: false, userId: '', userName: '', balance: 0 });
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -1068,6 +1072,21 @@ export default function AdminUsers() {
                                   <Tooltip>
                                     <TooltipTrigger asChild>
                                       <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => setBalanceDialog({ open: true, userId: child.id, userName: child.full_name, balance: child.lesson_balance || 0 })}
+                                      >
+                                        <CreditCard className="w-4 h-4 mr-1" />
+                                        {child.lesson_balance || 0}
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Gestisci saldo lezioni</TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button 
                                         variant="ghost" 
                                         size="sm"
                                         onClick={() => setDeleteDialog({ open: true, userId: child.id, userName: child.full_name })}
@@ -1183,6 +1202,21 @@ export default function AdminUsers() {
                                 <Plus className="w-4 h-4 mr-1" />
                                 Corsi
                               </Button>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => setBalanceDialog({ open: true, userId: child.id, userName: child.full_name, balance: child.lesson_balance || 0 })}
+                                    >
+                                      <CreditCard className="w-4 h-4 mr-1" />
+                                      {child.lesson_balance || 0}
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Gestisci saldo lezioni</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -1500,6 +1534,15 @@ export default function AdminUsers() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* Lesson Balance Manager Dialog */}
+      <LessonBalanceManager
+        open={balanceDialog.open}
+        onOpenChange={(open) => !open && setBalanceDialog({ open: false, userId: '', userName: '', balance: 0 })}
+        studentId={balanceDialog.userId}
+        studentName={balanceDialog.userName}
+        currentBalance={balanceDialog.balance}
+        onBalanceUpdated={fetchData}
+      />
 
     </div>
   );

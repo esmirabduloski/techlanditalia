@@ -24,7 +24,7 @@ import { DeadlineNotifications } from '@/components/dashboard/DeadlineNotificati
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { CelebrationOverlay } from '@/components/gamification/CelebrationOverlay';
 import { useCelebration } from '@/hooks/useCelebration';
-import { Loader2, BookOpen, Trophy, Target, Settings, LogOut, Rocket, Shield, GraduationCap } from 'lucide-react';
+import { Loader2, BookOpen, Trophy, Target, Settings, LogOut, Rocket, Shield, GraduationCap, CreditCard } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface CourseProgress {
@@ -279,7 +279,7 @@ export default function Dashboard() {
 
           {/* Stats Cards - Hide for parents and teachers */}
           {!isTeacher && !isParent && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
               <Card className="border-primary/20 bg-gradient-to-br from-card to-primary/5">
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
@@ -312,6 +312,18 @@ export default function Dashboard() {
                       <p className="text-3xl font-bold text-foreground">{completedLessons}</p>
                     </div>
                     <BookOpen className="w-10 h-10 text-secondary/30" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-primary/20 bg-gradient-to-br from-card to-primary/5">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Lezioni Rimanenti</p>
+                      <p className="text-3xl font-bold text-foreground">{(profile as any).lesson_balance || 0}</p>
+                    </div>
+                    <CreditCard className="w-10 h-10 text-primary/30" />
                   </div>
                 </CardContent>
               </Card>

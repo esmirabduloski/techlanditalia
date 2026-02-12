@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { 
-  Loader2, ArrowLeft, User, BookOpen, Users, MessageCircle, Mail, Calendar, Plus, Send, ChevronDown
+  Loader2, ArrowLeft, User, BookOpen, Users, MessageCircle, Mail, Calendar, Plus, Send, ChevronDown, CreditCard
 } from "lucide-react";
 import { AvatarDisplay } from "@/components/gamification/AvatarSelector";
 import { LevelBadge, getLevelFromPoints } from "@/components/gamification/LevelBadge";
@@ -131,6 +131,7 @@ interface StudentProfile {
   email: string | null;
   avatar_id: number;
   total_points: number;
+  lesson_balance: number;
   created_at: string;
   parent_id: string | null;
 }
@@ -375,6 +376,11 @@ export default function TeacherStudentDetail() {
                       <Calendar className="w-4 h-4" />
                       Iscritto dal {new Date(student.created_at).toLocaleDateString('it-IT')}
                     </p>
+                  </div>
+                  <div className="mt-3 flex items-center justify-center gap-2 text-sm">
+                    <CreditCard className="w-4 h-4 text-primary" />
+                    <span className="font-medium">{student.lesson_balance || 0}</span>
+                    <span className="text-muted-foreground">lezioni rimanenti</span>
                   </div>
                 </div>
               </CardContent>

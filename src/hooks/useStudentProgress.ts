@@ -9,6 +9,7 @@ interface Profile {
   role: string;
   avatar_id: number;
   total_points: number;
+  lesson_balance: number;
   parent_id: string | null;
   onboarding_completed: boolean | null;
 }

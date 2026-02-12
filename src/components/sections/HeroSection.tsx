@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Play, Sparkles, Users, Award, Shield } from "lucide-react";
-import heroImage from "@/assets/home_page_techland.jpeg";
+const heroImage = "/images/home_page_techland.jpeg";
 
 export function HeroSection() {
   return (

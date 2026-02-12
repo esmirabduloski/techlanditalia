@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,60 +9,61 @@ import { ThemeProvider } from "next-themes";
 import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
 import { ImpersonationProvider } from "@/contexts/ImpersonationContext";
 import { ImpersonationBanner } from "@/components/admin/ImpersonationBanner";
-import Index from "./pages/Index";
-import Corsi from "./pages/Corsi";
-import CorsoDettaglio from "./pages/CorsoDettaglio";
-import ChiSiamo from "./pages/ChiSiamo";
-import Blog from "./pages/Blog";
-import BlogArticle from "./pages/BlogArticle";
-import Prenota from "./pages/Prenota";
-import FAQ from "./pages/FAQ";
-import Privacy from "./pages/Privacy";
-import Termini from "./pages/Termini";
-import Cookie from "./pages/Cookie";
-import Contatti from "./pages/Contatti";
-import LavoraConNoi from "./pages/LavoraConNoi";
-import NotFound from "./pages/NotFound";
-import AdminLogin from "./pages/admin/AdminLogin";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminBookings from "./pages/admin/AdminBookings";
-import BlogEditor from "./pages/admin/BlogEditor";
-import AdminContatti from "./pages/admin/AdminContatti";
-import AdminUsers from "./pages/admin/AdminUsers";
-import AdminStats from "./pages/admin/AdminStats";
-import AdminCourses from "./pages/admin/AdminCourses";
-import AdminLessons from "./pages/admin/AdminLessons";
-import LessonEditor from "./pages/admin/LessonEditor";
-import AdminTasks from "./pages/admin/AdminTasks";
-import TaskEditor from "./pages/admin/TaskEditor";
-import AdminHomework from "./pages/admin/AdminHomework";
-import HomeworkEditor from "./pages/admin/HomeworkEditor";
-import HomeworkView from "./pages/area-riservata/HomeworkView";
-import AdminNewsletter from "./pages/admin/AdminNewsletter";
-import AdminStudentComments from "./pages/admin/AdminStudentComments";
-import AdminGrading from "./pages/admin/AdminGrading";
-// AdminSimulator removed - impersonation now in AdminUsers
-import AdminScheduledLessons from "./pages/admin/AdminScheduledLessons";
-import AdminAttendance from "./pages/admin/AdminAttendance";
-import AdminAnalytics from "./pages/admin/AdminAnalytics";
-import AuthPage from "./pages/auth/AuthPage";
-import AreaRiservataDashboard from "./pages/area-riservata/Dashboard";
-import AreaRiservataProfile from "./pages/area-riservata/Profile";
-import CourseProgress from "./pages/area-riservata/CourseProgress";
-import LessonView from "./pages/area-riservata/LessonView";
-import TaskView from "./pages/area-riservata/TaskView";
-import HomeworkDetail from "./pages/area-riservata/HomeworkDetail";
-import TeacherDashboard from "./pages/teacher/TeacherDashboard";
-import TeacherCourseDetail from "./pages/teacher/TeacherCourseDetail";
-import TeacherGroupDetail from "./pages/teacher/TeacherGroupDetail";
-import TeacherStudentDetail from "./pages/teacher/TeacherStudentDetail";
- import TeacherLessonView from "./pages/teacher/TeacherLessonView";
- import TeacherTaskView from "./pages/teacher/TeacherTaskView";
- import TeacherHomeworkView from "./pages/teacher/TeacherHomeworkView";
-import AdminGroups from "./pages/admin/AdminGroups";
-import AdminTeacherCalendar from "./pages/admin/AdminTeacherCalendar";
-import AdminTeacherLinks from "./pages/admin/AdminTeacherLinks";
 import ScrollToTop from "./components/ScrollToTop";
+import Index from "./pages/Index";
+
+// Lazy-loaded routes
+const Corsi = lazy(() => import("./pages/Corsi"));
+const CorsoDettaglio = lazy(() => import("./pages/CorsoDettaglio"));
+const ChiSiamo = lazy(() => import("./pages/ChiSiamo"));
+const Blog = lazy(() => import("./pages/Blog"));
+const BlogArticle = lazy(() => import("./pages/BlogArticle"));
+const Prenota = lazy(() => import("./pages/Prenota"));
+const FAQ = lazy(() => import("./pages/FAQ"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Termini = lazy(() => import("./pages/Termini"));
+const Cookie = lazy(() => import("./pages/Cookie"));
+const Contatti = lazy(() => import("./pages/Contatti"));
+const LavoraConNoi = lazy(() => import("./pages/LavoraConNoi"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminBookings = lazy(() => import("./pages/admin/AdminBookings"));
+const BlogEditor = lazy(() => import("./pages/admin/BlogEditor"));
+const AdminContatti = lazy(() => import("./pages/admin/AdminContatti"));
+const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
+const AdminStats = lazy(() => import("./pages/admin/AdminStats"));
+const AdminCourses = lazy(() => import("./pages/admin/AdminCourses"));
+const AdminLessons = lazy(() => import("./pages/admin/AdminLessons"));
+const LessonEditor = lazy(() => import("./pages/admin/LessonEditor"));
+const AdminTasks = lazy(() => import("./pages/admin/AdminTasks"));
+const TaskEditor = lazy(() => import("./pages/admin/TaskEditor"));
+const AdminHomework = lazy(() => import("./pages/admin/AdminHomework"));
+const HomeworkEditor = lazy(() => import("./pages/admin/HomeworkEditor"));
+const HomeworkView = lazy(() => import("./pages/area-riservata/HomeworkView"));
+const AdminNewsletter = lazy(() => import("./pages/admin/AdminNewsletter"));
+const AdminStudentComments = lazy(() => import("./pages/admin/AdminStudentComments"));
+const AdminGrading = lazy(() => import("./pages/admin/AdminGrading"));
+const AdminScheduledLessons = lazy(() => import("./pages/admin/AdminScheduledLessons"));
+const AdminAttendance = lazy(() => import("./pages/admin/AdminAttendance"));
+const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics"));
+const AuthPage = lazy(() => import("./pages/auth/AuthPage"));
+const AreaRiservataDashboard = lazy(() => import("./pages/area-riservata/Dashboard"));
+const AreaRiservataProfile = lazy(() => import("./pages/area-riservata/Profile"));
+const CourseProgress = lazy(() => import("./pages/area-riservata/CourseProgress"));
+const LessonView = lazy(() => import("./pages/area-riservata/LessonView"));
+const TaskView = lazy(() => import("./pages/area-riservata/TaskView"));
+const HomeworkDetail = lazy(() => import("./pages/area-riservata/HomeworkDetail"));
+const TeacherDashboard = lazy(() => import("./pages/teacher/TeacherDashboard"));
+const TeacherCourseDetail = lazy(() => import("./pages/teacher/TeacherCourseDetail"));
+const TeacherGroupDetail = lazy(() => import("./pages/teacher/TeacherGroupDetail"));
+const TeacherStudentDetail = lazy(() => import("./pages/teacher/TeacherStudentDetail"));
+const TeacherLessonView = lazy(() => import("./pages/teacher/TeacherLessonView"));
+const TeacherTaskView = lazy(() => import("./pages/teacher/TeacherTaskView"));
+const TeacherHomeworkView = lazy(() => import("./pages/teacher/TeacherHomeworkView"));
+const AdminGroups = lazy(() => import("./pages/admin/AdminGroups"));
+const AdminTeacherCalendar = lazy(() => import("./pages/admin/AdminTeacherCalendar"));
+const AdminTeacherLinks = lazy(() => import("./pages/admin/AdminTeacherLinks"));
 
 const queryClient = new QueryClient();
 
@@ -77,65 +79,66 @@ const App = () => (
               <ImpersonationBanner />
               <AnalyticsProvider>
                 <ScrollToTop />
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/corsi" element={<Corsi />} />
-                  <Route path="/corsi/:id" element={<CorsoDettaglio />} />
-                  <Route path="/chi-siamo" element={<ChiSiamo />} />
-                  <Route path="/blog" element={<Blog />} />
-                  <Route path="/blog/:slug" element={<BlogArticle />} />
-                  <Route path="/prenota" element={<Prenota />} />
-                  <Route path="/faq" element={<FAQ />} />
-                  <Route path="/privacy" element={<Privacy />} />
-                  <Route path="/termini" element={<Termini />} />
-                  <Route path="/cookie" element={<Cookie />} />
-                  <Route path="/contatti" element={<Contatti />} />
-                  <Route path="/lavora-con-noi" element={<LavoraConNoi />} />
-                  <Route path="/auth" element={<AuthPage />} />
-                  <Route path="/area-riservata" element={<AreaRiservataDashboard />} />
-                  <Route path="/area-riservata/profilo" element={<AreaRiservataProfile />} />
-                  <Route path="/area-riservata/corso/:courseId" element={<CourseProgress />} />
-                  <Route path="/area-riservata/corso/:courseId/lezione/:lessonNumber" element={<LessonView />} />
-                  <Route path="/area-riservata/corso/:courseId/lezione/:lessonNumber/task/:taskNumber" element={<TaskView />} />
-                  <Route path="/area-riservata/compito/:homeworkId" element={<HomeworkView />} />
-                  <Route path="/area-riservata/compito-dettaglio/:homeworkId" element={<HomeworkDetail />} />
-                  <Route path="/admin/login" element={<AdminLogin />} />
-                  <Route path="/admin" element={<AdminDashboard />} />
-                  <Route path="/admin/corsi" element={<AdminCourses />} />
-                  <Route path="/admin/corsi/:courseId/lezioni" element={<AdminLessons />} />
-                  <Route path="/admin/corsi/:courseId/lezioni/nuova" element={<LessonEditor />} />
-                  <Route path="/admin/corsi/:courseId/lezioni/:lessonId/modifica" element={<LessonEditor />} />
-                  <Route path="/admin/corsi/:courseId/lezioni/:lessonId/task" element={<AdminTasks />} />
-                  <Route path="/admin/corsi/:courseId/lezioni/:lessonId/task/nuovo" element={<TaskEditor />} />
-                  <Route path="/admin/corsi/:courseId/lezioni/:lessonId/task/:taskId/modifica" element={<TaskEditor />} />
-                  <Route path="/admin/corsi/:courseId/lezioni/:lessonId/compiti" element={<AdminHomework />} />
-                  <Route path="/admin/corsi/:courseId/lezioni/:lessonId/compiti/nuovo" element={<HomeworkEditor />} />
-                  <Route path="/admin/corsi/:courseId/lezioni/:lessonId/compiti/:homeworkId/modifica" element={<HomeworkEditor />} />
-                  <Route path="/admin/prenotazioni" element={<AdminBookings />} />
-                  <Route path="/admin/contatti" element={<AdminContatti />} />
-                  <Route path="/admin/blog/nuovo" element={<BlogEditor />} />
-                  <Route path="/admin/blog/:id/modifica" element={<BlogEditor />} />
-                  <Route path="/admin/utenti" element={<AdminUsers />} />
-                  <Route path="/admin/commenti" element={<AdminStudentComments />} />
-                  <Route path="/admin/valutazioni" element={<AdminGrading />} />
-                  <Route path="/admin/statistiche" element={<AdminStats />} />
-                  <Route path="/admin/newsletter" element={<AdminNewsletter />} />
-                  {/* Simulatore removed - impersonation now in AdminUsers */}
-                  <Route path="/admin/lezioni-programmate" element={<AdminScheduledLessons />} />
-                  <Route path="/admin/presenze" element={<AdminAttendance />} />
-                  <Route path="/admin/analytics" element={<AdminAnalytics />} />
-                  <Route path="/admin/gruppi" element={<AdminGroups />} />
-                  <Route path="/admin/disponibilita" element={<AdminTeacherCalendar />} />
-                  <Route path="/admin/link-insegnanti" element={<AdminTeacherLinks />} />
-                  <Route path="/insegnante" element={<TeacherDashboard />} />
-                  <Route path="/insegnante/corso/:courseSlug" element={<TeacherCourseDetail />} />
-                  <Route path="/insegnante/corso/:courseSlug/lezione/:lessonNumber" element={<TeacherLessonView />} />
-                  <Route path="/insegnante/corso/:courseSlug/lezione/:lessonNumber/task/:taskNumber" element={<TeacherTaskView />} />
-                  <Route path="/insegnante/corso/:courseSlug/compito/:homeworkId" element={<TeacherHomeworkView />} />
-                  <Route path="/insegnante/gruppo/:groupId" element={<TeacherGroupDetail />} />
-                  <Route path="/insegnante/studente/:studentId" element={<TeacherStudentDetail />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
+                <Suspense fallback={null}>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/corsi" element={<Corsi />} />
+                    <Route path="/corsi/:id" element={<CorsoDettaglio />} />
+                    <Route path="/chi-siamo" element={<ChiSiamo />} />
+                    <Route path="/blog" element={<Blog />} />
+                    <Route path="/blog/:slug" element={<BlogArticle />} />
+                    <Route path="/prenota" element={<Prenota />} />
+                    <Route path="/faq" element={<FAQ />} />
+                    <Route path="/privacy" element={<Privacy />} />
+                    <Route path="/termini" element={<Termini />} />
+                    <Route path="/cookie" element={<Cookie />} />
+                    <Route path="/contatti" element={<Contatti />} />
+                    <Route path="/lavora-con-noi" element={<LavoraConNoi />} />
+                    <Route path="/auth" element={<AuthPage />} />
+                    <Route path="/area-riservata" element={<AreaRiservataDashboard />} />
+                    <Route path="/area-riservata/profilo" element={<AreaRiservataProfile />} />
+                    <Route path="/area-riservata/corso/:courseId" element={<CourseProgress />} />
+                    <Route path="/area-riservata/corso/:courseId/lezione/:lessonNumber" element={<LessonView />} />
+                    <Route path="/area-riservata/corso/:courseId/lezione/:lessonNumber/task/:taskNumber" element={<TaskView />} />
+                    <Route path="/area-riservata/compito/:homeworkId" element={<HomeworkView />} />
+                    <Route path="/area-riservata/compito-dettaglio/:homeworkId" element={<HomeworkDetail />} />
+                    <Route path="/admin/login" element={<AdminLogin />} />
+                    <Route path="/admin" element={<AdminDashboard />} />
+                    <Route path="/admin/corsi" element={<AdminCourses />} />
+                    <Route path="/admin/corsi/:courseId/lezioni" element={<AdminLessons />} />
+                    <Route path="/admin/corsi/:courseId/lezioni/nuova" element={<LessonEditor />} />
+                    <Route path="/admin/corsi/:courseId/lezioni/:lessonId/modifica" element={<LessonEditor />} />
+                    <Route path="/admin/corsi/:courseId/lezioni/:lessonId/task" element={<AdminTasks />} />
+                    <Route path="/admin/corsi/:courseId/lezioni/:lessonId/task/nuovo" element={<TaskEditor />} />
+                    <Route path="/admin/corsi/:courseId/lezioni/:lessonId/task/:taskId/modifica" element={<TaskEditor />} />
+                    <Route path="/admin/corsi/:courseId/lezioni/:lessonId/compiti" element={<AdminHomework />} />
+                    <Route path="/admin/corsi/:courseId/lezioni/:lessonId/compiti/nuovo" element={<HomeworkEditor />} />
+                    <Route path="/admin/corsi/:courseId/lezioni/:lessonId/compiti/:homeworkId/modifica" element={<HomeworkEditor />} />
+                    <Route path="/admin/prenotazioni" element={<AdminBookings />} />
+                    <Route path="/admin/contatti" element={<AdminContatti />} />
+                    <Route path="/admin/blog/nuovo" element={<BlogEditor />} />
+                    <Route path="/admin/blog/:id/modifica" element={<BlogEditor />} />
+                    <Route path="/admin/utenti" element={<AdminUsers />} />
+                    <Route path="/admin/commenti" element={<AdminStudentComments />} />
+                    <Route path="/admin/valutazioni" element={<AdminGrading />} />
+                    <Route path="/admin/statistiche" element={<AdminStats />} />
+                    <Route path="/admin/newsletter" element={<AdminNewsletter />} />
+                    <Route path="/admin/lezioni-programmate" element={<AdminScheduledLessons />} />
+                    <Route path="/admin/presenze" element={<AdminAttendance />} />
+                    <Route path="/admin/analytics" element={<AdminAnalytics />} />
+                    <Route path="/admin/gruppi" element={<AdminGroups />} />
+                    <Route path="/admin/disponibilita" element={<AdminTeacherCalendar />} />
+                    <Route path="/admin/link-insegnanti" element={<AdminTeacherLinks />} />
+                    <Route path="/insegnante" element={<TeacherDashboard />} />
+                    <Route path="/insegnante/corso/:courseSlug" element={<TeacherCourseDetail />} />
+                    <Route path="/insegnante/corso/:courseSlug/lezione/:lessonNumber" element={<TeacherLessonView />} />
+                    <Route path="/insegnante/corso/:courseSlug/lezione/:lessonNumber/task/:taskNumber" element={<TeacherTaskView />} />
+                    <Route path="/insegnante/corso/:courseSlug/compito/:homeworkId" element={<TeacherHomeworkView />} />
+                    <Route path="/insegnante/gruppo/:groupId" element={<TeacherGroupDetail />} />
+                    <Route path="/insegnante/studente/:studentId" element={<TeacherStudentDetail />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
               </AnalyticsProvider>
             </BrowserRouter>
         </TooltipProvider>

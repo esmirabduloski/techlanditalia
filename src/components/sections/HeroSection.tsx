@@ -97,7 +97,7 @@ export function HeroSection() {
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-red-500/20 flex items-center justify-center">
                   <img
-                    src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Roblox_player_icon_black.svg"
+                    src="/images/roblox-icon.svg"
                     alt="Roblox"
                     className="w-7 h-7"
                   />

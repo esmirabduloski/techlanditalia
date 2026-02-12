@@ -76,7 +76,7 @@ export function Footer() {
 
           {/* Corsi */}
           <nav aria-label="Corsi di programmazione">
-            <h4 className="font-semibold text-lg mb-4">Corsi Coding Bambini</h4>
+            <h3 className="font-semibold text-lg mb-4">Corsi Coding Bambini</h3>
             <ul className="space-y-3">
               {footerLinks.corsi.map((link) => (
                 <li key={link.href}>
@@ -94,7 +94,7 @@ export function Footer() {
 
           {/* Azienda */}
           <nav aria-label="Informazioni azienda">
-            <h4 className="font-semibold text-lg mb-4">TECHLAND</h4>
+            <h3 className="font-semibold text-lg mb-4">TECHLAND</h3>
             <ul className="space-y-3">
               {footerLinks.azienda.map((link) => (
                 <li key={link.href}>
@@ -112,7 +112,7 @@ export function Footer() {
 
           {/* Supporto */}
           <nav aria-label="Supporto e informazioni">
-            <h4 className="font-semibold text-lg mb-4">Supporto</h4>
+            <h3 className="font-semibold text-lg mb-4">Supporto</h3>
             <ul className="space-y-3">
               {footerLinks.supporto.map((link) => (
                 <li key={link.href}>

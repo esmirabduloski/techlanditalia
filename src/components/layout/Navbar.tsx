@@ -95,6 +95,7 @@ export function Navbar() {
           <button
             className="md:hidden p-2 rounded-lg hover:bg-muted"
             onClick={() => setIsOpen(!isOpen)}
+            aria-label={isOpen ? "Chiudi menu" : "Apri menu"}
           >
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>

@@ -64,7 +64,7 @@ export function ParentsSection() {
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
                   <feature.icon className="w-5 h-5 text-primary" />
                 </div>
-                <h4 className="font-semibold mb-2">{feature.title}</h4>
+                <h3 className="font-semibold mb-2 text-base">{feature.title}</h3>
                 <p className="text-sm text-muted-foreground">{feature.description}</p>
               </div>
             ))}

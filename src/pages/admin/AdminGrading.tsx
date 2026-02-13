@@ -21,7 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { 
-  LogOut, Loader2, Award, User, Calendar, Save, Download, Code
+  LogOut, Loader2, Award, User, Calendar, Save, Download, Code, GraduationCap
 } from 'lucide-react';
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -261,9 +261,9 @@ export default function AdminGrading() {
           </div>
           <div className="flex items-center gap-4">
             <Button variant="outline" size="sm" asChild>
-              <Link to="/area-riservata">
-                <User className="w-4 h-4 mr-2" />
-                Area Riservata
+              <Link to="/insegnante">
+                <GraduationCap className="w-4 h-4 mr-2" />
+                Insegnante
               </Link>
             </Button>
             <Button variant="outline" size="sm" onClick={handleSignOut}>

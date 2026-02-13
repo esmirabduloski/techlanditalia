@@ -32,7 +32,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { 
-  LogOut, Loader2, Plus, Edit, Trash2, User, Calendar, Save, Home, MessageCircle, Eye
+  LogOut, Loader2, Plus, Edit, Trash2, User, Calendar, Save, Home, MessageCircle, Eye, GraduationCap
 } from 'lucide-react';
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -315,9 +315,9 @@ export default function AdminStudentComments() {
           </div>
           <div className="flex items-center gap-4">
             <Button variant="outline" size="sm" asChild>
-              <Link to="/area-riservata">
-                <Home className="w-4 h-4 mr-2" />
-                Area Riservata
+              <Link to="/insegnante">
+                <GraduationCap className="w-4 h-4 mr-2" />
+                Insegnante
               </Link>
             </Button>
             <Button variant="outline" size="sm" onClick={handleSignOut}>

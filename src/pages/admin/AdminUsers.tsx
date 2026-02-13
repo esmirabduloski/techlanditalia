@@ -742,12 +742,6 @@ export default function AdminUsers() {
                 Insegnante
               </Link>
             </Button>
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/area-riservata">
-                <Home className="w-4 h-4 mr-2" />
-                Area Riservata
-              </Link>
-            </Button>
             <span className="text-sm text-muted-foreground hidden sm:block">{user?.email}</span>
             <Button variant="outline" size="sm" onClick={handleSignOut}>
               <LogOut className="w-4 h-4 mr-2" />

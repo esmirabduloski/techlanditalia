@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { Loader2, Check, X, AlertTriangle, LogOut, User } from 'lucide-react';
+import { Loader2, Check, X, AlertTriangle, LogOut, User, GraduationCap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ScheduledLesson {
@@ -200,9 +200,9 @@ export default function AdminAttendance() {
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground hidden sm:block">{user?.email}</span>
             <Button variant="outline" size="sm" asChild>
-              <Link to="/area-riservata">
-                <User className="w-4 h-4 mr-2" />
-                Area Riservata
+              <Link to="/insegnante">
+                <GraduationCap className="w-4 h-4 mr-2" />
+                Insegnante
               </Link>
             </Button>
             <Button variant="outline" size="sm" onClick={handleSignOut}>

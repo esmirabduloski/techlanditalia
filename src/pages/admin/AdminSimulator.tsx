@@ -216,12 +216,12 @@ export default function AdminSimulator() {
             <Badge variant="secondary">Admin</Badge>
           </div>
           <div className="flex items-center gap-4">
-            <Link to="/area-riservata">
-              <Button variant="outline" size="sm">
-                <Home className="w-4 h-4 mr-2" />
-                Area Riservata
-              </Button>
-            </Link>
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/insegnante">
+                <GraduationCap className="w-4 h-4 mr-2" />
+                Insegnante
+              </Link>
+            </Button>
             <span className="text-sm text-muted-foreground hidden sm:block">{user?.email}</span>
             <Button variant="outline" size="sm" onClick={handleSignOut}>
               <LogOut className="w-4 h-4 mr-2" />

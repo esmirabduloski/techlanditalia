@@ -131,12 +131,6 @@ export default function AdminDashboard() {
                 Insegnante
               </Link>
             </Button>
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/area-riservata">
-                <User className="w-4 h-4 mr-2" />
-                Area Riservata
-              </Link>
-            </Button>
             <Button variant="outline" size="sm" onClick={handleSignOut}>
               <LogOut className="w-4 h-4 mr-2" />
               Esci

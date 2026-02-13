@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Play, Loader2, Trash2, RotateCcw, Save, Check } from 'lucide-react';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { useToast } from '@/hooks/use-toast';
 import { useCodeDraft } from '@/hooks/useCodeDraft';
 import { CodeEditor } from './CodeEditor';
@@ -109,7 +110,7 @@ sys.stderr = StringIO()
   };
 
   return (
-    <div className="flex flex-col h-full bg-card border-l border-border">
+    <div className="flex flex-col h-full bg-card">
       {/* Toolbar */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/50">
         <div className="flex items-center gap-2">
@@ -152,14 +153,6 @@ sys.stderr = StringIO()
             <RotateCcw className="w-4 h-4" />
           </Button>
           <Button
-            variant="ghost"
-            size="sm"
-            onClick={clearOutput}
-            title="Pulisci output"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
-          <Button
             size="sm"
             onClick={runCode}
             disabled={isLoadingPyodide || isRunning}
@@ -174,34 +167,49 @@ sys.stderr = StringIO()
         </div>
       </div>
 
-      {/* Code Editor */}
-      <div className="flex-1 overflow-hidden flex flex-col">
-        <div className="flex-1 min-h-0 bg-[#1e1e1e]">
-          {isLoadingDraft ? (
-            <div className="w-full h-full flex items-center justify-center">
-              <Loader2 className="w-6 h-6 animate-spin text-primary" />
-            </div>
-          ) : (
-            <CodeEditor
-              code={code}
-              onChange={setCode}
-              language="python"
-              className="h-full"
-              placeholder="Scrivi il tuo codice Python..."
-            />
-          )}
-        </div>
-
-        {/* Output */}
-        <div className="h-1/3 min-h-[120px] border-t border-border bg-muted/30">
-          <div className="px-4 py-2 border-b border-border bg-muted/50">
-            <span className="text-xs font-medium text-muted-foreground">Output</span>
+      {/* Resizable panels: Code editor + Output */}
+      <ResizablePanelGroup direction="vertical" className="flex-1">
+        {/* Code Editor Panel */}
+        <ResizablePanel defaultSize={65} minSize={30}>
+          <div className="h-full bg-muted overflow-hidden">
+            {isLoadingDraft ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+            ) : (
+              <CodeEditor
+                code={code}
+                onChange={setCode}
+                language="python"
+                className="h-full"
+                placeholder="Scrivi il tuo codice Python..."
+              />
+            )}
           </div>
-          <pre className="p-4 text-sm font-mono overflow-auto h-[calc(100%-32px)] text-foreground whitespace-pre-wrap">
-            {output}
-          </pre>
-        </div>
-      </div>
+        </ResizablePanel>
+
+        <ResizableHandle withHandle />
+
+        {/* Output Panel */}
+        <ResizablePanel defaultSize={35} minSize={15}>
+          <div className="h-full flex flex-col border-t border-border bg-muted/30">
+            <div className="px-4 py-2 border-b border-border bg-muted/50 flex items-center justify-between">
+              <span className="text-xs font-medium text-muted-foreground">Output</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setOutput('')}
+                title="Pulisci output"
+              >
+                <Trash2 className="w-3 h-3" />
+              </Button>
+            </div>
+            <pre className="p-4 text-sm font-mono overflow-auto flex-1 text-foreground whitespace-pre-wrap">
+              {output}
+            </pre>
+          </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 }

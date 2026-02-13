@@ -102,13 +102,13 @@ export function useCodeDraft({ taskId, codeType, defaultCode }: UseCodeDraftOpti
     }
   }, [user, taskId, codeType]);
 
-  // Auto-save with debounce
+  // Auto-save with debounce (3000ms per salvataggio più affidabile)
   useEffect(() => {
     if (isLoading || !taskId || code === defaultCode) return;
 
     const timeoutId = setTimeout(() => {
       saveDraft(code);
-    }, 2000);
+    }, 3000);
 
     return () => clearTimeout(timeoutId);
   }, [code, isLoading, saveDraft, taskId, defaultCode]);

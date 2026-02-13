@@ -16,7 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { Loader2, Plus, Pencil, Trash2, LogOut, User, Calendar as CalendarIcon } from 'lucide-react';
+import { Loader2, Plus, Pencil, Trash2, LogOut, User, Calendar as CalendarIcon, GraduationCap } from 'lucide-react';
 
 interface Course {
   id: string;
@@ -194,9 +194,9 @@ export default function AdminScheduledLessons() {
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground hidden sm:block">{user?.email}</span>
             <Button variant="outline" size="sm" asChild>
-              <Link to="/area-riservata">
-                <User className="w-4 h-4 mr-2" />
-                Area Riservata
+              <Link to="/insegnante">
+                <GraduationCap className="w-4 h-4 mr-2" />
+                Insegnante
               </Link>
             </Button>
             <Button variant="outline" size="sm" onClick={handleSignOut}>

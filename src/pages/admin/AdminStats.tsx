@@ -181,9 +181,9 @@ export default function AdminStats() {
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground hidden sm:block">{user?.email}</span>
             <Button variant="outline" size="sm" asChild>
-              <Link to="/area-riservata">
-                <Home className="w-4 h-4 mr-2" />
-                Area Riservata
+              <Link to="/insegnante">
+                <GraduationCap className="w-4 h-4 mr-2" />
+                Insegnante
               </Link>
             </Button>
             <Button variant="outline" size="sm" onClick={handleSignOut}>

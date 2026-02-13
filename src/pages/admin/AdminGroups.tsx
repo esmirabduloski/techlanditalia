@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { AdminNav } from "@/components/admin/AdminNav";
 import { LessonCalendarManager } from "@/components/admin/LessonCalendarManager";
 import { 
-  Loader2, Plus, Users, LogOut, Home, Edit, Trash2, UsersRound, Search, Calendar, RotateCcw, Archive
+  Loader2, Plus, Users, LogOut, Home, Edit, Trash2, UsersRound, Search, Calendar, RotateCcw, Archive, GraduationCap
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -442,12 +442,12 @@ export default function AdminGroups() {
             <Badge variant="secondary">Admin</Badge>
           </div>
           <div className="flex items-center gap-4">
-            <Link to="/area-riservata">
-              <Button variant="outline" size="sm">
-                <Home className="w-4 h-4 mr-2" />
-                Area Riservata
-              </Button>
-            </Link>
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/insegnante">
+                <GraduationCap className="w-4 h-4 mr-2" />
+                Insegnante
+              </Link>
+            </Button>
             <span className="text-sm text-muted-foreground hidden sm:block">{user?.email}</span>
             <Button variant="outline" size="sm" onClick={handleSignOut}>
               <LogOut className="w-4 h-4 mr-2" />

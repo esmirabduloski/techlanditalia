@@ -10,8 +10,11 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { LessonCalendarManager } from "@/components/admin/LessonCalendarManager";
+import { StudentTransferDialog } from "@/components/admin/StudentTransferDialog";
+import { GroupMergeSplitDialog } from "@/components/admin/GroupMergeSplitDialog";
+import { GroupTimelineDialog } from "@/components/admin/GroupTimelineDialog";
 import { 
-  Loader2, Plus, Users, LogOut, Home, Edit, Trash2, UsersRound, Search, Calendar, RotateCcw, Archive, GraduationCap
+  Loader2, Plus, Users, LogOut, Home, Edit, Trash2, UsersRound, Search, Calendar, RotateCcw, Archive, GraduationCap, ArrowRightLeft, GitMerge, ListTree
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -96,6 +99,9 @@ export default function AdminGroups() {
   const [archiveGroup, setArchiveGroup] = useState<StudentGroup | null>(null);
   const [archiveDate, setArchiveDate] = useState('');
   const [isArchiving, setIsArchiving] = useState(false);
+  const [transferGroup, setTransferGroup] = useState<StudentGroup | null>(null);
+  const [mergeSplitGroup, setMergeSplitGroup] = useState<StudentGroup | null>(null);
+  const [timelineGroup, setTimelineGroup] = useState<StudentGroup | null>(null);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -538,14 +544,22 @@ export default function AdminGroups() {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => setCalendarGroup(group)}
-                            title="Gestisci calendario"
-                          >
-                            <Calendar className="w-4 h-4" />
-                          </Button>
+                           <Button 
+                             variant="ghost" 
+                             size="icon" 
+                             onClick={() => setTimelineGroup(group)}
+                             title="Timeline programma"
+                           >
+                             <ListTree className="w-4 h-4" />
+                           </Button>
+                           <Button 
+                             variant="ghost" 
+                             size="icon" 
+                             onClick={() => setCalendarGroup(group)}
+                             title="Gestisci calendario"
+                           >
+                             <Calendar className="w-4 h-4" />
+                           </Button>
                           <Button 
                             variant="ghost" 
                             size="icon" 
@@ -554,9 +568,25 @@ export default function AdminGroups() {
                           >
                             <RotateCcw className="w-4 h-4 text-orange-500" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => openEditDialog(group)}>
-                            <Edit className="w-4 h-4" />
-                          </Button>
+                           <Button variant="ghost" size="icon" onClick={() => openEditDialog(group)}>
+                             <Edit className="w-4 h-4" />
+                           </Button>
+                           <Button 
+                             variant="ghost" 
+                             size="icon" 
+                             onClick={() => setTransferGroup(group)}
+                             title="Trasferisci studenti"
+                           >
+                             <ArrowRightLeft className="w-4 h-4 text-blue-500" />
+                           </Button>
+                           <Button 
+                             variant="ghost" 
+                             size="icon" 
+                             onClick={() => setMergeSplitGroup(group)}
+                             title="Unisci/Dividi gruppo"
+                           >
+                             <GitMerge className="w-4 h-4 text-purple-500" />
+                           </Button>
                           {group.status === 'active' ? (
                             <Button 
                               variant="ghost" 
@@ -872,6 +902,39 @@ export default function AdminGroups() {
             defaultLessonTime={calendarGroup.lesson_time}
             open={!!calendarGroup}
             onOpenChange={(open) => !open && setCalendarGroup(null)}
+          />
+        )}
+
+        {/* Student Transfer Dialog */}
+        {transferGroup && (
+          <StudentTransferDialog
+            open={!!transferGroup}
+            onOpenChange={(open) => !open && setTransferGroup(null)}
+            sourceGroupId={transferGroup.id}
+            sourceGroupTitle={transferGroup.title}
+            onComplete={fetchData}
+          />
+        )}
+
+        {/* Group Merge/Split Dialog */}
+        {mergeSplitGroup && (
+          <GroupMergeSplitDialog
+            open={!!mergeSplitGroup}
+            onOpenChange={(open) => !open && setMergeSplitGroup(null)}
+            currentGroupId={mergeSplitGroup.id}
+            currentGroupTitle={mergeSplitGroup.title}
+            currentCourseId={mergeSplitGroup.course_id}
+            onComplete={fetchData}
+          />
+        )}
+
+        {/* Group Timeline Dialog */}
+        {timelineGroup && (
+          <GroupTimelineDialog
+            open={!!timelineGroup}
+            onOpenChange={(open) => !open && setTimelineGroup(null)}
+            groupId={timelineGroup.id}
+            groupTitle={timelineGroup.title}
           />
         )}
       </main>

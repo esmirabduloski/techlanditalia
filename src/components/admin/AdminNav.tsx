@@ -3,11 +3,19 @@ import { useRef, useState, useEffect } from 'react';
 import { 
   FileText, GraduationCap, BookOpen, Mail, User, BarChart3, 
   Award, Calendar, ClipboardCheck, Users, Newspaper, UsersRound, CalendarClock, Link as LinkIcon,
-  ChevronLeft, ChevronRight
+  ChevronLeft, ChevronRight, Menu, X
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
+import { cn } from '@/lib/utils';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 
 interface NavItem {
   to: string;
@@ -38,6 +46,7 @@ export function AdminNav() {
   const scrollContainerRef = useRef<HTMLElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   
   const isActive = (path: string) => {
     if (path === '/admin') {
@@ -45,6 +54,11 @@ export function AdminNav() {
     }
     return location.pathname.startsWith(path);
   };
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
 
   // Mark notifications as seen when visiting the respective pages
   useEffect(() => {
@@ -78,14 +92,14 @@ export function AdminNav() {
     }
   }, []);
 
-  const scrollLeft = () => {
+  const scrollLeftFn = () => {
     const container = scrollContainerRef.current;
     if (container) {
       container.scrollBy({ left: -200, behavior: 'smooth' });
     }
   };
 
-  const scrollRight = () => {
+  const scrollRightFn = () => {
     const container = scrollContainerRef.current;
     if (container) {
       container.scrollBy({ left: 200, behavior: 'smooth' });
@@ -97,66 +111,125 @@ export function AdminNav() {
     return notifications[key];
   };
 
+  const totalNotifications = notifications.newBookings + notifications.newContacts;
+
+  // Find current active item for mobile label
+  const activeItem = navItems.find(item => isActive(item.to));
+
   return (
     <div className="border-b bg-background sticky top-[73px] z-40">
       <div className="max-w-7xl mx-auto px-4 relative">
-        {/* Left scroll arrow */}
-        {showLeftArrow && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={scrollLeft}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-8 w-8 bg-background/95 shadow-md border hover:bg-muted"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-        )}
-        
-        {/* Right scroll arrow */}
-        {showRightArrow && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={scrollRight}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-8 w-8 bg-background/95 shadow-md border hover:bg-muted"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-        )}
 
-        <nav 
-          ref={scrollContainerRef}
-          className="flex gap-2 sm:gap-4 overflow-x-auto scrollbar-hide pb-px px-6" 
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        >
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.to);
-            const notificationCount = getNotificationCount(item.notificationKey);
-            return (
-              <Link
-                key={item.to}
-                to={item.to}
-                className={`py-3 px-2 flex items-center gap-2 whitespace-nowrap relative ${
-                  active
-                    ? 'border-b-2 border-primary text-primary font-medium'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {item.label}
-                {notificationCount > 0 && (
-                  <Badge 
-                    variant="destructive" 
-                    className="h-5 min-w-5 px-1.5 text-xs font-bold animate-pulse"
-                  >
-                    {notificationCount > 99 ? '99+' : notificationCount}
+        {/* ===== MOBILE: Hamburger + Sheet ===== */}
+        <div className="md:hidden flex items-center py-2">
+          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="sm" className="flex items-center gap-2">
+                <Menu className="w-4 h-4" />
+                <span className="font-medium">{activeItem?.label || 'Menu'}</span>
+                {totalNotifications > 0 && (
+                  <Badge variant="destructive" className="h-5 min-w-5 px-1.5 text-xs font-bold">
+                    {totalNotifications}
                   </Badge>
                 )}
-              </Link>
-            );
-          })}
-        </nav>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-72 p-0">
+              <SheetHeader className="p-4 border-b">
+                <SheetTitle className="text-left">Pannello Admin</SheetTitle>
+              </SheetHeader>
+              <nav className="flex flex-col py-2">
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  const active = isActive(item.to);
+                  const notificationCount = getNotificationCount(item.notificationKey);
+                  return (
+                    <Link
+                      key={item.to}
+                      to={item.to}
+                      className={cn(
+                        "flex items-center gap-3 px-4 py-3 text-sm transition-colors",
+                        active
+                          ? "bg-primary/10 text-primary font-medium border-l-3 border-primary"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      )}
+                    >
+                      <Icon className="w-5 h-5 flex-shrink-0" />
+                      <span className="flex-1">{item.label}</span>
+                      {notificationCount > 0 && (
+                        <Badge 
+                          variant="destructive" 
+                          className="h-5 min-w-5 px-1.5 text-xs font-bold"
+                        >
+                          {notificationCount > 99 ? '99+' : notificationCount}
+                        </Badge>
+                      )}
+                    </Link>
+                  );
+                })}
+              </nav>
+            </SheetContent>
+          </Sheet>
+        </div>
+
+        {/* ===== DESKTOP: Horizontal scrollable tabs ===== */}
+        <div className="hidden md:block">
+          {showLeftArrow && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={scrollLeftFn}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-8 w-8 bg-background/95 shadow-md border hover:bg-muted"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+          )}
+          
+          {showRightArrow && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={scrollRightFn}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-8 w-8 bg-background/95 shadow-md border hover:bg-muted"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          )}
+
+          <nav 
+            ref={scrollContainerRef}
+            className="flex gap-2 sm:gap-4 overflow-x-auto scrollbar-hide pb-px px-6" 
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.to);
+              const notificationCount = getNotificationCount(item.notificationKey);
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className={`py-3 px-2 flex items-center gap-2 whitespace-nowrap relative ${
+                    active
+                      ? 'border-b-2 border-primary text-primary font-medium'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {item.label}
+                  {notificationCount > 0 && (
+                    <Badge 
+                      variant="destructive" 
+                      className="h-5 min-w-5 px-1.5 text-xs font-bold animate-pulse"
+                    >
+                      {notificationCount > 99 ? '99+' : notificationCount}
+                    </Badge>
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
       </div>
     </div>
   );

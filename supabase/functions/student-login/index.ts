@@ -17,116 +17,108 @@ serve(async (req) => {
     
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
     
-    const { username, password } = await req.json();
+    const { identifier, password } = await req.json();
 
-    if (!username || !password) {
-      return new Response(JSON.stringify({ error: "Username e password richiesti" }), {
+    if (!identifier || !password) {
+      return new Response(JSON.stringify({ error: "Credenziali richieste" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    console.log(`Student login attempt for username: ${username}`);
+    const trimmedIdentifier = identifier.trim();
+    const isEmail = trimmedIdentifier.includes("@");
 
-    // Find the student profile by username
+    console.log(`Login attempt: ${trimmedIdentifier} (${isEmail ? "email" : "username"})`);
+
+    // If it's an email, try direct sign in (works for parents, teachers, admins)
+    if (isEmail) {
+      const { data: signInData, error: signInError } = await supabaseAdmin.auth.signInWithPassword({
+        email: trimmedIdentifier,
+        password,
+      });
+
+      if (signInError) {
+        return new Response(JSON.stringify({ error: "Email o password non corretti" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(JSON.stringify({ session: signInData.session }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Username login - find the student profile
     const { data: profile, error: profileError } = await supabaseAdmin
-      .from('profiles')
-      .select('id, parent_id')
-      .eq('username', username.trim())
-      .eq('role', 'student')
+      .from("profiles")
+      .select("id, parent_id")
+      .eq("username", trimmedIdentifier)
+      .eq("role", "student")
       .maybeSingle();
 
     if (profileError || !profile) {
-      console.log("Profile not found for username:", username);
       return new Response(JSON.stringify({ error: "Nome utente o password non corretti" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Get the student's auth user to get their email
+    // Get the student's auth email
     const { data: studentAuthUser, error: studentAuthError } = await supabaseAdmin.auth.admin.getUserById(profile.id);
 
     if (studentAuthError || !studentAuthUser.user) {
-      console.error("Error getting student auth user:", studentAuthError);
       return new Response(JSON.stringify({ error: "Nome utente o password non corretti" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Student uses the same password as parent, stored in auth.users
-    // Try to sign in the student directly with the provided password
+    // Try direct sign in
     const { data: signInData, error: signInError } = await supabaseAdmin.auth.signInWithPassword({
       email: studentAuthUser.user.email!,
-      password: password,
+      password,
     });
 
-    if (signInError) {
-      console.log("Direct student login failed, password may have changed. Checking parent...");
+    if (!signInError) {
+      console.log(`Student logged in successfully: ${trimmedIdentifier}`);
+      return new Response(JSON.stringify({ session: signInData.session }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // If direct login fails and student has a parent, try parent password sync
+    if (profile.parent_id) {
+      const { data: parentAuthUser, error: parentAuthError } = await supabaseAdmin.auth.admin.getUserById(profile.parent_id);
       
-      // If direct login fails and student has a parent, maybe parent changed password
-      // We need to update student's password to match parent's
-      if (profile.parent_id) {
-        // Get parent's auth user
-        const { data: parentAuthUser, error: parentAuthError } = await supabaseAdmin.auth.admin.getUserById(profile.parent_id);
+      if (!parentAuthError && parentAuthUser.user) {
+        const { error: parentSignInError } = await supabaseAdmin.auth.signInWithPassword({
+          email: parentAuthUser.user.email!,
+          password,
+        });
         
-        if (!parentAuthError && parentAuthUser.user) {
-          // Try to verify the password using parent's account
-          const { error: parentSignInError } = await supabaseAdmin.auth.signInWithPassword({
-            email: parentAuthUser.user.email!,
-            password: password,
+        if (!parentSignInError) {
+          console.log("Parent password verified, syncing student password...");
+          
+          await supabaseAdmin.auth.admin.updateUserById(profile.id, { password });
+          
+          const { data: retryData, error: retryError } = await supabaseAdmin.auth.signInWithPassword({
+            email: studentAuthUser.user.email!,
+            password,
           });
           
-          if (!parentSignInError) {
-            // Password is correct for parent, update student's password to match
-            console.log("Parent password verified, updating student password to match...");
-            
-            const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(profile.id, {
-              password: password,
-            });
-            
-            if (updateError) {
-              console.error("Error updating student password:", updateError);
-              return new Response(JSON.stringify({ error: "Impossibile effettuare il login" }), {
-                status: 401,
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
-              });
-            }
-            
-            // Now try to sign in the student again
-            const { data: retryData, error: retryError } = await supabaseAdmin.auth.signInWithPassword({
-              email: studentAuthUser.user.email!,
-              password: password,
-            });
-            
-            if (retryError) {
-              console.error("Retry sign in failed:", retryError);
-              return new Response(JSON.stringify({ error: "Impossibile effettuare il login" }), {
-                status: 401,
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
-              });
-            }
-            
-            console.log(`Student logged in successfully after password sync: ${username}`);
+          if (!retryError) {
             return new Response(JSON.stringify({ session: retryData.session }), {
               headers: { ...corsHeaders, "Content-Type": "application/json" },
             });
           }
         }
       }
-      
-      // If we get here, password is wrong
-      console.log("Invalid password for username:", username);
-      return new Response(JSON.stringify({ error: "Nome utente o password non corretti" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
     }
 
-    console.log(`Student logged in successfully: ${username}`);
-
-    return new Response(JSON.stringify({ session: signInData.session }), {
+    return new Response(JSON.stringify({ error: "Nome utente o password non corretti" }), {
+      status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {

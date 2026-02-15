@@ -409,6 +409,7 @@ export default function AuthPage() {
                 </Tabs>
               ) : (
                 <>
+                  <CardContent></CardContent>
                   <CardContent>{renderLoginForm()}</CardContent>
                 </>
               )}

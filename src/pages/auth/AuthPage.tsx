@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Rocket, Users, KeyRound, GraduationCap } from 'lucide-react';
+import { Loader2, Rocket, Users, KeyRound, GraduationCap, ShieldCheck } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 
 export default function AuthPage() {
@@ -21,7 +21,8 @@ export default function AuthPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   
-  // Child registration fields
+  // Registration fields (admin only)
+  const [regRole, setRegRole] = useState<'parent' | 'teacher'>('parent');
   const [childName, setChildName] = useState('');
   const [childUsername, setChildUsername] = useState('');
   const [childCourse, setChildCourse] = useState('');
@@ -40,21 +41,21 @@ export default function AuthPage() {
 
   // Fetch courses for registration
   useEffect(() => {
-    const fetchCourses = async () => {
-      const { data } = await supabase.from('courses').select('id, title, emoji');
-      if (data) setCourses(data);
-    };
-    fetchCourses();
-  }, []);
+    if (isAdmin) {
+      const fetchCourses = async () => {
+        const { data } = await supabase.from('courses').select('id, title, emoji');
+        if (data) setCourses(data);
+      };
+      fetchCourses();
+    }
+  }, [isAdmin]);
 
-  // Redirect authenticated users
+  // Redirect authenticated non-admin users
   useEffect(() => {
     const checkRoleAndRedirect = async () => {
       if (!authLoading && user && !showNewPasswordForm) {
-        if (isAdmin) {
-          navigate('/admin');
-          return;
-        }
+        // Don't redirect admins - they may want to use the signup tab
+        if (isAdmin) return;
         
         // Check if user is a teacher
         const { data: teacherRole } = await supabase
@@ -214,7 +215,6 @@ export default function AuthPage() {
             description: loginData?.error || 'Impossibile effettuare il login',
           });
         } else if (loginData?.session) {
-          // Set the session
           await supabase.auth.setSession(loginData.session);
           toast({
             title: 'Benvenuto!',
@@ -222,7 +222,7 @@ export default function AuthPage() {
           });
         }
       } else {
-        // Parent login with email
+        // Parent/Teacher login with email
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -254,102 +254,74 @@ export default function AuthPage() {
     }
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleAdminSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate child data
-    if (!childName.trim() || !childUsername.trim()) {
+    if (!isAdmin) {
+      toast({
+        variant: 'destructive',
+        title: 'Non autorizzato',
+        description: 'Solo gli admin possono registrare nuovi utenti',
+      });
+      return;
+    }
+
+    if (regRole === 'parent' && (!childName.trim() || !childUsername.trim())) {
       toast({
         variant: 'destructive',
         title: 'Dati figlio obbligatori',
-        description: 'Inserisci tutti i dati del figlio: nome e username',
+        description: 'Inserisci nome e username del figlio',
       });
       return;
     }
 
-    // Check username uniqueness
-    const { data: existingUser } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('username', childUsername.trim())
-      .maybeSingle();
-
-    if (existingUser) {
+    if (password.length < 6) {
       toast({
         variant: 'destructive',
-        title: 'Username già in uso',
-        description: 'Questo username è già utilizzato. Scegline un altro per tuo figlio.',
+        title: 'Password troppo corta',
+        description: 'La password deve avere almeno 6 caratteri',
       });
       return;
     }
-    
+
     setIsLoading(true);
 
     try {
-      // Register parent
-      const { data: authData, error } = await supabase.auth.signUp({
-        email,
+      const body: Record<string, string | undefined> = {
+        role: regRole,
+        email: email.trim().toLowerCase(),
         password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/area-riservata`,
-          data: {
-            full_name: fullName,
-            role: 'parent',
-          },
-        },
-      });
+        fullName: fullName.trim(),
+      };
 
-      if (error) {
-        if (error.message.includes('already registered')) {
-          toast({
-            variant: 'destructive',
-            title: 'Utente già registrato',
-            description: 'Questa email è già associata a un account. Prova ad accedere.',
-          });
-        } else {
-          toast({
-            variant: 'destructive',
-            title: 'Errore di registrazione',
-            description: error.message,
-          });
-        }
-        setIsLoading(false);
-        return;
+      if (regRole === 'parent') {
+        body.childName = childName.trim();
+        body.childUsername = childUsername.trim();
+        body.courseId = childCourse || undefined;
       }
 
-      if (authData.user) {
-        // Create child profile via edge function (needs service role)
-        // Child uses same password as parent
-        const { error: childError } = await supabase.functions.invoke('create-child-account', {
-          body: {
-            parentId: authData.user.id,
-            childName: childName.trim(),
-            childUsername: childUsername.trim(),
-            childPassword: password, // Use parent's password
-            courseId: childCourse || null,
-          }
-        });
+      const { data, error } = await supabase.functions.invoke('admin-create-user', {
+        body,
+      });
 
-        if (childError) {
-          console.error('Error creating child account:', childError);
-        }
-
-        // Send welcome email (no password, child uses parent's password)
-        supabase.functions.invoke('send-welcome-email', {
-          body: { 
-            email, 
-            fullName, 
-            role: 'parent',
-            childName: childName.trim(),
-            childUsername: childUsername.trim(),
-          }
-        }).catch(err => console.error('Welcome email error:', err));
-
+      if (error || data?.error) {
         toast({
-          title: 'Registrazione completata!',
-          description: 'Benvenuto nella famiglia TECHLAND! Controlla la tua email 📧',
+          variant: 'destructive',
+          title: 'Errore di registrazione',
+          description: data?.error || 'Impossibile creare l\'account',
         });
-        navigate('/area-riservata');
+      } else {
+        toast({
+          title: 'Account creato!',
+          description: `Account ${regRole === 'parent' ? 'genitore + figlio' : 'insegnante'} creato con successo`,
+        });
+        // Reset form
+        setEmail('');
+        setPassword('');
+        setFullName('');
+        setChildName('');
+        setChildUsername('');
+        setChildCourse('');
       }
     } catch {
       toast({
@@ -376,7 +348,7 @@ export default function AuthPage() {
               )}
             </div>
             <h1 className="text-3xl font-bold text-foreground mb-2">
-              {showNewPasswordForm ? 'Nuova Password' : 'Area Riservata'}
+              {showNewPasswordForm ? 'Nuova Password' : 'Accedi'}
             </h1>
             <p className="text-muted-foreground">
               {showNewPasswordForm 
@@ -477,230 +449,44 @@ export default function AuthPage() {
             </Card>
           ) : (
           <Card className="border-border/50 shadow-lg">
-            <Tabs defaultValue="login" className="w-full">
-              <CardHeader className="pb-4">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="login">Accedi</TabsTrigger>
-                  <TabsTrigger value="signup">Registrati</TabsTrigger>
-                </TabsList>
-              </CardHeader>
-
-              <CardContent>
-                {/* Login Tab */}
-                <TabsContent value="login" className="mt-0">
-                  <form onSubmit={handleLogin} className="space-y-4">
-                    {/* Login Mode Toggle */}
-                    <div className="flex gap-2 p-1 bg-muted rounded-lg">
-                      <button
-                        type="button"
-                        onClick={() => setLoginMode('parent')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${
-                          loginMode === 'parent' 
-                            ? 'bg-background shadow text-foreground' 
-                            : 'text-muted-foreground hover:text-foreground'
-                        }`}
-                      >
-                        <Users className="w-4 h-4" />
-                        Genitore
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setLoginMode('student')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${
-                          loginMode === 'student' 
-                            ? 'bg-background shadow text-foreground' 
-                            : 'text-muted-foreground hover:text-foreground'
-                        }`}
-                      >
-                        <GraduationCap className="w-4 h-4" />
-                        Studente
-                      </button>
-                    </div>
-
-                    {loginMode === 'parent' ? (
-                      <div className="space-y-2">
-                        <Label htmlFor="login-email">Email</Label>
-                        <Input
-                          id="login-email"
-                          type="email"
-                          placeholder="mario@esempio.it"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          required
-                          disabled={isLoading}
-                        />
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <Label htmlFor="login-username">Nome Utente</Label>
-                        <Input
-                          id="login-username"
-                          type="text"
-                          placeholder="Il tuo nome utente"
-                          value={loginUsername}
-                          onChange={(e) => setLoginUsername(e.target.value)}
-                          required
-                          disabled={isLoading}
-                        />
-                      </div>
-                    )}
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="login-password">Password</Label>
-                      <PasswordInput
-                        id="login-password"
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        disabled={isLoading}
-                      />
-                    </div>
-                    <Button type="submit" className="w-full" disabled={isLoading}>
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Accesso in corso...
-                        </>
-                      ) : (
-                        'Accedi'
-                      )}
-                    </Button>
-                    {loginMode === 'parent' && (
-                      <button
-                        type="button"
-                        onClick={() => setShowResetPassword(true)}
-                        className="w-full text-center text-sm text-primary hover:underline mt-2"
-                      >
-                        Password dimenticata?
-                      </button>
-                    )}
-                  </form>
-                </TabsContent>
-
-                {/* Signup Tab - Only for Parents */}
-                <TabsContent value="signup" className="mt-0">
-                  <form onSubmit={handleSignup} className="space-y-4">
-                    {/* Parent Info */}
-                    <div className="space-y-3 pb-4 border-b">
-                      <div className="flex items-center gap-2 text-sm font-medium text-primary">
-                        <Users className="w-4 h-4" />
-                        I tuoi dati (Genitore)
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-name">Nome Completo</Label>
-                        <Input
-                          id="signup-name"
-                          type="text"
-                          placeholder="Mario Rossi"
-                          value={fullName}
-                          onChange={(e) => setFullName(e.target.value)}
-                          required
-                          disabled={isLoading}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-email">Email</Label>
-                        <Input
-                          id="signup-email"
-                          type="email"
-                          placeholder="mario@esempio.it"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          required
-                          disabled={isLoading}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-password">Password</Label>
-                        <PasswordInput
-                          id="signup-password"
-                          placeholder="Minimo 6 caratteri"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          required
-                          disabled={isLoading}
-                          minLength={6}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Child Info */}
-                    <div className="space-y-3 pt-2">
-                      <div className="flex items-center gap-2 text-sm font-medium text-tech-teal">
-                        <GraduationCap className="w-4 h-4" />
-                        Dati del figlio/a (obbligatori)
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="child-name">Nome del figlio/a</Label>
-                        <Input
-                          id="child-name"
-                          type="text"
-                          placeholder="Luca"
-                          value={childName}
-                          onChange={(e) => setChildName(e.target.value)}
-                          required
-                          disabled={isLoading}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="child-username">Nome utente per il login</Label>
-                        <Input
-                          id="child-username"
-                          type="text"
-                          placeholder="luca123"
-                          value={childUsername}
-                          onChange={(e) => setChildUsername(e.target.value)}
-                          required
-                          disabled={isLoading}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Il figlio userà questo nome utente per accedere
-                        </p>
-                      </div>
-                      <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
-                        Il figlio userà la stessa password del genitore per accedere
-                      </p>
-                      <div className="space-y-2">
-                        <Label htmlFor="child-course">Corso acquistato</Label>
-                        <Select value={childCourse} onValueChange={setChildCourse}>
-                          <SelectTrigger id="child-course">
-                            <SelectValue placeholder="Seleziona un corso (opzionale)" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">Non ho ancora deciso</SelectItem>
-                            {courses.map(course => (
-                              <SelectItem key={course.id} value={course.id}>
-                                {course.emoji} {course.title}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <Button type="submit" className="w-full" disabled={isLoading}>
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Registrazione...
-                        </>
-                      ) : (
-                        'Registrati'
-                      )}
-                    </Button>
-                  </form>
-                </TabsContent>
-              </CardContent>
-            </Tabs>
+            {isAdmin ? (
+              // Admin sees tabs: Accedi + Registra Utente
+              <Tabs defaultValue="signup" className="w-full">
+                <CardHeader className="pb-4">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="login">Accedi</TabsTrigger>
+                    <TabsTrigger value="signup">
+                      <ShieldCheck className="w-4 h-4 mr-1" />
+                      Registra Utente
+                    </TabsTrigger>
+                  </TabsList>
+                </CardHeader>
+                <CardContent>
+                  <TabsContent value="login" className="mt-0">
+                    {renderLoginForm()}
+                  </TabsContent>
+                  <TabsContent value="signup" className="mt-0">
+                    {renderAdminSignupForm()}
+                  </TabsContent>
+                </CardContent>
+              </Tabs>
+            ) : (
+              // Non-admin: only login
+              <>
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-center">Accedi</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {renderLoginForm()}
+                </CardContent>
+              </>
+            )}
           </Card>
           )}
 
           {/* Footer */}
           <p className="text-center text-sm text-muted-foreground mt-6">
-            Registrandoti accetti i nostri{' '}
+            Accedendo accetti i nostri{' '}
             <a href="/termini" className="text-primary hover:underline">
               Termini e Condizioni
             </a>{' '}
@@ -713,4 +499,247 @@ export default function AuthPage() {
       </div>
     </Layout>
   );
+
+  function renderLoginForm() {
+    return (
+      <form onSubmit={handleLogin} className="space-y-4">
+        {/* Login Mode Toggle */}
+        <div className="flex gap-2 p-1 bg-muted rounded-lg">
+          <button
+            type="button"
+            onClick={() => setLoginMode('parent')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${
+              loginMode === 'parent' 
+                ? 'bg-background shadow text-foreground' 
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Users className="w-4 h-4" />
+            Genitore
+          </button>
+          <button
+            type="button"
+            onClick={() => setLoginMode('student')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${
+              loginMode === 'student' 
+                ? 'bg-background shadow text-foreground' 
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <GraduationCap className="w-4 h-4" />
+            Studente
+          </button>
+        </div>
+
+        {loginMode === 'parent' ? (
+          <div className="space-y-2">
+            <Label htmlFor="login-email">Email</Label>
+            <Input
+              id="login-email"
+              type="email"
+              placeholder="mario@esempio.it"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={isLoading}
+            />
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <Label htmlFor="login-username">Nome Utente</Label>
+            <Input
+              id="login-username"
+              type="text"
+              placeholder="Il tuo nome utente"
+              value={loginUsername}
+              onChange={(e) => setLoginUsername(e.target.value)}
+              required
+              disabled={isLoading}
+            />
+          </div>
+        )}
+        
+        <div className="space-y-2">
+          <Label htmlFor="login-password">Password</Label>
+          <PasswordInput
+            id="login-password"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            disabled={isLoading}
+          />
+        </div>
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Accesso in corso...
+            </>
+          ) : (
+            'Accedi'
+          )}
+        </Button>
+        {loginMode === 'parent' && (
+          <button
+            type="button"
+            onClick={() => setShowResetPassword(true)}
+            className="w-full text-center text-sm text-primary hover:underline mt-2"
+          >
+            Password dimenticata?
+          </button>
+        )}
+      </form>
+    );
+  }
+
+  function renderAdminSignupForm() {
+    return (
+      <form onSubmit={handleAdminSignup} className="space-y-4">
+        {/* Role selection */}
+        <div className="space-y-2">
+          <Label>Tipo di utente</Label>
+          <div className="flex gap-2 p-1 bg-muted rounded-lg">
+            <button
+              type="button"
+              onClick={() => setRegRole('parent')}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${
+                regRole === 'parent'
+                  ? 'bg-background shadow text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              Genitore
+            </button>
+            <button
+              type="button"
+              onClick={() => setRegRole('teacher')}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${
+                regRole === 'teacher'
+                  ? 'bg-background shadow text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <GraduationCap className="w-4 h-4" />
+              Insegnante
+            </button>
+          </div>
+        </div>
+
+        {/* User Info */}
+        <div className="space-y-3 pb-4 border-b border-border/50">
+          <div className="flex items-center gap-2 text-sm font-medium text-primary">
+            {regRole === 'parent' ? <Users className="w-4 h-4" /> : <GraduationCap className="w-4 h-4" />}
+            Dati {regRole === 'parent' ? 'Genitore' : 'Insegnante'}
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="signup-name">Nome Completo</Label>
+            <Input
+              id="signup-name"
+              type="text"
+              placeholder="Mario Rossi"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              required
+              disabled={isLoading}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="signup-email">Email</Label>
+            <Input
+              id="signup-email"
+              type="email"
+              placeholder="mario@esempio.it"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={isLoading}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="signup-password">Password</Label>
+            <PasswordInput
+              id="signup-password"
+              placeholder="Minimo 6 caratteri"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              disabled={isLoading}
+              minLength={6}
+            />
+          </div>
+        </div>
+
+        {/* Child Info - only for parent */}
+        {regRole === 'parent' && (
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center gap-2 text-sm font-medium text-tech-teal">
+              <GraduationCap className="w-4 h-4" />
+              Dati del figlio/a (obbligatori)
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="child-name">Nome del figlio/a</Label>
+              <Input
+                id="child-name"
+                type="text"
+                placeholder="Luca"
+                value={childName}
+                onChange={(e) => setChildName(e.target.value)}
+                required
+                disabled={isLoading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="child-username">Nome utente per il login</Label>
+              <Input
+                id="child-username"
+                type="text"
+                placeholder="luca123"
+                value={childUsername}
+                onChange={(e) => setChildUsername(e.target.value)}
+                required
+                disabled={isLoading}
+              />
+              <p className="text-xs text-muted-foreground">
+                Il figlio userà questo nome utente per accedere
+              </p>
+            </div>
+            <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
+              Il figlio userà la stessa password del genitore per accedere
+            </p>
+            <div className="space-y-2">
+              <Label htmlFor="child-course">Corso acquistato</Label>
+              <Select value={childCourse} onValueChange={setChildCourse}>
+                <SelectTrigger id="child-course">
+                  <SelectValue placeholder="Seleziona un corso (opzionale)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Non ho ancora deciso</SelectItem>
+                  {courses.map(course => (
+                    <SelectItem key={course.id} value={course.id}>
+                      {course.emoji} {course.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        )}
+
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Creazione in corso...
+            </>
+          ) : (
+            `Crea account ${regRole === 'parent' ? 'Genitore + Figlio' : 'Insegnante'}`
+          )}
+        </Button>
+      </form>
+    );
+  }
 }

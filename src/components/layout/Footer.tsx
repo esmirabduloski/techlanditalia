@@ -151,9 +151,10 @@ export function Footer() {
 
         {/* Bottom Bar */}
         <div className="border-t border-background/10 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-background/50 text-sm">
-            © {new Date().getFullYear()} TECHLAND. Tutti i diritti riservati.
-          </p>
+          <div className="text-background/50 text-sm text-center md:text-left space-y-1">
+            <p>© {new Date().getFullYear()} TECHLAND. Tutti i diritti riservati.</p>
+            <p>P.IVA: 05596490267 — Sede legale: Vedelago (TV)</p>
+          </div>
           <p className="text-background/50 text-sm">
             Made with ❤️ in Italia
           </p>

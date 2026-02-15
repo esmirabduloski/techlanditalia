@@ -16,10 +16,12 @@ import { Layout } from '@/components/layout/Layout';
 export default function AuthPage() {
   const { user, isAdmin, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [regEmail, setRegEmail] = useState('');
+  const [regPassword, setRegPassword] = useState('');
   
   // Registration fields (admin only)
   const [regRole, setRegRole] = useState<'parent' | 'teacher'>('parent');
@@ -30,10 +32,7 @@ export default function AuthPage() {
   
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [showNewPasswordForm, setShowNewPasswordForm] = useState(false);
-  
-  // Login mode: 'parent' (email) or 'student' (username)
-  const [loginMode, setLoginMode] = useState<'parent' | 'student'>('parent');
-  const [loginUsername, setLoginUsername] = useState('');
+  const [resetEmail, setResetEmail] = useState('');
   
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -54,10 +53,8 @@ export default function AuthPage() {
   useEffect(() => {
     const checkRoleAndRedirect = async () => {
       if (!authLoading && user && !showNewPasswordForm) {
-        // Don't redirect admins - they may want to use the signup tab
         if (isAdmin) return;
         
-        // Check if user is a teacher
         const { data: teacherRole } = await supabase
           .from('user_roles')
           .select('role')
@@ -105,49 +102,28 @@ export default function AuthPage() {
     e.preventDefault();
     
     if (password !== confirmPassword) {
-      toast({
-        variant: 'destructive',
-        title: 'Le password non coincidono',
-        description: 'Assicurati che le due password siano identiche',
-      });
+      toast({ variant: 'destructive', title: 'Le password non coincidono', description: 'Assicurati che le due password siano identiche' });
       return;
     }
-    
     if (password.length < 6) {
-      toast({
-        variant: 'destructive',
-        title: 'Password troppo corta',
-        description: 'La password deve avere almeno 6 caratteri',
-      });
+      toast({ variant: 'destructive', title: 'Password troppo corta', description: 'La password deve avere almeno 6 caratteri' });
       return;
     }
     
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.updateUser({ password });
-      
       if (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Errore',
-          description: error.message,
-        });
+        toast({ variant: 'destructive', title: 'Errore', description: error.message });
       } else {
-        toast({
-          title: 'Password aggiornata!',
-          description: 'La tua password è stata aggiornata con successo',
-        });
+        toast({ title: 'Password aggiornata!', description: 'La tua password è stata aggiornata con successo' });
         setShowNewPasswordForm(false);
         setPassword('');
         setConfirmPassword('');
         navigate('/area-riservata');
       }
     } catch {
-      toast({
-        variant: 'destructive',
-        title: 'Errore',
-        description: 'Si è verificato un errore. Riprova più tardi.',
-      });
+      toast({ variant: 'destructive', title: 'Errore', description: 'Si è verificato un errore. Riprova più tardi.' });
     } finally {
       setIsLoading(false);
     }
@@ -155,43 +131,24 @@ export default function AuthPage() {
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) {
-      toast({
-        variant: 'destructive',
-        title: 'Email richiesta',
-        description: 'Inserisci la tua email per reimpostare la password',
-      });
+    if (!resetEmail) {
+      toast({ variant: 'destructive', title: 'Email richiesta', description: 'Inserisci la tua email per reimpostare la password' });
       return;
     }
     
     setIsLoading(true);
     try {
       const { error } = await supabase.functions.invoke('send-password-reset-email', {
-        body: { 
-          email: email.trim().toLowerCase(),
-          redirectUrl: `${window.location.origin}/auth?reset=true`
-        }
+        body: { email: resetEmail.trim().toLowerCase(), redirectUrl: `${window.location.origin}/auth?reset=true` }
       });
-
       if (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Errore',
-          description: 'Impossibile inviare l\'email. Riprova più tardi.',
-        });
+        toast({ variant: 'destructive', title: 'Errore', description: 'Impossibile inviare l\'email. Riprova più tardi.' });
       } else {
-        toast({
-          title: 'Email inviata!',
-          description: 'Controlla la tua casella email per reimpostare la password',
-        });
+        toast({ title: 'Email inviata!', description: 'Controlla la tua casella email per reimpostare la password' });
         setShowResetPassword(false);
       }
     } catch {
-      toast({
-        variant: 'destructive',
-        title: 'Errore',
-        description: 'Si è verificato un errore. Riprova più tardi.',
-      });
+      toast({ variant: 'destructive', title: 'Errore', description: 'Si è verificato un errore. Riprova più tardi.' });
     } finally {
       setIsLoading(false);
     }
@@ -202,53 +159,23 @@ export default function AuthPage() {
     setIsLoading(true);
 
     try {
-      if (loginMode === 'student') {
-        // Student login via edge function (bypasses RLS)
-        const { data: loginData, error: loginError } = await supabase.functions.invoke('student-login', {
-          body: { username: loginUsername.trim(), password }
-        });
+      // Unified login: use the edge function which handles both email and username
+      const { data: loginData, error: loginError } = await supabase.functions.invoke('student-login', {
+        body: { identifier: identifier.trim(), password }
+      });
 
-        if (loginError || loginData?.error) {
-          toast({
-            variant: 'destructive',
-            title: 'Errore di accesso',
-            description: loginData?.error || 'Impossibile effettuare il login',
-          });
-        } else if (loginData?.session) {
-          await supabase.auth.setSession(loginData.session);
-          toast({
-            title: 'Benvenuto!',
-            description: 'Accesso effettuato con successo',
-          });
-        }
-      } else {
-        // Parent/Teacher login with email
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
+      if (loginError || loginData?.error) {
+        toast({
+          variant: 'destructive',
+          title: 'Errore di accesso',
+          description: loginData?.error || 'Credenziali non corrette',
         });
-
-        if (error) {
-          toast({
-            variant: 'destructive',
-            title: 'Errore di accesso',
-            description: error.message === 'Invalid login credentials' 
-              ? 'Email o password non corretti' 
-              : error.message,
-          });
-        } else {
-          toast({
-            title: 'Benvenuto!',
-            description: 'Accesso effettuato con successo',
-          });
-        }
+      } else if (loginData?.session) {
+        await supabase.auth.setSession(loginData.session);
+        toast({ title: 'Benvenuto!', description: 'Accesso effettuato con successo' });
       }
     } catch {
-      toast({
-        variant: 'destructive',
-        title: 'Errore',
-        description: 'Si è verificato un errore durante l\'accesso',
-      });
+      toast({ variant: 'destructive', title: 'Errore', description: 'Si è verificato un errore durante l\'accesso' });
     } finally {
       setIsLoading(false);
     }
@@ -258,29 +185,17 @@ export default function AuthPage() {
     e.preventDefault();
     
     if (!isAdmin) {
-      toast({
-        variant: 'destructive',
-        title: 'Non autorizzato',
-        description: 'Solo gli admin possono registrare nuovi utenti',
-      });
+      toast({ variant: 'destructive', title: 'Non autorizzato', description: 'Solo gli admin possono registrare nuovi utenti' });
       return;
     }
 
     if (regRole === 'parent' && (!childName.trim() || !childUsername.trim())) {
-      toast({
-        variant: 'destructive',
-        title: 'Dati figlio obbligatori',
-        description: 'Inserisci nome e username del figlio',
-      });
+      toast({ variant: 'destructive', title: 'Dati figlio obbligatori', description: 'Inserisci nome e username del figlio' });
       return;
     }
 
-    if (password.length < 6) {
-      toast({
-        variant: 'destructive',
-        title: 'Password troppo corta',
-        description: 'La password deve avere almeno 6 caratteri',
-      });
+    if (regPassword.length < 6) {
+      toast({ variant: 'destructive', title: 'Password troppo corta', description: 'La password deve avere almeno 6 caratteri' });
       return;
     }
 
@@ -289,8 +204,8 @@ export default function AuthPage() {
     try {
       const body: Record<string, string | undefined> = {
         role: regRole,
-        email: email.trim().toLowerCase(),
-        password,
+        email: regEmail.trim().toLowerCase(),
+        password: regPassword,
         fullName: fullName.trim(),
       };
 
@@ -300,35 +215,21 @@ export default function AuthPage() {
         body.courseId = childCourse || undefined;
       }
 
-      const { data, error } = await supabase.functions.invoke('admin-create-user', {
-        body,
-      });
+      const { data, error } = await supabase.functions.invoke('admin-create-user', { body });
 
       if (error || data?.error) {
-        toast({
-          variant: 'destructive',
-          title: 'Errore di registrazione',
-          description: data?.error || 'Impossibile creare l\'account',
-        });
+        toast({ variant: 'destructive', title: 'Errore di registrazione', description: data?.error || 'Impossibile creare l\'account' });
       } else {
-        toast({
-          title: 'Account creato!',
-          description: `Account ${regRole === 'parent' ? 'genitore + figlio' : 'insegnante'} creato con successo`,
-        });
-        // Reset form
-        setEmail('');
-        setPassword('');
+        toast({ title: 'Account creato!', description: `Account ${regRole === 'parent' ? 'genitore + figlio' : 'insegnante'} creato con successo` });
+        setRegEmail('');
+        setRegPassword('');
         setFullName('');
         setChildName('');
         setChildUsername('');
         setChildCourse('');
       }
     } catch {
-      toast({
-        variant: 'destructive',
-        title: 'Errore',
-        description: 'Si è verificato un errore durante la registrazione',
-      });
+      toast({ variant: 'destructive', title: 'Errore', description: 'Si è verificato un errore durante la registrazione' });
     } finally {
       setIsLoading(false);
     }
@@ -362,45 +263,20 @@ export default function AuthPage() {
             <Card className="border-border/50 shadow-lg">
               <CardHeader>
                 <CardTitle>Crea nuova password</CardTitle>
-                <CardDescription>
-                  Scegli una password sicura di almeno 6 caratteri
-                </CardDescription>
+                <CardDescription>Scegli una password sicura di almeno 6 caratteri</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleUpdatePassword} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="new-password">Nuova Password</Label>
-                    <PasswordInput
-                      id="new-password"
-                      placeholder="Minimo 6 caratteri"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      disabled={isLoading}
-                      minLength={6}
-                    />
+                    <PasswordInput id="new-password" placeholder="Minimo 6 caratteri" value={password} onChange={(e) => setPassword(e.target.value)} required disabled={isLoading} minLength={6} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="confirm-password">Conferma Password</Label>
-                    <PasswordInput
-                      id="confirm-password"
-                      placeholder="Ripeti la password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
-                      disabled={isLoading}
-                      minLength={6}
-                    />
+                    <PasswordInput id="confirm-password" placeholder="Ripeti la password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required disabled={isLoading} minLength={6} />
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Aggiornamento...
-                      </>
-                    ) : (
-                      'Aggiorna Password'
-                    )}
+                    {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Aggiornamento...</> : 'Aggiorna Password'}
                   </Button>
                 </form>
               </CardContent>
@@ -409,39 +285,18 @@ export default function AuthPage() {
             <Card className="border-border/50 shadow-lg">
               <CardHeader>
                 <CardTitle>Reimposta Password</CardTitle>
-                <CardDescription>
-                  Inserisci la tua email e ti invieremo un link per reimpostare la password
-                </CardDescription>
+                <CardDescription>Inserisci la tua email e ti invieremo un link per reimpostare la password</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleResetPassword} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="reset-email">Email</Label>
-                    <Input
-                      id="reset-email"
-                      type="email"
-                      placeholder="mario@esempio.it"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      disabled={isLoading}
-                    />
+                    <Input id="reset-email" type="email" placeholder="mario@esempio.it" value={resetEmail} onChange={(e) => setResetEmail(e.target.value)} required disabled={isLoading} />
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Invio in corso...
-                      </>
-                    ) : (
-                      'Invia link di reset'
-                    )}
+                    {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Invio in corso...</> : 'Invia link di reset'}
                   </Button>
-                  <button
-                    type="button"
-                    onClick={() => setShowResetPassword(false)}
-                    className="w-full text-center text-sm text-muted-foreground hover:text-foreground"
-                  >
+                  <button type="button" onClick={() => setShowResetPassword(false)} className="w-full text-center text-sm text-muted-foreground hover:text-foreground">
                     ← Torna al login
                   </button>
                 </form>
@@ -450,7 +305,6 @@ export default function AuthPage() {
           ) : (
           <Card className="border-border/50 shadow-lg">
             {isAdmin ? (
-              // Admin sees tabs: Accedi + Registra Utente
               <Tabs defaultValue="signup" className="w-full">
                 <CardHeader className="pb-4">
                   <TabsList className="grid w-full grid-cols-2">
@@ -471,7 +325,6 @@ export default function AuthPage() {
                 </CardContent>
               </Tabs>
             ) : (
-              // Non-admin: only login
               <>
                 <CardHeader className="pb-4">
                   <CardTitle className="text-center">Accedi</CardTitle>
@@ -487,13 +340,9 @@ export default function AuthPage() {
           {/* Footer */}
           <p className="text-center text-sm text-muted-foreground mt-6">
             Accedendo accetti i nostri{' '}
-            <a href="/termini" className="text-primary hover:underline">
-              Termini e Condizioni
-            </a>{' '}
+            <a href="/termini" className="text-primary hover:underline">Termini e Condizioni</a>{' '}
             e la{' '}
-            <a href="/privacy" className="text-primary hover:underline">
-              Privacy Policy
-            </a>
+            <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>
           </p>
         </div>
       </div>
@@ -503,61 +352,21 @@ export default function AuthPage() {
   function renderLoginForm() {
     return (
       <form onSubmit={handleLogin} className="space-y-4">
-        {/* Login Mode Toggle */}
-        <div className="flex gap-2 p-1 bg-muted rounded-lg">
-          <button
-            type="button"
-            onClick={() => setLoginMode('parent')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${
-              loginMode === 'parent' 
-                ? 'bg-background shadow text-foreground' 
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Users className="w-4 h-4" />
-            Genitore
-          </button>
-          <button
-            type="button"
-            onClick={() => setLoginMode('student')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${
-              loginMode === 'student' 
-                ? 'bg-background shadow text-foreground' 
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <GraduationCap className="w-4 h-4" />
-            Studente
-          </button>
+        <div className="space-y-2">
+          <Label htmlFor="login-identifier">Email o Nome Utente</Label>
+          <Input
+            id="login-identifier"
+            type="text"
+            placeholder="mario@esempio.it oppure luca123"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+            required
+            disabled={isLoading}
+          />
+          <p className="text-xs text-muted-foreground">
+            Genitori e insegnanti: inserisci la tua email · Studenti: inserisci il tuo username
+          </p>
         </div>
-
-        {loginMode === 'parent' ? (
-          <div className="space-y-2">
-            <Label htmlFor="login-email">Email</Label>
-            <Input
-              id="login-email"
-              type="email"
-              placeholder="mario@esempio.it"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={isLoading}
-            />
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <Label htmlFor="login-username">Nome Utente</Label>
-            <Input
-              id="login-username"
-              type="text"
-              placeholder="Il tuo nome utente"
-              value={loginUsername}
-              onChange={(e) => setLoginUsername(e.target.value)}
-              required
-              disabled={isLoading}
-            />
-          </div>
-        )}
         
         <div className="space-y-2">
           <Label htmlFor="login-password">Password</Label>
@@ -571,24 +380,15 @@ export default function AuthPage() {
           />
         </div>
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Accesso in corso...
-            </>
-          ) : (
-            'Accedi'
-          )}
+          {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Accesso in corso...</> : 'Accedi'}
         </Button>
-        {loginMode === 'parent' && (
-          <button
-            type="button"
-            onClick={() => setShowResetPassword(true)}
-            className="w-full text-center text-sm text-primary hover:underline mt-2"
-          >
-            Password dimenticata?
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => setShowResetPassword(true)}
+          className="w-full text-center text-sm text-primary hover:underline mt-2"
+        >
+          Password dimenticata?
+        </button>
       </form>
     );
   }
@@ -604,9 +404,7 @@ export default function AuthPage() {
               type="button"
               onClick={() => setRegRole('parent')}
               className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${
-                regRole === 'parent'
-                  ? 'bg-background shadow text-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
+                regRole === 'parent' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <Users className="w-4 h-4" />
@@ -616,9 +414,7 @@ export default function AuthPage() {
               type="button"
               onClick={() => setRegRole('teacher')}
               className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${
-                regRole === 'teacher'
-                  ? 'bg-background shadow text-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
+                regRole === 'teacher' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <GraduationCap className="w-4 h-4" />
@@ -636,39 +432,15 @@ export default function AuthPage() {
           
           <div className="space-y-2">
             <Label htmlFor="signup-name">Nome Completo</Label>
-            <Input
-              id="signup-name"
-              type="text"
-              placeholder="Mario Rossi"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              required
-              disabled={isLoading}
-            />
+            <Input id="signup-name" type="text" placeholder="Mario Rossi" value={fullName} onChange={(e) => setFullName(e.target.value)} required disabled={isLoading} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="signup-email">Email</Label>
-            <Input
-              id="signup-email"
-              type="email"
-              placeholder="mario@esempio.it"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={isLoading}
-            />
+            <Input id="signup-email" type="email" placeholder="mario@esempio.it" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} required disabled={isLoading} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="signup-password">Password</Label>
-            <PasswordInput
-              id="signup-password"
-              placeholder="Minimo 6 caratteri"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={isLoading}
-              minLength={6}
-            />
+            <PasswordInput id="signup-password" placeholder="Minimo 6 caratteri" value={regPassword} onChange={(e) => setRegPassword(e.target.value)} required disabled={isLoading} minLength={6} />
           </div>
         </div>
 
@@ -679,37 +451,16 @@ export default function AuthPage() {
               <GraduationCap className="w-4 h-4" />
               Dati del figlio/a (obbligatori)
             </div>
-            
             <div className="space-y-2">
               <Label htmlFor="child-name">Nome del figlio/a</Label>
-              <Input
-                id="child-name"
-                type="text"
-                placeholder="Luca"
-                value={childName}
-                onChange={(e) => setChildName(e.target.value)}
-                required
-                disabled={isLoading}
-              />
+              <Input id="child-name" type="text" placeholder="Luca" value={childName} onChange={(e) => setChildName(e.target.value)} required disabled={isLoading} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="child-username">Nome utente per il login</Label>
-              <Input
-                id="child-username"
-                type="text"
-                placeholder="luca123"
-                value={childUsername}
-                onChange={(e) => setChildUsername(e.target.value)}
-                required
-                disabled={isLoading}
-              />
-              <p className="text-xs text-muted-foreground">
-                Il figlio userà questo nome utente per accedere
-              </p>
+              <Input id="child-username" type="text" placeholder="luca123" value={childUsername} onChange={(e) => setChildUsername(e.target.value)} required disabled={isLoading} />
+              <p className="text-xs text-muted-foreground">Il figlio userà questo nome utente per accedere</p>
             </div>
-            <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
-              Il figlio userà la stessa password del genitore per accedere
-            </p>
+            <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">Il figlio userà la stessa password del genitore per accedere</p>
             <div className="space-y-2">
               <Label htmlFor="child-course">Corso acquistato</Label>
               <Select value={childCourse} onValueChange={setChildCourse}>
@@ -719,9 +470,7 @@ export default function AuthPage() {
                 <SelectContent>
                   <SelectItem value="none">Non ho ancora deciso</SelectItem>
                   {courses.map(course => (
-                    <SelectItem key={course.id} value={course.id}>
-                      {course.emoji} {course.title}
-                    </SelectItem>
+                    <SelectItem key={course.id} value={course.id}>{course.emoji} {course.title}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -730,14 +479,7 @@ export default function AuthPage() {
         )}
 
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Creazione in corso...
-            </>
-          ) : (
-            `Crea account ${regRole === 'parent' ? 'Genitore + Figlio' : 'Insegnante'}`
-          )}
+          {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Creazione in corso...</> : `Crea account ${regRole === 'parent' ? 'Genitore + Figlio' : 'Insegnante'}`}
         </Button>
       </form>
     );

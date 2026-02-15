@@ -257,7 +257,7 @@ export default function ChiSiamo() {
       </section>
 
       {/* Team */}
-      <section className="tech-section">
+      <section className="tech-section hidden">
         <div className="tech-container">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Il nostro team</h2>

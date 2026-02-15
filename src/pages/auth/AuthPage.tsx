@@ -409,6 +409,7 @@ export default function AuthPage() {
                 </Tabs>
               ) : (
                 <>
+                  <CardContent></CardContent>
                   <CardContent>{renderLoginForm()}</CardContent>
                 </>
               )}
@@ -445,7 +446,7 @@ export default function AuthPage() {
             required
             disabled={isLoading}
           />
-          <p className="text-xs text-muted-foreground">Genitori e insegnanti: email - Studenti: username</p>
+          <p className="text-xs text-muted-foreground">Genitori e insegnanti: email · Studenti: username</p>
         </div>
 
         <div className="space-y-2">

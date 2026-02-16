@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,25 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AdminNav } from '@/components/admin/AdminNav';
+import { StatsFiltersBar, type StatsFilters } from '@/components/admin/StatsFilters';
 import { 
-  LogOut,
-  Loader2,
-  BookOpen,
-  Users,
-  GraduationCap,
-  Calendar,
-  MessageSquare,
-  TrendingUp,
-  Home
+  LogOut, Loader2, BookOpen, Users, GraduationCap,
+  Calendar, MessageSquare, TrendingUp
 } from 'lucide-react';
 import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 
 interface Stats {
@@ -43,15 +31,14 @@ interface EnrollmentTrend {
 
 export default function AdminStats() {
   const [stats, setStats] = useState<Stats>({
-    parents: 0,
-    students: 0,
-    courses: 0,
-    pendingBookings: 0,
-    unreadContacts: 0,
-    totalEnrollments: 0
+    parents: 0, students: 0, courses: 0,
+    pendingBookings: 0, unreadContacts: 0, totalEnrollments: 0
   });
   const [enrollmentTrends, setEnrollmentTrends] = useState<EnrollmentTrend[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [filters, setFilters] = useState<StatsFilters>({
+    dateFrom: undefined, dateTo: undefined, courseId: undefined, teacherId: undefined
+  });
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -61,86 +48,98 @@ export default function AdminStats() {
     }
   }, [user, isAdmin, authLoading, navigate]);
 
-  useEffect(() => {
-    if (user && isAdmin) {
-      fetchStats();
-    }
-  }, [user, isAdmin]);
+  const fetchStats = useCallback(async () => {
+    setIsLoading(true);
 
-  const fetchStats = async () => {
-    // First, get all admin user IDs to exclude them from counts
+    // Get admin IDs to exclude
     const { data: adminRoles } = await supabase
-      .from('user_roles')
-      .select('user_id')
-      .eq('role', 'admin');
-    
+      .from('user_roles').select('user_id').eq('role', 'admin');
     const adminIds = adminRoles?.map(r => r.user_id) || [];
 
-    // Fetch all stats in parallel
+    // If teacher filter is set, get students in that teacher's groups
+    let teacherStudentIds: string[] | null = null;
+    if (filters.teacherId) {
+      const { data: groups } = await supabase
+        .from('student_groups').select('id').eq('teacher_id', filters.teacherId);
+      if (groups && groups.length > 0) {
+        const groupIds = groups.map(g => g.id);
+        const { data: groupStudents } = await supabase
+          .from('group_students').select('student_id').in('group_id', groupIds);
+        teacherStudentIds = groupStudents?.map(gs => gs.student_id) || [];
+      } else {
+        teacherStudentIds = [];
+      }
+    }
+
+    // Build enrollment query
+    let enrollmentsQuery = supabase.from('enrollments').select('id, student_id, course_id, enrolled_at');
+    if (filters.courseId) enrollmentsQuery = enrollmentsQuery.eq('course_id', filters.courseId);
+    if (filters.dateFrom) enrollmentsQuery = enrollmentsQuery.gte('enrolled_at', filters.dateFrom.toISOString());
+    if (filters.dateTo) enrollmentsQuery = enrollmentsQuery.lte('enrolled_at', filters.dateTo.toISOString());
+
     const [
-      parentsRes,
-      studentsRes,
-      coursesRes,
-      pendingBookingsRes,
-      contactsRes,
-      enrollmentsRes,
-      enrollmentTrendsRes
+      parentsRes, studentsRes, coursesRes,
+      pendingBookingsRes, contactsRes, enrollmentsRes
     ] = await Promise.all([
-      // Parents: exclude admins
       supabase.from('profiles').select('id').eq('role', 'parent'),
       supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'student'),
       supabase.from('courses').select('id', { count: 'exact', head: true }),
       supabase.from('trial_bookings').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
       supabase.from('contact_submissions').select('id', { count: 'exact', head: true }),
-      // Enrollments: exclude admin enrollments
-      supabase.from('enrollments').select('id, student_id'),
-      supabase.from('enrollments').select('enrolled_at, student_id').order('enrolled_at', { ascending: true })
+      enrollmentsQuery,
     ]);
 
-    // Filter out admins from parent count
     const nonAdminParents = parentsRes.data?.filter(p => !adminIds.includes(p.id)) || [];
-    
-    // Filter out admin enrollments
-    const nonAdminEnrollments = enrollmentsRes.data?.filter(e => !adminIds.includes(e.student_id)) || [];
+
+    let filteredEnrollments = enrollmentsRes.data?.filter(e => !adminIds.includes(e.student_id)) || [];
+    if (teacherStudentIds !== null) {
+      filteredEnrollments = filteredEnrollments.filter(e => teacherStudentIds!.includes(e.student_id));
+    }
+
+    // Student count filtered by teacher
+    let studentCount = studentsRes.count || 0;
+    if (teacherStudentIds !== null) {
+      studentCount = teacherStudentIds.filter(id => !adminIds.includes(id)).length;
+    }
 
     setStats({
       parents: nonAdminParents.length,
-      students: studentsRes.count || 0,
+      students: studentCount,
       courses: coursesRes.count || 0,
       pendingBookings: pendingBookingsRes.count || 0,
       unreadContacts: contactsRes.count || 0,
-      totalEnrollments: nonAdminEnrollments.length
+      totalEnrollments: filteredEnrollments.length
     });
 
-    // Process enrollment trends by month (excluding admins)
-    if (enrollmentTrendsRes.data) {
-      const nonAdminEnrollmentTrends = enrollmentTrendsRes.data.filter(e => !adminIds.includes(e.student_id));
-      const monthlyData: Record<string, number> = {};
-      
-      nonAdminEnrollmentTrends.forEach((enrollment) => {
-        const date = new Date(enrollment.enrolled_at);
-        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-        monthlyData[monthKey] = (monthlyData[monthKey] || 0) + 1;
-      });
+    // Process enrollment trends
+    const monthlyData: Record<string, number> = {};
+    filteredEnrollments.forEach((enrollment) => {
+      const date = new Date(enrollment.enrolled_at);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      monthlyData[monthKey] = (monthlyData[monthKey] || 0) + 1;
+    });
 
-      // Get last 12 months
-      const trends: EnrollmentTrend[] = [];
-      const now = new Date();
-      for (let i = 11; i >= 0; i--) {
-        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-        const monthName = date.toLocaleDateString('it-IT', { month: 'short', year: '2-digit' });
-        trends.push({
-          month: monthName,
-          enrollments: monthlyData[monthKey] || 0
-        });
-      }
-      
-      setEnrollmentTrends(trends);
+    const trends: EnrollmentTrend[] = [];
+    const now = new Date();
+    const monthsToShow = filters.dateFrom ? 
+      Math.max(Math.ceil((now.getTime() - filters.dateFrom.getTime()) / (30 * 24 * 60 * 60 * 1000)), 3) : 12;
+    
+    for (let i = Math.min(monthsToShow, 24) - 1; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const monthName = date.toLocaleDateString('it-IT', { month: 'short', year: '2-digit' });
+      trends.push({ month: monthName, enrollments: monthlyData[monthKey] || 0 });
     }
 
+    setEnrollmentTrends(trends);
     setIsLoading(false);
-  };
+  }, [filters]);
+
+  useEffect(() => {
+    if (user && isAdmin) {
+      fetchStats();
+    }
+  }, [user, isAdmin, fetchStats]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -168,7 +167,6 @@ export default function AdminStats() {
 
   return (
     <div className="min-h-screen bg-muted/30">
-      {/* Header */}
       <header className="bg-background border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -194,17 +192,16 @@ export default function AdminStats() {
         </div>
       </header>
 
-      {/* Navigation */}
       <AdminNav />
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold">Statistiche</h1>
           <p className="text-muted-foreground mt-1">Panoramica generale della piattaforma</p>
         </div>
 
-        {/* Stats Cards */}
+        <StatsFiltersBar filters={filters} onFiltersChange={setFilters} />
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           {statCards.map((stat) => (
             <Card key={stat.label}>
@@ -223,12 +220,11 @@ export default function AdminStats() {
           ))}
         </div>
 
-        {/* Enrollment Chart */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="w-5 h-5" />
-              Andamento Iscrizioni (ultimi 12 mesi)
+              Andamento Iscrizioni
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -242,16 +238,8 @@ export default function AdminStats() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis 
-                    dataKey="month" 
-                    className="text-xs fill-muted-foreground"
-                    tick={{ fontSize: 12 }}
-                  />
-                  <YAxis 
-                    className="text-xs fill-muted-foreground"
-                    tick={{ fontSize: 12 }}
-                    allowDecimals={false}
-                  />
+                  <XAxis dataKey="month" className="text-xs fill-muted-foreground" tick={{ fontSize: 12 }} />
+                  <YAxis className="text-xs fill-muted-foreground" tick={{ fontSize: 12 }} allowDecimals={false} />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: 'hsl(var(--background))', 
@@ -260,20 +248,12 @@ export default function AdminStats() {
                     }}
                     labelStyle={{ color: 'hsl(var(--foreground))' }}
                   />
-                  <Area 
-                    type="monotone" 
-                    dataKey="enrollments" 
-                    stroke="hsl(var(--primary))" 
-                    fillOpacity={1} 
-                    fill="url(#colorEnrollments)"
-                    name="Iscrizioni"
-                  />
+                  <Area type="monotone" dataKey="enrollments" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorEnrollments)" name="Iscrizioni" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
-
       </main>
     </div>
   );

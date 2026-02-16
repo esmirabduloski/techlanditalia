@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { 
-  Loader2, ArrowLeft, Users, Calendar, ChevronRight, MessageCircle, Plus, Send, Trash2, Check, X, AlertCircle, Clock
+  Loader2, ArrowLeft, Users, Calendar, ChevronRight, MessageCircle, Plus, Send, Trash2, Check, X, AlertCircle, Clock, ExternalLink
 } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
@@ -29,6 +29,7 @@ interface GroupStudent {
   student_id: string;
   full_name: string;
   avatar_id: number;
+  lesson_balance: number;
   attendance: Record<number, string>; // lesson_number -> status
 }
 
@@ -53,6 +54,7 @@ interface StudentGroup {
   lesson_time: string | null;
   status: string;
   archived_at: string | null;
+  whatsapp_link: string | null;
 }
 
 interface GroupComment {
@@ -109,7 +111,7 @@ export default function TeacherGroupDetail() {
       const { data: groupData } = await supabase
         .from('student_groups')
         .select(`
-          id, title, course_id, start_date, max_lessons, teacher_id, lesson_days, lesson_time, status, archived_at,
+          id, title, course_id, start_date, max_lessons, teacher_id, lesson_days, lesson_time, status, archived_at, whatsapp_link,
           courses!inner(title, emoji)
         `)
         .eq('id', groupId)
@@ -140,7 +142,8 @@ export default function TeacherGroupDetail() {
         lesson_days: (groupData.lesson_days as number[]) || [0],
         lesson_time: groupData.lesson_time,
         status: groupData.status || 'active',
-        archived_at: groupData.archived_at
+        archived_at: groupData.archived_at,
+        whatsapp_link: (groupData as any).whatsapp_link || null
       });
 
       // Fetch lesson schedule
@@ -174,7 +177,7 @@ export default function TeacherGroupDetail() {
         .from('group_students')
         .select(`
           id, student_id,
-          profiles!inner(full_name, avatar_id)
+          profiles!inner(full_name, avatar_id, lesson_balance)
         `)
         .eq('group_id', groupId);
 
@@ -198,6 +201,7 @@ export default function TeacherGroupDetail() {
           student_id: gs.student_id,
           full_name: gs.profiles?.full_name,
           avatar_id: gs.profiles?.avatar_id || 1,
+          lesson_balance: gs.profiles?.lesson_balance ?? 0,
           attendance: attendanceMap[gs.student_id] || {}
         }));
 
@@ -543,6 +547,21 @@ export default function TeacherGroupDetail() {
               <p className="text-sm text-muted-foreground mb-1">Ultima Lezione Svolta</p>
               <p className="text-lg font-semibold text-primary">{lastCompletedLesson}</p>
             </div>
+
+            {group.whatsapp_link && (
+              <div className="mt-4 pt-4 border-t">
+                <p className="text-sm text-muted-foreground mb-2">Gruppo WhatsApp</p>
+                <a
+                  href={group.whatsapp_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Apri Gruppo WhatsApp
+                </a>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -689,10 +708,8 @@ export default function TeacherGroupDetail() {
               </ul>
             </div>
             
-            <p className="text-sm text-muted-foreground mt-2">
-              Lezioni disponibili: {availableLessonsCount} di {totalLessons}
-            </p>
-            <Badge variant="secondary" className="mt-2">UTC oggi: {new Date().toISOString().slice(0, 10)}</Badge>
+            
+
           </CardHeader>
           <CardContent>
             {students.length === 0 ? (
@@ -716,12 +733,13 @@ export default function TeacherGroupDetail() {
                   <tbody>
                     {students.map(student => (
                       <tr key={student.student_id} className="border-t">
-                        <td className="p-2 font-medium sticky left-0 bg-background z-10">
+                        <td className="p-2 sticky left-0 bg-background z-10">
                           <button
                             onClick={() => navigate(`/insegnante/studente/${student.student_id}`)}
                             className="text-left hover:text-primary hover:underline transition-colors"
                           >
-                            {student.full_name}
+                            <span className="font-medium">{student.full_name}</span>
+                            <span className="block text-xs text-muted-foreground">{student.lesson_balance} lezioni</span>
                           </button>
                         </td>
                         {lessonSchedule.map((lesson) => {

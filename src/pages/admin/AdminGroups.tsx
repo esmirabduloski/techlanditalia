@@ -111,6 +111,7 @@ export default function AdminGroups() {
     max_lessons: 32,
     lesson_days: [0] as number[], // Default Sunday
     lesson_time: '',
+    whatsapp_link: '',
     selected_students: [] as string[]
   });
   const [isSaving, setIsSaving] = useState(false);
@@ -227,6 +228,7 @@ export default function AdminGroups() {
       max_lessons: 32,
       lesson_days: [0],
       lesson_time: '',
+      whatsapp_link: '',
       selected_students: []
     });
     setStudentSearch('');
@@ -237,7 +239,7 @@ export default function AdminGroups() {
     // Fetch current students and group details with lesson_days
     const { data: groupDetails } = await supabase
       .from('student_groups')
-      .select('lesson_days')
+      .select('lesson_days, whatsapp_link')
       .eq('id', group.id)
       .single();
 
@@ -255,6 +257,7 @@ export default function AdminGroups() {
       max_lessons: group.max_lessons,
       lesson_days: (groupDetails?.lesson_days as number[]) || [0],
       lesson_time: group.lesson_time || '',
+      whatsapp_link: (groupDetails as any)?.whatsapp_link || '',
       selected_students: groupStudents?.map(gs => gs.student_id) || []
     });
     setStudentSearch('');
@@ -280,8 +283,9 @@ export default function AdminGroups() {
             start_date: formData.start_date || null,
             max_lessons: formData.max_lessons,
             lesson_days: formData.lesson_days,
-            lesson_time: formData.lesson_time || null
-          })
+            lesson_time: formData.lesson_time || null,
+            whatsapp_link: formData.whatsapp_link || null
+          } as any)
           .eq('id', editingGroup.id);
 
         // Update students
@@ -311,8 +315,9 @@ export default function AdminGroups() {
             start_date: formData.start_date || null,
             max_lessons: formData.max_lessons,
             lesson_days: formData.lesson_days,
-            lesson_time: formData.lesson_time || null
-          })
+            lesson_time: formData.lesson_time || null,
+            whatsapp_link: formData.whatsapp_link || null
+          } as any)
           .select()
           .single();
 
@@ -758,6 +763,18 @@ export default function AdminGroups() {
                   {formData.lesson_days.length > 1 
                     ? `${formData.lesson_days.length} lezioni a settimana`
                     : '1 lezione a settimana'}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Link Gruppo WhatsApp</Label>
+                <Input
+                  value={formData.whatsapp_link}
+                  onChange={(e) => setFormData(prev => ({ ...prev, whatsapp_link: e.target.value }))}
+                  placeholder="https://chat.whatsapp.com/..."
+                />
+                <p className="text-xs text-muted-foreground">
+                  L'insegnante potrà vedere questo link per entrare nel gruppo WhatsApp
                 </p>
               </div>
 

@@ -1,0 +1,1 @@
+ALTER TABLE public.student_groups ADD COLUMN whatsapp_link text NULL;

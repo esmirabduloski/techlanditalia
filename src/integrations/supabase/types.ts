@@ -1312,6 +1312,7 @@ export type Database = {
           teacher_id: string | null
           title: string
           updated_at: string | null
+          whatsapp_link: string | null
         }
         Insert: {
           archived_at?: string | null
@@ -1327,6 +1328,7 @@ export type Database = {
           teacher_id?: string | null
           title: string
           updated_at?: string | null
+          whatsapp_link?: string | null
         }
         Update: {
           archived_at?: string | null
@@ -1342,6 +1344,7 @@ export type Database = {
           teacher_id?: string | null
           title?: string
           updated_at?: string | null
+          whatsapp_link?: string | null
         }
         Relationships: [
           {

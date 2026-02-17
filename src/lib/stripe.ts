@@ -1,0 +1,3 @@
+// Chiave pubblica Stripe
+// Per passare alla produzione, sostituisci con la tua chiave pk_live_...
+export const STRIPE_PUBLISHABLE_KEY = 'pk_test_51T17EbJjUPaM67udJSbUKA2PzAQGsYV6uKEEC4qxSUo5Eqf7RGB3IC5sR6SBZADUZ1D4bnHRgYtGox0YVAPAqP4600RSE8WtsA';

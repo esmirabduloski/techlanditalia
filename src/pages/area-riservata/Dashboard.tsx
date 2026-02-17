@@ -512,6 +512,14 @@ export default function Dashboard() {
                     </Link>
                   </Button>
                 )}
+                {isParent && (
+                  <Button variant="outline" className="h-auto py-4 flex-col" asChild>
+                    <Link to="/area-riservata/acquisti">
+                      <CreditCard className="w-5 h-5 mb-2" />
+                      <span>Acquista Corsi</span>
+                    </Link>
+                  </Button>
+                )}
                 <Button variant="outline" className="h-auto py-4 flex-col" asChild>
                   <Link to="/chi-siamo">
                     <Trophy className="w-5 h-5 mb-2" />

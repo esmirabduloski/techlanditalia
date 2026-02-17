@@ -32,3 +32,9 @@ verify_jwt = false
 
 [functions.newsletter-send]
 verify_jwt = true
+
+[functions.stripe-get-products]
+verify_jwt = false
+
+[functions.stripe-create-checkout]
+verify_jwt = false

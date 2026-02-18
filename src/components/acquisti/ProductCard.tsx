@@ -1,7 +1,7 @@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Loader2, Star, Zap } from "lucide-react";
+import { ShoppingCart, Loader2, Star, Zap, CheckCircle } from "lucide-react";
 
 interface StripePrice {
   id: string;
@@ -127,6 +127,22 @@ export function ProductCard({ product, checkoutLoading, onCheckout, featured }: 
           )}
           Acquista ora
         </Button>
+
+        {/* Trust signals */}
+        <div className="flex flex-col gap-1.5 pt-1">
+          <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1.5">
+            <CheckCircle className="w-3.5 h-3.5 flex-shrink-0" />
+            Lezione di prova gratuita
+          </p>
+          <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1.5">
+            <CheckCircle className="w-3.5 h-3.5 flex-shrink-0" />
+            Puoi cancellare quando vuoi
+          </p>
+          <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1.5">
+            <CheckCircle className="w-3.5 h-3.5 flex-shrink-0" />
+            Soddisfatti o rimborsati
+          </p>
+        </div>
       </CardFooter>
     </Card>
   );

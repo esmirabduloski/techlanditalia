@@ -123,17 +123,18 @@ export default function Acquisti() {
 
   // Match products to courses by name similarity, then filter by age
   const getProductCourseAgeRange = (product: StripeProduct): string | null => {
-    // Check metadata first for explicit course_slug or age_range
+    // Check metadata first for explicit age_range or course_slug
     if (product.metadata?.age_range) return product.metadata.age_range;
     if (product.metadata?.course_slug) {
       const course = courses.find(c => c.slug === product.metadata.course_slug);
       return course?.age_range || null;
     }
-    // Fuzzy match by product name
-    const match = courses.find(c =>
-      product.name.toLowerCase().includes(c.title.toLowerCase()) ||
-      c.title.toLowerCase().includes(product.name.toLowerCase())
-    );
+    // Fuzzy match: check if any significant word from the product name appears in a course title
+    const productWords = product.name.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+    const match = courses.find(c => {
+      const titleLower = c.title.toLowerCase();
+      return productWords.some(word => titleLower.includes(word));
+    });
     return match?.age_range || null;
   };
 

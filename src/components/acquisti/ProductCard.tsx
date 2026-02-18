@@ -1,7 +1,7 @@
-import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Loader2, Star, Zap, CheckCircle } from "lucide-react";
+import { ShoppingCart, Loader2, Star, Zap } from "lucide-react";
 
 interface StripePrice {
   id: string;
@@ -25,6 +25,8 @@ interface ProductCardProps {
   checkoutLoading: string | null;
   onCheckout: (priceId: string) => void;
   featured?: boolean;
+  isAdmin?: boolean;
+  onToggleFeatured?: (productId: string, isFeatured: boolean) => void;
 }
 
 const formatPrice = (amount: number, currency: string) => {
@@ -34,7 +36,7 @@ const formatPrice = (amount: number, currency: string) => {
   }).format(amount / 100);
 };
 
-export function ProductCard({ product, checkoutLoading, onCheckout, featured }: ProductCardProps) {
+export function ProductCard({ product, checkoutLoading, onCheckout, featured, isAdmin, onToggleFeatured }: ProductCardProps) {
   const price = product.prices[0];
   const hasPromo = product.metadata?.promo === "true";
   const originalPrice = product.metadata?.original_price
@@ -49,15 +51,40 @@ export function ProductCard({ product, checkoutLoading, onCheckout, featured }: 
           : "hover:shadow-lg border-border/60"
       }`}
     >
+      {/* Admin toggle */}
+      {isAdmin && onToggleFeatured && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleFeatured(product.id, !!featured);
+          }}
+          className={`absolute top-3 right-3 z-20 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+            featured
+              ? "bg-primary text-primary-foreground shadow-md"
+              : "bg-muted/80 text-muted-foreground hover:bg-primary/20 hover:text-primary"
+          }`}
+          title={featured ? "Rimuovi da più popolari" : "Segna come più popolare"}
+        >
+          <Star className={`w-4 h-4 ${featured ? "fill-current" : ""}`} />
+        </button>
+      )}
+
       {/* Badges */}
-      {featured && (
+      {featured && !isAdmin && (
         <div className="absolute top-3 right-3 z-10">
           <Badge className="bg-primary text-primary-foreground gap-1 shadow-md">
             <Star className="w-3 h-3" /> Più popolare
           </Badge>
         </div>
       )}
-      {hasPromo && (
+      {featured && isAdmin && (
+        <div className="absolute top-3 left-3 z-10">
+          <Badge className="bg-primary text-primary-foreground gap-1 shadow-md">
+            <Star className="w-3 h-3" /> Più popolare
+          </Badge>
+        </div>
+      )}
+      {hasPromo && !featured && (
         <div className="absolute top-3 left-3 z-10">
           <Badge className="bg-secondary text-secondary-foreground gap-1 shadow-md">
             <Zap className="w-3 h-3" /> Offerta
@@ -127,22 +154,6 @@ export function ProductCard({ product, checkoutLoading, onCheckout, featured }: 
           )}
           Acquista ora
         </Button>
-
-        {/* Trust signals */}
-        <div className="flex flex-col gap-1.5 pt-1">
-          <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1.5">
-            <CheckCircle className="w-3.5 h-3.5 flex-shrink-0" />
-            Lezione di prova gratuita
-          </p>
-          <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1.5">
-            <CheckCircle className="w-3.5 h-3.5 flex-shrink-0" />
-            Puoi cancellare quando vuoi
-          </p>
-          <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1.5">
-            <CheckCircle className="w-3.5 h-3.5 flex-shrink-0" />
-            Soddisfatti o rimborsati
-          </p>
-        </div>
       </CardFooter>
     </Card>
   );

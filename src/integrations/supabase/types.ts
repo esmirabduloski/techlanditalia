@@ -429,6 +429,27 @@ export type Database = {
           },
         ]
       }
+      featured_products: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          stripe_product_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          stripe_product_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          stripe_product_id?: string
+        }
+        Relationships: []
+      }
       gamification_levels: {
         Row: {
           badge_emoji: string

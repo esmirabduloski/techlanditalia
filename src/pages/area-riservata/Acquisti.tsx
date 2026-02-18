@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, CheckCircle2, ShoppingCart, Loader2, XCircle, Sparkles, GraduationCap } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Loader2, XCircle, Sparkles, GraduationCap, CheckCircle, Shield, ShoppingCart } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { AcquistiBenefits } from '@/components/acquisti/AcquistiBenefits';
 import { AcquistiFAQ } from '@/components/acquisti/AcquistiFAQ';
@@ -46,6 +46,8 @@ export default function Acquisti() {
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [ageFilter, setAgeFilter] = useState("Tutti");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [featuredProductIds, setFeaturedProductIds] = useState<Set<string>>(new Set());
 
   const isSuccess = searchParams.get('success') === 'true';
   const isCanceled = searchParams.get('canceled') === 'true';
@@ -59,7 +61,25 @@ export default function Acquisti() {
   useEffect(() => {
     fetchProducts();
     fetchCourses();
+    fetchFeaturedProducts();
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      checkAdminRole();
+    }
+  }, [user]);
+
+  const checkAdminRole = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+    setIsAdmin(!!data);
+  };
 
   const fetchProducts = async () => {
     try {
@@ -83,6 +103,29 @@ export default function Acquisti() {
       .select('id, slug, title, age_range')
       .eq('is_visible', true);
     if (data) setCourses(data);
+  };
+
+  const fetchFeaturedProducts = async () => {
+    const { data } = await supabase
+      .from('featured_products')
+      .select('stripe_product_id');
+    if (data) {
+      setFeaturedProductIds(new Set(data.map(d => d.stripe_product_id)));
+    }
+  };
+
+  const handleToggleFeatured = async (productId: string, isFeatured: boolean) => {
+    if (isFeatured) {
+      await supabase
+        .from('featured_products')
+        .delete()
+        .eq('stripe_product_id', productId);
+    } else {
+      await supabase
+        .from('featured_products')
+        .insert({ stripe_product_id: productId, created_by: user?.id });
+    }
+    fetchFeaturedProducts();
   };
 
   const handleCheckout = async (priceId: string) => {
@@ -111,7 +154,6 @@ export default function Acquisti() {
     }
   };
 
-  // Age range filtering logic (same as /corsi)
   const parseAgeRange = (ageRange: string | null): [number, number] | null => {
     if (!ageRange) return null;
     const match = ageRange.match(/(\d+)-(\d+)/);
@@ -121,15 +163,12 @@ export default function Acquisti() {
   const rangesOverlap = (a: [number, number], b: [number, number]) =>
     a[0] <= b[1] && a[1] >= b[0];
 
-  // Match products to courses by name similarity, then filter by age
   const getProductCourseAgeRange = (product: StripeProduct): string | null => {
-    // Check metadata first for explicit age_range or course_slug
     if (product.metadata?.age_range) return product.metadata.age_range;
     if (product.metadata?.course_slug) {
       const course = courses.find(c => c.slug === product.metadata.course_slug);
       return course?.age_range || null;
     }
-    // Fuzzy match: check if any significant word from the product name appears in a course title
     const productWords = product.name.toLowerCase().split(/\s+/).filter(w => w.length > 3);
     const match = courses.find(c => {
       const titleLower = c.title.toLowerCase();
@@ -143,8 +182,15 @@ export default function Acquisti() {
     const ageRange = getProductCourseAgeRange(product);
     const courseRange = parseAgeRange(ageRange);
     const filterRange = parseAgeRange(ageFilter + " anni");
-    if (!courseRange || !filterRange) return true; // show if no age data
+    if (!courseRange || !filterRange) return true;
     return rangesOverlap(courseRange, filterRange);
+  });
+
+  // Sort: featured products first
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    const aFeatured = featuredProductIds.has(a.id) ? 1 : 0;
+    const bFeatured = featuredProductIds.has(b.id) ? 1 : 0;
+    return bFeatured - aFeatured;
   });
 
   if (authLoading) {
@@ -179,7 +225,6 @@ export default function Acquisti() {
             </div>
           </div>
 
-          {/* Tagline */}
           <p className="text-sm text-muted-foreground mb-8 ml-14">
             🎯 Oltre <strong>500 famiglie</strong> hanno già scelto TECHLAND per i loro figli
           </p>
@@ -201,7 +246,6 @@ export default function Acquisti() {
             </Card>
           )}
 
-          {/* Canceled Message */}
           {isCanceled && (
             <Card className="mb-8 border-orange-500/50 bg-orange-50/50 dark:bg-orange-950/20">
               <CardContent className="pt-6">
@@ -221,8 +265,31 @@ export default function Acquisti() {
           {/* Benefits */}
           <AcquistiBenefits />
 
+          {/* Trust Signals - single instance */}
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mb-8 p-4 rounded-xl bg-primary/5 border border-primary/10">
+            <div className="flex items-center gap-1.5">
+              <Shield className="w-4 h-4 text-primary flex-shrink-0" />
+              <span className="text-sm font-medium text-foreground">Lezione di prova gratuita</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <CheckCircle className="w-4 h-4 text-primary flex-shrink-0" />
+              <span className="text-sm font-medium text-foreground">Puoi cancellare quando vuoi</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <CheckCircle className="w-4 h-4 text-primary flex-shrink-0" />
+              <span className="text-sm font-medium text-foreground">Soddisfatti o rimborsati per tutte le lezioni mancanti</span>
+            </div>
+          </div>
+
           {/* Filters */}
           <AcquistiFilters ageFilter={ageFilter} onAgeFilterChange={setAgeFilter} />
+
+          {/* Admin hint */}
+          {isAdmin && (
+            <p className="text-xs text-muted-foreground mb-4 flex items-center gap-1">
+              ⭐ Clicca la stella su un prodotto per segnarlo come "Più popolare"
+            </p>
+          )}
 
           {/* Loading State */}
           {loading && (
@@ -241,7 +308,6 @@ export default function Acquisti() {
             </div>
           )}
 
-          {/* Empty State */}
           {!loading && filteredProducts.length === 0 && products.length > 0 && (
             <Card className="border-dashed">
               <CardContent className="py-12 text-center">
@@ -274,26 +340,27 @@ export default function Acquisti() {
           )}
 
           {/* Products Grid */}
-          {!loading && filteredProducts.length > 0 && (
+          {!loading && sortedProducts.length > 0 && (
             <>
               <p className="text-sm text-muted-foreground mb-4">
-                {filteredProducts.length} {filteredProducts.length === 1 ? "corso disponibile" : "corsi disponibili"}
+                {sortedProducts.length} {sortedProducts.length === 1 ? "corso disponibile" : "corsi disponibili"}
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredProducts.map((product, index) => (
+                {sortedProducts.map((product) => (
                   <ProductCard
                     key={product.id}
                     product={product}
                     checkoutLoading={checkoutLoading}
                     onCheckout={handleCheckout}
-                    featured={index === 0 && filteredProducts.length > 1}
+                    featured={featuredProductIds.has(product.id)}
+                    isAdmin={isAdmin}
+                    onToggleFeatured={handleToggleFeatured}
                   />
                 ))}
               </div>
             </>
           )}
 
-          {/* FAQ */}
           <AcquistiFAQ />
         </div>
       </div>

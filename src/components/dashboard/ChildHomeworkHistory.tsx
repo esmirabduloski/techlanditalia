@@ -22,9 +22,10 @@ interface HomeworkStatus {
 interface ChildHomeworkHistoryProps {
   childId: string;
   childName: string;
+  courseIds?: string[];
 }
 
-export function ChildHomeworkHistory({ childId, childName }: ChildHomeworkHistoryProps) {
+export function ChildHomeworkHistory({ childId, childName, courseIds: filterCourseIds }: ChildHomeworkHistoryProps) {
   const [homeworkHistory, setHomeworkHistory] = useState<Record<string, HomeworkStatus[]>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,44 +34,56 @@ export function ChildHomeworkHistory({ childId, childName }: ChildHomeworkHistor
     if (childId) {
       fetchHomeworkHistory();
     }
-  }, [childId]);
+  }, [childId, filterCourseIds?.join(',')]);
 
   const fetchHomeworkHistory = async () => {
     setError(null);
     setIsLoading(true);
     try {
-      // Get child's groups
-      const { data: groupStudentData, error: groupError } = await supabase
-        .from("group_students")
-        .select(`
-          group_id,
-          group:group_id (
-            id,
-            title,
-            course_id,
-            course:course_id (
+      let courseIds: string[];
+
+      if (filterCourseIds) {
+        courseIds = filterCourseIds;
+      } else {
+        // Fallback: fetch all groups
+        const { data: groupStudentData, error: groupError } = await supabase
+          .from("group_students")
+          .select(`
+            group_id,
+            group:group_id (
               id,
               title,
-              emoji
+              course_id,
+              course:course_id (
+                id,
+                title,
+                emoji
+              )
             )
-          )
-        `)
-        .eq("student_id", childId);
+          `)
+          .eq("student_id", childId);
 
-      if (groupError) {
-        console.error("Error fetching group_students:", groupError);
-        setError(`Errore di caricamento gruppi: ${groupError.message}`);
-        setIsLoading(false);
-        return;
+        if (groupError) {
+          console.error("Error fetching group_students:", groupError);
+          setError(`Errore di caricamento gruppi: ${groupError.message}`);
+          setIsLoading(false);
+          return;
+        }
+
+        if (!groupStudentData || groupStudentData.length === 0) {
+          setHomeworkHistory({});
+          setIsLoading(false);
+          return;
+        }
+
+        courseIds = [...new Set(groupStudentData.map((gs: any) => gs.group.course_id))];
       }
 
-      if (!groupStudentData || groupStudentData.length === 0) {
+      if (courseIds.length === 0) {
         setHomeworkHistory({});
         setIsLoading(false);
         return;
       }
-
-      const courseIds = [...new Set(groupStudentData.map((gs: any) => gs.group.course_id))];
 
       // Get all lessons for these courses
       const { data: lessonsData } = await supabase

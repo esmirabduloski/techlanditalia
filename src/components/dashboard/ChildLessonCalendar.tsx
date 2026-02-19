@@ -30,9 +30,10 @@ interface LessonSchedule {
 interface ChildLessonCalendarProps {
   childId: string;
   childName: string;
+  groupIds?: string[];
 }
 
-export function ChildLessonCalendar({ childId, childName }: ChildLessonCalendarProps) {
+export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupIds }: ChildLessonCalendarProps) {
   const [lessons, setLessons] = useState<LessonSchedule[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,32 +42,42 @@ export function ChildLessonCalendar({ childId, childName }: ChildLessonCalendarP
     if (childId) {
       fetchLessonSchedule();
     }
-  }, [childId]);
+  }, [childId, filterGroupIds?.join(',')]);
 
   const fetchLessonSchedule = async () => {
     setError(null);
     setIsLoading(true);
     try {
-      // First get the groups the child is in
-      const { data: groupStudentData, error: groupError } = await supabase
-        .from("group_students")
-        .select("group_id")
-        .eq("student_id", childId);
+      let groupIds = filterGroupIds;
 
-      if (groupError) {
-        console.error("Error fetching group_students:", groupError);
-        setError(`Errore di caricamento gruppi: ${groupError.message}`);
-        setIsLoading(false);
-        return;
+      if (!groupIds) {
+        // Fallback: fetch all groups the child is in
+        const { data: groupStudentData, error: groupError } = await supabase
+          .from("group_students")
+          .select("group_id")
+          .eq("student_id", childId);
+
+        if (groupError) {
+          console.error("Error fetching group_students:", groupError);
+          setError(`Errore di caricamento gruppi: ${groupError.message}`);
+          setIsLoading(false);
+          return;
+        }
+
+        if (!groupStudentData || groupStudentData.length === 0) {
+          setLessons([]);
+          setIsLoading(false);
+          return;
+        }
+
+        groupIds = groupStudentData.map(gs => gs.group_id);
       }
 
-      if (!groupStudentData || groupStudentData.length === 0) {
+      if (groupIds.length === 0) {
         setLessons([]);
         setIsLoading(false);
         return;
       }
-
-      const groupIds = groupStudentData.map(gs => gs.group_id);
 
       // Fetch the lesson schedule for those groups
       const { data: scheduleData, error: scheduleError } = await supabase

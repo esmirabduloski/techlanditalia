@@ -25,9 +25,10 @@ interface AttendanceStats {
 interface ChildAttendanceHistoryProps {
   childId: string;
   childName?: string;
+  groupIds?: string[];
 }
 
-export function ChildAttendanceHistory({ childId, childName }: ChildAttendanceHistoryProps) {
+export function ChildAttendanceHistory({ childId, childName, groupIds: filterGroupIds }: ChildAttendanceHistoryProps) {
   const [attendanceHistory, setAttendanceHistory] = useState<Record<string, AttendanceStatus[]>>({});
   const [stats, setStats] = useState<AttendanceStats>({ total: 0, present: 0, absent: 0, justified: 0, percentage: 0 });
   const [isLoading, setIsLoading] = useState(true);
@@ -37,42 +38,54 @@ export function ChildAttendanceHistory({ childId, childName }: ChildAttendanceHi
     if (childId) {
       fetchAttendanceHistory();
     }
-  }, [childId]);
+  }, [childId, filterGroupIds?.join(',')]);
 
   const fetchAttendanceHistory = async () => {
     setError(null);
     setIsLoading(true);
     try {
-      // Get child's groups
-      const { data: groupStudentData, error: groupError } = await supabase
-        .from("group_students")
-        .select(`
-          group_id,
-          group:group_id (
-            id,
-            title,
-            course:course_id (
-              title,
-              emoji
-            )
-          )
-        `)
-        .eq("student_id", childId);
+      let groupIds: string[];
 
-      if (groupError) {
-        console.error("Error fetching group_students:", groupError);
-        setError(`Errore di caricamento gruppi: ${groupError.message}`);
-        setIsLoading(false);
-        return;
+      if (filterGroupIds) {
+        groupIds = filterGroupIds;
+      } else {
+        // Fallback: fetch all groups
+        const { data: groupStudentData, error: groupError } = await supabase
+          .from("group_students")
+          .select(`
+            group_id,
+            group:group_id (
+              id,
+              title,
+              course:course_id (
+                title,
+                emoji
+              )
+            )
+          `)
+          .eq("student_id", childId);
+
+        if (groupError) {
+          console.error("Error fetching group_students:", groupError);
+          setError(`Errore di caricamento gruppi: ${groupError.message}`);
+          setIsLoading(false);
+          return;
+        }
+
+        if (!groupStudentData || groupStudentData.length === 0) {
+          setAttendanceHistory({});
+          setIsLoading(false);
+          return;
+        }
+
+        groupIds = groupStudentData.map((gs: any) => gs.group_id);
       }
 
-      if (!groupStudentData || groupStudentData.length === 0) {
+      if (groupIds.length === 0) {
         setAttendanceHistory({});
         setIsLoading(false);
         return;
       }
-
-      const groupIds = groupStudentData.map((gs: any) => gs.group_id);
 
       // Get lesson schedule for these groups
       const { data: scheduleData, error: scheduleError } = await supabase

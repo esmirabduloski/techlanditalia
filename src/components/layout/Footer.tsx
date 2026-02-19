@@ -1,17 +1,9 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Facebook, Instagram, Linkedin, Mail } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const footerLinks = {
-  corsi: [
-    { label: "L'ABC dell'informatica", href: "/corsi/abc-informatica", title: "Corso ABC informatica per bambini 6-8 anni" },
-    { label: "Programmazione Scratch", href: "/corsi/scratch", title: "Corso Scratch per bambini - programmazione visiva" },
-    { label: "Corso Roblox Bambini", href: "/corsi/roblox", title: "Corso Roblox per bambini - sviluppo giochi" },
-    { label: "Roblox Avanzato", href: "/corsi/roblox-avanzato", title: "Corso Roblox avanzato per ragazzi" },
-    { label: "Web Development", href: "/corsi/web-development", title: "Corso sviluppo web per ragazzi" },
-    { label: "Sviluppo Giochi Unity", href: "/corsi/unity", title: "Corso Unity sviluppo videogiochi" },
-    { label: "Python Base", href: "/corsi/python-base", title: "Corso Python base per ragazzi" },
-    { label: "Python PRO & AI", href: "/corsi/python-ai", title: "Corso Python avanzato e intelligenza artificiale" },
-  ],
   azienda: [
     { label: "Chi Siamo", href: "/chi-siamo", title: "Scopri la scuola di coding TECHLAND" },
     { label: "Blog Coding Bambini", href: "/blog", title: "Articoli e guide sulla programmazione per bambini" },
@@ -40,6 +32,20 @@ const WhatsAppIcon = () => (
 );
 
 export function Footer() {
+  const [courses, setCourses] = useState<{ slug: string; title: string }[]>([]);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      const { data } = await supabase
+        .from('courses')
+        .select('slug, title')
+        .eq('is_visible', true)
+        .order('title');
+      if (data) setCourses(data);
+    };
+    fetchCourses();
+  }, []);
+
   return (
     <footer className="bg-foreground text-background" role="contentinfo">
       <div className="tech-container py-16 px-6 md:px-8">
@@ -78,14 +84,14 @@ export function Footer() {
           <nav aria-label="Corsi di programmazione">
             <h3 className="font-semibold text-lg mb-4">Corsi Coding Bambini</h3>
             <ul className="space-y-3">
-              {footerLinks.corsi.map((link) => (
-                <li key={link.href}>
+              {courses.map((course) => (
+                <li key={course.slug}>
                   <Link
-                    to={link.href}
-                    title={link.title}
+                    to={`/corsi/${course.slug}`}
+                    title={`Corso ${course.title}`}
                     className="text-background/70 hover:text-background transition-colors text-sm"
                   >
-                    {link.label}
+                    {course.title}
                   </Link>
                 </li>
               ))}

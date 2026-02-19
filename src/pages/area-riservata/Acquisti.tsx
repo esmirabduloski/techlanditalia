@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { ArrowLeft, CheckCircle2, Loader2, XCircle, Sparkles, GraduationCap, CheckCircle, Shield, ShoppingCart } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import { AcquistiBenefits } from '@/components/acquisti/AcquistiBenefits';
 import { AcquistiFAQ } from '@/components/acquisti/AcquistiFAQ';
@@ -34,6 +35,7 @@ interface Course {
   id: string;
   slug: string;
   title: string;
+  emoji?: string;
   age_range: string | null;
 }
 
@@ -100,7 +102,7 @@ export default function Acquisti() {
   const fetchCourses = async () => {
     const { data } = await supabase
       .from('courses')
-      .select('id, slug, title, age_range')
+      .select('id, slug, title, age_range, emoji')
       .eq('is_visible', true);
     if (data) setCourses(data);
   };
@@ -186,11 +188,31 @@ export default function Acquisti() {
     return rangesOverlap(courseRange, filterRange);
   });
 
-  // Sort: featured products first
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
-    const aFeatured = featuredProductIds.has(a.id) ? 1 : 0;
-    const bFeatured = featuredProductIds.has(b.id) ? 1 : 0;
-    return bFeatured - aFeatured;
+  // Group products by course
+  const getProductCourseKey = (product: StripeProduct): string => {
+    if (product.metadata?.course_slug) return product.metadata.course_slug;
+    const productWords = product.name.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+    const match = courses.find(c => {
+      const titleLower = c.title.toLowerCase();
+      return productWords.some(word => titleLower.includes(word));
+    });
+    return match?.slug || '__other__';
+  };
+
+  const groupedProducts = filteredProducts.reduce<Record<string, { course: Course | null; products: StripeProduct[] }>>((acc, product) => {
+    const key = getProductCourseKey(product);
+    if (!acc[key]) {
+      const course = courses.find(c => c.slug === key) || null;
+      acc[key] = { course, products: [] };
+    }
+    acc[key].products.push(product);
+    return acc;
+  }, {});
+
+  const groupEntries = Object.entries(groupedProducts).sort(([a], [b]) => {
+    if (a === '__other__') return 1;
+    if (b === '__other__') return -1;
+    return a.localeCompare(b);
   });
 
   if (authLoading) {
@@ -339,26 +361,37 @@ export default function Acquisti() {
             </Card>
           )}
 
-          {/* Products Grid */}
-          {!loading && sortedProducts.length > 0 && (
-            <>
-              <p className="text-sm text-muted-foreground mb-4">
-                {sortedProducts.length} {sortedProducts.length === 1 ? "corso disponibile" : "corsi disponibili"}
+          {/* Products Grid grouped by course */}
+          {!loading && filteredProducts.length > 0 && (
+            <div className="space-y-8">
+              <p className="text-sm text-muted-foreground">
+                {filteredProducts.length} {filteredProducts.length === 1 ? "corso disponibile" : "corsi disponibili"}
               </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {sortedProducts.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    checkoutLoading={checkoutLoading}
-                    onCheckout={handleCheckout}
-                    featured={featuredProductIds.has(product.id)}
-                    isAdmin={isAdmin}
-                    onToggleFeatured={handleToggleFeatured}
-                  />
-                ))}
-              </div>
-            </>
+              {groupEntries.map(([key, { course, products: groupProducts }], idx) => (
+                <div key={key}>
+                  {idx > 0 && <Separator className="mb-8" />}
+                  <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                    {course?.emoji || '📦'} {course?.title || 'Altro'}
+                    {course?.age_range && (
+                      <span className="text-sm font-normal text-muted-foreground">({course.age_range})</span>
+                    )}
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {groupProducts.map((product) => (
+                      <ProductCard
+                        key={product.id}
+                        product={product}
+                        checkoutLoading={checkoutLoading}
+                        onCheckout={handleCheckout}
+                        featured={featuredProductIds.has(product.id)}
+                        isAdmin={isAdmin}
+                        onToggleFeatured={handleToggleFeatured}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
 
           <AcquistiFAQ />

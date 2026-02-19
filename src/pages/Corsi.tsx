@@ -161,7 +161,7 @@ export default function Corsi() {
             
             {/* Age Filter */}
             <div className="flex flex-wrap gap-2">
-              <span className="text-sm text-muted-foreground mr-2">Età:</span>
+              <span className="text-sm text-muted-foreground mr-2 flex items-center">Età:</span>
               {ageFilters.map((filter) => (
                 <Button
                   key={filter}

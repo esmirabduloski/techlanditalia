@@ -103,7 +103,7 @@ export function ProductCard({ product, checkoutLoading, onCheckout, featured, is
 
       {/* Product Image */}
       {product.images?.[0] && (
-        <div className="h-44 overflow-hidden">
+        <div className="h-32 overflow-hidden">
           <img
             src={product.images[0]}
             alt={product.name}
@@ -112,8 +112,8 @@ export function ProductCard({ product, checkoutLoading, onCheckout, featured, is
         </div>
       )}
 
-      <CardHeader className="flex-1 pb-3">
-        <CardTitle className="text-lg">{product.name}</CardTitle>
+      <CardHeader className="flex-1 p-4 pb-2">
+        <CardTitle className="text-base">{product.name}</CardTitle>
         {product.description && (
           <CardDescription className="text-sm leading-relaxed line-clamp-3">
             {product.description}
@@ -121,10 +121,10 @@ export function ProductCard({ product, checkoutLoading, onCheckout, featured, is
         )}
       </CardHeader>
 
-      <CardFooter className="flex flex-col items-stretch gap-3 pt-0">
+      <CardFooter className="flex flex-col items-stretch gap-2 px-4 pb-4 pt-0">
         {/* Price */}
         <div className="flex items-baseline gap-2">
-          <span className="text-2xl font-bold text-primary">
+          <span className="text-xl font-bold text-primary">
             {formatPrice(price.unit_amount, price.currency)}
           </span>
           {originalPrice && (
@@ -143,7 +143,7 @@ export function ProductCard({ product, checkoutLoading, onCheckout, featured, is
         <Button
           onClick={() => onCheckout(price.id)}
           disabled={checkoutLoading === price.id}
-          size="lg"
+          size="default"
           variant={featured ? "hero" : "default"}
           className="w-full"
         >

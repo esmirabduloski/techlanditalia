@@ -17,6 +17,7 @@ interface HomeworkStatus {
   submittedAt?: string;
   status?: string;
   grade?: number;
+  lessonDate?: string;
 }
 
 interface ChildHomeworkHistoryProps {
@@ -116,6 +117,38 @@ export function ChildHomeworkHistory({ childId, childName, courseIds: filterCour
         .eq("student_id", childId)
         .in("homework_id", homeworkIds);
 
+      // Fetch group lesson schedule dates for this child
+      const { data: groupStudentsForSchedule } = await supabase
+        .from("group_students")
+        .select("group_id")
+        .eq("student_id", childId);
+
+      const groupIdsForSchedule = groupStudentsForSchedule?.map(gs => gs.group_id) || [];
+      
+      let lessonDateMap = new Map<string, string>(); // key: "courseId-lessonNumber" -> date
+      if (groupIdsForSchedule.length > 0) {
+        const { data: scheduleData } = await supabase
+          .from("group_lesson_schedule")
+          .select("group_id, lesson_number, lesson_date")
+          .in("group_id", groupIdsForSchedule);
+
+        // Map group_id to course_id
+        const { data: groupsData } = await supabase
+          .from("student_groups")
+          .select("id, course_id")
+          .in("id", groupIdsForSchedule);
+
+        const groupToCourse = new Map<string, string>();
+        groupsData?.forEach(g => groupToCourse.set(g.id, g.course_id));
+
+        scheduleData?.forEach(s => {
+          const cId = groupToCourse.get(s.group_id);
+          if (cId) {
+            lessonDateMap.set(`${cId}-${s.lesson_number}`, s.lesson_date);
+          }
+        });
+      }
+
       // Build the homework map
       const homeworkByLesson = new Map<string, { id: string; title: string }>();
       homeworkData?.forEach(hw => {
@@ -142,6 +175,7 @@ export function ChildHomeworkHistory({ childId, childName, courseIds: filterCour
 
         const homework = homeworkByLesson.get(lesson.id);
         const submission = homework ? submissionsByHomework.get(homework.id) : undefined;
+        const dateKey = `${lesson.course_id}-${lesson.lesson_number}`;
 
         historyByCourse[courseKey].push({
           lessonNumber: lesson.lesson_number,
@@ -153,6 +187,7 @@ export function ChildHomeworkHistory({ childId, childName, courseIds: filterCour
           submittedAt: submission?.submitted_at,
           status: submission?.status,
           grade: submission?.grade ?? undefined,
+          lessonDate: lessonDateMap.get(dateKey),
         });
       });
 
@@ -258,28 +293,41 @@ export function ChildHomeworkHistory({ childId, childName, courseIds: filterCour
 
                     const isCompleted = lesson.isSubmitted;
                     const isGraded = lesson.status === 'graded';
+                    const isPastLesson = lesson.lessonDate 
+                      ? new Date(lesson.lessonDate) < new Date(new Date().toDateString())
+                      : false;
+                    const isMissing = !isCompleted && isPastLesson;
+                    
+                    // Green = submitted, Red = past & not submitted, Grey = future & not submitted
+                    const cardColor = isCompleted 
+                      ? "bg-green-500/10 border-green-500/30"
+                      : isMissing
+                        ? "bg-red-500/10 border-red-500/30"
+                        : "bg-muted/30 border-muted";
+                    const textColor = isCompleted
+                      ? "text-green-600"
+                      : isMissing
+                        ? "text-red-600"
+                        : "text-muted-foreground";
                     
                     return (
                       <div
                         key={lesson.lessonNumber}
                         className={cn(
                           "p-2 rounded-lg border text-center transition-colors",
-                          isCompleted 
-                            ? "bg-green-500/10 border-green-500/30" 
-                            : "bg-red-500/10 border-red-500/30"
+                          cardColor
                         )}
                         title={lesson.homeworkTitle || 'Compito'}
                       >
-                        <p className={cn(
-                          "text-xs font-medium",
-                          isCompleted ? "text-green-600" : "text-red-600"
-                        )}>
+                        <p className={cn("text-xs font-medium", textColor)}>
                           {lessonLabel}
                         </p>
                         {isCompleted ? (
                           <CheckCircle2 className="w-4 h-4 mx-auto mt-1 text-green-600" />
-                        ) : (
+                        ) : isMissing ? (
                           <XCircle className="w-4 h-4 mx-auto mt-1 text-red-600" />
+                        ) : (
+                          <Minus className="w-4 h-4 mx-auto mt-1 text-muted-foreground/50" />
                         )}
                         {isGraded && lesson.grade !== undefined ? (
                           <Badge 
@@ -295,7 +343,7 @@ export function ChildHomeworkHistory({ childId, childName, courseIds: filterCour
                           </Badge>
                         ) : (
                           <p className="text-[10px] mt-1 text-muted-foreground">
-                            {isCompleted ? "Fatto" : "Da fare"}
+                            {isCompleted ? "Fatto" : isMissing ? "Mancante" : "Da fare"}
                           </p>
                         )}
                       </div>
@@ -315,11 +363,11 @@ export function ChildHomeworkHistory({ childId, childName, courseIds: filterCour
           </div>
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded bg-red-500/30 border border-red-500/50" />
-            <span>Non consegnato</span>
+            <span>Mancante</span>
           </div>
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded bg-muted/50 border border-muted" />
-            <span>Nessun compito</span>
+            <span>Nessun compito / Da fare</span>
           </div>
         </div>
       </CardContent>

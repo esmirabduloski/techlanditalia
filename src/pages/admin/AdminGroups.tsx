@@ -333,7 +333,34 @@ export default function AdminGroups() {
             })));
         }
 
-        toast({ title: 'Successo', description: 'Gruppo creato' });
+        // Auto-generate lesson calendar if start_date and lesson_days are set
+        if (formData.start_date && formData.lesson_days.length > 0) {
+          const scheduleItems = [];
+          let currentDate = new Date(formData.start_date);
+          let lessonCount = 0;
+          const maxLessons = formData.max_lessons || 32;
+
+          while (lessonCount < maxLessons) {
+            const dayOfWeek = currentDate.getDay();
+            if (formData.lesson_days.includes(dayOfWeek)) {
+              lessonCount++;
+              scheduleItems.push({
+                group_id: newGroup.id,
+                lesson_number: lessonCount,
+                lesson_date: currentDate.toISOString().split('T')[0],
+                lesson_title: `M${Math.ceil(lessonCount / 4)}L${((lessonCount - 1) % 4) + 1}`,
+                lesson_time: formData.lesson_time || null
+              });
+            }
+            currentDate.setDate(currentDate.getDate() + 1);
+          }
+
+          if (scheduleItems.length > 0) {
+            await supabase.from('group_lesson_schedule').insert(scheduleItems);
+          }
+        }
+
+        toast({ title: 'Successo', description: 'Gruppo creato con calendario' });
       }
 
       setIsDialogOpen(false);

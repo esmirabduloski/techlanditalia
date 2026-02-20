@@ -17,7 +17,7 @@ import {
   Loader2, User, BookOpen, Users, UsersRound, LogOut, Phone, Mail, Clock,
   ChevronRight, GraduationCap, Plus, Trash2, Edit2, Bell, Check, CheckCheck,
   BarChart3, CalendarDays, ExternalLink, TrendingUp, TrendingDown, AlertTriangle,
-  Link as LinkIcon, Book, FileText, Calendar, Video, MessageCircle, HelpCircle, Settings, Star, Globe, Shield
+  Link as LinkIcon, Book, FileText, Calendar, Video, MessageCircle, HelpCircle, Settings, Star, Globe, Shield, Award
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -756,6 +756,12 @@ export default function TeacherDashboard() {
           <p className="text-muted-foreground mt-1">
             Gestisci i tuoi corsi, gruppi e studenti
           </p>
+          <Button asChild className="mt-3" variant="default">
+            <Link to="/insegnante/valutazioni">
+              <Award className="w-4 h-4 mr-2" />
+              Valuta Compiti
+            </Link>
+          </Button>
         </div>
 
         {/* Statistics Section */}

@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { 
-  Loader2, ArrowLeft, Users, Calendar, ChevronRight, MessageCircle, Plus, Send, Trash2, Check, X, AlertCircle, Clock, ExternalLink
+  Loader2, ArrowLeft, Users, Calendar, ChevronRight, MessageCircle, Plus, Send, Trash2, Check, X, AlertCircle, Clock, ExternalLink, Award
 } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
@@ -548,9 +548,14 @@ export default function TeacherGroupDetail() {
               <p className="text-lg font-semibold text-primary">{lastCompletedLesson}</p>
             </div>
 
-            {group.whatsapp_link && (
-              <div className="mt-4 pt-4 border-t">
-                <p className="text-sm text-muted-foreground mb-2">Gruppo WhatsApp</p>
+            <div className="mt-4 pt-4 border-t flex flex-wrap gap-3">
+              <Button asChild>
+                <Link to={`/insegnante/valutazioni?gruppo=${groupId}`}>
+                  <Award className="w-4 h-4 mr-2" />
+                  Valuta Compiti
+                </Link>
+              </Button>
+              {group.whatsapp_link && (
                 <a
                   href={group.whatsapp_link}
                   target="_blank"
@@ -560,8 +565,8 @@ export default function TeacherGroupDetail() {
                   <ExternalLink className="w-4 h-4" />
                   Apri Gruppo WhatsApp
                 </a>
-              </div>
-            )}
+              )}
+            </div>
           </CardContent>
         </Card>
 

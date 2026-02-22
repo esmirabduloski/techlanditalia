@@ -3,7 +3,7 @@ import { useRef, useState, useEffect } from 'react';
 import { 
   FileText, GraduationCap, BookOpen, Mail, User, BarChart3, 
   Award, Calendar, ClipboardCheck, Users, Newspaper, UsersRound, CalendarClock, Link as LinkIcon,
-  ChevronLeft, ChevronRight, Menu, X
+  ChevronLeft, ChevronRight, Menu, X, Database
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -38,6 +38,7 @@ const navItems: NavItem[] = [
   { to: '/admin/valutazioni', label: 'Valutazioni', icon: Award },
   { to: '/admin/statistiche', label: 'Statistiche', icon: BarChart3 },
   { to: '/admin/link-insegnanti', label: 'Link', icon: LinkIcon },
+  { to: '/admin/backup', label: 'Backup', icon: Database },
 ];
 
 export function AdminNav() {

@@ -312,6 +312,39 @@ export type Database = {
         }
         Relationships: []
       }
+      content_snapshots: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          entity_id: string
+          entity_label: string
+          entity_type: string
+          id: string
+          snapshot_data: Json
+          snapshot_label: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          entity_id: string
+          entity_label: string
+          entity_type: string
+          id?: string
+          snapshot_data: Json
+          snapshot_label?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          entity_id?: string
+          entity_label?: string
+          entity_type?: string
+          id?: string
+          snapshot_data?: Json
+          snapshot_label?: string | null
+        }
+        Relationships: []
+      }
       conversion_funnels: {
         Row: {
           completed: boolean | null

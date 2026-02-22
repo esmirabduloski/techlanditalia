@@ -247,11 +247,26 @@ export default function AdminUsers() {
   };
 
   // Filter profiles based on search and role filter
+  const [filterCourse, setFilterCourse] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'enrolled' | 'no_enrollment'>('all');
+
   const matchesSearchQuery = (p: Profile) => {
     if (searchQuery === '') return true;
     const query = searchQuery.toLowerCase();
     return p.full_name.toLowerCase().includes(query) ||
-      (p.username && p.username.toLowerCase().includes(query));
+      (p.username && p.username.toLowerCase().includes(query)) ||
+      (p.email && p.email.toLowerCase().includes(query));
+  };
+
+  const matchesCourseFilter = (p: Profile) => {
+    if (filterCourse === 'all') return true;
+    return enrollments.some(e => e.student_id === p.id && e.course_id === filterCourse);
+  };
+
+  const matchesStatusFilter = (p: Profile) => {
+    if (filterStatus === 'all') return true;
+    const hasEnrollment = enrollments.some(e => e.student_id === p.id);
+    return filterStatus === 'enrolled' ? hasEnrollment : !hasEnrollment;
   };
 
   const groupedUsers = () => {
@@ -279,24 +294,28 @@ export default function AdminUsers() {
       const parentMatchesBasicRole = filterRole === 'all' || filterRole === 'parent';
       const parentMatchesSpecialRole = filterRole === 'admin' || filterRole === 'teacher' || filterRole === 'parentRole';
       const parentMatchesRole = parentMatchesBasicRole || (parentMatchesSpecialRole && matchesSpecialRoleFilter(parent));
+      const parentMatchesCourse = matchesCourseFilter(parent);
+      const parentMatchesStatus = matchesStatusFilter(parent);
       
       // Check if any child matches filter
       const matchingChildren = children.filter(c => {
         const childMatchesSearch = matchesSearchQuery(c);
         const childMatchesBasicRole = filterRole === 'all' || filterRole === 'student';
         const childMatchesSpecialRole = (filterRole === 'admin' || filterRole === 'teacher' || filterRole === 'parentRole') && matchesSpecialRoleFilter(c);
-        return childMatchesSearch && (childMatchesBasicRole || childMatchesSpecialRole);
+        const childMatchesCourse = matchesCourseFilter(c);
+        const childMatchesStatus = matchesStatusFilter(c);
+        return childMatchesSearch && (childMatchesBasicRole || childMatchesSpecialRole) && childMatchesCourse && childMatchesStatus;
       });
       
       // Include parent if:
       // 1. Parent matches search and role filter, OR
       // 2. Any child matches search and we're not filtering only parents
-      const shouldIncludeParent = (parentMatchesSearch && parentMatchesRole) || 
+      const shouldIncludeParent = (parentMatchesSearch && parentMatchesRole && parentMatchesCourse && parentMatchesStatus) || 
         (matchingChildren.length > 0 && filterRole !== 'parent' && !parentMatchesSpecialRole);
       
       if (shouldIncludeParent) {
         // If searching, only show matching children. Otherwise show all children.
-        const childrenToShow = searchQuery === '' && filterRole === 'all' 
+        const childrenToShow = searchQuery === '' && filterRole === 'all' && filterCourse === 'all' && filterStatus === 'all'
           ? children 
           : matchingChildren.length > 0 ? matchingChildren : (parentMatchesSearch ? children : []);
         groups.push({ parent, children: childrenToShow });
@@ -307,16 +326,15 @@ export default function AdminUsers() {
     if (filterRole !== 'parent' && filterRole !== 'admin' && filterRole !== 'teacher' && filterRole !== 'parentRole') {
       const orphanStudents = allStudents.filter(s => {
         if (s.parent_id) return false;
-        return matchesSearchQuery(s);
+        return matchesSearchQuery(s) && matchesCourseFilter(s) && matchesStatusFilter(s);
       });
       if (orphanStudents.length > 0) {
         groups.push({ parent: null, children: orphanStudents });
       }
     } else if (filterRole === 'admin' || filterRole === 'teacher' || filterRole === 'parentRole') {
-      // For special role filters, also show orphan students with that role
       const orphanStudentsWithRole = allStudents.filter(s => {
         if (s.parent_id) return false;
-        return matchesSearchQuery(s) && matchesSpecialRoleFilter(s);
+        return matchesSearchQuery(s) && matchesSpecialRoleFilter(s) && matchesCourseFilter(s) && matchesStatusFilter(s);
       });
       if (orphanStudentsWithRole.length > 0) {
         groups.push({ parent: null, children: orphanStudentsWithRole });
@@ -761,34 +779,88 @@ export default function AdminUsers() {
             <h1 className="text-3xl font-bold">Gestione Utenti</h1>
             <p className="text-muted-foreground mt-1">
               {profiles.length} utenti registrati
+              {(filterRole !== 'all' || filterCourse !== 'all' || filterStatus !== 'all' || searchQuery) && 
+                ` • ${groups.reduce((acc, g) => acc + (g.parent ? 1 : 0) + g.children.length, 0)} risultati`
+              }
             </p>
           </div>
         </div>
 
         {/* Search and Filter */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Cerca per nome o username..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
+        <div className="flex flex-col gap-4 mb-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Cerca per nome, username o email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={filterRole} onValueChange={(v) => setFilterRole(v as 'all' | 'parent' | 'student' | 'admin' | 'teacher' | 'parentRole')}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Filtra per ruolo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tutti i ruoli</SelectItem>
+                <SelectItem value="parent">Genitori</SelectItem>
+                <SelectItem value="student">Studenti</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="teacher">Insegnanti</SelectItem>
+                <SelectItem value="parentRole">Ruolo Genitore</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterCourse} onValueChange={setFilterCourse}>
+              <SelectTrigger className="w-52">
+                <SelectValue placeholder="Filtra per corso" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tutti i corsi</SelectItem>
+                {courses.map(c => (
+                  <SelectItem key={c.id} value={c.id}>{c.emoji} {c.title}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as 'all' | 'enrolled' | 'no_enrollment')}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Stato iscrizione" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tutti gli stati</SelectItem>
+                <SelectItem value="enrolled">Iscritti a corsi</SelectItem>
+                <SelectItem value="no_enrollment">Senza iscrizioni</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <Select value={filterRole} onValueChange={(v) => setFilterRole(v as 'all' | 'parent' | 'student' | 'admin' | 'teacher' | 'parentRole')}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Filtra per ruolo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tutti</SelectItem>
-              <SelectItem value="parent">Genitori</SelectItem>
-              <SelectItem value="student">Studenti</SelectItem>
-              <SelectItem value="admin">Admin</SelectItem>
-              <SelectItem value="teacher">Insegnanti</SelectItem>
-              <SelectItem value="parentRole">Ruolo Genitore</SelectItem>
-            </SelectContent>
-          </Select>
+          {(filterRole !== 'all' || filterCourse !== 'all' || filterStatus !== 'all' || searchQuery) && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm text-muted-foreground">Filtri attivi:</span>
+              {searchQuery && (
+                <Badge variant="secondary" className="cursor-pointer" onClick={() => setSearchQuery('')}>
+                  Ricerca: "{searchQuery}" ✕
+                </Badge>
+              )}
+              {filterRole !== 'all' && (
+                <Badge variant="secondary" className="cursor-pointer" onClick={() => setFilterRole('all')}>
+                  Ruolo: {filterRole === 'parent' ? 'Genitori' : filterRole === 'student' ? 'Studenti' : filterRole === 'admin' ? 'Admin' : filterRole === 'teacher' ? 'Insegnanti' : 'Ruolo Genitore'} ✕
+                </Badge>
+              )}
+              {filterCourse !== 'all' && (
+                <Badge variant="secondary" className="cursor-pointer" onClick={() => setFilterCourse('all')}>
+                  Corso: {courses.find(c => c.id === filterCourse)?.title} ✕
+                </Badge>
+              )}
+              {filterStatus !== 'all' && (
+                <Badge variant="secondary" className="cursor-pointer" onClick={() => setFilterStatus('all')}>
+                  {filterStatus === 'enrolled' ? 'Iscritti' : 'Senza iscrizioni'} ✕
+                </Badge>
+              )}
+              <Button variant="ghost" size="sm" onClick={() => { setSearchQuery(''); setFilterRole('all'); setFilterCourse('all'); setFilterStatus('all'); }}>
+                Resetta filtri
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Users List */}

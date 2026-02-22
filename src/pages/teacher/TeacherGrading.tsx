@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useTeacherRole } from '@/hooks/useTeacherRole';
 import { useImpersonation } from '@/contexts/ImpersonationContext';
@@ -78,7 +78,10 @@ export default function TeacherGrading() {
   const { isTeacher, isLoading: teacherLoading } = useTeacherRole();
   const { isImpersonating, impersonatedUser } = useImpersonation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const groupIdFilter = searchParams.get('gruppo');
   const { toast } = useToast();
+  const [groupTitle, setGroupTitle] = useState<string | null>(null);
 
   const isAuthorized = isTeacher || (isAdmin && isImpersonating && impersonatedUser?.role === 'teacher');
 
@@ -91,11 +94,37 @@ export default function TeacherGrading() {
   useEffect(() => {
     if (user && isAuthorized) {
       fetchSubmissions();
+      if (groupIdFilter) fetchGroupTitle();
     }
-  }, [user, isAuthorized, statusFilter]);
+  }, [user, isAuthorized, statusFilter, groupIdFilter]);
+
+  const fetchGroupTitle = async () => {
+    if (!groupIdFilter) return;
+    const { data } = await supabase
+      .from('student_groups')
+      .select('title')
+      .eq('id', groupIdFilter)
+      .single();
+    setGroupTitle(data?.title || null);
+  };
 
   const fetchSubmissions = async () => {
     // The RLS policy will automatically filter to only show submissions for the teacher's students
+    // If filtering by group, first get student IDs in that group
+    let studentIdsInGroup: string[] | null = null;
+    if (groupIdFilter) {
+      const { data: groupStudents } = await supabase
+        .from('group_students')
+        .select('student_id')
+        .eq('group_id', groupIdFilter);
+      studentIdsInGroup = groupStudents?.map(gs => gs.student_id) || [];
+      if (studentIdsInGroup.length === 0) {
+        setSubmissions([]);
+        setIsLoading(false);
+        return;
+      }
+    }
+
     let query = supabase
       .from('homework_submissions')
       .select(`
@@ -124,6 +153,10 @@ export default function TeacherGrading() {
         )
       `)
       .order('submitted_at', { ascending: false });
+
+    if (studentIdsInGroup) {
+      query = query.in('student_id', studentIdsInGroup);
+    }
 
     if (statusFilter !== 'all') {
       query = query.eq('status', statusFilter);
@@ -258,9 +291,9 @@ export default function TeacherGrading() {
             <Badge className="bg-tech-teal text-white">Insegnante</Badge>
           </div>
           <Button variant="outline" size="sm" asChild>
-            <Link to="/insegnante">
+            <Link to={groupIdFilter ? `/insegnante/gruppo/${groupIdFilter}` : '/insegnante'}>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Dashboard
+              {groupIdFilter ? 'Torna al Gruppo' : 'Dashboard'}
             </Link>
           </Button>
         </div>
@@ -274,7 +307,12 @@ export default function TeacherGrading() {
               <Award className="w-8 h-8 text-tech-teal" />
               Valutazione Compiti
             </h1>
-            <p className="text-muted-foreground mt-1">{submissions.length} consegne</p>
+            {groupTitle && (
+              <p className="text-muted-foreground mt-1">{groupTitle} · {submissions.length} consegne</p>
+            )}
+            {!groupTitle && (
+              <p className="text-muted-foreground mt-1">{submissions.length} consegne</p>
+            )}
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[180px]">

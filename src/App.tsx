@@ -65,6 +65,7 @@ const TeacherGrading = lazy(() => import("./pages/teacher/TeacherGrading"));
 const AdminGroups = lazy(() => import("./pages/admin/AdminGroups"));
 const AdminTeacherCalendar = lazy(() => import("./pages/admin/AdminTeacherCalendar"));
 const AdminTeacherLinks = lazy(() => import("./pages/admin/AdminTeacherLinks"));
+const AdminBackups = lazy(() => import("./pages/admin/AdminBackups"));
 const Acquisti = lazy(() => import("./pages/area-riservata/Acquisti"));
 
 const queryClient = new QueryClient();
@@ -132,6 +133,7 @@ const App = () => (
                     <Route path="/admin/gruppi" element={<AdminGroups />} />
                     <Route path="/admin/disponibilita" element={<AdminTeacherCalendar />} />
                     <Route path="/admin/link-insegnanti" element={<AdminTeacherLinks />} />
+                    <Route path="/admin/backup" element={<AdminBackups />} />
                     <Route path="/insegnante" element={<TeacherDashboard />} />
                     <Route path="/insegnante/valutazioni" element={<TeacherGrading />} />
                     <Route path="/insegnante/corso/:courseSlug" element={<TeacherCourseDetail />} />

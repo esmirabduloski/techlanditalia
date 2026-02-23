@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { GroupCertificatesManager } from "@/components/admin/GroupCertificatesManager";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,6 +44,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+interface CertificateFile {
+  path: string;
+  name: string;
+  type: string;
+}
+
 interface StudentGroup {
   id: string;
   title: string;
@@ -59,6 +66,7 @@ interface StudentGroup {
   lesson_time: string | null;
   status: string;
   archived_at: string | null;
+  certificates: CertificateFile[];
 }
 
 interface Teacher {
@@ -135,7 +143,7 @@ export default function AdminGroups() {
       const { data: groupsData } = await supabase
         .from('student_groups')
         .select(`
-          id, title, course_id, teacher_id, start_date, last_lesson_title, max_lessons, lesson_days, lesson_time, status, archived_at,
+          id, title, course_id, teacher_id, start_date, last_lesson_title, max_lessons, lesson_days, lesson_time, status, archived_at, certificates,
           courses!inner(title, emoji)
         `)
         .order('created_at', { ascending: false });
@@ -174,7 +182,8 @@ export default function AdminGroups() {
               lesson_days: (g.lesson_days as number[]) || [0],
               lesson_time: g.lesson_time,
               status: g.status || 'active',
-              archived_at: g.archived_at
+              archived_at: g.archived_at,
+              certificates: ((g as any).certificates as CertificateFile[]) || []
             };
           })
         );
@@ -239,7 +248,7 @@ export default function AdminGroups() {
     // Fetch current students and group details with lesson_days
     const { data: groupDetails } = await supabase
       .from('student_groups')
-      .select('lesson_days, whatsapp_link')
+      .select('lesson_days, whatsapp_link, certificates')
       .eq('id', group.id)
       .single();
 
@@ -804,6 +813,19 @@ export default function AdminGroups() {
                   L'insegnante potrà vedere questo link per entrare nel gruppo WhatsApp
                 </p>
               </div>
+
+              {/* Certificates Manager - only in edit mode */}
+              {editingGroup && (
+                <GroupCertificatesManager
+                  groupId={editingGroup.id}
+                  certificates={editingGroup.certificates}
+                  onUpdate={(certs) => {
+                    setEditingGroup(prev => prev ? { ...prev, certificates: certs } : null);
+                    // Also update in the groups list
+                    setGroups(prev => prev.map(g => g.id === editingGroup.id ? { ...g, certificates: certs } : g));
+                  }}
+                />
+              )}
 
               <div className="space-y-2">
                 <Label>Studenti ({formData.selected_students.length} selezionati)</Label>

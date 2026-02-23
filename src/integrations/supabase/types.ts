@@ -1354,6 +1354,7 @@ export type Database = {
       student_groups: {
         Row: {
           archived_at: string | null
+          certificates: Json | null
           course_id: string
           created_at: string | null
           id: string
@@ -1370,6 +1371,7 @@ export type Database = {
         }
         Insert: {
           archived_at?: string | null
+          certificates?: Json | null
           course_id: string
           created_at?: string | null
           id?: string
@@ -1386,6 +1388,7 @@ export type Database = {
         }
         Update: {
           archived_at?: string | null
+          certificates?: Json | null
           course_id?: string
           created_at?: string | null
           id?: string

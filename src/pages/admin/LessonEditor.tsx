@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { AdminNav } from '@/components/admin/AdminNav';
 import { useToast } from '@/hooks/use-toast';
 import { LogOut, Loader2, ArrowLeft, Save, User } from 'lucide-react';
+import { useAutoBackup } from '@/hooks/useAutoBackup';
 
 interface Course {
   id: string;
@@ -37,6 +38,7 @@ export default function LessonEditor() {
   const [course, setCourse] = useState<Course | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const { createCourseSnapshot } = useAutoBackup();
   
   
   const [formData, setFormData] = useState<LessonData>({
@@ -128,6 +130,11 @@ export default function LessonEditor() {
     }
 
     setIsSaving(true);
+
+    // Auto-backup before editing
+    if (isEditing && courseId) {
+      await createCourseSnapshot(courseId, `Auto-backup prima di modifica lezione "${formData.title}"`);
+    }
 
     const lessonPayload = {
       course_id: courseId,

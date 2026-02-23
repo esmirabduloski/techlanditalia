@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, CalendarDays, Clock } from "lucide-react";
+import { Loader2, CalendarDays, Clock, Video } from "lucide-react";
 import { format, isPast, isToday, isFuture } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,7 @@ interface LessonSchedule {
     id: string;
     title: string;
     lesson_time: string | null;
+    student_meeting_link: string | null;
     course: {
       title: string;
       emoji: string;
@@ -77,6 +78,7 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
             id,
             title,
             lesson_time,
+            student_meeting_link,
             course:course_id (
               title,
               emoji
@@ -103,6 +105,7 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
             id: s.group.id,
             title: s.group.title,
             lesson_time: s.group.lesson_time,
+            student_meeting_link: s.group.student_meeting_link || null,
             course: {
               title: s.group.course.title,
               emoji: s.group.course.emoji,
@@ -191,6 +194,9 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
     return acc;
   }, {} as Record<string, { emoji: string; lessons: LessonSchedule[] }>);
 
+  // Find today's lessons with meeting links
+  const todayLessons = lessons.filter(l => isToday(new Date(l.lesson_date)) && l.group.student_meeting_link);
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -200,6 +206,29 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
         </CardTitle>
       </CardHeader>
       <CardContent>
+        {/* Prominent "Join Lesson" buttons for today */}
+        {todayLessons.length > 0 && (
+          <div className="mb-4 space-y-2">
+            {todayLessons.map((lesson) => (
+              <a
+                key={`join-${lesson.id}`}
+                href={lesson.group.student_meeting_link!}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-3 w-full px-6 py-4 rounded-xl bg-primary text-primary-foreground font-bold text-base shadow-tech-glow hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300"
+              >
+                <Video className="w-5 h-5" />
+                🚀 Entra a Lezione — {lesson.group.course.emoji} {getLessonLabel(lesson.lesson_number, lesson.lesson_title)}
+                {(lesson.lesson_time || lesson.group.lesson_time) && (
+                  <span className="text-primary-foreground/80 text-sm font-normal ml-1">
+                    ore {(lesson.lesson_time || lesson.group.lesson_time)?.substring(0, 5)}
+                  </span>
+                )}
+              </a>
+            ))}
+          </div>
+        )}
+
         <ScrollArea className="h-[400px]">
           <div className="space-y-6 pr-4">
             {Object.entries(lessonsByCourse).map(([courseTitle, courseData]) => (
@@ -249,7 +278,18 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
                             )}
                           </div>
                         </div>
-                        <div className="mt-2 flex justify-end">
+                        <div className="mt-2 flex items-center justify-between">
+                          {isTodayLesson && lesson.group.student_meeting_link ? (
+                            <a
+                              href={lesson.group.student_meeting_link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors"
+                            >
+                              <Video className="w-3 h-3" />
+                              Entra
+                            </a>
+                          ) : <span />}
                           {getStatusBadge(lesson.lesson_date)}
                         </div>
                       </div>

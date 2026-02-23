@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, CalendarDays, Clock, AlertCircle, RefreshCw } from "lucide-react";
+import { Loader2, CalendarDays, Clock, AlertCircle, RefreshCw, Video } from "lucide-react";
 import { format, isPast, isToday, isFuture } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -20,6 +20,7 @@ interface LessonSchedule {
     title: string;
     lesson_time: string | null;
     status: string;
+    student_meeting_link: string | null;
     course: {
       title: string;
       emoji: string;
@@ -93,6 +94,7 @@ export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupI
             title,
             lesson_time,
             status,
+            student_meeting_link,
             course:course_id (
               title,
               emoji
@@ -121,6 +123,7 @@ export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupI
             title: s.group.title,
             lesson_time: s.group.lesson_time,
             status: s.group.status || 'active',
+            student_meeting_link: s.group.student_meeting_link || null,
             course: {
               title: s.group.course.title,
               emoji: s.group.course.emoji,
@@ -267,9 +270,22 @@ export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupI
                           )}
                         </p>
                         {isTodayLesson && (
-                          <Badge className="text-[10px] mt-1 bg-primary text-primary-foreground">
-                            Oggi
-                          </Badge>
+                          <div className="flex flex-col items-center gap-1">
+                            <Badge className="text-[10px] bg-primary text-primary-foreground">
+                              Oggi
+                            </Badge>
+                            {lesson.group.student_meeting_link && (
+                              <a
+                                href={lesson.group.student_meeting_link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary text-primary-foreground text-[10px] font-semibold hover:bg-primary/90 transition-colors"
+                              >
+                                <Video className="w-2.5 h-2.5" />
+                                Entra
+                              </a>
+                            )}
+                          </div>
                         )}
                       </div>
                     );

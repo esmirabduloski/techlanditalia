@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { 
   Loader2, ArrowLeft, Users, Calendar, ChevronRight, MessageCircle, Plus, Send, Trash2, Check, X, AlertCircle, Clock, ExternalLink, Award
 } from "lucide-react";
+import { GroupCertificatesViewer } from "@/components/teacher/GroupCertificatesViewer";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -55,6 +56,7 @@ interface StudentGroup {
   status: string;
   archived_at: string | null;
   whatsapp_link: string | null;
+  certificates: { path: string; name: string; type: string }[];
 }
 
 interface GroupComment {
@@ -111,7 +113,7 @@ export default function TeacherGroupDetail() {
       const { data: groupData } = await supabase
         .from('student_groups')
         .select(`
-          id, title, course_id, start_date, max_lessons, teacher_id, lesson_days, lesson_time, status, archived_at, whatsapp_link,
+          id, title, course_id, start_date, max_lessons, teacher_id, lesson_days, lesson_time, status, archived_at, whatsapp_link, certificates,
           courses!inner(title, emoji)
         `)
         .eq('id', groupId)
@@ -143,7 +145,8 @@ export default function TeacherGroupDetail() {
         lesson_time: groupData.lesson_time,
         status: groupData.status || 'active',
         archived_at: groupData.archived_at,
-        whatsapp_link: (groupData as any).whatsapp_link || null
+        whatsapp_link: (groupData as any).whatsapp_link || null,
+        certificates: ((groupData as any).certificates as any[]) || []
       });
 
       // Fetch lesson schedule
@@ -569,6 +572,13 @@ export default function TeacherGroupDetail() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Certificates */}
+        {group.certificates.length > 0 && (
+          <div className="mb-6">
+            <GroupCertificatesViewer certificates={group.certificates} />
+          </div>
+        )}
 
         {/* Lesson Calendar */}
         <Card className="mb-6">

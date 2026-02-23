@@ -40,6 +40,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Switch } from '@/components/ui/switch';
+import { useAutoBackup } from '@/hooks/useAutoBackup';
 
 interface Course {
   id: string;
@@ -96,6 +97,7 @@ export default function AdminCourses() {
   const [formData, setFormData] = useState<CourseFormData>(initialFormState);
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
+  const { createCourseSnapshot } = useAutoBackup();
 
   useEffect(() => {
     if (!authLoading && (!user || !isAdmin)) {
@@ -207,6 +209,9 @@ export default function AdminCourses() {
     }
 
     setIsSaving(true);
+
+    // Auto-backup before editing course
+    await createCourseSnapshot(editingCourse.id, `Auto-backup prima di modifica corso "${editingCourse.title}"`);
 
     const slug = generateSlug(formData.title);
 

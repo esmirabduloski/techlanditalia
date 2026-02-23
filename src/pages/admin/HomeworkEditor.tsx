@@ -16,6 +16,7 @@ import RichTextEditor from '@/components/editor/RichTextEditor';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useRef } from 'react';
+import { useAutoBackup } from '@/hooks/useAutoBackup';
 
 interface Course {
   id: string;
@@ -64,6 +65,7 @@ export default function HomeworkEditor() {
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const { createCourseSnapshot } = useAutoBackup();
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -230,6 +232,11 @@ export default function HomeworkEditor() {
     }
 
     setIsSaving(true);
+
+    // Auto-backup before editing
+    if (isEditing && courseId) {
+      await createCourseSnapshot(courseId, `Auto-backup prima di modifica compito "${formData.title}"`);
+    }
 
     const payload: any = {
       lesson_id: lessonId,

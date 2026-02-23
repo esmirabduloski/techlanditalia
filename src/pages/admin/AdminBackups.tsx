@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAutoBackup } from '@/hooks/useAutoBackup';
 
 interface Snapshot {
   id: string;
@@ -58,12 +59,14 @@ export default function AdminBackups() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [isBackingUpAll, setIsBackingUpAll] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<string>('');
   const [snapshotLabel, setSnapshotLabel] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
   const { user, isAdmin, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { backupAllCourses } = useAutoBackup();
 
   useEffect(() => {
     if (!authLoading && (!user || !isAdmin)) navigate('/admin/login');
@@ -196,6 +199,23 @@ export default function AdminBackups() {
     URL.revokeObjectURL(url);
   };
 
+  const handleBackupAll = async () => {
+    setIsBackingUpAll(true);
+    try {
+      const result = await backupAllCourses();
+      toast({ 
+        title: 'Backup completato', 
+        description: `${result.success}/${result.total} corsi salvati con successo` 
+      });
+      fetchSnapshots();
+    } catch {
+      toast({ title: 'Errore', description: 'Errore durante il backup', variant: 'destructive' });
+    } finally {
+      setIsBackingUpAll(false);
+    }
+  };
+
+
   const filtered = filterType === 'all' ? snapshots : snapshots.filter(s => s.entity_type === filterType);
 
   if (authLoading || isLoading) {
@@ -243,6 +263,10 @@ export default function AdminBackups() {
                 <SelectItem value="homework">Compiti</SelectItem>
               </SelectContent>
             </Select>
+            <Button variant="outline" onClick={handleBackupAll} disabled={isBackingUpAll}>
+              {isBackingUpAll ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Database className="w-4 h-4 mr-2" />}
+              Backup Tutti i Corsi
+            </Button>
             <Button onClick={() => setCreateDialogOpen(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Nuovo Backup

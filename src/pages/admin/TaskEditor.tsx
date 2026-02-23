@@ -15,6 +15,7 @@ import { LogOut, Loader2, ArrowLeft, Save, User, Clock } from 'lucide-react';
 import RichTextEditor from '@/components/editor/RichTextEditor';
 import { TaskAttachmentUpload } from '@/components/admin/TaskAttachmentUpload';
 import { useTaskEditorDraft } from '@/hooks/useTaskEditorDraft';
+import { useAutoBackup } from '@/hooks/useAutoBackup';
 interface Attachment {
   name: string;
   url: string;
@@ -59,6 +60,7 @@ export default function TaskEditor() {
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const { createCourseSnapshot } = useAutoBackup();
   const dataLoadedFromDbRef = useRef(false);
   
   const [formData, setFormData] = useState<TaskData>({
@@ -226,6 +228,11 @@ export default function TaskEditor() {
     }
 
     setIsSaving(true);
+
+    // Auto-backup before editing
+    if (isEditing && courseId) {
+      await createCourseSnapshot(courseId, `Auto-backup prima di modifica task "${formData.title}"`);
+    }
 
     const taskPayload: any = {
       lesson_id: lessonId,

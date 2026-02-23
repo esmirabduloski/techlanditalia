@@ -120,6 +120,8 @@ export default function AdminGroups() {
     lesson_days: [0] as number[], // Default Sunday
     lesson_time: '',
     whatsapp_link: '',
+    teacher_meeting_link: '',
+    student_meeting_link: '',
     selected_students: [] as string[]
   });
   const [isSaving, setIsSaving] = useState(false);
@@ -238,6 +240,8 @@ export default function AdminGroups() {
       lesson_days: [0],
       lesson_time: '',
       whatsapp_link: '',
+      teacher_meeting_link: '',
+      student_meeting_link: '',
       selected_students: []
     });
     setStudentSearch('');
@@ -248,7 +252,7 @@ export default function AdminGroups() {
     // Fetch current students and group details with lesson_days
     const { data: groupDetails } = await supabase
       .from('student_groups')
-      .select('lesson_days, whatsapp_link, certificates')
+      .select('lesson_days, whatsapp_link, certificates, teacher_meeting_link, student_meeting_link')
       .eq('id', group.id)
       .single();
 
@@ -267,6 +271,8 @@ export default function AdminGroups() {
       lesson_days: (groupDetails?.lesson_days as number[]) || [0],
       lesson_time: group.lesson_time || '',
       whatsapp_link: (groupDetails as any)?.whatsapp_link || '',
+      teacher_meeting_link: (groupDetails as any)?.teacher_meeting_link || '',
+      student_meeting_link: (groupDetails as any)?.student_meeting_link || '',
       selected_students: groupStudents?.map(gs => gs.student_id) || []
     });
     setStudentSearch('');
@@ -293,7 +299,9 @@ export default function AdminGroups() {
             max_lessons: formData.max_lessons,
             lesson_days: formData.lesson_days,
             lesson_time: formData.lesson_time || null,
-            whatsapp_link: formData.whatsapp_link || null
+            whatsapp_link: formData.whatsapp_link || null,
+            teacher_meeting_link: formData.teacher_meeting_link || null,
+            student_meeting_link: formData.student_meeting_link || null
           } as any)
           .eq('id', editingGroup.id);
 
@@ -325,7 +333,9 @@ export default function AdminGroups() {
             max_lessons: formData.max_lessons,
             lesson_days: formData.lesson_days,
             lesson_time: formData.lesson_time || null,
-            whatsapp_link: formData.whatsapp_link || null
+            whatsapp_link: formData.whatsapp_link || null,
+            teacher_meeting_link: formData.teacher_meeting_link || null,
+            student_meeting_link: formData.student_meeting_link || null
           } as any)
           .select()
           .single();
@@ -812,6 +822,32 @@ export default function AdminGroups() {
                 <p className="text-xs text-muted-foreground">
                   L'insegnante potrà vedere questo link per entrare nel gruppo WhatsApp
                 </p>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>🎥 Link Meeting Insegnante</Label>
+                  <Input
+                    value={formData.teacher_meeting_link}
+                    onChange={(e) => setFormData(prev => ({ ...prev, teacher_meeting_link: e.target.value }))}
+                    placeholder="https://zoom.us/j/... (organizzatore)"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Link per l'insegnante (organizzatore della call)
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>🎥 Link Meeting Studenti</Label>
+                  <Input
+                    value={formData.student_meeting_link}
+                    onChange={(e) => setFormData(prev => ({ ...prev, student_meeting_link: e.target.value }))}
+                    placeholder="https://zoom.us/j/... (partecipante)"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Link per gli studenti (partecipanti)
+                  </p>
+                </div>
               </div>
 
               {/* Certificates Manager - only in edit mode */}

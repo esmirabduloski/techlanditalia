@@ -56,6 +56,7 @@ interface StudentGroup {
   status: string;
   archived_at: string | null;
   whatsapp_link: string | null;
+  teacher_meeting_link: string | null;
   certificates: { path: string; name: string; type: string }[];
 }
 
@@ -113,7 +114,7 @@ export default function TeacherGroupDetail() {
       const { data: groupData } = await supabase
         .from('student_groups')
         .select(`
-          id, title, course_id, start_date, max_lessons, teacher_id, lesson_days, lesson_time, status, archived_at, whatsapp_link, certificates,
+          id, title, course_id, start_date, max_lessons, teacher_id, lesson_days, lesson_time, status, archived_at, whatsapp_link, certificates, teacher_meeting_link,
           courses!inner(title, emoji)
         `)
         .eq('id', groupId)
@@ -146,6 +147,7 @@ export default function TeacherGroupDetail() {
         status: groupData.status || 'active',
         archived_at: groupData.archived_at,
         whatsapp_link: (groupData as any).whatsapp_link || null,
+        teacher_meeting_link: (groupData as any).teacher_meeting_link || null,
         certificates: ((groupData as any).certificates as any[]) || []
       });
 
@@ -552,6 +554,17 @@ export default function TeacherGroupDetail() {
             </div>
 
             <div className="mt-4 pt-4 border-t flex flex-wrap gap-3">
+              {group.teacher_meeting_link && (
+                <a
+                  href={group.teacher_meeting_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold transition-colors shadow-tech-sm"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Avvia Lezione (Organizzatore)
+                </a>
+              )}
               <Button asChild>
                 <Link to={`/insegnante/valutazioni?gruppo=${groupId}`}>
                   <Award className="w-4 h-4 mr-2" />

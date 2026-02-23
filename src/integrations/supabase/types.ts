@@ -1364,7 +1364,9 @@ export type Database = {
           max_lessons: number | null
           start_date: string | null
           status: string
+          student_meeting_link: string | null
           teacher_id: string | null
+          teacher_meeting_link: string | null
           title: string
           updated_at: string | null
           whatsapp_link: string | null
@@ -1381,7 +1383,9 @@ export type Database = {
           max_lessons?: number | null
           start_date?: string | null
           status?: string
+          student_meeting_link?: string | null
           teacher_id?: string | null
+          teacher_meeting_link?: string | null
           title: string
           updated_at?: string | null
           whatsapp_link?: string | null
@@ -1398,7 +1402,9 @@ export type Database = {
           max_lessons?: number | null
           start_date?: string | null
           status?: string
+          student_meeting_link?: string | null
           teacher_id?: string | null
+          teacher_meeting_link?: string | null
           title?: string
           updated_at?: string | null
           whatsapp_link?: string | null

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -33,26 +33,26 @@ interface ChildCourse {
 }
 
 export function ParentChildrenSection() {
-  const { user } = useAuth();
+  const { effectiveUserId } = useEffectiveUserId();
   const [children, setChildren] = useState<Child[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isParent, setIsParent] = useState(false);
   const [activeChild, setActiveChild] = useState<string>("");
 
   useEffect(() => {
-    if (user) {
+    if (effectiveUserId) {
       fetchChildrenData();
     }
-  }, [user]);
+  }, [effectiveUserId]);
 
   const fetchChildrenData = async () => {
-    if (!user) return;
+    if (!effectiveUserId) return;
 
     try {
       const { data: childrenData } = await supabase
         .from("profiles")
         .select("id, full_name, email, avatar_id, total_points")
-        .eq("parent_id", user.id);
+        .eq("parent_id", effectiveUserId);
 
       if (!childrenData || childrenData.length === 0) {
         setIsParent(false);

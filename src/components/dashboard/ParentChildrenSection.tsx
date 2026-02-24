@@ -14,6 +14,7 @@ import { ParentCommentsSection } from "@/components/dashboard/ParentCommentsSect
 import { ChildLessonCalendar } from "@/components/dashboard/ChildLessonCalendar";
 import { ChildHomeworkHistory } from "@/components/dashboard/ChildHomeworkHistory";
 import { ChildAttendanceHistory } from "@/components/dashboard/ChildAttendanceHistory";
+import { ParentPaymentHistory } from "@/components/dashboard/ParentPaymentHistory";
 import { useStudentStreaks } from "@/hooks/useStudentStreaks";
 
 interface Child {
@@ -295,6 +296,9 @@ function ChildDashboard({ child }: { child: Child }) {
                   courseIds={[selectedCourse.courseId]}
                 />
               </div>
+
+              {/* Payment History & Balance */}
+              <ParentPaymentHistory childId={child.id} childName={child.full_name} />
 
               {/* Teacher Comments */}
               <ParentCommentsSection childId={child.id} childName={child.full_name} />

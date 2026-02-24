@@ -23,7 +23,7 @@ export function ImpersonationBanner() {
 
   const handleExit = () => {
     stopImpersonation();
-    navigate('/admin/simulatore');
+    navigate('/admin/utenti');
   };
 
   return (

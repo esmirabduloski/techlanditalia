@@ -831,6 +831,39 @@ export type Database = {
           },
         ]
       }
+      job_applications: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          messaggio: string
+          nome: string
+          posizione: string
+          read: boolean
+          telefono: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          messaggio: string
+          nome: string
+          posizione: string
+          read?: boolean
+          telefono?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          messaggio?: string
+          nome?: string
+          posizione?: string
+          read?: boolean
+          telefono?: string | null
+        }
+        Relationships: []
+      }
       lesson_balance_log: {
         Row: {
           amount: number

@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Briefcase, Heart, Rocket, Users, CheckCircle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const benefits = [
   {
@@ -69,9 +70,20 @@ export default function LavoraConNoi() {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
+    const { error } = await supabase.from('job_applications').insert({
+      nome: formData.nome,
+      email: formData.email,
+      telefono: formData.telefono || null,
+      posizione: formData.posizione,
+      messaggio: formData.messaggio,
+    });
+
+    if (error) {
+      toast.error("Errore nell'invio della candidatura. Riprova.");
+      setIsSubmitting(false);
+      return;
+    }
+
     toast.success("Candidatura inviata con successo! Ti contatteremo presto.");
     setFormData({ nome: "", email: "", telefono: "", posizione: "", messaggio: "" });
     setIsSubmitting(false);

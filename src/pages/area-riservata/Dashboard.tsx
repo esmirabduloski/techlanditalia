@@ -201,6 +201,10 @@ export default function Dashboard() {
 
   const userRole = profile.role === 'parent' ? 'parent' : 'student';
   const isParent = profile.role === 'parent';
+  
+  // When impersonating, override isTeacher based on impersonated user's role
+  const effectiveIsTeacher = isImpersonating ? (impersonatedUser?.role === 'teacher') : isTeacher;
+  const effectiveIsParent = isImpersonating ? isParent : isParent;
 
   return (
     <Layout>
@@ -248,7 +252,7 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {isTeacher && (
+              {effectiveIsTeacher && (
                 <Button variant="outline" size="sm" asChild>
                   <Link to="/insegnante">
                     <GraduationCap className="w-4 h-4 mr-2" />
@@ -278,7 +282,7 @@ export default function Dashboard() {
           </div>
 
           {/* Stats Cards - Hide for parents and teachers */}
-          {!isTeacher && !isParent && (
+          {!effectiveIsTeacher && !effectiveIsParent && (
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
               <Card className="border-primary/20 bg-gradient-to-br from-card to-primary/5">
                 <CardContent className="pt-6">
@@ -331,7 +335,7 @@ export default function Dashboard() {
           )}
 
           {/* Teacher Stats Card */}
-          {isTeacher && (
+          {effectiveIsTeacher && (
             <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-8">
               <Card className="border-secondary/20 bg-gradient-to-br from-card to-secondary/5">
                 <CardContent className="pt-6">
@@ -348,7 +352,7 @@ export default function Dashboard() {
           )}
 
           {/* Streaks Section - Hide for teachers and parents */}
-          {streaks && !isTeacher && !isParent && (
+          {streaks && !effectiveIsTeacher && !effectiveIsParent && (
             <div className="mb-8">
               <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                 🔥 Le Tue Streak
@@ -371,7 +375,7 @@ export default function Dashboard() {
           )}
 
           {/* Active Courses - Hide for teachers and parents */}
-          {!isTeacher && !isParent && (
+          {!effectiveIsTeacher && !effectiveIsParent && (
             <div className="mb-8">
               <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                 <Rocket className="w-5 h-5 text-primary" />
@@ -436,42 +440,42 @@ export default function Dashboard() {
           )}
 
           {/* Lesson Schedule - Hide for teachers and parents */}
-          {effectiveUserId && !isTeacher && !isParent && (
+          {effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (
             <div className="mb-8">
               <StudentLessonSchedule studentId={effectiveUserId} />
             </div>
           )}
 
           {/* Badges Section - Hide for teachers and parents */}
-          {effectiveUserId && !isTeacher && !isParent && (
+          {effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (
             <div className="mb-8">
               <BadgesDisplay userId={effectiveUserId} showAll={true} />
             </div>
           )}
 
           {/* Homework Section for Students - Hide for teachers and parents */}
-          {!isTeacher && !isParent && (
+          {!effectiveIsTeacher && !effectiveIsParent && (
             <div className="mb-8">
               <HomeworkSection />
             </div>
           )}
 
           {/* Student Comments Section - Hide for teachers and parents */}
-          {effectiveUserId && !isTeacher && !isParent && (
+          {effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (
             <div className="mb-8">
               <StudentCommentsSection studentId={effectiveUserId} />
             </div>
           )}
 
           {/* Parent Children Section - Hide for teachers */}
-          {!isTeacher && (
+          {!effectiveIsTeacher && (
             <div className="mb-8">
               <ParentChildrenSection />
             </div>
           )}
 
           {/* Parent Feedback Section - Only for students (not teachers or parents) */}
-          {!isTeacher && !isParent && (
+          {!effectiveIsTeacher && !effectiveIsParent && (
             <div className="mb-8">
               <ParentFeedbackSection />
             </div>
@@ -483,14 +487,14 @@ export default function Dashboard() {
               <CardTitle className="text-lg">Azioni Rapide</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className={`grid grid-cols-2 ${isTeacher ? 'md:grid-cols-3' : 'md:grid-cols-4'} gap-3`}>
+              <div className={`grid grid-cols-2 ${effectiveIsTeacher ? 'md:grid-cols-3' : 'md:grid-cols-4'} gap-3`}>
                 <Button variant="outline" className="h-auto py-4 flex-col" asChild>
                   <Link to="/area-riservata/profilo">
                     <Settings className="w-5 h-5 mb-2" />
                     <span>Modifica Profilo</span>
                   </Link>
                 </Button>
-                {isTeacher && (
+                {effectiveIsTeacher && (
                   <Button variant="outline" className="h-auto py-4 flex-col" asChild>
                     <Link to="/insegnante">
                       <GraduationCap className="w-5 h-5 mb-2" />
@@ -504,7 +508,7 @@ export default function Dashboard() {
                     <span>Tutti i Corsi</span>
                   </Link>
                 </Button>
-                {!isTeacher && (
+                {!effectiveIsTeacher && (
                   <Button variant="outline" className="h-auto py-4 flex-col" asChild>
                     <Link to="/prenota">
                       <Target className="w-5 h-5 mb-2" />
@@ -512,7 +516,7 @@ export default function Dashboard() {
                     </Link>
                   </Button>
                 )}
-                {isParent && (
+                {effectiveIsParent && (
                   <Button variant="outline" className="h-auto py-4 flex-col" asChild>
                     <Link to="/area-riservata/acquisti">
                       <CreditCard className="w-5 h-5 mb-2" />

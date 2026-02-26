@@ -34,6 +34,7 @@ import {
 import { 
   LogOut, Loader2, Plus, Edit, Trash2, User, Calendar, Save, Home, MessageCircle, Eye, GraduationCap
 } from 'lucide-react';
+import { FeedbackTemplates } from '@/components/feedback/FeedbackTemplates';
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 
@@ -384,6 +385,13 @@ export default function AdminStudentComments() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="content">Commento *</Label>
+                    <FeedbackTemplates
+                      mode="comment"
+                      onSelect={(text) => setFormData(prev => ({
+                        ...prev,
+                        content: prev.content ? prev.content + '\n' + text : text
+                      }))}
+                    />
                     <Textarea
                       id="content"
                       value={formData.content}

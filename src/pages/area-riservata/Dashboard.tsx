@@ -260,7 +260,7 @@ export default function Dashboard() {
                   </Link>
                 </Button>
               )}
-              {isAdmin && (
+              {isAdmin && !isImpersonating && (
                 <Button variant="outline" size="sm" asChild>
                   <Link to="/admin">
                     <Shield className="w-4 h-4 mr-2" />

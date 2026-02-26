@@ -53,6 +53,8 @@ interface StudentGroup {
   max_lessons: number;
   student_count?: number;
   lesson_time?: string | null;
+  status: string;
+  lessons_completed?: number;
 }
 
 interface TeacherNotification {
@@ -155,6 +157,8 @@ export default function TeacherDashboard() {
   const [upcomingLessons, setUpcomingLessons] = useState<UpcomingLesson[]>([]);
   const [teacherLinks, setTeacherLinks] = useState<TeacherLink[]>([]);
   const [statsLoading, setStatsLoading] = useState(true);
+  const [groupStatusFilter, setGroupStatusFilter] = useState<string>('all');
+  const [groupSortBy, setGroupSortBy] = useState<string>('title');
 
   useEffect(() => {
     // If impersonating a teacher, skip normal auth checks
@@ -256,13 +260,21 @@ export default function TeacherDashboard() {
 
       let fetchedGroups: StudentGroup[] = [];
       if (groupsData) {
-        // Get student counts for each group
+        // Get student counts and completed lessons for each group
+        const today = new Date().toISOString().split('T')[0];
         const groupsWithCounts = await Promise.all(
           groupsData.map(async (g: any) => {
-            const { count } = await supabase
-              .from('group_students')
-              .select('*', { count: 'exact', head: true })
-              .eq('group_id', g.id);
+            const [{ count }, { count: lessonsCount }] = await Promise.all([
+              supabase
+                .from('group_students')
+                .select('*', { count: 'exact', head: true })
+                .eq('group_id', g.id),
+              supabase
+                .from('group_lesson_schedule')
+                .select('*', { count: 'exact', head: true })
+                .eq('group_id', g.id)
+                .lte('lesson_date', today)
+            ]);
             
             return {
               id: g.id,
@@ -275,7 +287,8 @@ export default function TeacherDashboard() {
               max_lessons: g.max_lessons,
               student_count: count || 0,
               lesson_time: g.lesson_time,
-              status: g.status || 'active'
+              status: g.status || 'active',
+              lessons_completed: lessonsCount || 0
             };
           })
         );
@@ -1196,75 +1209,125 @@ export default function TeacherDashboard() {
             <TeacherStudentsList groups={groups} />
           </TabsContent>
 
-          {/* Gruppi Tab */}
           <TabsContent value="gruppi" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Gruppi Assegnati</CardTitle>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <CardTitle>Gruppi Assegnati</CardTitle>
+                  <div className="flex items-center gap-3">
+                    <Select value={groupStatusFilter} onValueChange={setGroupStatusFilter}>
+                      <SelectTrigger className="w-[150px]">
+                        <SelectValue placeholder="Stato" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Tutti</SelectItem>
+                        <SelectItem value="active">Attivi</SelectItem>
+                        <SelectItem value="archived">Archiviati</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={groupSortBy} onValueChange={setGroupSortBy}>
+                      <SelectTrigger className="w-[160px]">
+                        <SelectValue placeholder="Ordina per" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="title">Nome</SelectItem>
+                        <SelectItem value="progress">Progresso</SelectItem>
+                        <SelectItem value="students">Studenti</SelectItem>
+                        <SelectItem value="start_date">Data inizio</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
-                {groups.length === 0 ? (
-                  <div className="text-center py-8">
-                    <UsersRound className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">Nessun gruppo assegnato</p>
-                  </div>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                         <TableHead className="w-24">ID</TableHead>
-                         <TableHead>Titolo</TableHead>
-                         <TableHead>Stato</TableHead>
-                         <TableHead>Corso</TableHead>
-                         <TableHead>Data Inizio</TableHead>
-                         <TableHead>Orario</TableHead>
-                         <TableHead className="text-center">Studenti</TableHead>
-                         <TableHead>Ultima Lezione</TableHead>
-                         <TableHead className="w-20"></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {groups.map(group => (
-                        <TableRow 
-                          key={group.id} 
-                          className="cursor-pointer hover:bg-muted/50"
-                          onClick={() => navigate(`/insegnante/gruppo/${group.id}`)}
-                        >
-                          <TableCell className="font-mono text-xs">
-                            {group.id.substring(0, 8)}...
-                          </TableCell>
-                          <TableCell className="font-medium">{group.title}</TableCell>
-                          <TableCell>
-                            {(group as any).status === 'archived' ? (
-                              <Badge variant="secondary">Archiviato</Badge>
-                            ) : (
-                              <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">Attivo</Badge>
+                {(() => {
+                  const filtered = groups
+                    .filter(g => groupStatusFilter === 'all' || g.status === groupStatusFilter)
+                    .sort((a, b) => {
+                      switch (groupSortBy) {
+                        case 'progress':
+                          return ((b.lessons_completed || 0) / (b.max_lessons || 1)) - ((a.lessons_completed || 0) / (a.max_lessons || 1));
+                        case 'students':
+                          return (b.student_count || 0) - (a.student_count || 0);
+                        case 'start_date':
+                          return (b.start_date || '').localeCompare(a.start_date || '');
+                        default:
+                          return a.title.localeCompare(b.title);
+                      }
+                    });
+
+                  if (filtered.length === 0) {
+                    return (
+                      <div className="text-center py-8">
+                        <UsersRound className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                        <p className="text-muted-foreground">
+                          {groups.length === 0 ? 'Nessun gruppo assegnato' : 'Nessun gruppo con questo filtro'}
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="space-y-3">
+                      {filtered.map(group => {
+                        const progressPercent = group.max_lessons > 0 
+                          ? Math.round(((group.lessons_completed || 0) / group.max_lessons) * 100) 
+                          : 0;
+                        
+                        return (
+                          <div
+                            key={group.id}
+                            className="flex flex-col gap-3 p-4 rounded-lg border bg-background hover:bg-muted/50 cursor-pointer transition-colors"
+                            onClick={() => navigate(`/insegnante/gruppo/${group.id}`)}
+                          >
+                            <div className="flex items-center justify-between gap-4">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <span className="text-2xl">{group.course_emoji}</span>
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <h3 className="font-semibold truncate">{group.title}</h3>
+                                    {group.status === 'archived' ? (
+                                      <Badge variant="secondary">Archiviato</Badge>
+                                    ) : (
+                                      <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">Attivo</Badge>
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-muted-foreground">
+                                    {group.course_title}
+                                    {group.start_date && ` · Dal ${new Date(group.start_date).toLocaleDateString('it-IT')}`}
+                                    {group.lesson_time && ` · ${group.lesson_time.substring(0, 5)}`}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3 flex-shrink-0">
+                                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                  <Users className="w-4 h-4" />
+                                  {group.student_count}
+                                </div>
+                                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                              </div>
+                            </div>
+                            {/* Progress Bar */}
+                            <div className="space-y-1">
+                              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                <span>Progresso corso</span>
+                                <span className="font-medium">
+                                  {group.lessons_completed || 0}/{group.max_lessons} lezioni ({progressPercent}%)
+                                </span>
+                              </div>
+                              <Progress value={progressPercent} className="h-2" />
+                            </div>
+                            {group.last_lesson_title && (
+                              <p className="text-xs text-muted-foreground">
+                                Ultima lezione: {group.last_lesson_title}
+                              </p>
                             )}
-                          </TableCell>
-                          <TableCell>
-                            <span className="mr-1">{group.course_emoji}</span>
-                            {group.course_title}
-                          </TableCell>
-                          <TableCell>
-                            {group.start_date ? new Date(group.start_date).toLocaleDateString('it-IT') : '-'}
-                          </TableCell>
-                          <TableCell>
-                            {group.lesson_time ? group.lesson_time.substring(0, 5) : '-'}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Badge variant="secondary">{group.student_count}</Badge>
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {group.last_lesson_title || '-'}
-                          </TableCell>
-                          <TableCell>
-                            <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
               </CardContent>
             </Card>
           </TabsContent>

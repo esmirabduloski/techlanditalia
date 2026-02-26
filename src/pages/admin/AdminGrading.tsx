@@ -23,6 +23,7 @@ import {
 import { 
   LogOut, Loader2, Award, User, Calendar, Save, Download, Code, GraduationCap
 } from 'lucide-react';
+import { FeedbackTemplates } from '@/components/feedback/FeedbackTemplates';
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 
@@ -457,6 +458,13 @@ export default function AdminGrading() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="feedback">Feedback (opzionale)</Label>
+                <FeedbackTemplates
+                  mode="grading"
+                  onSelect={(text) => setFormData(prev => ({
+                    ...prev,
+                    teacher_feedback: prev.teacher_feedback ? prev.teacher_feedback + '\n' + text : text
+                  }))}
+                />
                 <Textarea
                   id="feedback"
                   value={formData.teacher_feedback}

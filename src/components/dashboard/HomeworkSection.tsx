@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ClipboardList, CheckCircle2, Clock, AlertCircle, Loader2, Paperclip, Download, AlertTriangle, CalendarClock } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ClipboardList, CheckCircle2, Clock, AlertCircle, Loader2, Paperclip, Download, AlertTriangle, CalendarClock, MessageSquare, ArrowUpDown, Filter } from "lucide-react";
 
 interface Attachment {
   name: string;
@@ -28,12 +29,21 @@ interface HomeworkWithDetails {
   course_id: string;
   is_submitted: boolean;
   submission_status: string | null;
+  teacher_feedback: string | null;
+  grade: number | null;
+  points_earned: number;
+  feedback_at: string | null;
 }
+
+type FilterStatus = "all" | "pending" | "graded" | "expired" | "in_review";
+type SortOption = "deadline" | "course" | "status" | "points";
 
 export function HomeworkSection() {
   const { user } = useAuth();
   const [homework, setHomework] = useState<HomeworkWithDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
+  const [sortBy, setSortBy] = useState<SortOption>("deadline");
 
   useEffect(() => {
     if (user) {
@@ -45,7 +55,6 @@ export function HomeworkSection() {
     if (!user) return;
 
     try {
-      // Get student's enrolled courses
       const { data: enrollments } = await supabase
         .from("enrollments")
         .select("course_id")
@@ -60,14 +69,12 @@ export function HomeworkSection() {
 
       const courseIds = enrollments.map((e) => e.course_id);
 
-      // Get student's group to determine group-specific deadlines
       const { data: studentGroup } = await supabase
         .from("group_students")
         .select("group_id")
         .eq("student_id", user.id)
         .maybeSingle();
 
-      // Get lessons for enrolled courses
       const { data: lessons } = await supabase
         .from("lessons")
         .select("id, title, course_id, courses(title, emoji)")
@@ -81,7 +88,6 @@ export function HomeworkSection() {
 
       const lessonIds = lessons.map((l) => l.id);
 
-      // Get completed lessons for this student
       const { data: completedLessons } = await supabase
         .from("lesson_progress")
         .select("lesson_id")
@@ -91,7 +97,6 @@ export function HomeworkSection() {
         completedLessons?.map((lp) => lp.lesson_id) || []
       );
 
-      // Only show homework for lessons the student has completed
       const accessibleLessonIds = lessonIds.filter((id) => completedLessonIds.has(id));
 
       if (accessibleLessonIds.length === 0) {
@@ -100,7 +105,6 @@ export function HomeworkSection() {
         return;
       }
 
-      // Get homework for completed lessons only
       const { data: homeworkData } = await supabase
         .from("homework")
         .select("*")
@@ -112,7 +116,6 @@ export function HomeworkSection() {
         return;
       }
 
-      // Get group-specific deadlines if student is in a group
       let groupDeadlinesMap = new Map<string, string>();
       if (studentGroup?.group_id) {
         const { data: groupDeadlines } = await supabase
@@ -125,24 +128,22 @@ export function HomeworkSection() {
         );
       }
 
-      // Get student's submissions
+      // Fetch submissions WITH feedback data
       const { data: submissions } = await supabase
         .from("homework_submissions")
-        .select("homework_id, status")
+        .select("homework_id, status, teacher_feedback, grade, points_earned, feedback_at")
         .eq("student_id", user.id);
 
       const submissionMap = new Map(
-        submissions?.map((s) => [s.homework_id, s.status]) || []
+        submissions?.map((s) => [s.homework_id, s]) || []
       );
 
-      // Combine data
       const homeworkWithDetails: HomeworkWithDetails[] = homeworkData.map((h) => {
         const lesson = lessons.find((l) => l.id === h.lesson_id);
         const course = lesson?.courses as { title: string; emoji: string } | null;
         const attachments = Array.isArray(h.attachments) ? (h.attachments as unknown as Attachment[]) : [];
-        
-        // Use group-specific deadline if available, otherwise fall back to global due_date
         const effectiveDueDate = groupDeadlinesMap.get(h.id) || h.due_date;
+        const submission = submissionMap.get(h.id);
         
         return {
           id: h.id,
@@ -156,21 +157,13 @@ export function HomeworkSection() {
           course_title: course?.title || "Corso",
           course_emoji: course?.emoji || "📚",
           course_id: lesson?.course_id || "",
-          is_submitted: submissionMap.has(h.id),
-          submission_status: submissionMap.get(h.id) || null,
+          is_submitted: !!submission,
+          submission_status: submission?.status || null,
+          teacher_feedback: submission?.teacher_feedback || null,
+          grade: submission?.grade ?? null,
+          points_earned: submission?.points_earned || 0,
+          feedback_at: submission?.feedback_at || null,
         };
-      });
-
-      // Sort: pending first, then by due date (earliest first), then by course
-      homeworkWithDetails.sort((a, b) => {
-        if (a.is_submitted !== b.is_submitted) {
-          return a.is_submitted ? 1 : -1;
-        }
-        // Sort by due date (earliest first) for pending homework
-        if (!a.is_submitted && a.due_date && b.due_date) {
-          return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
-        }
-        return a.course_title.localeCompare(b.course_title);
       });
 
       setHomework(homeworkWithDetails);
@@ -181,9 +174,55 @@ export function HomeworkSection() {
     }
   };
 
+  const getEffectiveStatus = (hw: HomeworkWithDetails): FilterStatus => {
+    if (hw.submission_status === "graded" || hw.submission_status === "approved") return "graded";
+    if (hw.is_submitted && hw.submission_status === "pending") return "in_review";
+    if (!hw.is_submitted && hw.due_date && new Date(hw.due_date) < new Date()) return "expired";
+    return "pending";
+  };
+
+  const filteredAndSorted = useMemo(() => {
+    let filtered = homework;
+
+    if (filterStatus !== "all") {
+      filtered = filtered.filter((hw) => getEffectiveStatus(hw) === filterStatus);
+    }
+
+    const sorted = [...filtered];
+    switch (sortBy) {
+      case "deadline":
+        sorted.sort((a, b) => {
+          // Non-submitted first
+          if (a.is_submitted !== b.is_submitted) return a.is_submitted ? 1 : -1;
+          if (a.due_date && b.due_date) return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+          if (a.due_date) return -1;
+          if (b.due_date) return 1;
+          return 0;
+        });
+        break;
+      case "course":
+        sorted.sort((a, b) => a.course_title.localeCompare(b.course_title));
+        break;
+      case "status":
+        const statusOrder: Record<string, number> = { expired: 0, pending: 1, in_review: 2, graded: 3 };
+        sorted.sort((a, b) => (statusOrder[getEffectiveStatus(a)] ?? 4) - (statusOrder[getEffectiveStatus(b)] ?? 4));
+        break;
+      case "points":
+        sorted.sort((a, b) => b.points_reward - a.points_reward);
+        break;
+    }
+
+    return sorted;
+  }, [homework, filterStatus, sortBy]);
+
+  const statusCounts = useMemo(() => {
+    const counts = { all: homework.length, pending: 0, graded: 0, expired: 0, in_review: 0 };
+    homework.forEach((hw) => { counts[getEffectiveStatus(hw)]++; });
+    return counts;
+  }, [homework]);
+
   const getDeadlineBadge = (hw: HomeworkWithDetails) => {
     if (!hw.due_date || hw.is_submitted) return null;
-    
     const now = new Date();
     const dueDate = new Date(hw.due_date);
     const hoursUntilDue = (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60);
@@ -196,7 +235,6 @@ export function HomeworkSection() {
         </Badge>
       );
     }
-    
     if (hoursUntilDue <= 24) {
       return (
         <Badge className="bg-red-500 text-white text-xs">
@@ -205,7 +243,6 @@ export function HomeworkSection() {
         </Badge>
       );
     }
-    
     if (hoursUntilDue <= 48) {
       return (
         <Badge className="bg-orange-500 text-white text-xs">
@@ -214,7 +251,6 @@ export function HomeworkSection() {
         </Badge>
       );
     }
-    
     return null;
   };
 
@@ -229,36 +265,39 @@ export function HomeworkSection() {
   };
 
   const getStatusBadge = (hw: HomeworkWithDetails) => {
-    if (!hw.is_submitted) {
-      return (
-        <Badge variant="outline" className="text-amber-600 border-amber-300 bg-amber-50">
-          <Clock className="w-3 h-3 mr-1" />
-          Da fare
-        </Badge>
-      );
+    const status = getEffectiveStatus(hw);
+    switch (status) {
+      case "expired":
+        return (
+          <Badge variant="destructive" className="text-xs">
+            <AlertTriangle className="w-3 h-3 mr-1" />
+            Scaduto
+          </Badge>
+        );
+      case "pending":
+        return (
+          <Badge variant="outline" className="text-amber-600 border-amber-300 bg-amber-50">
+            <Clock className="w-3 h-3 mr-1" />
+            Da fare
+          </Badge>
+        );
+      case "in_review":
+        return (
+          <Badge variant="outline" className="text-blue-600 border-blue-300 bg-blue-50">
+            <Clock className="w-3 h-3 mr-1" />
+            In revisione
+          </Badge>
+        );
+      case "graded":
+        return (
+          <Badge variant="outline" className="text-green-600 border-green-300 bg-green-50">
+            <CheckCircle2 className="w-3 h-3 mr-1" />
+            Valutato
+          </Badge>
+        );
+      default:
+        return null;
     }
-    if (hw.submission_status === "approved") {
-      return (
-        <Badge variant="outline" className="text-green-600 border-green-300 bg-green-50">
-          <CheckCircle2 className="w-3 h-3 mr-1" />
-          Approvato
-        </Badge>
-      );
-    }
-    if (hw.submission_status === "pending") {
-      return (
-        <Badge variant="outline" className="text-blue-600 border-blue-300 bg-blue-50">
-          <Clock className="w-3 h-3 mr-1" />
-          In revisione
-        </Badge>
-      );
-    }
-    return (
-      <Badge variant="outline" className="text-red-600 border-red-300 bg-red-50">
-        <AlertCircle className="w-3 h-3 mr-1" />
-        Da rivedere
-      </Badge>
-    );
   };
 
   if (isLoading) {
@@ -271,15 +310,48 @@ export function HomeworkSection() {
     );
   }
 
-  const pendingHomework = homework.filter((h) => !h.is_submitted);
-  const completedHomework = homework.filter((h) => h.is_submitted);
-
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-        <ClipboardList className="w-5 h-5 text-primary" />
-        I Tuoi Compiti
-      </h2>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+          <ClipboardList className="w-5 h-5 text-primary" />
+          I Tuoi Compiti
+        </h2>
+
+        {homework.length > 0 && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5">
+              <Filter className="w-3.5 h-3.5 text-muted-foreground" />
+              <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as FilterStatus)}>
+                <SelectTrigger className="h-8 w-[150px] text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tutti ({statusCounts.all})</SelectItem>
+                  <SelectItem value="pending">Da fare ({statusCounts.pending})</SelectItem>
+                  <SelectItem value="in_review">In revisione ({statusCounts.in_review})</SelectItem>
+                  <SelectItem value="graded">Valutati ({statusCounts.graded})</SelectItem>
+                  <SelectItem value="expired">Scaduti ({statusCounts.expired})</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground" />
+              <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+                <SelectTrigger className="h-8 w-[130px] text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="deadline">Scadenza</SelectItem>
+                  <SelectItem value="course">Corso</SelectItem>
+                  <SelectItem value="status">Stato</SelectItem>
+                  <SelectItem value="points">Punti</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        )}
+      </div>
 
       {homework.length === 0 ? (
         <Card className="border-dashed">
@@ -290,127 +362,127 @@ export function HomeworkSection() {
             </p>
           </CardContent>
         </Card>
+      ) : filteredAndSorted.length === 0 ? (
+        <Card className="border-dashed">
+          <CardContent className="py-6 text-center">
+            <p className="text-sm text-muted-foreground">Nessun compito con questo filtro</p>
+          </CardContent>
+        </Card>
       ) : (
-        <div className="space-y-4">
-          {pendingHomework.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="text-sm font-medium text-muted-foreground">
-                Da completare ({pendingHomework.length})
-              </h3>
-              {pendingHomework.map((hw) => {
-                const deadlineBadge = getDeadlineBadge(hw);
-                const isUrgent = hw.due_date && (new Date(hw.due_date).getTime() - new Date().getTime()) / (1000 * 60 * 60) <= 48;
-                
-                return (
-                <Card 
-                  key={hw.id} 
-                  className={`border-amber-200/50 bg-gradient-to-r from-card ${
-                    isUrgent ? 'to-red-50/50 border-red-300/50' : 'to-amber-50/30'
-                  }`}
-                >
-                  <CardHeader className="pb-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-2xl">{hw.course_emoji}</span>
-                        <div>
-                          <CardTitle className="text-base flex items-center gap-2">
-                            {hw.title}
-                            {deadlineBadge}
-                          </CardTitle>
-                          <CardDescription className="text-xs">
-                            {hw.course_title} · {hw.lesson_title}
-                            {hw.due_date && (
-                              <span className="ml-2 text-muted-foreground">
-                                📅 Scadenza: {formatDueDate(hw.due_date)}
-                              </span>
-                            )}
-                          </CardDescription>
-                        </div>
+        <div className="space-y-3">
+          {filteredAndSorted.map((hw) => {
+            const deadlineBadge = getDeadlineBadge(hw);
+            const effectiveStatus = getEffectiveStatus(hw);
+            const isUrgent = !hw.is_submitted && hw.due_date && (new Date(hw.due_date).getTime() - new Date().getTime()) / (1000 * 60 * 60) <= 48;
+            
+            const cardBg = effectiveStatus === "expired" && !hw.is_submitted
+              ? "to-destructive/5 border-destructive/20"
+              : effectiveStatus === "graded"
+              ? "to-green-50/30 border-green-200/50"
+              : isUrgent
+              ? "to-red-50/50 border-red-300/50"
+              : effectiveStatus === "pending"
+              ? "to-amber-50/30 border-amber-200/50"
+              : "to-blue-50/30 border-blue-200/50";
+
+            return (
+              <Card key={hw.id} className={`bg-gradient-to-r from-card ${cardBg}`}>
+                <CardHeader className="pb-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">{hw.course_emoji}</span>
+                      <div>
+                        <CardTitle className="text-base flex items-center gap-2 flex-wrap">
+                          {hw.title}
+                          {deadlineBadge}
+                        </CardTitle>
+                        <CardDescription className="text-xs">
+                          {hw.course_title} · {hw.lesson_title}
+                          {hw.due_date && (
+                            <span className="ml-2 text-muted-foreground">
+                              📅 Scadenza: {formatDueDate(hw.due_date)}
+                            </span>
+                          )}
+                        </CardDescription>
                       </div>
-                      {getStatusBadge(hw)}
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    {hw.description && (
-                      <p className="text-sm text-muted-foreground mb-3">{hw.description}</p>
-                    )}
-                    {/* Attachments */}
-                    {hw.attachments && hw.attachments.length > 0 && (
-                      <div className="mb-3 space-y-2">
-                        <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                          <Paperclip className="w-3 h-3" />
-                          Materiali allegati
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {hw.attachments.map((att, idx) => (
-                            <a
-                              key={idx}
-                              href={att.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 px-2 py-1 bg-muted rounded text-xs hover:bg-muted/80 transition-colors"
-                            >
-                              <Download className="w-3 h-3" />
-                              {att.name}
-                            </a>
-                          ))}
-                        </div>
+                    {getStatusBadge(hw)}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {hw.description && (
+                    <p className="text-sm text-muted-foreground mb-3">{hw.description}</p>
+                  )}
+
+                  {/* Feedback preview */}
+                  {hw.teacher_feedback && (
+                    <div className="mb-3 rounded-lg bg-muted/50 border border-border/50 p-3">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <MessageSquare className="w-3.5 h-3.5 text-primary" />
+                        <span className="text-xs font-medium text-foreground">Feedback insegnante</span>
+                        {hw.grade != null && (
+                          <Badge variant="secondary" className="text-xs ml-auto">
+                            Voto: {hw.grade}/100
+                          </Badge>
+                        )}
                       </div>
-                    )}
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">
-                        🏆 {hw.points_reward} punti
-                      </span>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline" asChild>
-                          <Link to={`/area-riservata/compito/${hw.id}`}>
-                            Dettagli
-                          </Link>
-                        </Button>
+                      <p className="text-sm text-muted-foreground italic line-clamp-2">
+                        "{hw.teacher_feedback}"
+                      </p>
+                      {hw.points_earned > 0 && (
+                        <p className="text-xs text-primary mt-1.5 font-medium">
+                          +{hw.points_earned} punti guadagnati
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Attachments */}
+                  {hw.attachments && hw.attachments.length > 0 && (
+                    <div className="mb-3 space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                        <Paperclip className="w-3 h-3" />
+                        Materiali allegati
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {hw.attachments.map((att, idx) => (
+                          <a
+                            key={idx}
+                            href={att.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 px-2 py-1 bg-muted rounded text-xs hover:bg-muted/80 transition-colors"
+                          >
+                            <Download className="w-3 h-3" />
+                            {att.name}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">
+                      🏆 {hw.points_reward} punti
+                    </span>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" asChild>
+                        <Link to={`/area-riservata/compito/${hw.id}`}>
+                          Dettagli
+                        </Link>
+                      </Button>
+                      {!hw.is_submitted && (
                         <Button size="sm" variant="default" asChild>
                           <Link to={`/area-riservata/corso/${hw.course_id}`}>
                             Vai al corso
                           </Link>
                         </Button>
-                      </div>
+                      )}
                     </div>
-                  </CardContent>
-                </Card>
-                );
-              })}
-            </div>
-          )}
-
-          {completedHomework.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="text-sm font-medium text-muted-foreground">
-                Completati ({completedHomework.length})
-              </h3>
-              {completedHomework.slice(0, 3).map((hw) => (
-                <Card key={hw.id} className="border-border/50 bg-muted/30">
-                  <CardHeader className="py-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xl">{hw.course_emoji}</span>
-                        <div>
-                          <CardTitle className="text-sm font-medium">{hw.title}</CardTitle>
-                          <CardDescription className="text-xs">
-                            {hw.course_title}
-                          </CardDescription>
-                        </div>
-                      </div>
-                      {getStatusBadge(hw)}
-                    </div>
-                  </CardHeader>
-                </Card>
-              ))}
-              {completedHomework.length > 3 && (
-                <p className="text-xs text-muted-foreground text-center">
-                  + altri {completedHomework.length - 3} compiti completati
-                </p>
-              )}
-            </div>
-          )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>

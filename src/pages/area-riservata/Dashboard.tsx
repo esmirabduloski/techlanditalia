@@ -21,6 +21,7 @@ import { StreakDisplay } from '@/components/dashboard/StreakDisplay';
 import { ChildAttendanceHistory } from '@/components/dashboard/ChildAttendanceHistory';
 import { StreakBonusesDisplay } from '@/components/dashboard/StreakBonusesDisplay';
 import { DeadlineNotifications } from '@/components/dashboard/DeadlineNotifications';
+import { ProgressCharts } from '@/components/dashboard/ProgressCharts';
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { CelebrationOverlay } from '@/components/gamification/CelebrationOverlay';
 import { useCelebration } from '@/hooks/useCelebration';
@@ -36,7 +37,7 @@ interface CourseProgress {
 export default function Dashboard() {
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const { isImpersonating, impersonatedUser } = useImpersonation();
-  const { profile, enrollments, lessonProgress, taskProgress, isLoading: dataLoading, effectiveUserId } = useStudentProgress();
+  const { profile, enrollments, lessonProgress, homeworkSubmissions, taskProgress, isLoading: dataLoading, effectiveUserId } = useStudentProgress();
   const { streaks, bonuses, loading: streaksLoading } = useStudentStreaks(effectiveUserId);
   const { isTeacher, isLoading: teacherLoading } = useTeacherRole();
   const { celebration, isVisible: showCelebration, hideCelebration } = useCelebration();
@@ -371,6 +372,17 @@ export default function Dashboard() {
                 </div>
                 <ChildAttendanceHistory childId={effectiveUserId} />
               </div>
+            </div>
+          )}
+
+          {/* Progress Charts - Hide for teachers and parents */}
+          {!effectiveIsTeacher && !effectiveIsParent && (
+            <div className="mb-8">
+              <ProgressCharts
+                lessonProgress={lessonProgress}
+                homeworkSubmissions={homeworkSubmissions}
+                taskProgress={taskProgress}
+              />
             </div>
           )}
 

@@ -769,12 +769,20 @@ export default function TeacherDashboard() {
           <p className="text-muted-foreground mt-1">
             Gestisci i tuoi corsi, gruppi e studenti
           </p>
-          <Button asChild className="mt-3" variant="default">
-            <Link to="/insegnante/valutazioni">
-              <Award className="w-4 h-4 mr-2" />
-              Valuta Compiti
-            </Link>
-          </Button>
+          <div className="flex gap-3 mt-3">
+            <Button asChild variant="default">
+              <Link to="/insegnante/valutazioni">
+                <Award className="w-4 h-4 mr-2" />
+                Valuta Compiti
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link to="/insegnante/registro-voti">
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Registro Voti
+              </Link>
+            </Button>
+          </div>
         </div>
 
         {/* Statistics Section */}

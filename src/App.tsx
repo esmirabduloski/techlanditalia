@@ -62,6 +62,7 @@ const TeacherLessonView = lazy(() => import("./pages/teacher/TeacherLessonView")
 const TeacherTaskView = lazy(() => import("./pages/teacher/TeacherTaskView"));
 const TeacherHomeworkView = lazy(() => import("./pages/teacher/TeacherHomeworkView"));
 const TeacherGrading = lazy(() => import("./pages/teacher/TeacherGrading"));
+const TeacherGradebook = lazy(() => import("./pages/teacher/TeacherGradebook"));
 const AdminGroups = lazy(() => import("./pages/admin/AdminGroups"));
 const AdminTeacherCalendar = lazy(() => import("./pages/admin/AdminTeacherCalendar"));
 const AdminTeacherLinks = lazy(() => import("./pages/admin/AdminTeacherLinks"));
@@ -136,6 +137,7 @@ const App = () => (
                     <Route path="/admin/backup" element={<AdminBackups />} />
                     <Route path="/insegnante" element={<TeacherDashboard />} />
                     <Route path="/insegnante/valutazioni" element={<TeacherGrading />} />
+                    <Route path="/insegnante/registro-voti" element={<TeacherGradebook />} />
                     <Route path="/insegnante/corso/:courseSlug" element={<TeacherCourseDetail />} />
                     <Route path="/insegnante/corso/:courseSlug/lezione/:lessonNumber" element={<TeacherLessonView />} />
                     <Route path="/insegnante/corso/:courseSlug/lezione/:lessonNumber/task/:taskNumber" element={<TeacherTaskView />} />

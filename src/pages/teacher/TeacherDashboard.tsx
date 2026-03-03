@@ -20,6 +20,7 @@ import {
   Link as LinkIcon, Book, FileText, Calendar, Video, MessageCircle, HelpCircle, Settings, Star, Globe, Shield, Award
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { BugReportButton } from '@/components/BugReportButton';
 
 interface AvailabilitySlot {
   day: string;
@@ -742,6 +743,7 @@ export default function TeacherDashboard() {
               </PopoverContent>
             </Popover>
 
+            <BugReportButton />
             <span className="text-sm text-muted-foreground hidden sm:block">{user?.email}</span>
             {isAdmin && !isImpersonating && (
               <Button variant="outline" size="sm" asChild>

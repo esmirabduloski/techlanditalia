@@ -17,6 +17,7 @@ import {
   Loader2,
   User
 } from 'lucide-react';
+import { BugReportButton } from '@/components/BugReportButton';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -124,6 +125,7 @@ export default function AdminDashboard() {
             <Badge variant="secondary">Admin</Badge>
           </div>
           <div className="flex items-center gap-4">
+            <BugReportButton />
             <span className="text-sm text-muted-foreground hidden sm:block">{user?.email}</span>
             <Button variant="outline" size="sm" asChild>
               <Link to="/insegnante">

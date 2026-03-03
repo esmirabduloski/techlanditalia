@@ -26,6 +26,7 @@ import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { CelebrationOverlay } from '@/components/gamification/CelebrationOverlay';
 import { useCelebration } from '@/hooks/useCelebration';
 import { Loader2, BookOpen, Trophy, Target, Settings, LogOut, Rocket, Shield, GraduationCap, CreditCard } from 'lucide-react';
+import { BugReportButton } from '@/components/BugReportButton';
 import { supabase } from '@/integrations/supabase/client';
 
 interface CourseProgress {
@@ -269,6 +270,7 @@ export default function Dashboard() {
                   </Link>
                 </Button>
               )}
+              <BugReportButton />
               <Button variant="outline" size="sm" asChild>
                 <Link to="/area-riservata/profilo">
                   <Settings className="w-4 h-4 mr-2" />

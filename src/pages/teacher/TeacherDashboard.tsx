@@ -959,6 +959,11 @@ export default function TeacherDashboard() {
           </Card>
         </div>
 
+        {/* Weekly Calendar */}
+        {calendarLessons.length > 0 && (
+          <TeacherWeeklyCalendar lessons={calendarLessons} />
+        )}
+
         {/* Upcoming Lessons */}
         {upcomingLessons.length > 0 && (
           <Card className="mb-8">

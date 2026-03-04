@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BugReportButton } from '@/components/BugReportButton';
+import { TeacherWeeklyCalendar } from '@/components/teacher/TeacherWeeklyCalendar';
 
 interface AvailabilitySlot {
   day: string;
@@ -157,6 +158,7 @@ export default function TeacherDashboard() {
   const [topStudents, setTopStudents] = useState<StudentActivity[]>([]);
   const [lowAttendanceStudents, setLowAttendanceStudents] = useState<StudentActivity[]>([]);
   const [upcomingLessons, setUpcomingLessons] = useState<UpcomingLesson[]>([]);
+  const [calendarLessons, setCalendarLessons] = useState<any[]>([]);
   const [teacherLinks, setTeacherLinks] = useState<TeacherLink[]>([]);
   const [statsLoading, setStatsLoading] = useState(true);
   const [groupStatusFilter, setGroupStatusFilter] = useState<string>('all');
@@ -445,26 +447,43 @@ export default function TeacherDashboard() {
       const groupIds = groupsList.map(g => g.id);
       const today = new Date().toISOString().split('T')[0];
       const next7Days = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      // Fetch 60 days of lessons for the calendar view
+      const calendarEnd = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-      const { data: lessonsData } = await supabase
-        .from('group_lesson_schedule')
-        .select('id, group_id, lesson_number, lesson_date, lesson_title, lesson_time')
-        .in('group_id', groupIds)
-        .gte('lesson_date', today)
-        .lte('lesson_date', next7Days)
-        .order('lesson_date', { ascending: true })
-        .limit(10);
+      const [{ data: lessonsData }, { data: calendarData }] = await Promise.all([
+        supabase
+          .from('group_lesson_schedule')
+          .select('id, group_id, lesson_number, lesson_date, lesson_title, lesson_time')
+          .in('group_id', groupIds)
+          .gte('lesson_date', today)
+          .lte('lesson_date', next7Days)
+          .order('lesson_date', { ascending: true })
+          .limit(10),
+        supabase
+          .from('group_lesson_schedule')
+          .select('id, group_id, lesson_number, lesson_date, lesson_title, lesson_time')
+          .in('group_id', groupIds)
+          .gte('lesson_date', today)
+          .lte('lesson_date', calendarEnd)
+          .order('lesson_date', { ascending: true })
+      ]);
+
+      const enrichLesson = (l: any) => {
+        const group = groupsList.find(g => g.id === l.group_id);
+        return {
+          ...l,
+          group_title: group?.title || 'Gruppo',
+          group_lesson_time: group?.lesson_time || null,
+          course_emoji: group?.course_emoji || '📚',
+          course_title: group?.course_title || '',
+        };
+      };
 
       if (lessonsData) {
-        const lessonsWithGroups = lessonsData.map((l: any) => {
-          const group = groupsList.find(g => g.id === l.group_id);
-          return {
-            ...l,
-            group_title: group?.title || 'Gruppo',
-            group_lesson_time: group?.lesson_time || null
-          };
-        });
-        setUpcomingLessons(lessonsWithGroups);
+        setUpcomingLessons(lessonsData.map(enrichLesson));
+      }
+      if (calendarData) {
+        setCalendarLessons(calendarData.map(enrichLesson));
       }
     } catch (error) {
       console.error("Error fetching upcoming lessons:", error);
@@ -939,6 +958,11 @@ export default function TeacherDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Weekly Calendar */}
+        {calendarLessons.length > 0 && (
+          <TeacherWeeklyCalendar lessons={calendarLessons} />
+        )}
 
         {/* Upcoming Lessons */}
         {upcomingLessons.length > 0 && (

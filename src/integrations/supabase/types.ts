@@ -1636,6 +1636,7 @@ export type Database = {
       teacher_profiles: {
         Row: {
           availability: Json | null
+          bio: string | null
           created_at: string | null
           id: string
           phone: string | null
@@ -1644,6 +1645,7 @@ export type Database = {
         }
         Insert: {
           availability?: Json | null
+          bio?: string | null
           created_at?: string | null
           id?: string
           phone?: string | null
@@ -1652,6 +1654,7 @@ export type Database = {
         }
         Update: {
           availability?: Json | null
+          bio?: string | null
           created_at?: string | null
           id?: string
           phone?: string | null

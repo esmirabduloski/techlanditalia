@@ -145,6 +145,7 @@ export default function TeacherDashboard() {
   const [assignedCourses, setAssignedCourses] = useState<Course[]>([]);
   const [groups, setGroups] = useState<StudentGroup[]>([]);
   const [phone, setPhone] = useState("");
+  const [bio, setBio] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isEditingAvailability, setIsEditingAvailability] = useState(false);
   const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([]);
@@ -231,6 +232,7 @@ export default function TeacherDashboard() {
         };
         setTeacherProfile(parsedProfile);
         setPhone(teacherData.phone || "");
+        setBio((teacherData as any).bio || "");
         setAvailabilitySlots(parsedAvailability || []);
       }
 
@@ -553,6 +555,37 @@ export default function TeacherDashboard() {
       await fetchData();
     } catch (error: any) {
       console.error('Error saving phone:', error);
+      toast({ title: 'Errore', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSaveBio = async () => {
+    if (!effectiveUserId) return;
+    
+    setIsSaving(true);
+    try {
+      let error;
+      if (teacherProfile) {
+        const result = await supabase
+          .from('teacher_profiles')
+          .update({ bio } as any)
+          .eq('user_id', effectiveUserId);
+        error = result.error;
+      } else {
+        const result = await supabase
+          .from('teacher_profiles')
+          .insert({ user_id: effectiveUserId, bio } as any);
+        error = result.error;
+      }
+      
+      if (error) throw error;
+      
+      toast({ title: 'Salvato', description: 'Bio aggiornata' });
+      await fetchData();
+    } catch (error: any) {
+      console.error('Error saving bio:', error);
       toast({ title: 'Errore', description: error.message, variant: 'destructive' });
     } finally {
       setIsSaving(false);
@@ -1013,6 +1046,37 @@ export default function TeacherDashboard() {
                             Salvando...
                           </>
                         ) : 'Salva'}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bio Section */}
+                <div className="border-t pt-6">
+                  <h4 className="font-medium mb-3 flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-muted-foreground" />
+                    Bio Pubblica
+                  </h4>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Questa bio sarà visibile agli studenti e ai genitori dei tuoi gruppi.
+                  </p>
+                  <div className="space-y-3">
+                    <textarea
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                      placeholder="Scrivi una breve presentazione su di te, le tue competenze e la tua esperienza..."
+                      className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
+                      maxLength={500}
+                    />
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">{bio.length}/500 caratteri</span>
+                      <Button onClick={handleSaveBio} disabled={isSaving} size="sm">
+                        {isSaving ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                            Salvando...
+                          </>
+                        ) : 'Salva Bio'}
                       </Button>
                     </div>
                   </div>

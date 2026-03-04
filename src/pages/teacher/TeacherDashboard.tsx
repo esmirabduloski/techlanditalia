@@ -158,6 +158,7 @@ export default function TeacherDashboard() {
   const [topStudents, setTopStudents] = useState<StudentActivity[]>([]);
   const [lowAttendanceStudents, setLowAttendanceStudents] = useState<StudentActivity[]>([]);
   const [upcomingLessons, setUpcomingLessons] = useState<UpcomingLesson[]>([]);
+  const [calendarLessons, setCalendarLessons] = useState<any[]>([]);
   const [teacherLinks, setTeacherLinks] = useState<TeacherLink[]>([]);
   const [statsLoading, setStatsLoading] = useState(true);
   const [groupStatusFilter, setGroupStatusFilter] = useState<string>('all');

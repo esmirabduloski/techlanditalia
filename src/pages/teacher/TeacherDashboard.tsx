@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BugReportButton } from '@/components/BugReportButton';
+import { TeacherWeeklyCalendar } from '@/components/teacher/TeacherWeeklyCalendar';
 
 interface AvailabilitySlot {
   day: string;

@@ -232,6 +232,7 @@ export default function TeacherDashboard() {
         };
         setTeacherProfile(parsedProfile);
         setPhone(teacherData.phone || "");
+        setBio((teacherData as any).bio || "");
         setAvailabilitySlots(parsedAvailability || []);
       }
 

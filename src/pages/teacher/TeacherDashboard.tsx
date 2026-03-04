@@ -590,6 +590,7 @@ export default function TeacherDashboard() {
     } finally {
       setIsSaving(false);
     }
+  };
 
   const handleSignOut = async () => {
     await signOut();

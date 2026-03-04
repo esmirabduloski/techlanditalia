@@ -1051,6 +1051,37 @@ export default function TeacherDashboard() {
                   </div>
                 </div>
 
+                {/* Bio Section */}
+                <div className="border-t pt-6">
+                  <h4 className="font-medium mb-3 flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-muted-foreground" />
+                    Bio Pubblica
+                  </h4>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Questa bio sarà visibile agli studenti e ai genitori dei tuoi gruppi.
+                  </p>
+                  <div className="space-y-3">
+                    <textarea
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                      placeholder="Scrivi una breve presentazione su di te, le tue competenze e la tua esperienza..."
+                      className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
+                      maxLength={500}
+                    />
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">{bio.length}/500 caratteri</span>
+                      <Button onClick={handleSaveBio} disabled={isSaving} size="sm">
+                        {isSaving ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                            Salvando...
+                          </>
+                        ) : 'Salva Bio'}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="border-t pt-6">
                   <h4 className="font-medium mb-4 flex items-center gap-2">
                     <BookOpen className="w-4 h-4 text-muted-foreground" />

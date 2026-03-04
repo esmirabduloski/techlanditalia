@@ -561,6 +561,36 @@ export default function TeacherDashboard() {
     }
   };
 
+  const handleSaveBio = async () => {
+    if (!effectiveUserId) return;
+    
+    setIsSaving(true);
+    try {
+      let error;
+      if (teacherProfile) {
+        const result = await supabase
+          .from('teacher_profiles')
+          .update({ bio } as any)
+          .eq('user_id', effectiveUserId);
+        error = result.error;
+      } else {
+        const result = await supabase
+          .from('teacher_profiles')
+          .insert({ user_id: effectiveUserId, bio } as any);
+        error = result.error;
+      }
+      
+      if (error) throw error;
+      
+      toast({ title: 'Salvato', description: 'Bio aggiornata' });
+      await fetchData();
+    } catch (error: any) {
+      console.error('Error saving bio:', error);
+      toast({ title: 'Errore', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsSaving(false);
+    }
+
   const handleSignOut = async () => {
     await signOut();
     navigate('/auth');

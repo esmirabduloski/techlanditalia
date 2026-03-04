@@ -145,6 +145,7 @@ export default function TeacherDashboard() {
   const [assignedCourses, setAssignedCourses] = useState<Course[]>([]);
   const [groups, setGroups] = useState<StudentGroup[]>([]);
   const [phone, setPhone] = useState("");
+  const [bio, setBio] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isEditingAvailability, setIsEditingAvailability] = useState(false);
   const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([]);

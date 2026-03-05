@@ -277,8 +277,9 @@ export default function AdminGroups() {
       selected_students: groupStudents?.map(gs => gs.student_id) || []
     });
     setStudentSearch('');
+    const studentIds = groupStudents?.map(gs => gs.student_id) || [];
+    fetchStudentExistingCourses(studentIds);
     setIsDialogOpen(true);
-  };
 
   const handleSave = async () => {
     if (!formData.title || !formData.course_id) {

@@ -386,10 +386,16 @@ export default function TaskView() {
   return (
     <Layout>
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <Button variant="ghost" onClick={handleNavigateToCourse} className="mb-4">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Torna al corso
-        </Button>
+        <div className="flex items-center justify-between mb-4">
+          <Button variant="ghost" onClick={handleNavigateToCourse}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Torna al corso
+          </Button>
+          <BookmarkButton
+            isBookmarked={isBookmarked('task', task.id)}
+            onToggle={() => toggleBookmark('task', task.id, course.id)}
+          />
+        </div>
         <LessonContent
           title={task.title}
           lessonTitle={lesson.title}

@@ -41,6 +41,7 @@ export default function LessonView() {
   const { courseId, lessonNumber } = useParams<{ courseId: string; lessonNumber: string }>();
   const { user, isLoading: authLoading } = useAuth();
   const { trackLessonStart, trackLessonComplete, startLessonTimer, getLessonTime } = useAnalytics();
+  const { isBookmarked, toggleBookmark } = useBookmarks();
   const navigate = useNavigate();
   
   const [course, setCourse] = useState<Course | null>(null);

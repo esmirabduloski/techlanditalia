@@ -62,6 +62,7 @@ export default function TaskView() {
   const { courseId, lessonNumber, taskNumber } = useParams<{ courseId: string; lessonNumber: string; taskNumber: string }>();
   const { user, isLoading: authLoading } = useAuth();
   const { isTaskCompleted, completeTask } = useStudentProgress();
+  const { isBookmarked, toggleBookmark } = useBookmarks();
   const navigate = useNavigate();
   
   const [course, setCourse] = useState<Course | null>(null);

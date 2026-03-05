@@ -955,47 +955,8 @@ export default function AdminGroups() {
                 />
               )}
 
-              <div className="space-y-2">
-                <Label>Studenti ({formData.selected_students.length} selezionati)</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    value={studentSearch}
-                    onChange={(e) => setStudentSearch(e.target.value)}
-                    placeholder="Cerca per nome o username..."
-                    className="pl-9"
-                  />
-                </div>
-                <div className="border rounded-lg max-h-60 overflow-y-auto p-2 space-y-1">
-                  {students
-                    .filter(s => {
-                      const search = studentSearch.toLowerCase();
-                      return s.full_name.toLowerCase().includes(search) ||
-                        (s.username && s.username.toLowerCase().includes(search));
-                    })
-                    .map(s => (
-                      <div key={s.id} className="flex items-center gap-2 p-2 hover:bg-muted rounded">
-                        <Checkbox
-                          checked={formData.selected_students.includes(s.id)}
-                          onCheckedChange={() => toggleStudent(s.id)}
-                        />
-                        <span className="text-sm">
-                          {s.full_name}
-                          {s.username && <span className="text-muted-foreground"> (@{s.username})</span>}
-                        </span>
-                      </div>
-                    ))}
-                  {students.filter(s => {
-                    const search = studentSearch.toLowerCase();
-                    return s.full_name.toLowerCase().includes(search) ||
-                      (s.username && s.username.toLowerCase().includes(search));
-                  }).length === 0 && (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      Nessuno studente trovato
-                    </p>
-                  )}
-                </div>
-              </div>
+
+
             </div>
 
             <DialogFooter>

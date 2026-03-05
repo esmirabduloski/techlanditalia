@@ -126,6 +126,7 @@ export default function AdminGroups() {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [studentSearch, setStudentSearch] = useState('');
+  const [studentExistingCourses, setStudentExistingCourses] = useState<Map<string, string[]>>(new Map());
 
   useEffect(() => {
     if (!authLoading && (!user || !isAdmin)) {

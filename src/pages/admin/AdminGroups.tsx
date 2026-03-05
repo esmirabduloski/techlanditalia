@@ -278,7 +278,7 @@ export default function AdminGroups() {
     });
     setStudentSearch('');
     const studentIds = groupStudents?.map(gs => gs.student_id) || [];
-    fetchStudentExistingCourses(studentIds);
+    };
     setIsDialogOpen(true);
 
   const handleSave = async () => {

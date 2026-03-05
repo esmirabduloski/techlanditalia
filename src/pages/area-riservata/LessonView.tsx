@@ -175,6 +175,12 @@ export default function LessonView() {
           {/* Left Panel - Lesson Content */}
           <ResizablePanel defaultSize={50} minSize={30}>
             <div className="h-full overflow-y-auto">
+              <div className="flex justify-end px-6 pt-4">
+                <BookmarkButton
+                  isBookmarked={isBookmarked('lesson', lesson.id)}
+                  onToggle={() => toggleBookmark('lesson', lesson.id, course.id)}
+                />
+              </div>
               <LessonContent
                 title={lesson.title}
                 description={lesson.description}

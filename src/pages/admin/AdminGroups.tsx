@@ -246,6 +246,7 @@ export default function AdminGroups() {
       selected_students: []
     });
     setStudentSearch('');
+    setStudentExistingCourses(new Map());
     setIsDialogOpen(true);
   };
 

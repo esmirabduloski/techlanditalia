@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useStudentProgress } from '@/hooks/useStudentProgress';
+import { useBookmarks } from '@/hooks/useBookmarks';
 import { supabase } from '@/integrations/supabase/client';
 import { Layout } from '@/components/layout/Layout';
 import { LessonContent } from '@/components/lesson/LessonContent';
 import { TaskNavigation } from '@/components/lesson/TaskNavigation';
+import { BookmarkButton } from '@/components/dashboard/BookmarkButton';
 import { PythonCompiler } from '@/components/lesson/PythonCompiler';
 import { TurtleCompiler } from '@/components/lesson/TurtleCompiler';
 import { PgzeroCompiler } from '@/components/lesson/PgzeroCompiler';
@@ -60,6 +62,7 @@ export default function TaskView() {
   const { courseId, lessonNumber, taskNumber } = useParams<{ courseId: string; lessonNumber: string; taskNumber: string }>();
   const { user, isLoading: authLoading } = useAuth();
   const { isTaskCompleted, completeTask } = useStudentProgress();
+  const { isBookmarked, toggleBookmark } = useBookmarks();
   const navigate = useNavigate();
   
   const [course, setCourse] = useState<Course | null>(null);
@@ -214,7 +217,7 @@ export default function TaskView() {
           <Button variant="ghost" size="icon" onClick={handleNavigateToCourse}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <div>
+          <div className="flex-1">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span>{course.title}</span>
               <span>·</span>
@@ -222,6 +225,11 @@ export default function TaskView() {
             </div>
             <h1 className="font-semibold">Task {task.task_number}: {task.title}</h1>
           </div>
+          <BookmarkButton
+            isBookmarked={isBookmarked('task', task.id)}
+            onToggle={() => toggleBookmark('task', task.id, course.id)}
+            size="sm"
+          />
         </div>
 
         <ResizablePanelGroup direction="horizontal" className="flex-1">
@@ -296,7 +304,7 @@ export default function TaskView() {
           <Button variant="ghost" size="icon" onClick={handleNavigateToCourse}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <div>
+          <div className="flex-1">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span>{course.title}</span>
               <span>·</span>
@@ -304,6 +312,11 @@ export default function TaskView() {
             </div>
             <h1 className="font-semibold">Task {task.task_number}: {task.title}</h1>
           </div>
+          <BookmarkButton
+            isBookmarked={isBookmarked('task', task.id)}
+            onToggle={() => toggleBookmark('task', task.id, course.id)}
+            size="sm"
+          />
         </div>
 
         <ResizablePanelGroup direction="horizontal" className="flex-1">
@@ -373,10 +386,16 @@ export default function TaskView() {
   return (
     <Layout>
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <Button variant="ghost" onClick={handleNavigateToCourse} className="mb-4">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Torna al corso
-        </Button>
+        <div className="flex items-center justify-between mb-4">
+          <Button variant="ghost" onClick={handleNavigateToCourse}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Torna al corso
+          </Button>
+          <BookmarkButton
+            isBookmarked={isBookmarked('task', task.id)}
+            onToggle={() => toggleBookmark('task', task.id, course.id)}
+          />
+        </div>
         <LessonContent
           title={task.title}
           lessonTitle={lesson.title}

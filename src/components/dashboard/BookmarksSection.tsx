@@ -1,0 +1,153 @@
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useBookmarks } from '@/hooks/useBookmarks';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { BookmarkButton } from './BookmarkButton';
+import { Bookmark, BookOpen, Puzzle, Loader2 } from 'lucide-react';
+
+interface EnrichedBookmark {
+  id: string;
+  entity_type: 'lesson' | 'task';
+  entity_id: string;
+  course_id: string | null;
+  title: string;
+  subtitle: string;
+  courseEmoji: string;
+  courseSlug: string;
+  lessonNumber: number;
+  taskNumber?: number;
+}
+
+export function BookmarksSection() {
+  const { bookmarks, isLoading, isBookmarked, toggleBookmark } = useBookmarks();
+  const [enriched, setEnriched] = useState<EnrichedBookmark[]>([]);
+  const [enrichLoading, setEnrichLoading] = useState(false);
+
+  useEffect(() => {
+    if (bookmarks.length === 0) { setEnriched([]); return; }
+    enrichBookmarks();
+  }, [bookmarks]);
+
+  const enrichBookmarks = async () => {
+    setEnrichLoading(true);
+    const result: EnrichedBookmark[] = [];
+
+    const lessonBookmarks = bookmarks.filter(b => b.entity_type === 'lesson');
+    const taskBookmarks = bookmarks.filter(b => b.entity_type === 'task');
+
+    // Enrich lessons
+    if (lessonBookmarks.length > 0) {
+      const { data: lessons } = await supabase
+        .from('lessons')
+        .select('id, title, lesson_number, course_id, courses!inner(title, emoji, slug)')
+        .in('id', lessonBookmarks.map(b => b.entity_id));
+
+      if (lessons) {
+        lessons.forEach((l: any) => {
+          const bm = lessonBookmarks.find(b => b.entity_id === l.id);
+          if (bm) {
+            result.push({
+              id: bm.id,
+              entity_type: 'lesson',
+              entity_id: l.id,
+              course_id: l.course_id,
+              title: l.title,
+              subtitle: `Lezione ${l.lesson_number}`,
+              courseEmoji: l.courses.emoji,
+              courseSlug: l.courses.slug,
+              lessonNumber: l.lesson_number,
+            });
+          }
+        });
+      }
+    }
+
+    // Enrich tasks
+    if (taskBookmarks.length > 0) {
+      const { data: tasks } = await supabase
+        .from('lesson_tasks')
+        .select('id, title, task_number, lesson_id, lessons!inner(lesson_number, course_id, courses!inner(title, emoji, slug))')
+        .in('id', taskBookmarks.map(b => b.entity_id));
+
+      if (tasks) {
+        tasks.forEach((t: any) => {
+          const bm = taskBookmarks.find(b => b.entity_id === t.id);
+          if (bm) {
+            result.push({
+              id: bm.id,
+              entity_type: 'task',
+              entity_id: t.id,
+              course_id: t.lessons.course_id,
+              title: t.title,
+              subtitle: `M${Math.ceil(t.lessons.lesson_number / 4)}L${((t.lessons.lesson_number - 1) % 4) + 1} • Task ${t.task_number}`,
+              courseEmoji: t.lessons.courses.emoji,
+              courseSlug: t.lessons.courses.slug,
+              lessonNumber: t.lessons.lesson_number,
+              taskNumber: t.task_number,
+            });
+          }
+        });
+      }
+    }
+
+    setEnriched(result);
+    setEnrichLoading(false);
+  };
+
+  if (isLoading || enrichLoading) {
+    return (
+      <Card>
+        <CardContent className="py-6 flex justify-center">
+          <Loader2 className="w-5 h-5 animate-spin text-primary" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (enriched.length === 0) return null;
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg flex items-center gap-2">
+          <Bookmark className="w-5 h-5 text-primary" />
+          I Tuoi Preferiti
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-2">
+          {enriched.map(item => {
+            const href = item.entity_type === 'lesson'
+              ? `/area-riservata/corso/${item.courseSlug}/lezione/${item.lessonNumber}`
+              : `/area-riservata/corso/${item.courseSlug}/lezione/${item.lessonNumber}/task/${item.taskNumber}`;
+
+            return (
+              <div key={item.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors group">
+                <span className="text-lg">{item.courseEmoji}</span>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  {item.entity_type === 'lesson' ? (
+                    <BookOpen className="w-4 h-4" />
+                  ) : (
+                    <Puzzle className="w-4 h-4" />
+                  )}
+                </div>
+                <Link to={href} className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                    {item.title}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{item.subtitle}</p>
+                </Link>
+                <BookmarkButton
+                  isBookmarked={true}
+                  onToggle={() => toggleBookmark(item.entity_type, item.entity_id, item.course_id || undefined)}
+                  size="sm"
+                />
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

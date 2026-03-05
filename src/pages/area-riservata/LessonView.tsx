@@ -2,10 +2,12 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useBookmarks } from '@/hooks/useBookmarks';
 import { supabase } from '@/integrations/supabase/client';
 import { Layout } from '@/components/layout/Layout';
 import { LessonContent } from '@/components/lesson/LessonContent';
 import { LessonNavigation } from '@/components/lesson/LessonNavigation';
+import { BookmarkButton } from '@/components/dashboard/BookmarkButton';
 import { PythonCompiler } from '@/components/lesson/PythonCompiler';
 import { WebCompiler } from '@/components/lesson/WebCompiler';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
@@ -39,6 +41,7 @@ export default function LessonView() {
   const { courseId, lessonNumber } = useParams<{ courseId: string; lessonNumber: string }>();
   const { user, isLoading: authLoading } = useAuth();
   const { trackLessonStart, trackLessonComplete, startLessonTimer, getLessonTime } = useAnalytics();
+  const { isBookmarked, toggleBookmark } = useBookmarks();
   const navigate = useNavigate();
   
   const [course, setCourse] = useState<Course | null>(null);
@@ -172,6 +175,12 @@ export default function LessonView() {
           {/* Left Panel - Lesson Content */}
           <ResizablePanel defaultSize={50} minSize={30}>
             <div className="h-full overflow-y-auto">
+              <div className="flex justify-end px-6 pt-4">
+                <BookmarkButton
+                  isBookmarked={isBookmarked('lesson', lesson.id)}
+                  onToggle={() => toggleBookmark('lesson', lesson.id, course.id)}
+                />
+              </div>
               <LessonContent
                 title={lesson.title}
                 description={lesson.description}
@@ -210,6 +219,12 @@ export default function LessonView() {
   return (
     <Layout>
       <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="flex justify-end mb-2">
+          <BookmarkButton
+            isBookmarked={isBookmarked('lesson', lesson.id)}
+            onToggle={() => toggleBookmark('lesson', lesson.id, course.id)}
+          />
+        </div>
         <LessonContent
           title={lesson.title}
           description={lesson.description}

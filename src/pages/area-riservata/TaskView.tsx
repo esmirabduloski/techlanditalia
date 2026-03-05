@@ -304,7 +304,7 @@ export default function TaskView() {
           <Button variant="ghost" size="icon" onClick={handleNavigateToCourse}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <div>
+          <div className="flex-1">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span>{course.title}</span>
               <span>·</span>
@@ -312,6 +312,11 @@ export default function TaskView() {
             </div>
             <h1 className="font-semibold">Task {task.task_number}: {task.title}</h1>
           </div>
+          <BookmarkButton
+            isBookmarked={isBookmarked('task', task.id)}
+            onToggle={() => toggleBookmark('task', task.id, course.id)}
+            size="sm"
+          />
         </div>
 
         <ResizablePanelGroup direction="horizontal" className="flex-1">

@@ -126,6 +126,7 @@ export default function AdminGroups() {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [studentSearch, setStudentSearch] = useState('');
+  const [studentExistingCourses, setStudentExistingCourses] = useState<Map<string, string[]>>(new Map());
 
   useEffect(() => {
     if (!authLoading && (!user || !isAdmin)) {
@@ -245,6 +246,7 @@ export default function AdminGroups() {
       selected_students: []
     });
     setStudentSearch('');
+    setStudentExistingCourses(new Map());
     setIsDialogOpen(true);
   };
 
@@ -276,6 +278,8 @@ export default function AdminGroups() {
       selected_students: groupStudents?.map(gs => gs.student_id) || []
     });
     setStudentSearch('');
+    const studentIds = groupStudents?.map(gs => gs.student_id) || [];
+    fetchStudentExistingCourses(studentIds);
     setIsDialogOpen(true);
   };
 
@@ -467,14 +471,51 @@ export default function AdminGroups() {
     }
   };
 
-  const toggleStudent = (studentId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      selected_students: prev.selected_students.includes(studentId)
-        ? prev.selected_students.filter(id => id !== studentId)
-        : [...prev.selected_students, studentId]
-    }));
+  const fetchStudentExistingCourses = async (studentIds: string[]) => {
+    if (studentIds.length === 0) {
+      setStudentExistingCourses(new Map());
+      return;
+    }
+    const { data } = await supabase
+      .from('group_students')
+      .select('student_id, group_id, group:group_id(course_id)')
+      .in('student_id', studentIds);
+
+    const map = new Map<string, string[]>();
+    if (data) {
+      data.forEach((row: any) => {
+        // Skip if editing and this is the current group
+        if (editingGroup && row.group_id === editingGroup.id) return;
+        const courseId = row.group?.course_id;
+        if (!courseId) return;
+        const existing = map.get(row.student_id) || [];
+        if (!existing.includes(courseId)) existing.push(courseId);
+        map.set(row.student_id, existing);
+      });
+    }
+    setStudentExistingCourses(map);
   };
+
+  const toggleStudent = (studentId: string) => {
+    setFormData(prev => {
+      const newSelected = prev.selected_students.includes(studentId)
+        ? prev.selected_students.filter(id => id !== studentId)
+        : [...prev.selected_students, studentId];
+      
+      // Fetch existing courses for updated selection
+      fetchStudentExistingCourses(newSelected);
+      
+      return { ...prev, selected_students: newSelected };
+    });
+  };
+
+  // Courses that are blocked because at least one selected student is already in a group for that course
+  const blockedCourseIds = new Set<string>();
+  studentExistingCourses.forEach((courseIds) => {
+    courseIds.forEach(cid => blockedCourseIds.add(cid));
+  });
+
+  const availableCourses = courses.filter(c => !blockedCourseIds.has(c.id));
 
   if (authLoading || isLoading) {
     return (
@@ -692,24 +733,76 @@ export default function AdminGroups() {
                 />
               </div>
 
+              {/* Students - select BEFORE course so courses get filtered */}
+              <div className="space-y-2">
+                <Label>Studenti ({formData.selected_students.length} selezionati)</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    value={studentSearch}
+                    onChange={(e) => setStudentSearch(e.target.value)}
+                    placeholder="Cerca per nome o username..."
+                    className="pl-9"
+                  />
+                </div>
+                <div className="border rounded-lg max-h-60 overflow-y-auto p-2 space-y-1">
+                  {students
+                    .filter(s => {
+                      const search = studentSearch.toLowerCase();
+                      return s.full_name.toLowerCase().includes(search) ||
+                        (s.username && s.username.toLowerCase().includes(search));
+                    })
+                    .map(s => (
+                      <div key={s.id} className="flex items-center gap-2 p-2 hover:bg-muted rounded">
+                        <Checkbox
+                          checked={formData.selected_students.includes(s.id)}
+                          onCheckedChange={() => toggleStudent(s.id)}
+                        />
+                        <span className="text-sm">
+                          {s.full_name}
+                          {s.username && <span className="text-muted-foreground"> (@{s.username})</span>}
+                        </span>
+                      </div>
+                    ))}
+                  {students.filter(s => {
+                    const search = studentSearch.toLowerCase();
+                    return s.full_name.toLowerCase().includes(search) ||
+                      (s.username && s.username.toLowerCase().includes(search));
+                  }).length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      Nessuno studente trovato
+                    </p>
+                  )}
+                </div>
+              </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Corso *</Label>
                   <Select
-                    value={formData.course_id}
+                    value={blockedCourseIds.has(formData.course_id) ? '' : formData.course_id}
                     onValueChange={(v) => setFormData(prev => ({ ...prev, course_id: v }))}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Seleziona corso" />
                     </SelectTrigger>
                     <SelectContent>
-                      {courses.map(c => (
+                      {availableCourses.map(c => (
                         <SelectItem key={c.id} value={c.id}>
                           {c.emoji} {c.title}
                         </SelectItem>
                       ))}
+                      {availableCourses.length === 0 && formData.selected_students.length > 0 && (
+                        <div className="px-2 py-3 text-sm text-muted-foreground text-center">
+                          Nessun corso disponibile per gli studenti selezionati
+                        </div>
+                      )}
                     </SelectContent>
                   </Select>
+                  {blockedCourseIds.size > 0 && formData.selected_students.length > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      {blockedCourseIds.size} cors{blockedCourseIds.size === 1 ? 'o escluso' : 'i esclusi'} (studenti già iscritti)
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -863,47 +956,8 @@ export default function AdminGroups() {
                 />
               )}
 
-              <div className="space-y-2">
-                <Label>Studenti ({formData.selected_students.length} selezionati)</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    value={studentSearch}
-                    onChange={(e) => setStudentSearch(e.target.value)}
-                    placeholder="Cerca per nome o username..."
-                    className="pl-9"
-                  />
-                </div>
-                <div className="border rounded-lg max-h-60 overflow-y-auto p-2 space-y-1">
-                  {students
-                    .filter(s => {
-                      const search = studentSearch.toLowerCase();
-                      return s.full_name.toLowerCase().includes(search) ||
-                        (s.username && s.username.toLowerCase().includes(search));
-                    })
-                    .map(s => (
-                      <div key={s.id} className="flex items-center gap-2 p-2 hover:bg-muted rounded">
-                        <Checkbox
-                          checked={formData.selected_students.includes(s.id)}
-                          onCheckedChange={() => toggleStudent(s.id)}
-                        />
-                        <span className="text-sm">
-                          {s.full_name}
-                          {s.username && <span className="text-muted-foreground"> (@{s.username})</span>}
-                        </span>
-                      </div>
-                    ))}
-                  {students.filter(s => {
-                    const search = studentSearch.toLowerCase();
-                    return s.full_name.toLowerCase().includes(search) ||
-                      (s.username && s.username.toLowerCase().includes(search));
-                  }).length === 0 && (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      Nessuno studente trovato
-                    </p>
-                  )}
-                </div>
-              </div>
+
+
             </div>
 
             <DialogFooter>

@@ -734,20 +734,30 @@ export default function AdminGroups() {
                 <div className="space-y-2">
                   <Label>Corso *</Label>
                   <Select
-                    value={formData.course_id}
+                    value={blockedCourseIds.has(formData.course_id) ? '' : formData.course_id}
                     onValueChange={(v) => setFormData(prev => ({ ...prev, course_id: v }))}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Seleziona corso" />
                     </SelectTrigger>
                     <SelectContent>
-                      {courses.map(c => (
+                      {availableCourses.map(c => (
                         <SelectItem key={c.id} value={c.id}>
                           {c.emoji} {c.title}
                         </SelectItem>
                       ))}
+                      {availableCourses.length === 0 && formData.selected_students.length > 0 && (
+                        <div className="px-2 py-3 text-sm text-muted-foreground text-center">
+                          Nessun corso disponibile per gli studenti selezionati
+                        </div>
+                      )}
                     </SelectContent>
                   </Select>
+                  {blockedCourseIds.size > 0 && formData.selected_students.length > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      {blockedCourseIds.size} cors{blockedCourseIds.size === 1 ? 'o escluso' : 'i esclusi'} (studenti già iscritti)
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">

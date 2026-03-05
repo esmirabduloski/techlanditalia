@@ -22,6 +22,7 @@ import { StreakDisplay } from '@/components/dashboard/StreakDisplay';
 import { ChildAttendanceHistory } from '@/components/dashboard/ChildAttendanceHistory';
 import { StreakBonusesDisplay } from '@/components/dashboard/StreakBonusesDisplay';
 import { DeadlineNotifications } from '@/components/dashboard/DeadlineNotifications';
+import { BookmarksSection } from '@/components/dashboard/BookmarksSection';
 import { ProgressCharts } from '@/components/dashboard/ProgressCharts';
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { CelebrationOverlay } from '@/components/gamification/CelebrationOverlay';

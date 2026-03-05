@@ -390,6 +390,13 @@ export default function Dashboard() {
             </div>
           )}
 
+          {/* Bookmarks - Hide for teachers and parents */}
+          {!effectiveIsTeacher && !effectiveIsParent && (
+            <div className="mb-8">
+              <BookmarksSection />
+            </div>
+          )}
+
           {/* Active Courses - Hide for teachers and parents */}
           {!effectiveIsTeacher && !effectiveIsParent && (
             <div className="mb-8">

@@ -219,6 +219,12 @@ export default function LessonView() {
   return (
     <Layout>
       <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="flex justify-end mb-2">
+          <BookmarkButton
+            isBookmarked={isBookmarked('lesson', lesson.id)}
+            onToggle={() => toggleBookmark('lesson', lesson.id, course.id)}
+          />
+        </div>
         <LessonContent
           title={lesson.title}
           description={lesson.description}

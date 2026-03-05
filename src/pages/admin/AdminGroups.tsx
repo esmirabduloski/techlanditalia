@@ -468,14 +468,51 @@ export default function AdminGroups() {
     }
   };
 
-  const toggleStudent = (studentId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      selected_students: prev.selected_students.includes(studentId)
-        ? prev.selected_students.filter(id => id !== studentId)
-        : [...prev.selected_students, studentId]
-    }));
+  const fetchStudentExistingCourses = async (studentIds: string[]) => {
+    if (studentIds.length === 0) {
+      setStudentExistingCourses(new Map());
+      return;
+    }
+    const { data } = await supabase
+      .from('group_students')
+      .select('student_id, group_id, group:group_id(course_id)')
+      .in('student_id', studentIds);
+
+    const map = new Map<string, string[]>();
+    if (data) {
+      data.forEach((row: any) => {
+        // Skip if editing and this is the current group
+        if (editingGroup && row.group_id === editingGroup.id) return;
+        const courseId = row.group?.course_id;
+        if (!courseId) return;
+        const existing = map.get(row.student_id) || [];
+        if (!existing.includes(courseId)) existing.push(courseId);
+        map.set(row.student_id, existing);
+      });
+    }
+    setStudentExistingCourses(map);
   };
+
+  const toggleStudent = (studentId: string) => {
+    setFormData(prev => {
+      const newSelected = prev.selected_students.includes(studentId)
+        ? prev.selected_students.filter(id => id !== studentId)
+        : [...prev.selected_students, studentId];
+      
+      // Fetch existing courses for updated selection
+      fetchStudentExistingCourses(newSelected);
+      
+      return { ...prev, selected_students: newSelected };
+    });
+  };
+
+  // Courses that are blocked because at least one selected student is already in a group for that course
+  const blockedCourseIds = new Set<string>();
+  studentExistingCourses.forEach((courseIds) => {
+    courseIds.forEach(cid => blockedCourseIds.add(cid));
+  });
+
+  const availableCourses = courses.filter(c => !blockedCourseIds.has(c.id));
 
   if (authLoading || isLoading) {
     return (

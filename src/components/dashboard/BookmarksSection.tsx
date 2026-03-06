@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useBookmarks } from '@/hooks/useBookmarks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BookmarkButton } from './BookmarkButton';
-import { Bookmark, BookOpen, Puzzle, Loader2 } from 'lucide-react';
+import { Bookmark, BookOpen, Puzzle, Loader2, ArrowDownAZ, Clock } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface EnrichedBookmark {
   id: string;
@@ -15,14 +16,19 @@ interface EnrichedBookmark {
   subtitle: string;
   courseEmoji: string;
   courseSlug: string;
+  courseTitle: string;
   lessonNumber: number;
   taskNumber?: number;
+  created_at: string;
 }
+
+type SortMode = 'date' | 'course';
 
 export function BookmarksSection() {
   const { bookmarks, isLoading, isBookmarked, toggleBookmark } = useBookmarks();
   const [enriched, setEnriched] = useState<EnrichedBookmark[]>([]);
   const [enrichLoading, setEnrichLoading] = useState(false);
+  const [sortMode, setSortMode] = useState<SortMode>('date');
 
   useEffect(() => {
     if (bookmarks.length === 0) { setEnriched([]); return; }
@@ -36,7 +42,6 @@ export function BookmarksSection() {
     const lessonBookmarks = bookmarks.filter(b => b.entity_type === 'lesson');
     const taskBookmarks = bookmarks.filter(b => b.entity_type === 'task');
 
-    // Enrich lessons
     if (lessonBookmarks.length > 0) {
       const { data: lessons } = await supabase
         .from('lessons')
@@ -56,14 +61,15 @@ export function BookmarksSection() {
               subtitle: `Lezione ${l.lesson_number}`,
               courseEmoji: l.courses.emoji,
               courseSlug: l.courses.slug,
+              courseTitle: l.courses.title,
               lessonNumber: l.lesson_number,
+              created_at: bm.created_at,
             });
           }
         });
       }
     }
 
-    // Enrich tasks
     if (taskBookmarks.length > 0) {
       const { data: tasks } = await supabase
         .from('lesson_tasks')
@@ -83,8 +89,10 @@ export function BookmarksSection() {
               subtitle: `M${Math.ceil(t.lessons.lesson_number / 4)}L${((t.lessons.lesson_number - 1) % 4) + 1} • Task ${t.task_number}`,
               courseEmoji: t.lessons.courses.emoji,
               courseSlug: t.lessons.courses.slug,
+              courseTitle: t.lessons.courses.title,
               lessonNumber: t.lessons.lesson_number,
               taskNumber: t.task_number,
+              created_at: bm.created_at,
             });
           }
         });
@@ -94,6 +102,21 @@ export function BookmarksSection() {
     setEnriched(result);
     setEnrichLoading(false);
   };
+
+  const sorted = useMemo(() => {
+    const items = [...enriched];
+    if (sortMode === 'date') {
+      items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    } else {
+      items.sort((a, b) => {
+        const cmp = a.courseTitle.localeCompare(b.courseTitle);
+        if (cmp !== 0) return cmp;
+        if (a.lessonNumber !== b.lessonNumber) return a.lessonNumber - b.lessonNumber;
+        return (a.taskNumber ?? 0) - (b.taskNumber ?? 0);
+      });
+    }
+    return items;
+  }, [enriched, sortMode]);
 
   if (isLoading || enrichLoading) {
     return (
@@ -110,14 +133,26 @@ export function BookmarksSection() {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Bookmark className="w-5 h-5 text-primary" />
-          I Tuoi Preferiti
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Bookmark className="w-5 h-5 text-primary" />
+            I Tuoi Preferiti
+          </CardTitle>
+          <Tabs value={sortMode} onValueChange={(v) => setSortMode(v as SortMode)}>
+            <TabsList className="h-8">
+              <TabsTrigger value="date" className="text-xs gap-1 px-2 h-7">
+                <Clock className="w-3 h-3" /> Data
+              </TabsTrigger>
+              <TabsTrigger value="course" className="text-xs gap-1 px-2 h-7">
+                <ArrowDownAZ className="w-3 h-3" /> Corso
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          {enriched.map(item => {
+          {sorted.map(item => {
             const href = item.entity_type === 'lesson'
               ? `/area-riservata/corso/${item.courseSlug}/lezione/${item.lessonNumber}`
               : `/area-riservata/corso/${item.courseSlug}/lezione/${item.lessonNumber}/task/${item.taskNumber}`;

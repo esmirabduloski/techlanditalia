@@ -161,6 +161,16 @@ export function ParentBadgesSection({ childId, childName }: ParentBadgesSectionP
                           Ottenuto: {format(new Date(badge.earned_at), "d MMMM yyyy", { locale: it })}
                         </p>
                       )}
+                      {badge.isEarned && (
+                        <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                          <SocialShareButton
+                            text={`${childName} ha ottenuto il badge "${badge.name}" su TechLand!`}
+                            emoji={badge.emoji}
+                            size="sm"
+                            variant="ghost"
+                          />
+                        </div>
+                      )}
                     </div>
                   </TooltipContent>
                 </Tooltip>

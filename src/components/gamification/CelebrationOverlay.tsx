@@ -212,12 +212,28 @@ export function CelebrationOverlay({
                   )}
                 </motion.div>
 
+                {/* Share button */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8 }}
+                  className="flex justify-center mt-4"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <SocialShareButton
+                    text={type === 'level-up' 
+                      ? `Ho raggiunto il ${title} su TechLand!` 
+                      : `Ho ottenuto il badge "${title}" su TechLand!`}
+                    emoji={emoji || '🏆'}
+                  />
+                </motion.div>
+
                 {/* Close hint */}
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 1.5 }}
-                  className="text-center text-xs text-muted-foreground mt-6"
+                  className="text-center text-xs text-muted-foreground mt-4"
                 >
                   Tocca per continuare
                 </motion.p>

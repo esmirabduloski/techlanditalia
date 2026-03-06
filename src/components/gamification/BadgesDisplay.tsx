@@ -169,6 +169,16 @@ export function BadgesDisplay({ userId, showAll = true, maxItems, title = "🏆 
                         +{badge.points_reward} punti bonus
                       </p>
                     )}
+                    {badge.isEarned && (
+                      <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                        <SocialShareButton
+                          text={`Ho ottenuto il badge "${badge.name}" su TechLand!`}
+                          emoji={badge.emoji}
+                          size="sm"
+                          variant="ghost"
+                        />
+                      </div>
+                    )}
                   </div>
                 </TooltipContent>
               </Tooltip>

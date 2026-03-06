@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Star, Sparkles } from 'lucide-react';
+import { SocialShareButton } from './SocialShareButton';
 
 interface Confetti {
   id: number;

@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2, Trophy, Lock, ChevronDown } from "lucide-react";
+import { SocialShareButton } from "@/components/gamification/SocialShareButton";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";

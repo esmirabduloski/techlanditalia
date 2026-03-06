@@ -27,7 +27,8 @@ import { ProgressCharts } from '@/components/dashboard/ProgressCharts';
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { CelebrationOverlay } from '@/components/gamification/CelebrationOverlay';
 import { useCelebration } from '@/hooks/useCelebration';
-import { Loader2, BookOpen, Trophy, Target, Settings, LogOut, Rocket, Shield, GraduationCap, CreditCard } from 'lucide-react';
+import { Loader2, BookOpen, Trophy, Target, Settings, LogOut, Rocket, Shield, GraduationCap, CreditCard, Bookmark } from 'lucide-react';
+import { useBookmarks } from '@/hooks/useBookmarks';
 import { BugReportButton } from '@/components/BugReportButton';
 import { supabase } from '@/integrations/supabase/client';
 

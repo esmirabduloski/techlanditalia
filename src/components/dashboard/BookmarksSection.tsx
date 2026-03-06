@@ -154,8 +154,8 @@ export function BookmarksSection() {
         <div className="space-y-2">
           {sorted.map(item => {
             const href = item.entity_type === 'lesson'
-              ? `/area-riservata/corso/${item.courseSlug}/lezione/${item.lessonNumber}`
-              : `/area-riservata/corso/${item.courseSlug}/lezione/${item.lessonNumber}/task/${item.taskNumber}`;
+              ? `/area-riservata/corso/${item.course_id}/lezione/${item.lessonNumber}`
+              : `/area-riservata/corso/${item.course_id}/lezione/${item.lessonNumber}/task/${item.taskNumber}`;
 
             return (
               <div key={item.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors group">

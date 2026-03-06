@@ -27,7 +27,8 @@ import { ProgressCharts } from '@/components/dashboard/ProgressCharts';
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { CelebrationOverlay } from '@/components/gamification/CelebrationOverlay';
 import { useCelebration } from '@/hooks/useCelebration';
-import { Loader2, BookOpen, Trophy, Target, Settings, LogOut, Rocket, Shield, GraduationCap, CreditCard } from 'lucide-react';
+import { Loader2, BookOpen, Trophy, Target, Settings, LogOut, Rocket, Shield, GraduationCap, CreditCard, Bookmark } from 'lucide-react';
+import { useBookmarks } from '@/hooks/useBookmarks';
 import { BugReportButton } from '@/components/BugReportButton';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -44,6 +45,7 @@ export default function Dashboard() {
   const { streaks, bonuses, loading: streaksLoading } = useStudentStreaks(effectiveUserId);
   const { isTeacher, isLoading: teacherLoading } = useTeacherRole();
   const { celebration, isVisible: showCelebration, hideCelebration } = useCelebration();
+  const { bookmarks } = useBookmarks();
   const navigate = useNavigate();
   const [courseProgressMap, setCourseProgressMap] = useState<CourseProgress[]>([]);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -438,8 +440,14 @@ export default function Dashboard() {
                               <span className="text-4xl">{course.emoji}</span>
                               <div className="flex-1">
                                 <CardTitle className="text-lg">{course.title}</CardTitle>
-                                <CardDescription>
-                                  {course.total_lessons} lezioni · Livello {course.level}
+                                <CardDescription className="flex items-center gap-2">
+                                  <span>{course.total_lessons} lezioni · Livello {course.level}</span>
+                                  {bookmarks.filter(b => b.course_id === course.id).length > 0 && (
+                                    <span className="inline-flex items-center gap-1 text-xs text-primary">
+                                      <Bookmark className="w-3 h-3 fill-primary" />
+                                      {bookmarks.filter(b => b.course_id === course.id).length}
+                                    </span>
+                                  )}
                                 </CardDescription>
                               </div>
                             </div>

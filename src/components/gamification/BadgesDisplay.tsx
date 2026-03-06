@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Trophy, Lock } from "lucide-react";
+import { SocialShareButton } from "./SocialShareButton";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -167,6 +168,16 @@ export function BadgesDisplay({ userId, showAll = true, maxItems, title = "🏆 
                       <p className="text-xs font-medium mt-1">
                         +{badge.points_reward} punti bonus
                       </p>
+                    )}
+                    {badge.isEarned && (
+                      <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                        <SocialShareButton
+                          text={`Ho ottenuto il badge "${badge.name}" su TechLand!`}
+                          emoji={badge.emoji}
+                          size="sm"
+                          variant="ghost"
+                        />
+                      </div>
                     )}
                   </div>
                 </TooltipContent>

@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2, Trophy, Lock, ChevronDown } from "lucide-react";
+import { SocialShareButton } from "@/components/gamification/SocialShareButton";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -159,6 +160,16 @@ export function ParentBadgesSection({ childId, childName }: ParentBadgesSectionP
                         <p className="text-xs text-primary mt-2">
                           Ottenuto: {format(new Date(badge.earned_at), "d MMMM yyyy", { locale: it })}
                         </p>
+                      )}
+                      {badge.isEarned && (
+                        <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                          <SocialShareButton
+                            text={`${childName} ha ottenuto il badge "${badge.name}" su TechLand!`}
+                            emoji={badge.emoji}
+                            size="sm"
+                            variant="ghost"
+                          />
+                        </div>
                       )}
                     </div>
                   </TooltipContent>

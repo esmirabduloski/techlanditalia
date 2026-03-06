@@ -440,8 +440,14 @@ export default function Dashboard() {
                               <span className="text-4xl">{course.emoji}</span>
                               <div className="flex-1">
                                 <CardTitle className="text-lg">{course.title}</CardTitle>
-                                <CardDescription>
-                                  {course.total_lessons} lezioni · Livello {course.level}
+                                <CardDescription className="flex items-center gap-2">
+                                  <span>{course.total_lessons} lezioni · Livello {course.level}</span>
+                                  {bookmarks.filter(b => b.course_id === course.id).length > 0 && (
+                                    <span className="inline-flex items-center gap-1 text-xs text-primary">
+                                      <Bookmark className="w-3 h-3 fill-primary" />
+                                      {bookmarks.filter(b => b.course_id === course.id).length}
+                                    </span>
+                                  )}
                                 </CardDescription>
                               </div>
                             </div>

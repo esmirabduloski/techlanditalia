@@ -239,7 +239,7 @@ export default function Leaderboard() {
           <Card className="mb-6 border-primary/40 bg-primary/5">
             <CardContent className="p-4 flex items-center gap-4">
               <div className="text-2xl font-bold text-primary">#{currentUserRank.rank}</div>
-              <AvatarDisplay avatarId={currentUserRank.avatar_id} size="md" />
+              <AvatarDisplay avatarId={currentUserRank.avatar_id} level={getLevelFromPoints(currentUserRank.total_points).level} size="md" />
               <div className="flex-1">
                 <p className="font-semibold">{currentUserRank.full_name}</p>
                 <p className="text-sm text-muted-foreground">

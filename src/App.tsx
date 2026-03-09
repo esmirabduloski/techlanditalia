@@ -68,6 +68,7 @@ const AdminTeacherCalendar = lazy(() => import("./pages/admin/AdminTeacherCalend
 const AdminTeacherLinks = lazy(() => import("./pages/admin/AdminTeacherLinks"));
 const AdminBackups = lazy(() => import("./pages/admin/AdminBackups"));
 const Acquisti = lazy(() => import("./pages/area-riservata/Acquisti"));
+const Leaderboard = lazy(() => import("./pages/area-riservata/Leaderboard"));
 
 const queryClient = new QueryClient();
 

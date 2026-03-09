@@ -371,10 +371,14 @@ export default function Dashboard() {
                     attendanceStreak={streaks.attendance_streak}
                     bestHomeworkStreak={streaks.best_homework_streak}
                     bestAttendanceStreak={streaks.best_attendance_streak}
+                    lastHomeworkDate={streaks.last_homework_date}
+                    lastAttendanceDate={streaks.last_attendance_date}
                   />
-                  {bonuses.length > 0 && (
-                    <StreakBonusesDisplay bonuses={bonuses} />
-                  )}
+                  <StreakBonusesDisplay
+                    bonuses={bonuses}
+                    currentHomeworkStreak={streaks.homework_streak}
+                    currentAttendanceStreak={streaks.attendance_streak}
+                  />
                 </div>
                 <ChildAttendanceHistory childId={effectiveUserId} />
               </div>

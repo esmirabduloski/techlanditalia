@@ -1807,6 +1807,17 @@ export type Database = {
     Functions: {
       generate_slug: { Args: { title: string }; Returns: string }
       get_children_ids: { Args: { _parent_id: string }; Returns: string[] }
+      get_leaderboard: {
+        Args: { _filter_id?: string; _filter_type?: string; _limit?: number }
+        Returns: {
+          avatar_id: number
+          full_name: string
+          rank: number
+          role: string
+          total_points: number
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -290,55 +290,67 @@ export default function Dashboard() {
 
           {/* Stats Cards - Hide for parents and teachers */}
           {!effectiveIsTeacher && !effectiveIsParent && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-              <Card className="border-primary/20 bg-gradient-to-br from-card to-primary/5">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Livello Attuale</p>
-                      <LevelBadge points={profile.total_points} size="md" showProgress />
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <Card className="border-primary/20 bg-gradient-to-br from-card to-primary/5">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Livello Attuale</p>
+                        <LevelBadge points={profile.total_points} size="md" showProgress />
+                      </div>
+                      <Trophy className="w-10 h-10 text-primary/30" />
                     </div>
-                    <Trophy className="w-10 h-10 text-primary/30" />
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
 
-              <Card className="border-accent/20 bg-gradient-to-br from-card to-accent/5">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Punti Totali</p>
-                      <PointsDisplay points={profile.total_points} size="lg" />
+                <Card className="border-accent/20 bg-gradient-to-br from-card to-accent/5">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Punti Totali</p>
+                        <PointsDisplay points={profile.total_points} size="lg" />
+                      </div>
+                      <Target className="w-10 h-10 text-accent/30" />
                     </div>
-                    <Target className="w-10 h-10 text-accent/30" />
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
 
-              <Card className="border-secondary/20 bg-gradient-to-br from-card to-secondary/5">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Lezioni Completate</p>
-                      <p className="text-3xl font-bold text-foreground">{completedLessons}</p>
+                <Card className="border-secondary/20 bg-gradient-to-br from-card to-secondary/5">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Lezioni Completate</p>
+                        <p className="text-3xl font-bold text-foreground">{completedLessons}</p>
+                      </div>
+                      <BookOpen className="w-10 h-10 text-secondary/30" />
                     </div>
-                    <BookOpen className="w-10 h-10 text-secondary/30" />
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
 
-              <Card className="border-primary/20 bg-gradient-to-br from-card to-primary/5">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Lezioni Rimanenti</p>
-                      <p className="text-3xl font-bold text-foreground">{(profile as any).lesson_balance || 0}</p>
+                <Card className="border-primary/20 bg-gradient-to-br from-card to-primary/5">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Lezioni Rimanenti</p>
+                        <p className="text-3xl font-bold text-foreground">{(profile as any).lesson_balance || 0}</p>
+                      </div>
+                      <CreditCard className="w-10 h-10 text-primary/30" />
                     </div>
-                    <CreditCard className="w-10 h-10 text-primary/30" />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Leaderboard Link */}
+              <div className="mb-8">
+                <Button variant="outline" className="w-full md:w-auto" asChild>
+                  <Link to="/area-riservata/classifica">
+                    <Trophy className="w-4 h-4 mr-2" />
+                    🏅 Classifica Studenti
+                  </Link>
+                </Button>
+              </div>
+            </>
           )}
 
           {/* Teacher Stats Card */}

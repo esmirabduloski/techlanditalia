@@ -68,6 +68,7 @@ const AdminTeacherCalendar = lazy(() => import("./pages/admin/AdminTeacherCalend
 const AdminTeacherLinks = lazy(() => import("./pages/admin/AdminTeacherLinks"));
 const AdminBackups = lazy(() => import("./pages/admin/AdminBackups"));
 const Acquisti = lazy(() => import("./pages/area-riservata/Acquisti"));
+const Leaderboard = lazy(() => import("./pages/area-riservata/Leaderboard"));
 
 const queryClient = new QueryClient();
 
@@ -107,6 +108,7 @@ const App = () => (
                     <Route path="/area-riservata/compito/:homeworkId" element={<HomeworkView />} />
                     <Route path="/area-riservata/compito-dettaglio/:homeworkId" element={<HomeworkDetail />} />
                     <Route path="/area-riservata/acquisti" element={<Acquisti />} />
+                    <Route path="/area-riservata/classifica" element={<Leaderboard />} />
                     <Route path="/admin/login" element={<AdminLogin />} />
                     <Route path="/admin" element={<AdminDashboard />} />
                     <Route path="/admin/corsi" element={<AdminCourses />} />

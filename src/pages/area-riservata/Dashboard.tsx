@@ -339,6 +339,16 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Leaderboard Link */}
+            <div className="mb-8">
+              <Button variant="outline" className="w-full md:w-auto" asChild>
+                <Link to="/area-riservata/classifica">
+                  <Trophy className="w-4 h-4 mr-2" />
+                  🏅 Classifica Studenti
+                </Link>
+              </Button>
+            </div>
           )}
 
           {/* Teacher Stats Card */}

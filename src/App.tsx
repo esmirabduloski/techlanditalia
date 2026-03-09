@@ -108,6 +108,7 @@ const App = () => (
                     <Route path="/area-riservata/compito/:homeworkId" element={<HomeworkView />} />
                     <Route path="/area-riservata/compito-dettaglio/:homeworkId" element={<HomeworkDetail />} />
                     <Route path="/area-riservata/acquisti" element={<Acquisti />} />
+                    <Route path="/area-riservata/classifica" element={<Leaderboard />} />
                     <Route path="/admin/login" element={<AdminLogin />} />
                     <Route path="/admin" element={<AdminDashboard />} />
                     <Route path="/admin/corsi" element={<AdminCourses />} />

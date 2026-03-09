@@ -295,7 +295,7 @@ export default function Leaderboard() {
                         🎭
                       </div>
                     ) : (
-                      <AvatarDisplay avatarId={entry.avatar_id} size="sm" />
+                      <AvatarDisplay avatarId={entry.avatar_id} level={level.level} size="sm" />
                     )}
 
                     {/* Name & Level */}

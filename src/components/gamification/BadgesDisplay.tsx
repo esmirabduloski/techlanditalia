@@ -27,9 +27,12 @@ interface BadgesDisplayProps {
   title?: string;
 }
 
-export function BadgesDisplay({ userId, showAll = true, maxItems, title = "🏆 Badge e Achievement" }: BadgesDisplayProps) {
+const INITIAL_BADGES_COUNT = 10;
+
+export function BadgesDisplay({ userId, showAll: showAllProp = true, maxItems, title = "🏆 Badge e Achievement" }: BadgesDisplayProps) {
   const [badges, setBadges] = useState<BadgeData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     if (userId) {

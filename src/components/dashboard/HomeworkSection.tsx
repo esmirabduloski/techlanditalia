@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ClipboardList, CheckCircle2, Clock, AlertCircle, Loader2, Paperclip, Download, AlertTriangle, CalendarClock, MessageSquare, ArrowUpDown, Filter } from "lucide-react";
+import { ClipboardList, CheckCircle2, Clock, AlertCircle, Loader2, Paperclip, Download, AlertTriangle, CalendarClock, MessageSquare, ArrowUpDown, Filter, ChevronDown } from "lucide-react";
 
 interface Attachment {
   name: string;

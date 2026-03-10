@@ -257,7 +257,13 @@ export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupI
                   )}
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                  {courseData.lessons.map((lesson) => {
+                  {courseData.lessons
+                    .filter((lesson) => {
+                      if (showCompleted) return true;
+                      const date = new Date(lesson.lesson_date);
+                      return isToday(date) || isFuture(date);
+                    })
+                    .map((lesson) => {
                     const date = new Date(lesson.lesson_date);
                     const isPastLesson = isPast(date) && !isToday(date);
                     const isTodayLesson = isToday(date);

@@ -258,6 +258,31 @@ function ChildDashboard({ child }: { child: Child }) {
                 groupIds={selectedCourse.groupIds}
               />
 
+              {/* Streaks Section */}
+              {streaks && !streaksLoading && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    🔥 Streak di {child.full_name}
+                  </h3>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className="space-y-4">
+                      <StreakDisplay
+                        homeworkStreak={streaks.homework_streak}
+                        attendanceStreak={streaks.attendance_streak}
+                        bestHomeworkStreak={streaks.best_homework_streak}
+                        bestAttendanceStreak={streaks.best_attendance_streak}
+                      />
+                      {bonuses.length > 0 && (
+                        <StreakBonusesDisplay bonuses={bonuses} />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Badges - global */}
+              <ParentBadgesSection childId={child.id} childName={child.full_name} />
+
               {/* Attendance & Homework History side by side - filtered by course */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <ChildAttendanceHistory

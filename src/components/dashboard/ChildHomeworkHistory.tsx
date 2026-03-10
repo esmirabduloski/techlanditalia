@@ -357,8 +357,22 @@ export function ChildHomeworkHistory({ childId, childName, courseIds: filterCour
                     );
                   })}
                 </div>
+                {hasMoreLessons && !showAll && (
+                  <div className="flex justify-center pt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowAll(true)}
+                      className="gap-2"
+                    >
+                      <ChevronDown className="w-4 h-4" />
+                      Vedi Altri ({lessons.length - INITIAL_ITEMS_COUNT} rimanenti)
+                    </Button>
+                  </div>
+                )}
               </div>
-            ))}
+              );
+            })}
           </div>
         </ScrollArea>
         

@@ -37,7 +37,7 @@ const DEBOUNCE_MS = 1000;
 export function useTaskEditorDraft({ courseId, lessonId, taskId, isEditing }: UseTaskEditorDraftOptions) {
   const [hasDraft, setHasDraft] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initialLoadDoneRef = useRef(false);
 
   // Generate a unique key for this draft

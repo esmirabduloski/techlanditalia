@@ -370,6 +370,13 @@ export default function Dashboard() {
             </div>
           )}
 
+          {/* Lesson Schedule - FIRST for students */}
+          {effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (
+            <div className="mb-8">
+              <StudentLessonSchedule studentId={effectiveUserId} />
+            </div>
+          )}
+
           {/* Streaks Section - Hide for teachers and parents */}
           {streaks && !effectiveIsTeacher && !effectiveIsParent && (
             <div className="mb-8">
@@ -483,13 +490,6 @@ export default function Dashboard() {
                   })}
                 </div>
               )}
-            </div>
-          )}
-
-          {/* Lesson Schedule - FIRST for students, Hide for teachers and parents */}
-          {effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (
-            <div className="mb-8">
-              <StudentLessonSchedule studentId={effectiveUserId} />
             </div>
           )}
 

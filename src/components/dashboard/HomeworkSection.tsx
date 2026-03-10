@@ -38,12 +38,15 @@ interface HomeworkWithDetails {
 type FilterStatus = "all" | "pending" | "graded" | "expired" | "in_review";
 type SortOption = "deadline" | "course" | "status" | "points";
 
+const INITIAL_HOMEWORK_COUNT = 4;
+
 export function HomeworkSection() {
   const { user } = useAuth();
   const [homework, setHomework] = useState<HomeworkWithDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const [sortBy, setSortBy] = useState<SortOption>("deadline");
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     if (user) {

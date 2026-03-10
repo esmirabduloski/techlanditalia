@@ -124,9 +124,10 @@ export function BadgesDisplay({ userId, showAll: showAllProp = true, maxItems, t
           </CardContent>
         </Card>
       ) : (
+        <>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
           <TooltipProvider>
-            {finalBadges.map((badge) => (
+            {limitedBadges.map((badge) => (
               <Tooltip key={badge.id}>
                 <TooltipTrigger asChild>
                   <Card

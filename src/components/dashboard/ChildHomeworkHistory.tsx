@@ -32,6 +32,7 @@ export function ChildHomeworkHistory({ childId, childName, courseIds: filterCour
   const [homeworkHistory, setHomeworkHistory] = useState<Record<string, HomeworkStatus[]>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     if (childId) {

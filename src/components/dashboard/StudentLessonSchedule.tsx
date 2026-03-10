@@ -40,7 +40,6 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
-  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [showCompleted, setShowCompleted] = useState(false);
 
   useEffect(() => {
@@ -145,13 +144,7 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
         
         // Set default selected course (first course found)
         if (!selectedCourseId && courseIds.length > 0) {
-          const firstCourseId = courseIds[0] as string;
-          setSelectedCourseId(firstCourseId);
-          // Also set default group for that course
-          const firstGroup = typedLessons.find(l => l.group.course.id === firstCourseId);
-          if (firstGroup && !selectedGroupId) {
-            setSelectedGroupId(firstGroup.group.id);
-          }
+          setSelectedCourseId(courseIds[0] as string);
         }
       }
     } catch (err: any) {
@@ -187,34 +180,11 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
     return Array.from(map.values());
   }, [lessons]);
 
-  // Build group options for the selected course
-  const groupOptions = useMemo(() => {
-    const map = new Map<string, { id: string; title: string }>();
-    lessons
-      .filter(l => !selectedCourseId || l.group.course.id === selectedCourseId)
-      .forEach(l => {
-        if (!map.has(l.group.id)) {
-          map.set(l.group.id, { id: l.group.id, title: l.group.title });
-        }
-      });
-    return Array.from(map.values());
-  }, [lessons, selectedCourseId]);
-
-  // Auto-select first group when course changes
-  useEffect(() => {
-    if (groupOptions.length > 0 && !groupOptions.find(g => g.id === selectedGroupId)) {
-      setSelectedGroupId(groupOptions[0].id);
-    }
-  }, [groupOptions, selectedGroupId]);
-
-  // Filter lessons by selected course AND group
+  // Filter lessons by selected course
   const filteredLessons = useMemo(() => {
     let result = lessons;
     if (selectedCourseId) {
       result = result.filter(l => l.group.course.id === selectedCourseId);
-    }
-    if (selectedGroupId) {
-      result = result.filter(l => l.group.id === selectedGroupId);
     }
     if (!showCompleted) {
       result = result.filter(l => {
@@ -223,7 +193,7 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
       });
     }
     return result;
-  }, [lessons, selectedCourseId, selectedGroupId, showCompleted]);
+  }, [lessons, selectedCourseId, showCompleted]);
 
   // Find today's lessons with meeting links (across ALL courses)
   const todayLessons = useMemo(() => 
@@ -285,10 +255,7 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
           </CardTitle>
           <div className="flex items-center gap-3 flex-wrap">
             {courseOptions.length > 1 && (
-              <Select value={selectedCourseId || ""} onValueChange={(val) => {
-                setSelectedCourseId(val);
-                setSelectedGroupId(null); // reset group when course changes
-              }}>
+              <Select value={selectedCourseId || ""} onValueChange={setSelectedCourseId}>
                 <SelectTrigger className="w-[200px] h-8 text-sm">
                   <SelectValue placeholder="Seleziona corso" />
                 </SelectTrigger>
@@ -296,20 +263,6 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
                   {courseOptions.map(c => (
                     <SelectItem key={c.id} value={c.id}>
                       {c.emoji} {c.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-            {groupOptions.length > 1 && (
-              <Select value={selectedGroupId || ""} onValueChange={setSelectedGroupId}>
-                <SelectTrigger className="w-[180px] h-8 text-sm">
-                  <SelectValue placeholder="Seleziona gruppo" />
-                </SelectTrigger>
-                <SelectContent>
-                  {groupOptions.map(g => (
-                    <SelectItem key={g.id} value={g.id}>
-                      {g.title}
                     </SelectItem>
                   ))}
                 </SelectContent>

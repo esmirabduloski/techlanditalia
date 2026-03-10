@@ -222,9 +222,6 @@ function ChildDashboard({ child }: { child: Child }) {
         </Card>
       </div>
 
-      {/* Badges - global */}
-      <ParentBadgesSection childId={child.id} childName={child.full_name} />
-
       {/* Course Selector */}
       {!coursesLoading && courses.length > 0 && (
         <div className="space-y-4">
@@ -254,6 +251,13 @@ function ChildDashboard({ child }: { child: Child }) {
 
           {selectedCourse && (
             <div className="space-y-6">
+              {/* Lesson Calendar - TOP, filtered by course */}
+              <ChildLessonCalendar
+                childId={child.id}
+                childName={child.full_name}
+                groupIds={selectedCourse.groupIds}
+              />
+
               {/* Streaks Section */}
               {streaks && !streaksLoading && (
                 <div className="space-y-4">
@@ -276,12 +280,8 @@ function ChildDashboard({ child }: { child: Child }) {
                 </div>
               )}
 
-              {/* Lesson Calendar - filtered by course */}
-              <ChildLessonCalendar
-                childId={child.id}
-                childName={child.full_name}
-                groupIds={selectedCourse.groupIds}
-              />
+              {/* Badges - global */}
+              <ParentBadgesSection childId={child.id} childName={child.full_name} />
 
               {/* Attendance & Homework History side by side - filtered by course */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

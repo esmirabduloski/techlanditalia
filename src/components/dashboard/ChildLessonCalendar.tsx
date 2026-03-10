@@ -4,8 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, CalendarDays, Clock, AlertCircle, RefreshCw, Video } from "lucide-react";
+import { Loader2, CalendarDays, Clock, AlertCircle, RefreshCw, Video, Eye, EyeOff } from "lucide-react";
 import { format, isPast, isToday, isFuture } from "date-fns";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
@@ -38,6 +40,7 @@ export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupI
   const [lessons, setLessons] = useState<LessonSchedule[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showCompleted, setShowCompleted] = useState(false);
 
   useEffect(() => {
     if (childId) {
@@ -223,10 +226,23 @@ export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupI
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <CalendarDays className="h-5 w-5 text-primary" />
-          Calendario Lezioni di {childName}
-        </CardTitle>
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <CalendarDays className="h-5 w-5 text-primary" />
+            Calendario Lezioni di {childName}
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            {showCompleted ? <Eye className="w-4 h-4 text-muted-foreground" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
+            <Label htmlFor="show-completed" className="text-xs text-muted-foreground cursor-pointer">
+              Completate
+            </Label>
+            <Switch
+              id="show-completed"
+              checked={showCompleted}
+              onCheckedChange={setShowCompleted}
+            />
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[300px]">
@@ -241,7 +257,13 @@ export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupI
                   )}
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                  {courseData.lessons.map((lesson) => {
+                  {courseData.lessons
+                    .filter((lesson) => {
+                      if (showCompleted) return true;
+                      const date = new Date(lesson.lesson_date);
+                      return isToday(date) || isFuture(date);
+                    })
+                    .map((lesson) => {
                     const date = new Date(lesson.lesson_date);
                     const isPastLesson = isPast(date) && !isToday(date);
                     const isTodayLesson = isToday(date);

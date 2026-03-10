@@ -4,8 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, ClipboardCheck, CheckCircle2, XCircle, Minus, AlertCircle, RefreshCw } from "lucide-react";
+import { Loader2, ClipboardCheck, CheckCircle2, XCircle, Minus, AlertCircle, RefreshCw, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const INITIAL_ITEMS_COUNT = 8;
 
 interface HomeworkStatus {
   lessonNumber: number;
@@ -30,6 +32,7 @@ export function ChildHomeworkHistory({ childId, childName, courseIds: filterCour
   const [homeworkHistory, setHomeworkHistory] = useState<Record<string, HomeworkStatus[]>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     if (childId) {
@@ -266,11 +269,15 @@ export function ChildHomeworkHistory({ childId, childName, courseIds: filterCour
       <CardContent>
         <ScrollArea className="h-[250px]">
           <div className="space-y-6">
-            {Object.entries(homeworkHistory).map(([courseTitle, lessons]) => (
+            {Object.entries(homeworkHistory).map(([courseTitle, lessons]) => {
+              const displayLessons = showAll ? lessons : lessons.slice(0, INITIAL_ITEMS_COUNT);
+              const hasMoreLessons = lessons.length > INITIAL_ITEMS_COUNT;
+              
+              return (
               <div key={courseTitle} className="space-y-3">
                 <h4 className="font-medium text-foreground">{courseTitle}</h4>
                 <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
-                  {lessons.map((lesson) => {
+                  {displayLessons.map((lesson) => {
                     const lessonLabel = `L${lesson.lessonNumber}`;
                     
                     if (!lesson.hasHomework) {
@@ -350,8 +357,22 @@ export function ChildHomeworkHistory({ childId, childName, courseIds: filterCour
                     );
                   })}
                 </div>
+                {hasMoreLessons && !showAll && (
+                  <div className="flex justify-center pt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowAll(true)}
+                      className="gap-2"
+                    >
+                      <ChevronDown className="w-4 h-4" />
+                      Vedi Altri ({lessons.length - INITIAL_ITEMS_COUNT} rimanenti)
+                    </Button>
+                  </div>
+                )}
               </div>
-            ))}
+              );
+            })}
           </div>
         </ScrollArea>
         

@@ -40,6 +40,7 @@ export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupI
   const [lessons, setLessons] = useState<LessonSchedule[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showCompleted, setShowCompleted] = useState(false);
 
   useEffect(() => {
     if (childId) {

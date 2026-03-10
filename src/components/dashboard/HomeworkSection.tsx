@@ -373,7 +373,7 @@ export function HomeworkSection() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {filteredAndSorted.map((hw) => {
+          {(showAll ? filteredAndSorted : filteredAndSorted.slice(0, INITIAL_HOMEWORK_COUNT)).map((hw) => {
             const deadlineBadge = getDeadlineBadge(hw);
             const effectiveStatus = getEffectiveStatus(hw);
             const isUrgent = !hw.is_submitted && hw.due_date && (new Date(hw.due_date).getTime() - new Date().getTime()) / (1000 * 60 * 60) <= 48;

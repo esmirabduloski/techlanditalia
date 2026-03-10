@@ -111,7 +111,7 @@ export function BadgesDisplay({ userId, showAll: showAllProp = true, maxItems, t
         </Badge>
       </div>
 
-      {finalBadges.length === 0 ? (
+      {limitedBadges.length === 0 ? (
         <Card className="border-dashed">
           <CardContent className="py-8 text-center">
             <Trophy className="w-10 h-10 text-muted-foreground mx-auto mb-3" />

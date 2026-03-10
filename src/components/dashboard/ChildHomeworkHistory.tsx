@@ -269,11 +269,15 @@ export function ChildHomeworkHistory({ childId, childName, courseIds: filterCour
       <CardContent>
         <ScrollArea className="h-[250px]">
           <div className="space-y-6">
-            {Object.entries(homeworkHistory).map(([courseTitle, lessons]) => (
+            {Object.entries(homeworkHistory).map(([courseTitle, lessons]) => {
+              const displayLessons = showAll ? lessons : lessons.slice(0, INITIAL_ITEMS_COUNT);
+              const hasMoreLessons = lessons.length > INITIAL_ITEMS_COUNT;
+              
+              return (
               <div key={courseTitle} className="space-y-3">
                 <h4 className="font-medium text-foreground">{courseTitle}</h4>
                 <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
-                  {lessons.map((lesson) => {
+                  {displayLessons.map((lesson) => {
                     const lessonLabel = `L${lesson.lessonNumber}`;
                     
                     if (!lesson.hasHomework) {

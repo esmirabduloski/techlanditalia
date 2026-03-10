@@ -285,7 +285,10 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
           </CardTitle>
           <div className="flex items-center gap-3 flex-wrap">
             {courseOptions.length > 1 && (
-              <Select value={selectedCourseId || ""} onValueChange={setSelectedCourseId}>
+              <Select value={selectedCourseId || ""} onValueChange={(val) => {
+                setSelectedCourseId(val);
+                setSelectedGroupId(null); // reset group when course changes
+              }}>
                 <SelectTrigger className="w-[200px] h-8 text-sm">
                   <SelectValue placeholder="Seleziona corso" />
                 </SelectTrigger>
@@ -293,6 +296,20 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
                   {courseOptions.map(c => (
                     <SelectItem key={c.id} value={c.id}>
                       {c.emoji} {c.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            {groupOptions.length > 1 && (
+              <Select value={selectedGroupId || ""} onValueChange={setSelectedGroupId}>
+                <SelectTrigger className="w-[180px] h-8 text-sm">
+                  <SelectValue placeholder="Seleziona gruppo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {groupOptions.map(g => (
+                    <SelectItem key={g.id} value={g.id}>
+                      {g.title}
                     </SelectItem>
                   ))}
                 </SelectContent>

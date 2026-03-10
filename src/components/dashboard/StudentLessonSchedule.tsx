@@ -145,7 +145,13 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
         
         // Set default selected course (first course found)
         if (!selectedCourseId && courseIds.length > 0) {
-          setSelectedCourseId(courseIds[0] as string);
+          const firstCourseId = courseIds[0] as string;
+          setSelectedCourseId(firstCourseId);
+          // Also set default group for that course
+          const firstGroup = typedLessons.find(l => l.group.course.id === firstCourseId);
+          if (firstGroup && !selectedGroupId) {
+            setSelectedGroupId(firstGroup.group.id);
+          }
         }
       }
     } catch (err: any) {

@@ -182,9 +182,18 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
 
   // Filter lessons by selected course
   const filteredLessons = useMemo(() => {
-    if (!selectedCourseId) return lessons;
-    return lessons.filter(l => l.group.course.id === selectedCourseId);
-  }, [lessons, selectedCourseId]);
+    let result = lessons;
+    if (selectedCourseId) {
+      result = result.filter(l => l.group.course.id === selectedCourseId);
+    }
+    if (!showCompleted) {
+      result = result.filter(l => {
+        const date = new Date(l.lesson_date);
+        return isToday(date) || isFuture(date);
+      });
+    }
+    return result;
+  }, [lessons, selectedCourseId, showCompleted]);
 
   // Find today's lessons with meeting links (across ALL courses)
   const todayLessons = useMemo(() => 

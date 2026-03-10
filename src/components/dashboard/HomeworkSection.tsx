@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ClipboardList, CheckCircle2, Clock, AlertCircle, Loader2, Paperclip, Download, AlertTriangle, CalendarClock, MessageSquare, ArrowUpDown, Filter } from "lucide-react";
+import { ClipboardList, CheckCircle2, Clock, AlertCircle, Loader2, Paperclip, Download, AlertTriangle, CalendarClock, MessageSquare, ArrowUpDown, Filter, ChevronDown } from "lucide-react";
 
 interface Attachment {
   name: string;
@@ -38,12 +38,15 @@ interface HomeworkWithDetails {
 type FilterStatus = "all" | "pending" | "graded" | "expired" | "in_review";
 type SortOption = "deadline" | "course" | "status" | "points";
 
+const INITIAL_HOMEWORK_COUNT = 4;
+
 export function HomeworkSection() {
   const { user } = useAuth();
   const [homework, setHomework] = useState<HomeworkWithDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const [sortBy, setSortBy] = useState<SortOption>("deadline");
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -370,7 +373,7 @@ export function HomeworkSection() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {filteredAndSorted.map((hw) => {
+          {(showAll ? filteredAndSorted : filteredAndSorted.slice(0, INITIAL_HOMEWORK_COUNT)).map((hw) => {
             const deadlineBadge = getDeadlineBadge(hw);
             const effectiveStatus = getEffectiveStatus(hw);
             const isUrgent = !hw.is_submitted && hw.due_date && (new Date(hw.due_date).getTime() - new Date().getTime()) / (1000 * 60 * 60) <= 48;
@@ -483,6 +486,18 @@ export function HomeworkSection() {
               </Card>
             );
           })}
+          {!showAll && filteredAndSorted.length > INITIAL_HOMEWORK_COUNT && (
+            <div className="flex justify-center">
+              <Button
+                variant="outline"
+                onClick={() => setShowAll(true)}
+                className="gap-2"
+              >
+                <ChevronDown className="w-4 h-4" />
+                Vedi Altri ({filteredAndSorted.length - INITIAL_HOMEWORK_COUNT} rimanenti)
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>

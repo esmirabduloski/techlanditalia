@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Trophy, Lock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loader2, Trophy, Lock, ChevronDown } from "lucide-react";
 import { SocialShareButton } from "./SocialShareButton";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -26,9 +27,12 @@ interface BadgesDisplayProps {
   title?: string;
 }
 
-export function BadgesDisplay({ userId, showAll = true, maxItems, title = "🏆 Badge e Achievement" }: BadgesDisplayProps) {
+const INITIAL_BADGES_COUNT = 10;
+
+export function BadgesDisplay({ userId, showAll: showAllProp = true, maxItems, title = "🏆 Badge e Achievement" }: BadgesDisplayProps) {
   const [badges, setBadges] = useState<BadgeData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     if (userId) {
@@ -90,8 +94,9 @@ export function BadgesDisplay({ userId, showAll = true, maxItems, title = "🏆 
     );
   }
 
-  const displayBadges = showAll ? badges : badges.filter((b) => b.isEarned);
-  const finalBadges = maxItems ? displayBadges.slice(0, maxItems) : displayBadges;
+  const displayBadges = showAllProp ? badges : badges.filter((b) => b.isEarned);
+  const limitedBadges = maxItems ? displayBadges.slice(0, maxItems) : expanded ? displayBadges : displayBadges.slice(0, INITIAL_BADGES_COUNT);
+  const hasMore = !maxItems && displayBadges.length > INITIAL_BADGES_COUNT;
   const earnedCount = badges.filter((b) => b.isEarned).length;
 
   return (
@@ -106,7 +111,7 @@ export function BadgesDisplay({ userId, showAll = true, maxItems, title = "🏆 
         </Badge>
       </div>
 
-      {finalBadges.length === 0 ? (
+      {limitedBadges.length === 0 ? (
         <Card className="border-dashed">
           <CardContent className="py-8 text-center">
             <Trophy className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
@@ -119,9 +124,10 @@ export function BadgesDisplay({ userId, showAll = true, maxItems, title = "🏆 
           </CardContent>
         </Card>
       ) : (
+        <>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
           <TooltipProvider>
-            {finalBadges.map((badge) => (
+            {limitedBadges.map((badge) => (
               <Tooltip key={badge.id}>
                 <TooltipTrigger asChild>
                   <Card
@@ -185,6 +191,19 @@ export function BadgesDisplay({ userId, showAll = true, maxItems, title = "🏆 
             ))}
           </TooltipProvider>
         </div>
+        {hasMore && !expanded && (
+          <div className="flex justify-center">
+            <Button
+              variant="outline"
+              onClick={() => setExpanded(true)}
+              className="gap-2"
+            >
+              <ChevronDown className="w-4 h-4" />
+              Vedi Altri ({displayBadges.length - INITIAL_BADGES_COUNT} rimanenti)
+            </Button>
+          </div>
+        )}
+        </>
       )}
     </div>
   );

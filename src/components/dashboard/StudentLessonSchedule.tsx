@@ -4,7 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, CalendarDays, Clock, Video } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Loader2, CalendarDays, Clock, Video, Eye, EyeOff } from "lucide-react";
 import { format, isPast, isToday, isFuture } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -38,6 +40,7 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [showCompleted, setShowCompleted] = useState(false);
 
   useEffect(() => {
     if (studentId) {
@@ -179,9 +182,18 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
 
   // Filter lessons by selected course
   const filteredLessons = useMemo(() => {
-    if (!selectedCourseId) return lessons;
-    return lessons.filter(l => l.group.course.id === selectedCourseId);
-  }, [lessons, selectedCourseId]);
+    let result = lessons;
+    if (selectedCourseId) {
+      result = result.filter(l => l.group.course.id === selectedCourseId);
+    }
+    if (!showCompleted) {
+      result = result.filter(l => {
+        const date = new Date(l.lesson_date);
+        return isToday(date) || isFuture(date);
+      });
+    }
+    return result;
+  }, [lessons, selectedCourseId, showCompleted]);
 
   // Find today's lessons with meeting links (across ALL courses)
   const todayLessons = useMemo(() => 
@@ -241,20 +253,33 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
             <CalendarDays className="h-5 w-5 text-primary" />
             Calendario Lezioni
           </CardTitle>
-          {courseOptions.length > 1 && (
-            <Select value={selectedCourseId || ""} onValueChange={setSelectedCourseId}>
-              <SelectTrigger className="w-[200px] h-8 text-sm">
-                <SelectValue placeholder="Seleziona corso" />
-              </SelectTrigger>
-              <SelectContent>
-                {courseOptions.map(c => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.emoji} {c.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+          <div className="flex items-center gap-3 flex-wrap">
+            {courseOptions.length > 1 && (
+              <Select value={selectedCourseId || ""} onValueChange={setSelectedCourseId}>
+                <SelectTrigger className="w-[200px] h-8 text-sm">
+                  <SelectValue placeholder="Seleziona corso" />
+                </SelectTrigger>
+                <SelectContent>
+                  {courseOptions.map(c => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.emoji} {c.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            <div className="flex items-center gap-2">
+              {showCompleted ? <Eye className="w-4 h-4 text-muted-foreground" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
+              <Label htmlFor="show-completed-student" className="text-xs text-muted-foreground cursor-pointer">
+                Completate
+              </Label>
+              <Switch
+                id="show-completed-student"
+                checked={showCompleted}
+                onCheckedChange={setShowCompleted}
+              />
+            </div>
+          </div>
         </div>
       </CardHeader>
       <CardContent>

@@ -187,11 +187,34 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
     return Array.from(map.values());
   }, [lessons]);
 
-  // Filter lessons by selected course
+  // Build group options for the selected course
+  const groupOptions = useMemo(() => {
+    const map = new Map<string, { id: string; title: string }>();
+    lessons
+      .filter(l => !selectedCourseId || l.group.course.id === selectedCourseId)
+      .forEach(l => {
+        if (!map.has(l.group.id)) {
+          map.set(l.group.id, { id: l.group.id, title: l.group.title });
+        }
+      });
+    return Array.from(map.values());
+  }, [lessons, selectedCourseId]);
+
+  // Auto-select first group when course changes
+  useEffect(() => {
+    if (groupOptions.length > 0 && !groupOptions.find(g => g.id === selectedGroupId)) {
+      setSelectedGroupId(groupOptions[0].id);
+    }
+  }, [groupOptions, selectedGroupId]);
+
+  // Filter lessons by selected course AND group
   const filteredLessons = useMemo(() => {
     let result = lessons;
     if (selectedCourseId) {
       result = result.filter(l => l.group.course.id === selectedCourseId);
+    }
+    if (selectedGroupId) {
+      result = result.filter(l => l.group.id === selectedGroupId);
     }
     if (!showCompleted) {
       result = result.filter(l => {
@@ -200,7 +223,7 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
       });
     }
     return result;
-  }, [lessons, selectedCourseId, showCompleted]);
+  }, [lessons, selectedCourseId, selectedGroupId, showCompleted]);
 
   // Find today's lessons with meeting links (across ALL courses)
   const todayLessons = useMemo(() => 

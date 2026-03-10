@@ -40,6 +40,7 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [showCompleted, setShowCompleted] = useState(false);
 
   useEffect(() => {

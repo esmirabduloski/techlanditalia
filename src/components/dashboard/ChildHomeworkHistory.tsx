@@ -4,8 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, ClipboardCheck, CheckCircle2, XCircle, Minus, AlertCircle, RefreshCw } from "lucide-react";
+import { Loader2, ClipboardCheck, CheckCircle2, XCircle, Minus, AlertCircle, RefreshCw, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const INITIAL_ITEMS_COUNT = 8;
 
 interface HomeworkStatus {
   lessonNumber: number;

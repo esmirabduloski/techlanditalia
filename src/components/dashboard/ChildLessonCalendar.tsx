@@ -226,10 +226,23 @@ export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupI
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <CalendarDays className="h-5 w-5 text-primary" />
-          Calendario Lezioni di {childName}
-        </CardTitle>
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <CalendarDays className="h-5 w-5 text-primary" />
+            Calendario Lezioni di {childName}
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            {showCompleted ? <Eye className="w-4 h-4 text-muted-foreground" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
+            <Label htmlFor="show-completed" className="text-xs text-muted-foreground cursor-pointer">
+              Completate
+            </Label>
+            <Switch
+              id="show-completed"
+              checked={showCompleted}
+              onCheckedChange={setShowCompleted}
+            />
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[300px]">

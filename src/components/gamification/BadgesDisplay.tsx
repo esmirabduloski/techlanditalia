@@ -94,8 +94,9 @@ export function BadgesDisplay({ userId, showAll: showAllProp = true, maxItems, t
     );
   }
 
-  const displayBadges = showAll ? badges : badges.filter((b) => b.isEarned);
-  const finalBadges = maxItems ? displayBadges.slice(0, maxItems) : displayBadges;
+  const displayBadges = showAllProp ? badges : badges.filter((b) => b.isEarned);
+  const limitedBadges = maxItems ? displayBadges.slice(0, maxItems) : expanded ? displayBadges : displayBadges.slice(0, INITIAL_BADGES_COUNT);
+  const hasMore = !maxItems && displayBadges.length > INITIAL_BADGES_COUNT;
   const earnedCount = badges.filter((b) => b.isEarned).length;
 
   return (

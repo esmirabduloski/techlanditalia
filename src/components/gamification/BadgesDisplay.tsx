@@ -191,6 +191,19 @@ export function BadgesDisplay({ userId, showAll: showAllProp = true, maxItems, t
             ))}
           </TooltipProvider>
         </div>
+        {hasMore && !expanded && (
+          <div className="flex justify-center">
+            <Button
+              variant="outline"
+              onClick={() => setExpanded(true)}
+              className="gap-2"
+            >
+              <ChevronDown className="w-4 h-4" />
+              Vedi Altri ({displayBadges.length - INITIAL_BADGES_COUNT} rimanenti)
+            </Button>
+          </div>
+        )}
+        </>
       )}
     </div>
   );

@@ -486,6 +486,18 @@ export function HomeworkSection() {
               </Card>
             );
           })}
+          {!showAll && filteredAndSorted.length > INITIAL_HOMEWORK_COUNT && (
+            <div className="flex justify-center">
+              <Button
+                variant="outline"
+                onClick={() => setShowAll(true)}
+                className="gap-2"
+              >
+                <ChevronDown className="w-4 h-4" />
+                Vedi Altri ({filteredAndSorted.length - INITIAL_HOMEWORK_COUNT} rimanenti)
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>

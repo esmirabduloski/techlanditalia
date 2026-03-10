@@ -486,19 +486,13 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Lesson Schedule - Hide for teachers and parents */}
+          {/* Lesson Schedule - FIRST for students, Hide for teachers and parents */}
           {effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (
             <div className="mb-8">
               <StudentLessonSchedule studentId={effectiveUserId} />
             </div>
           )}
 
-          {/* Teacher Info Card - Only for students */}
-          {effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (
-            <div className="mb-8">
-              <TeacherBioCard studentId={effectiveUserId} />
-            </div>
-          )}
           {/* Badges Section - Hide for teachers and parents */}
           {effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (
             <div className="mb-8">
@@ -510,6 +504,13 @@ export default function Dashboard() {
           {!effectiveIsTeacher && !effectiveIsParent && (
             <div className="mb-8">
               <HomeworkSection />
+            </div>
+          )}
+
+          {/* Teacher Info Card - Only for students */}
+          {effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (
+            <div className="mb-8">
+              <TeacherBioCard studentId={effectiveUserId} />
             </div>
           )}
 

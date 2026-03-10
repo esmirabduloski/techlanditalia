@@ -253,20 +253,33 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
             <CalendarDays className="h-5 w-5 text-primary" />
             Calendario Lezioni
           </CardTitle>
-          {courseOptions.length > 1 && (
-            <Select value={selectedCourseId || ""} onValueChange={setSelectedCourseId}>
-              <SelectTrigger className="w-[200px] h-8 text-sm">
-                <SelectValue placeholder="Seleziona corso" />
-              </SelectTrigger>
-              <SelectContent>
-                {courseOptions.map(c => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.emoji} {c.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+          <div className="flex items-center gap-3 flex-wrap">
+            {courseOptions.length > 1 && (
+              <Select value={selectedCourseId || ""} onValueChange={setSelectedCourseId}>
+                <SelectTrigger className="w-[200px] h-8 text-sm">
+                  <SelectValue placeholder="Seleziona corso" />
+                </SelectTrigger>
+                <SelectContent>
+                  {courseOptions.map(c => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.emoji} {c.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            <div className="flex items-center gap-2">
+              {showCompleted ? <Eye className="w-4 h-4 text-muted-foreground" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
+              <Label htmlFor="show-completed-student" className="text-xs text-muted-foreground cursor-pointer">
+                Completate
+              </Label>
+              <Switch
+                id="show-completed-student"
+                checked={showCompleted}
+                onCheckedChange={setShowCompleted}
+              />
+            </div>
+          </div>
         </div>
       </CardHeader>
       <CardContent>

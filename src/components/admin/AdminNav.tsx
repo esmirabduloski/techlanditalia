@@ -38,6 +38,7 @@ const navItems: NavItem[] = [
   { to: '/admin/valutazioni', label: 'Valutazioni', icon: Award },
   { to: '/admin/statistiche', label: 'Statistiche', icon: BarChart3 },
   { to: '/admin/link-insegnanti', label: 'Link', icon: LinkIcon },
+  { to: '/admin/report-lezioni', label: 'Report', icon: FileText },
   { to: '/admin/backup', label: 'Backup', icon: Database },
 ];
 

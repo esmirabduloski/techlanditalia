@@ -138,6 +138,7 @@ const App = () => (
                     <Route path="/admin/disponibilita" element={<AdminTeacherCalendar />} />
                     <Route path="/admin/link-insegnanti" element={<AdminTeacherLinks />} />
                     <Route path="/admin/backup" element={<AdminBackups />} />
+                    <Route path="/admin/report-lezioni" element={<AdminLessonReports />} />
                     <Route path="/insegnante" element={<TeacherDashboard />} />
                     <Route path="/insegnante/valutazioni" element={<TeacherGrading />} />
                     <Route path="/insegnante/registro-voti" element={<TeacherGradebook />} />

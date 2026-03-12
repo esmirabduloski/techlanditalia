@@ -982,6 +982,53 @@ export type Database = {
           },
         ]
       }
+      lesson_reports: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          lesson_number: number
+          students_needing_support: string[]
+          support_notes: string | null
+          teacher_id: string
+          topics_covered: string
+          topics_not_covered: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          lesson_number: number
+          students_needing_support?: string[]
+          support_notes?: string | null
+          teacher_id: string
+          topics_covered?: string
+          topics_not_covered?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          lesson_number?: number
+          students_needing_support?: string[]
+          support_notes?: string | null
+          teacher_id?: string
+          topics_covered?: string
+          topics_not_covered?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_reports_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "student_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lesson_tasks: {
         Row: {
           attachments: Json | null

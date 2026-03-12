@@ -67,6 +67,7 @@ const AdminGroups = lazy(() => import("./pages/admin/AdminGroups"));
 const AdminTeacherCalendar = lazy(() => import("./pages/admin/AdminTeacherCalendar"));
 const AdminTeacherLinks = lazy(() => import("./pages/admin/AdminTeacherLinks"));
 const AdminBackups = lazy(() => import("./pages/admin/AdminBackups"));
+const AdminLessonReports = lazy(() => import("./pages/admin/AdminLessonReports"));
 const Acquisti = lazy(() => import("./pages/area-riservata/Acquisti"));
 const Leaderboard = lazy(() => import("./pages/area-riservata/Leaderboard"));
 
@@ -137,6 +138,7 @@ const App = () => (
                     <Route path="/admin/disponibilita" element={<AdminTeacherCalendar />} />
                     <Route path="/admin/link-insegnanti" element={<AdminTeacherLinks />} />
                     <Route path="/admin/backup" element={<AdminBackups />} />
+                    <Route path="/admin/report-lezioni" element={<AdminLessonReports />} />
                     <Route path="/insegnante" element={<TeacherDashboard />} />
                     <Route path="/insegnante/valutazioni" element={<TeacherGrading />} />
                     <Route path="/insegnante/registro-voti" element={<TeacherGradebook />} />

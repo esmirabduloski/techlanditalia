@@ -12,6 +12,7 @@ import {
   Loader2, ArrowLeft, Users, Calendar, ChevronRight, MessageCircle, Plus, Send, Trash2, Check, X, AlertCircle, Clock, ExternalLink, Award
 } from "lucide-react";
 import { GroupCertificatesViewer } from "@/components/teacher/GroupCertificatesViewer";
+import { LessonReportForm } from "@/components/teacher/LessonReportForm";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";

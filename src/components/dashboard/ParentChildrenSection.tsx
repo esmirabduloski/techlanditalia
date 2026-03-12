@@ -13,6 +13,7 @@ import { ParentBadgesSection } from "@/components/dashboard/ParentBadgesSection"
 import { ParentCommentsSection } from "@/components/dashboard/ParentCommentsSection";
 import { ChildLessonCalendar } from "@/components/dashboard/ChildLessonCalendar";
 import { ChildHomeworkHistory } from "@/components/dashboard/ChildHomeworkHistory";
+import { ParentHomeworkDetail } from "@/components/dashboard/ParentHomeworkDetail";
 import { ChildAttendanceHistory } from "@/components/dashboard/ChildAttendanceHistory";
 import { ParentPaymentHistory } from "@/components/dashboard/ParentPaymentHistory";
 import { useStudentStreaks } from "@/hooks/useStudentStreaks";

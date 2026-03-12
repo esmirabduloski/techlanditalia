@@ -284,6 +284,13 @@ function ChildDashboard({ child }: { child: Child }) {
               {/* Badges - global */}
               <ParentBadgesSection childId={child.id} childName={child.full_name} />
 
+              {/* Detailed Homework View */}
+              <ParentHomeworkDetail
+                childId={child.id}
+                childName={child.full_name}
+                courseIds={[selectedCourse.courseId]}
+              />
+
               {/* Attendance & Homework History side by side - filtered by course */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <ChildAttendanceHistory

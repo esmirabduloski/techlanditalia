@@ -649,6 +649,14 @@ export default function TeacherGroupDetail() {
           </CardContent>
         </Card>
 
+        {/* Lesson Report Form */}
+        <LessonReportForm
+          groupId={groupId!}
+          teacherId={effectiveUserId!}
+          students={students.map(s => ({ student_id: s.student_id, full_name: s.full_name }))}
+          lessonSchedule={lessonSchedule.map(l => ({ lesson_number: l.lesson_number, lesson_title: l.lesson_title, lesson_date: l.lesson_date }))}
+        />
+
         {/* Group Comments */}
         <Card className="mb-6">
           <CardHeader className="flex flex-row items-center justify-between">

@@ -276,6 +276,17 @@ export default function AuthPage() {
     }
   };
 
+  if (authLoading) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+          <Loader2 className="w-10 h-10 animate-spin text-primary" />
+          <p className="text-muted-foreground text-lg font-medium">Accesso in corso...</p>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="min-h-screen bg-gradient-to-br from-background via-tech-green-light/30 to-tech-cyan-light/30 dark:from-background dark:via-background dark:to-background flex items-center justify-center p-4">

@@ -10,7 +10,7 @@ import { useTeacherRole } from "@/hooks/useTeacherRole";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 const navLinks = [
-  { href: "/corsi", label: "Corsi di Coding", title: "Corsi di programmazione per bambini e ragazzi" },
+  { href: "/corsi", label: "Corsi", title: "Corsi di programmazione per bambini e ragazzi" },
   { href: "/chi-siamo", label: "Chi Siamo", title: "Scopri la scuola di coding TECHLAND" },
   { href: "/faq", label: "FAQ", title: "Domande frequenti sui corsi di programmazione" },
   { href: "/blog", label: "Blog", title: "Articoli e guide sul coding per bambini" },

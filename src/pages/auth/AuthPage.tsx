@@ -276,7 +276,7 @@ export default function AuthPage() {
     }
   };
 
-  if (authLoading) {
+  if (authLoading || (user && !showNewPasswordForm)) {
     return (
       <Layout>
         <div className="min-h-screen flex flex-col items-center justify-center gap-4">

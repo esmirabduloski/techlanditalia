@@ -211,8 +211,8 @@ export default function BlogArticle() {
               className="prose prose-lg max-w-none"
               dangerouslySetInnerHTML={{ 
                 __html: DOMPurify.sanitize(`<p class="mb-4">${parseMarkdown(post.content)}</p>`, {
-                  ALLOWED_TAGS: ['h1', 'h2', 'h3', 'p', 'strong', 'em', 'a', 'li', 'br'],
-                  ALLOWED_ATTR: ['href', 'class', 'target', 'rel'],
+                  ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'p', 'strong', 'em', 'a', 'li', 'br', 'img'],
+                  ALLOWED_ATTR: ['href', 'class', 'target', 'rel', 'src', 'alt', 'loading'],
                 })
               }}
             />

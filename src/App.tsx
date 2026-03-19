@@ -140,6 +140,7 @@ const App = () => (
                     <Route path="/admin/link-insegnanti" element={<AdminTeacherLinks />} />
                     <Route path="/admin/backup" element={<AdminBackups />} />
                     <Route path="/admin/report-lezioni" element={<AdminLessonReports />} />
+                    <Route path="/admin/documentazione" element={<AdminDocumentation />} />
                     <Route path="/insegnante" element={<TeacherDashboard />} />
                     <Route path="/insegnante/valutazioni" element={<TeacherGrading />} />
                     <Route path="/insegnante/registro-voti" element={<TeacherGradebook />} />

@@ -223,8 +223,8 @@ export default function ChiSiamo() {
               <h2 className="text-3xl md:text-4xl font-bold mb-6">La nostra storia</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
-                  TECHLAND è nata nel 2021 da un'idea semplice: rendere la programmazione accessibile ai bambini
-                  italiani. I nostri fondatori, professionisti del settore tech con figli, hanno visto la difficoltà nel
+                  TECHLAND è nata nel 2023 da un'idea semplice: rendere la programmazione accessibile ai bambini in
+                  italia. I nostri fondatori, professionisti del settore tech con figli, hanno visto la difficoltà nel
                   trovare corsi di qualità per i più giovani.
                 </p>
                 <p>

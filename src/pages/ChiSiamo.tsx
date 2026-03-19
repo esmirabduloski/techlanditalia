@@ -20,7 +20,7 @@ import {
 
 const stats = [
   { value: "1.200+", label: "Studenti formati", icon: Users },
-  { value: "5", label: "Anni di esperienza", icon: Award },
+  { value: "Qaulity", label: "Esperienza professionale", icon: Award },
   { value: "98%", label: "Genitori soddisfatti", icon: Heart },
 ];
 

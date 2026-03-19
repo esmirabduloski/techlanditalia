@@ -66,7 +66,6 @@ const team = [
   { name: "Esmir", role: "Fondatore & CEO", initials: "ES" },
   { name: "Alessia", role: "Insegnante", initials: "AL" },
   { name: "Vittorio", role: "Insegnante", initials: "VI" },
-  { name: "Adele", role: "Insegnante", initials: "AD" },
 ];
 
 // Schema.org per Organization
@@ -78,8 +77,8 @@ const organizationSchema = {
     "Scuola di programmazione e coding per bambini e ragazzi dai 6 ai 18 anni. Corsi online di Roblox, Minecraft, Python, Scratch e sviluppo web.",
   url: "https://techlanditalia.it",
   logo: "https://techlanditalia.it/favicon.ico",
-  foundingDate: "2021",
-  numberOfEmployees: "50+",
+  foundingDate: "2023",
+  numberOfEmployees: "10+",
   areaServed: "IT",
   contactPoint: {
     "@type": "ContactPoint",

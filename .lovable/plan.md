@@ -1,45 +1,31 @@
 
 
-## Piano: Bottone Segnala Bug + Integrazione Jira Service
+## Piano: Pagina Admin "Documentazione Funzionalità"
 
-### Integrazione con Atlassian Jira
+### Obiettivo
+Creare una pagina `/admin/documentazione` che elenca tutte le funzionalità della piattaforma, organizzate per ruolo, sempre aggiornata perché fa parte del codice stesso.
 
-Jira non è disponibile come connettore standard in Lovable, quindi l'integrazione avverrà tramite le **API REST di Jira Cloud** con autenticazione via API token. Ecco cosa serve da parte tua:
+### Cosa verrà creato
 
-1. **Crea un API Token Atlassian**: Vai su [https://id.atlassian.com/manage-profile/security/api-tokens](https://id.atlassian.com/manage-profile/security/api-tokens) e crea un nuovo token
-2. **Informazioni necessarie**:
-   - **Email Atlassian** associata all'account (es. `tuaemail@esempio.com`)
-   - **API Token** appena creato
-   - **URL del tuo sito Jira** (es. `https://tuosito.atlassian.net`)
-   - **Project Key** del progetto Jira Service dove vuoi ricevere i ticket (es. `TECH` o `SUP`)
+**1. Nuovo file `src/pages/admin/AdminDocumentation.tsx`**
+- Pagina con sezioni espandibili (Accordion) per ogni area:
+  - **Area Pubblica** — Homepage, Corsi, Blog, Prenotazione, Contatti, FAQ, pagine legali
+  - **Area Studenti** — Dashboard, gamification (punti/badge/streak), editor codice (Python/Web), compiti, classifica, acquisti
+  - **Area Genitori** — Monitoraggio figli, storico pagamenti, chat supporto, feedback
+  - **Area Insegnanti** — Dashboard, gestione gruppi, registro presenze, gradebook, report lezioni, vista corsi/lezioni
+  - **Area Admin** — Blog editor, gestione corsi/lezioni/task/compiti, gruppi, calendario, presenze, prenotazioni, contatti, newsletter, utenti, valutazioni, statistiche, analytics, backup, link insegnanti, report, simulatore vista
+- Ogni funzionalità avrà: nome, breve descrizione, percorso della rotta
+- Stile coerente con le altre pagine admin (usa Layout, AdminNav, Card, Badge)
+- Barra di ricerca per filtrare rapidamente le funzionalità
 
-Questi verranno salvati come secrets sicuri nel backend e usati solo dalla edge function.
+**2. Registrazione rotta in `src/App.tsx`**
+- Aggiunta lazy import e `<Route path="/admin/documentazione">` 
 
-### Implementazione tecnica
+**3. Link nella navigazione admin `src/components/admin/AdminNav.tsx`**
+- Aggiunta voce "Docs" con icona `BookText` nell'array `navItems`
 
-1. **Creare componente `BugReportButton`** — Un bottone floating o posizionato nell'header della dashboard che apre un dialog con:
-   - Campo titolo (obbligatorio)
-   - Campo descrizione (textarea)
-   - Priorità (bassa/media/alta)
-   - Screenshot opzionale
-   - Il componente invia i dati alla edge function
-
-2. **Creare edge function `create-jira-ticket`** — Riceve titolo, descrizione, priorità e info utente, poi chiama l'API Jira REST per creare un issue:
-   ```
-   POST https://{site}.atlassian.net/rest/api/3/issue
-   ```
-   con autenticazione Basic (email:apitoken in base64)
-
-3. **Aggiungere il bottone in tutte e 3 le dashboard** — Student (`Dashboard.tsx`), Teacher (`TeacherDashboard.tsx`), Admin (`AdminDashboard.tsx`)
-
-4. **Salvare i secrets** — `JIRA_EMAIL`, `JIRA_API_TOKEN`, `JIRA_SITE_URL`, `JIRA_PROJECT_KEY`
-
-### Prossimi passi
-
-Prima di procedere con l'implementazione ho bisogno che tu:
-1. Confermi di avere un progetto Jira Service Management creato
-2. Mi fornisca il **Project Key** del progetto
-3. Mi fornisca l'**URL del sito** (es. `https://tuosito.atlassian.net`)
-
-Poi ti chiederò di inserire email e API token tramite il sistema sicuro di secrets.
+### Dettagli tecnici
+- I dati delle funzionalità sono definiti staticamente nel componente (array di oggetti tipizzati) — questo è intenzionale: ogni volta che si aggiunge una feature al sito, si aggiunge anche la relativa entry nella documentazione
+- Componenti UI: `Accordion`, `Card`, `Badge`, `Input` (ricerca), icone Lucide
+- Nessuna modifica al database necessaria
 

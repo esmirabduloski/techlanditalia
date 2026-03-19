@@ -3,7 +3,7 @@ import { useRef, useState, useEffect } from 'react';
 import { 
   FileText, GraduationCap, BookOpen, Mail, User, BarChart3, 
   Award, Calendar, ClipboardCheck, Users, Newspaper, UsersRound, CalendarClock, Link as LinkIcon,
-  ChevronLeft, ChevronRight, Menu, X, Database, ClipboardList
+  ChevronLeft, ChevronRight, Menu, X, Database, ClipboardList, BookText
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -40,6 +40,7 @@ const navItems: NavItem[] = [
   { to: '/admin/link-insegnanti', label: 'Link', icon: LinkIcon },
   { to: '/admin/report-lezioni', label: 'Report', icon: ClipboardList },
   { to: '/admin/backup', label: 'Backup', icon: Database },
+  { to: '/admin/documentazione', label: 'Docs', icon: BookText },
 ];
 
 export function AdminNav() {

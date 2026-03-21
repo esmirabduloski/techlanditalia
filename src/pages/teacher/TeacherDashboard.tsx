@@ -164,6 +164,8 @@ export default function TeacherDashboard() {
   const [statsLoading, setStatsLoading] = useState(true);
   const [groupStatusFilter, setGroupStatusFilter] = useState<string>('all');
   const [groupSortBy, setGroupSortBy] = useState<string>('title');
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
 
   useEffect(() => {
     // If impersonating a teacher, skip normal auth checks

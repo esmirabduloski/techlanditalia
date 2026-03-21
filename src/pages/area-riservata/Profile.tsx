@@ -49,6 +49,13 @@ export default function Profile() {
 
   const level = getLevelFromPoints(profile.total_points);
   const hasChanges = selectedAvatar !== profile.avatar_id;
+  const userRole = profile.role === 'parent' ? 'parent' : 'student';
+
+  const handleReplayTutorial = async () => {
+    // Reset onboarding flag then show
+    await supabase.from('profiles').update({ onboarding_completed: false }).eq('id', user.id);
+    setShowTutorial(true);
+  };
 
   const handleSave = async () => {
     setIsSaving(true);

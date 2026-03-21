@@ -40,8 +40,8 @@ const contactInfo = [
   },
   {
     icon: Clock,
-    title: "Orari",
-    value: "Lun-Ven 9:00-20:00",
+    title: "Orari Lezioni",
+    value: "Lun-Ven dalle 18 - Sab-Dom dalle 10",
     href: null,
     description: "Siamo disponibili per te",
   },

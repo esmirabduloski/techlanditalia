@@ -7,8 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { AvatarSelector, AvatarDisplay } from '@/components/gamification/AvatarSelector';
 import { LevelBadge, PointsDisplay, getLevelFromPoints, LEVELS } from '@/components/gamification/LevelBadge';
+import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, Save, Trophy } from 'lucide-react';
+import { Loader2, ArrowLeft, Save, Trophy, RotateCcw } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Profile() {
   const { user, isLoading: authLoading } = useAuth();

@@ -212,9 +212,17 @@ export default function TeacherDashboard() {
       // Fetch user profile
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('full_name, email')
+        .select('full_name, email, onboarding_completed')
         .eq('id', effectiveUserId)
         .single();
+      
+      setProfile(profileData);
+
+      // Check if onboarding should be shown
+      if (!onboardingChecked && profileData && profileData.onboarding_completed === false && !isImpersonating) {
+        setShowOnboarding(true);
+      }
+      setOnboardingChecked(true);
       
       setProfile(profileData);
 

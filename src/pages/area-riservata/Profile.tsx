@@ -17,6 +17,7 @@ export default function Profile() {
   const { profile, isLoading: dataLoading, updateAvatar } = useStudentProgress();
   const [selectedAvatar, setSelectedAvatar] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 

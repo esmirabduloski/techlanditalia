@@ -142,7 +142,7 @@ export default function TeacherDashboard() {
   const [isTeacher, setIsTeacher] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("profilo");
-  const [profile, setProfile] = useState<{ full_name: string; email: string | null } | null>(null);
+  const [profile, setProfile] = useState<{ full_name: string; email: string | null; onboarding_completed: boolean | null } | null>(null);
   const [teacherProfile, setTeacherProfile] = useState<TeacherProfile | null>(null);
   const [assignedCourses, setAssignedCourses] = useState<Course[]>([]);
   const [groups, setGroups] = useState<StudentGroup[]>([]);

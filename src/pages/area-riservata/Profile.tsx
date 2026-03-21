@@ -160,6 +160,16 @@ export default function Profile() {
                     </>
                   )}
                 </Button>
+
+                {/* Replay Tutorial */}
+                <Button 
+                  variant="outline"
+                  onClick={handleReplayTutorial}
+                  className="w-full"
+                >
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  Ripeti Tutorial
+                </Button>
               </CardContent>
             </Card>
 

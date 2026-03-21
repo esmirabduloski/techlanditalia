@@ -1149,6 +1149,18 @@ export default function TeacherDashboard() {
                   )}
                 </div>
 
+                {/* Replay Tutorial */}
+                <div className="border-t pt-6">
+                  <Button 
+                    variant="outline"
+                    onClick={handleReplayTutorial}
+                    className="w-full sm:w-auto"
+                  >
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    Ripeti Tutorial
+                  </Button>
+                </div>
+
                 <div className="border-t pt-6">
                   <div className="flex items-center justify-between mb-4">
                     <h4 className="font-medium flex items-center gap-2">

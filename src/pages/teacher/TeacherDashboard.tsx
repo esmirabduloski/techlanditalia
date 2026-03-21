@@ -18,7 +18,7 @@ import {
   Loader2, User, BookOpen, Users, UsersRound, LogOut, Phone, Mail, Clock,
   ChevronRight, GraduationCap, Plus, Trash2, Edit2, Bell, Check, CheckCheck,
   BarChart3, CalendarDays, ExternalLink, TrendingUp, TrendingDown, AlertTriangle,
-  Link as LinkIcon, Book, FileText, Calendar, Video, MessageCircle, HelpCircle, Settings, Star, Globe, Shield, Award
+  Link as LinkIcon, Book, FileText, Calendar, Video, MessageCircle, HelpCircle, Settings, Star, Globe, Shield, Award, RotateCcw
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BugReportButton } from '@/components/BugReportButton';

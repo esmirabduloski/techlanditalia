@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useImpersonation } from "@/contexts/ImpersonationContext";
@@ -17,7 +18,7 @@ import {
   Loader2, User, BookOpen, Users, UsersRound, LogOut, Phone, Mail, Clock,
   ChevronRight, GraduationCap, Plus, Trash2, Edit2, Bell, Check, CheckCheck,
   BarChart3, CalendarDays, ExternalLink, TrendingUp, TrendingDown, AlertTriangle,
-  Link as LinkIcon, Book, FileText, Calendar, Video, MessageCircle, HelpCircle, Settings, Star, Globe, Shield, Award
+  Link as LinkIcon, Book, FileText, Calendar, Video, MessageCircle, HelpCircle, Settings, Star, Globe, Shield, Award, RotateCcw
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BugReportButton } from '@/components/BugReportButton';
@@ -141,7 +142,7 @@ export default function TeacherDashboard() {
   const [isTeacher, setIsTeacher] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("profilo");
-  const [profile, setProfile] = useState<{ full_name: string; email: string | null } | null>(null);
+  const [profile, setProfile] = useState<{ full_name: string; email: string | null; onboarding_completed: boolean | null } | null>(null);
   const [teacherProfile, setTeacherProfile] = useState<TeacherProfile | null>(null);
   const [assignedCourses, setAssignedCourses] = useState<Course[]>([]);
   const [groups, setGroups] = useState<StudentGroup[]>([]);
@@ -163,6 +164,8 @@ export default function TeacherDashboard() {
   const [statsLoading, setStatsLoading] = useState(true);
   const [groupStatusFilter, setGroupStatusFilter] = useState<string>('all');
   const [groupSortBy, setGroupSortBy] = useState<string>('title');
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
 
   useEffect(() => {
     // If impersonating a teacher, skip normal auth checks
@@ -209,9 +212,17 @@ export default function TeacherDashboard() {
       // Fetch user profile
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('full_name, email')
+        .select('full_name, email, onboarding_completed')
         .eq('id', effectiveUserId)
         .single();
+      
+      setProfile(profileData);
+
+      // Check if onboarding should be shown
+      if (!onboardingChecked && profileData && profileData.onboarding_completed === false && !isImpersonating) {
+        setShowOnboarding(true);
+      }
+      setOnboardingChecked(true);
       
       setProfile(profileData);
 
@@ -692,8 +703,22 @@ export default function TeacherDashboard() {
 
   if (!isTeacher) return null;
 
+  const handleReplayTutorial = async () => {
+    if (!effectiveUserId) return;
+    await supabase.from('profiles').update({ onboarding_completed: false }).eq('id', effectiveUserId);
+    setShowOnboarding(true);
+  };
+
   return (
     <div className="min-h-screen bg-muted/30">
+      {/* Onboarding Tour */}
+      {showOnboarding && effectiveUserId && (
+        <OnboardingTour
+          userId={effectiveUserId}
+          userRole="teacher"
+          onComplete={() => setShowOnboarding(false)}
+        />
+      )}
       {/* Header */}
       <header className="bg-background border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -1122,6 +1147,18 @@ export default function TeacherDashboard() {
                       ))}
                     </div>
                   )}
+                </div>
+
+                {/* Replay Tutorial */}
+                <div className="border-t pt-6">
+                  <Button 
+                    variant="outline"
+                    onClick={handleReplayTutorial}
+                    className="w-full sm:w-auto"
+                  >
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    Ripeti Tutorial
+                  </Button>
                 </div>
 
                 <div className="border-t pt-6">

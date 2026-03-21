@@ -7,14 +7,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { AvatarSelector, AvatarDisplay } from '@/components/gamification/AvatarSelector';
 import { LevelBadge, PointsDisplay, getLevelFromPoints, LEVELS } from '@/components/gamification/LevelBadge';
+import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, Save, Trophy } from 'lucide-react';
+import { Loader2, ArrowLeft, Save, Trophy, RotateCcw } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Profile() {
   const { user, isLoading: authLoading } = useAuth();
   const { profile, isLoading: dataLoading, updateAvatar } = useStudentProgress();
   const [selectedAvatar, setSelectedAvatar] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -46,6 +49,13 @@ export default function Profile() {
 
   const level = getLevelFromPoints(profile.total_points);
   const hasChanges = selectedAvatar !== profile.avatar_id;
+  const userRole = profile.role === 'parent' ? 'parent' : 'student';
+
+  const handleReplayTutorial = async () => {
+    // Reset onboarding flag then show
+    await supabase.from('profiles').update({ onboarding_completed: false }).eq('id', user.id);
+    setShowTutorial(true);
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -68,6 +78,14 @@ export default function Profile() {
 
   return (
     <Layout>
+      {showTutorial && (
+        <OnboardingTour
+          userId={user.id}
+          userRole={userRole as 'student' | 'parent'}
+          onComplete={() => setShowTutorial(false)}
+        />
+      )}
+
       <div className="min-h-screen bg-gradient-to-br from-background via-tech-green-light/20 to-tech-cyan-light/20 dark:from-background dark:via-background dark:to-background">
         <div className="max-w-4xl mx-auto px-4 py-8">
           {/* Header */}
@@ -141,6 +159,16 @@ export default function Profile() {
                       Salva Avatar
                     </>
                   )}
+                </Button>
+
+                {/* Replay Tutorial */}
+                <Button 
+                  variant="outline"
+                  onClick={handleReplayTutorial}
+                  className="w-full"
+                >
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  Ripeti Tutorial
                 </Button>
               </CardContent>
             </Card>

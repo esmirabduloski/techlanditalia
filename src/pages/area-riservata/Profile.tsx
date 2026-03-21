@@ -78,6 +78,14 @@ export default function Profile() {
 
   return (
     <Layout>
+      {showTutorial && (
+        <OnboardingTour
+          userId={user.id}
+          userRole={userRole as 'student' | 'parent'}
+          onComplete={() => setShowTutorial(false)}
+        />
+      )}
+
       <div className="min-h-screen bg-gradient-to-br from-background via-tech-green-light/20 to-tech-cyan-light/20 dark:from-background dark:via-background dark:to-background">
         <div className="max-w-4xl mx-auto px-4 py-8">
           {/* Header */}

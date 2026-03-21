@@ -56,9 +56,9 @@ export function HeroSection() {
               <div className="text-center sm:text-left">
                 <div className="flex items-center justify-center sm:justify-start gap-2 text-tech-teal mb-1">
                   <Award className="w-5 h-5 shrink-0" />
-                  <span className="text-2xl font-bold">98%</span>
+                  <span className="text-2xl font-bold">Qualità</span>
                 </div>
-                <p className="text-sm text-muted-foreground">Genitori soddisfatti</p>
+                <p className="text-sm text-muted-foreground">Lezioni professionali e divertenti</p>
               </div>
               <div className="text-center sm:text-left">
                 <div className="flex items-center justify-center sm:justify-start gap-2 text-tech-cyan mb-1">
@@ -96,11 +96,7 @@ export function HeroSection() {
             >
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-red-500/20 flex items-center justify-center">
-                  <img
-                    src="/images/roblox-icon.svg"
-                    alt="Roblox"
-                    className="w-7 h-7"
-                  />
+                  <img src="/images/roblox-icon.svg" alt="Roblox" className="w-7 h-7" />
                 </div>
                 <div>
                   <p className="font-semibold text-sm">Roblox</p>

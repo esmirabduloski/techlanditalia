@@ -703,8 +703,22 @@ export default function TeacherDashboard() {
 
   if (!isTeacher) return null;
 
+  const handleReplayTutorial = async () => {
+    if (!effectiveUserId) return;
+    await supabase.from('profiles').update({ onboarding_completed: false }).eq('id', effectiveUserId);
+    setShowOnboarding(true);
+  };
+
   return (
     <div className="min-h-screen bg-muted/30">
+      {/* Onboarding Tour */}
+      {showOnboarding && effectiveUserId && (
+        <OnboardingTour
+          userId={effectiveUserId}
+          userRole="teacher"
+          onComplete={() => setShowOnboarding(false)}
+        />
+      )}
       {/* Header */}
       <header className="bg-background border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">

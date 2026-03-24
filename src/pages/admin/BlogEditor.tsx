@@ -47,6 +47,47 @@ export default function BlogEditor() {
   const [featuredImage, setFeaturedImage] = useState('');
   const [readTime, setReadTime] = useState('5 min');
   const [published, setPublished] = useState(false);
+  const [courses, setCourses] = useState<{ title: string; slug: string; emoji: string }[]>([]);
+  const [blogPosts, setBlogPosts] = useState<{ title: string; slug: string; category: string }[]>([]);
+  const [copiedLink, setCopiedLink] = useState<string | null>(null);
+  const [linksOpen, setLinksOpen] = useState(true);
+  const contentRef = React.useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const fetchLinksData = async () => {
+      const [coursesRes, postsRes] = await Promise.all([
+        supabase.from('courses').select('title, slug, emoji').eq('is_visible', true).order('title'),
+        supabase.from('blog_posts').select('title, slug, category').eq('published', true).order('created_at', { ascending: false }),
+      ]);
+      if (coursesRes.data) setCourses(coursesRes.data);
+      if (postsRes.data) setBlogPosts(postsRes.data.filter(p => p.slug !== slug));
+    };
+    if (user && isAdmin) fetchLinksData();
+  }, [user, isAdmin]);
+
+  const insertLink = (label: string, url: string) => {
+    const markdown = `[${label}](${url})`;
+    const textarea = contentRef.current;
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const newContent = content.substring(0, start) + markdown + content.substring(end);
+      setContent(newContent);
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + markdown.length, start + markdown.length);
+      }, 0);
+    } else {
+      setContent(prev => prev + '\n' + markdown);
+    }
+  };
+
+  const copyMarkdownLink = (label: string, url: string) => {
+    const markdown = `[${label}](${url})`;
+    navigator.clipboard.writeText(markdown);
+    setCopiedLink(url);
+    setTimeout(() => setCopiedLink(null), 2000);
+  };
 
   useEffect(() => {
     if (!authLoading && (!user || !isAdmin)) {

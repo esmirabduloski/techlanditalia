@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,8 +9,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { AdminNav } from '@/components/admin/AdminNav';
-import { ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Link2, BookOpen, GraduationCap, Copy, Check } from 'lucide-react';
 import { z } from 'zod';
+import { Badge } from '@/components/ui/badge';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 
 const postSchema = z.object({
   title: z.string().min(3, 'Il titolo deve avere almeno 3 caratteri').max(200),
@@ -41,6 +47,47 @@ export default function BlogEditor() {
   const [featuredImage, setFeaturedImage] = useState('');
   const [readTime, setReadTime] = useState('5 min');
   const [published, setPublished] = useState(false);
+  const [courses, setCourses] = useState<{ title: string; slug: string; emoji: string }[]>([]);
+  const [blogPosts, setBlogPosts] = useState<{ title: string; slug: string; category: string }[]>([]);
+  const [copiedLink, setCopiedLink] = useState<string | null>(null);
+  const [linksOpen, setLinksOpen] = useState(true);
+  const contentRef = React.useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const fetchLinksData = async () => {
+      const [coursesRes, postsRes] = await Promise.all([
+        supabase.from('courses').select('title, slug, emoji').eq('is_visible', true).order('title'),
+        supabase.from('blog_posts').select('title, slug, category').eq('published', true).order('created_at', { ascending: false }),
+      ]);
+      if (coursesRes.data) setCourses(coursesRes.data);
+      if (postsRes.data) setBlogPosts(postsRes.data.filter(p => p.slug !== slug));
+    };
+    if (user && isAdmin) fetchLinksData();
+  }, [user, isAdmin]);
+
+  const insertLink = (label: string, url: string) => {
+    const markdown = `[${label}](${url})`;
+    const textarea = contentRef.current;
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const newContent = content.substring(0, start) + markdown + content.substring(end);
+      setContent(newContent);
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + markdown.length, start + markdown.length);
+      }, 0);
+    } else {
+      setContent(prev => prev + '\n' + markdown);
+    }
+  };
+
+  const copyMarkdownLink = (label: string, url: string) => {
+    const markdown = `[${label}](${url})`;
+    navigator.clipboard.writeText(markdown);
+    setCopiedLink(url);
+    setTimeout(() => setCopiedLink(null), 2000);
+  };
 
   useEffect(() => {
     if (!authLoading && (!user || !isAdmin)) {
@@ -295,24 +342,105 @@ export default function BlogEditor() {
 
             <div className="space-y-2">
               <Label htmlFor="content">Contenuto *</Label>
+
+              {/* Internal Links Panel */}
+              <Collapsible open={linksOpen} onOpenChange={setLinksOpen}>
+                <CollapsibleTrigger asChild>
+                  <Button variant="outline" size="sm" type="button" className="mb-2 gap-2">
+                    <Link2 className="w-4 h-4" />
+                    Link Interni
+                    <Badge variant="secondary" className="ml-1">{courses.length + blogPosts.length}</Badge>
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="border rounded-lg p-4 mb-3 space-y-4 bg-muted/30">
+                    <p className="text-xs text-muted-foreground">
+                      Clicca su un link per inserirlo nel contenuto alla posizione del cursore, oppure usa l'icona copia per copiare il markdown.
+                    </p>
+
+                    {/* Courses */}
+                    {courses.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-semibold flex items-center gap-1.5 mb-2">
+                          <GraduationCap className="w-4 h-4 text-primary" />
+                          Pagine Corsi
+                        </h4>
+                        <div className="flex flex-wrap gap-1.5">
+                          {courses.map((c) => (
+                            <div key={c.slug} className="flex items-center gap-0.5">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                type="button"
+                                className="text-xs h-7 gap-1"
+                                onClick={() => insertLink(c.title, `/corsi/${c.slug}`)}
+                              >
+                                {c.emoji} {c.title}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                type="button"
+                                className="h-7 w-7"
+                                onClick={() => copyMarkdownLink(c.title, `/corsi/${c.slug}`)}
+                              >
+                                {copiedLink === `/corsi/${c.slug}` ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Blog Posts */}
+                    {blogPosts.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-semibold flex items-center gap-1.5 mb-2">
+                          <BookOpen className="w-4 h-4 text-primary" />
+                          Altri Articoli
+                        </h4>
+                        <div className="flex flex-wrap gap-1.5">
+                          {blogPosts.map((p) => (
+                            <div key={p.slug} className="flex items-center gap-0.5">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                type="button"
+                                className="text-xs h-7 gap-1"
+                                onClick={() => insertLink(p.title, `/blog/${p.slug}`)}
+                              >
+                                📄 {p.title}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                type="button"
+                                className="h-7 w-7"
+                                onClick={() => copyMarkdownLink(p.title, `/blog/${p.slug}`)}
+                              >
+                                {copiedLink === `/blog/${p.slug}` ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+
               <Textarea
                 id="content"
+                ref={contentRef}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="Scrivi il contenuto del tuo articolo...
-
-Puoi usare Markdown per formattare il testo:
-- **grassetto**
-- *corsivo*
-- ## Titoli
-- [link](url)
-- Liste puntate"
+                placeholder="Scrivi il contenuto del tuo articolo..."
                 rows={20}
                 className="font-mono text-sm"
                 required
               />
               <p className="text-xs text-muted-foreground">
-                Supporta formattazione Markdown
+                Supporta formattazione Markdown — i link interni si aprono nella stessa finestra
               </p>
             </div>
           </div>

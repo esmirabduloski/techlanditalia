@@ -9,8 +9,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { AdminNav } from '@/components/admin/AdminNav';
-import { ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Link2, BookOpen, GraduationCap, Copy, Check } from 'lucide-react';
 import { z } from 'zod';
+import { Badge } from '@/components/ui/badge';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 
 const postSchema = z.object({
   title: z.string().min(3, 'Il titolo deve avere almeno 3 caratteri').max(200),

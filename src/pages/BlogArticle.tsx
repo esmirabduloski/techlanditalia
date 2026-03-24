@@ -42,6 +42,7 @@ function parseMarkdown(text: string): string {
     .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="rounded-xl my-6 max-w-sm w-full shadow-md" loading="lazy" />')
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/\[([^\]]+)\]\(((\/[^)]+))\)/g, '<a href="$2" class="text-primary hover:underline font-medium">$1</a>')
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-primary hover:underline" target="_blank" rel="noopener">$1</a>')
     .replace(/^- (.*$)/gim, '<li class="ml-4">$1</li>')
     .replace(/\n\n/g, '</p><p class="mb-4">')

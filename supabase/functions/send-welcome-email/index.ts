@@ -157,6 +157,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await resend.emails.send({
       from: "TECHLAND <info@techlanditalia.it>",
       to: [email],
+      bcc: ["techlanditalia.it+af31baed12@invite.trustpilot.com"],
       subject: subject,
       html: htmlContent,
     });

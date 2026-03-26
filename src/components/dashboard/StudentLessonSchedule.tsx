@@ -293,21 +293,31 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
         {todayLessons.length > 0 && (
           <div className="mb-4 space-y-2">
             {todayLessons.map((lesson) => (
-              <a
-                key={`join-${lesson.id}`}
-                href={lesson.group.student_meeting_link!}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-3 w-full px-6 py-4 rounded-xl bg-primary text-primary-foreground font-bold text-base shadow-tech-glow hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300"
-              >
-                <Video className="w-5 h-5" />
-                🚀 Entra a Lezione — {lesson.group.course.emoji} {getLessonLabel(lesson.lesson_number)}
-                {(lesson.lesson_time || lesson.group.lesson_time) && (
-                  <span className="text-primary-foreground/80 text-sm font-normal ml-1">
-                    ore {(lesson.lesson_time || lesson.group.lesson_time)?.substring(0, 5)}
-                  </span>
-                )}
-              </a>
+              lesson.group.student_meeting_link ? (
+                <a
+                  key={`join-${lesson.id}`}
+                  href={lesson.group.student_meeting_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-3 w-full px-6 py-4 rounded-xl bg-primary text-primary-foreground font-bold text-base shadow-tech-glow hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300"
+                >
+                  <Video className="w-5 h-5" />
+                  🚀 Entra a Lezione — {lesson.group.course.emoji} {getLessonLabel(lesson.lesson_number)}
+                  {(lesson.lesson_time || lesson.group.lesson_time) && (
+                    <span className="text-primary-foreground/80 text-sm font-normal ml-1">
+                      ore {(lesson.lesson_time || lesson.group.lesson_time)?.substring(0, 5)}
+                    </span>
+                  )}
+                </a>
+              ) : (
+                <div
+                  key={`join-${lesson.id}`}
+                  className="flex items-center justify-center gap-3 w-full px-6 py-4 rounded-xl bg-muted border-2 border-dashed border-border text-muted-foreground font-bold text-base"
+                >
+                  <Video className="w-5 h-5" />
+                  {lesson.group.course.emoji} {getLessonLabel(lesson.lesson_number)} — Link non disponibile
+                </div>
+              )
             ))}
           </div>
         )}

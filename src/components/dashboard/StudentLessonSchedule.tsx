@@ -386,18 +386,23 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
                   </div>
                   <div className="mt-2 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      {isTodayLesson && lesson.group.student_meeting_link ? (
+                      {lesson.group.student_meeting_link ? (
                         <a
                           href={lesson.group.student_meeting_link}
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={(e) => e.stopPropagation()}
-                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors"
+                          className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors shadow-sm"
                         >
-                          <Video className="w-3 h-3" />
-                          Entra
+                          <Video className="w-4 h-4" />
+                          ENTRA
                         </a>
-                      ) : <span />}
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-muted text-muted-foreground text-sm font-medium border border-dashed border-border">
+                          <Video className="w-4 h-4" />
+                          Link non disponibile
+                        </span>
+                      )}
                       {hasLessonMaterial ? (
                         <span className="text-[10px] text-primary flex items-center gap-1 font-medium">
                           <BookOpen className="w-3 h-3" />
@@ -405,7 +410,7 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
                         </span>
                       ) : (
                         <span className="text-[10px] text-muted-foreground italic">
-                          Link alla lezione non disponibile
+                          Materiale non disponibile
                         </span>
                       )}
                     </div>

@@ -305,16 +305,6 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Background Color Picker - Students only */}
-          {!effectiveIsTeacher && !effectiveIsParent && (
-            <div className="mb-6">
-              <BackgroundColorPicker
-                currentColor={bgColor}
-                onColorChange={(color) => updateColor(color)}
-              />
-            </div>
-          )}
-
           {/* Stats Cards - Hide for parents and teachers */}
           {!effectiveIsTeacher && !effectiveIsParent && (
             <>
@@ -367,16 +357,6 @@ export default function Dashboard() {
                   </CardContent>
                 </Card>
               </div>
-
-              {/* Leaderboard Link */}
-              <div className="mb-8">
-                <Button variant="outline" className="w-full md:w-auto" asChild>
-                  <Link to="/area-riservata/classifica">
-                    <Trophy className="w-4 h-4 mr-2" />
-                    🏅 Classifica Studenti
-                  </Link>
-                </Button>
-              </div>
             </>
           )}
 
@@ -397,59 +377,21 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Lesson Schedule - FIRST for students */}
+          {/* Lesson Schedule */}
           {effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (
             <div className="mb-8">
               <StudentLessonSchedule studentId={effectiveUserId} />
             </div>
           )}
 
-          {/* Streaks Section - Hide for teachers and parents */}
-          {streaks && !effectiveIsTeacher && !effectiveIsParent && (
-            <div className="mb-8">
-              <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-                🔥 Le Tue Streak
-              </h2>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <StreakDisplay
-                    homeworkStreak={streaks.homework_streak}
-                    attendanceStreak={streaks.attendance_streak}
-                    bestHomeworkStreak={streaks.best_homework_streak}
-                    bestAttendanceStreak={streaks.best_attendance_streak}
-                    lastHomeworkDate={streaks.last_homework_date}
-                    lastAttendanceDate={streaks.last_attendance_date}
-                  />
-                  <StreakBonusesDisplay
-                    bonuses={bonuses}
-                    currentHomeworkStreak={streaks.homework_streak}
-                    currentAttendanceStreak={streaks.attendance_streak}
-                  />
-                </div>
-                <ChildAttendanceHistory childId={effectiveUserId} />
-              </div>
-            </div>
-          )}
-
-          {/* Progress Charts - Hide for teachers and parents */}
-          {!effectiveIsTeacher && !effectiveIsParent && (
-            <div className="mb-8">
-              <ProgressCharts
-                lessonProgress={lessonProgress}
-                homeworkSubmissions={homeworkSubmissions}
-                taskProgress={taskProgress}
-              />
-            </div>
-          )}
-
-          {/* Bookmarks - Hide for teachers and parents */}
+          {/* Bookmarks - Right after calendar */}
           {!effectiveIsTeacher && !effectiveIsParent && (
             <div className="mb-8">
               <BookmarksSection />
             </div>
           )}
 
-          {/* Active Courses - Hide for teachers and parents */}
+          {/* Active Courses - After bookmarks */}
           {!effectiveIsTeacher && !effectiveIsParent && (
             <div className="mb-8">
               <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
@@ -520,45 +462,105 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Badges Section - Hide for teachers and parents */}
+          {/* Attendance History + Streaks - Hide for teachers and parents */}
+          {streaks && !effectiveIsTeacher && !effectiveIsParent && (
+            <div className="mb-8">
+              <div className="mb-6">
+                <ChildAttendanceHistory childId={effectiveUserId} />
+              </div>
+              <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+                🔥 Le Tue Streak
+              </h2>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <StreakDisplay
+                  homeworkStreak={streaks.homework_streak}
+                  attendanceStreak={streaks.attendance_streak}
+                  bestHomeworkStreak={streaks.best_homework_streak}
+                  bestAttendanceStreak={streaks.best_attendance_streak}
+                  lastHomeworkDate={streaks.last_homework_date}
+                  lastAttendanceDate={streaks.last_attendance_date}
+                />
+                <StreakBonusesDisplay
+                  bonuses={bonuses}
+                  currentHomeworkStreak={streaks.homework_streak}
+                  currentAttendanceStreak={streaks.attendance_streak}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Progress Charts */}
+          {!effectiveIsTeacher && !effectiveIsParent && (
+            <div className="mb-8">
+              <ProgressCharts
+                lessonProgress={lessonProgress}
+                homeworkSubmissions={homeworkSubmissions}
+                taskProgress={taskProgress}
+              />
+            </div>
+          )}
+
+          {/* Badges Section */}
           {effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (
             <div className="mb-8">
               <BadgesDisplay userId={effectiveUserId} showAll={true} />
             </div>
           )}
 
-          {/* Homework Section for Students - Hide for teachers and parents */}
+          {/* Homework Section */}
           {!effectiveIsTeacher && !effectiveIsParent && (
             <div className="mb-8">
               <HomeworkSection />
             </div>
           )}
 
-          {/* Teacher Info Card - Only for students */}
+          {/* Teacher Info Card */}
           {effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (
             <div className="mb-8">
               <TeacherBioCard studentId={effectiveUserId} />
             </div>
           )}
 
-          {/* Student Comments Section - Hide for teachers and parents */}
+          {/* Student Comments Section */}
           {effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (
             <div className="mb-8">
               <StudentCommentsSection studentId={effectiveUserId} />
             </div>
           )}
 
-          {/* Parent Children Section - Hide for teachers */}
+          {/* Parent Children Section */}
           {!effectiveIsTeacher && (
             <div className="mb-8">
               <ParentChildrenSection />
             </div>
           )}
 
-          {/* Parent Feedback Section - Only for students (not teachers or parents) */}
+          {/* Parent Feedback Section */}
           {!effectiveIsTeacher && !effectiveIsParent && (
             <div className="mb-8">
               <ParentFeedbackSection />
+            </div>
+          )}
+
+          {/* Leaderboard Link - bottom */}
+          {!effectiveIsTeacher && !effectiveIsParent && (
+            <div className="mb-8">
+              <Button variant="outline" className="w-full md:w-auto" asChild>
+                <Link to="/area-riservata/classifica">
+                  <Trophy className="w-4 h-4 mr-2" />
+                  🏅 Classifica Studenti
+                </Link>
+              </Button>
+            </div>
+          )}
+
+          {/* Background Color Picker - Students only, very end */}
+          {!effectiveIsTeacher && !effectiveIsParent && (
+            <div className="mb-8">
+              <BackgroundColorPicker
+                currentColor={bgColor}
+                onColorChange={(color) => updateColor(color)}
+              />
             </div>
           )}
 

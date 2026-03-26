@@ -201,9 +201,9 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
     return result;
   }, [lessons, selectedCourseId, showCompleted]);
 
-  // Find today's lessons with meeting links (across ALL courses)
+  // Find today's lessons (across ALL courses)
   const todayLessons = useMemo(() => 
-    lessons.filter(l => isToday(new Date(l.lesson_date)) && l.group.student_meeting_link),
+    lessons.filter(l => isToday(new Date(l.lesson_date))),
     [lessons]
   );
 

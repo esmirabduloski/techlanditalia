@@ -4,12 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, CalendarDays, Clock, AlertCircle, RefreshCw, Video, Eye, EyeOff } from "lucide-react";
+import { Loader2, CalendarDays, Clock, AlertCircle, RefreshCw, Video, Eye, EyeOff, BookOpen } from "lucide-react";
 import { format, isPast, isToday, isFuture } from "date-fns";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 interface LessonSchedule {
   id: string;
@@ -24,6 +25,7 @@ interface LessonSchedule {
     status: string;
     student_meeting_link: string | null;
     course: {
+      id: string;
       title: string;
       emoji: string;
     };
@@ -38,9 +40,11 @@ interface ChildLessonCalendarProps {
 
 export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupIds }: ChildLessonCalendarProps) {
   const [lessons, setLessons] = useState<LessonSchedule[]>([]);
+  const [existingLessons, setExistingLessons] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCompleted, setShowCompleted] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (childId) {
@@ -99,6 +103,7 @@ export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupI
             status,
             student_meeting_link,
             course:course_id (
+              id,
               title,
               emoji
             )
@@ -128,12 +133,26 @@ export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupI
             status: s.group.status || 'active',
             student_meeting_link: s.group.student_meeting_link || null,
             course: {
+              id: s.group.course.id,
               title: s.group.course.title,
               emoji: s.group.course.emoji,
             },
           },
         }));
         setLessons(typedLessons);
+
+        // Fetch which lessons actually have material
+        const courseIds = [...new Set(typedLessons.map(l => l.group.course.id))];
+        if (courseIds.length > 0) {
+          const { data: lessonData } = await supabase
+            .from("lessons")
+            .select("course_id, lesson_number")
+            .in("course_id", courseIds);
+          if (lessonData) {
+            const set = new Set(lessonData.map(l => `${l.course_id}_${l.lesson_number}`));
+            setExistingLessons(set);
+          }
+        }
       }
     } catch (err: any) {
       console.error("Error fetching lesson schedule:", err);
@@ -267,6 +286,8 @@ export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupI
                     const date = new Date(lesson.lesson_date);
                     const isPastLesson = isPast(date) && !isToday(date);
                     const isTodayLesson = isToday(date);
+                    const courseId = lesson.group.course.id;
+                    const hasLessonMaterial = existingLessons.has(`${courseId}_${lesson.lesson_number}`);
                     
                     return (
                       <div
@@ -275,8 +296,14 @@ export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupI
                           "p-2 rounded-lg border text-center transition-colors",
                           isTodayLesson && "bg-primary/10 border-primary",
                           isPastLesson && "bg-muted/50 border-muted",
-                          isFuture(date) && !isTodayLesson && "bg-card border-border hover:border-primary/50"
+                          isFuture(date) && !isTodayLesson && "bg-card border-border hover:border-primary/50",
+                          hasLessonMaterial && "cursor-pointer hover:shadow-sm"
                         )}
+                        onClick={() => {
+                          if (hasLessonMaterial) {
+                            navigate(`/area-riservata/corso/${courseId}/lezione/${lesson.lesson_number}`);
+                          }
+                        }}
                       >
                         <p className={cn(
                           "text-sm font-semibold",
@@ -291,6 +318,16 @@ export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupI
                             <span>· {(lesson.lesson_time || lesson.group.lesson_time)?.substring(0, 5)}</span>
                           )}
                         </p>
+                        {hasLessonMaterial ? (
+                          <p className="text-[10px] text-primary flex items-center justify-center gap-1 mt-1 font-medium">
+                            <BookOpen className="w-3 h-3" />
+                            Vai alla lezione
+                          </p>
+                        ) : (
+                          <p className="text-[10px] text-muted-foreground mt-1 italic">
+                            Link alla lezione non disponibile
+                          </p>
+                        )}
                         {isTodayLesson && (
                           <div className="flex flex-col items-center gap-1">
                             <Badge className="text-[10px] bg-primary text-primary-foreground">
@@ -301,6 +338,7 @@ export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupI
                                 href={lesson.group.student_meeting_link}
                                 target="_blank"
                                 rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
                                 className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary text-primary-foreground text-[10px] font-semibold hover:bg-primary/90 transition-colors"
                               >
                                 <Video className="w-2.5 h-2.5" />

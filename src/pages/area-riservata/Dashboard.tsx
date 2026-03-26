@@ -30,6 +30,9 @@ import { useCelebration } from '@/hooks/useCelebration';
 import { Loader2, BookOpen, Trophy, Target, Settings, LogOut, Rocket, Shield, GraduationCap, CreditCard, Bookmark } from 'lucide-react';
 import { useBookmarks } from '@/hooks/useBookmarks';
 import { BugReportButton } from '@/components/BugReportButton';
+import { BackgroundColorPicker } from '@/components/dashboard/BackgroundColorPicker';
+import { useBackgroundColor, LIGHT_COLORS, DARK_COLORS } from '@/hooks/useBackgroundColor';
+import { useTheme } from 'next-themes';
 import { supabase } from '@/integrations/supabase/client';
 
 interface CourseProgress {

@@ -38,10 +38,12 @@ interface StudentLessonScheduleProps {
 
 export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps) {
   const [lessons, setLessons] = useState<LessonSchedule[]>([]);
+  const [existingLessons, setExistingLessons] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [showCompleted, setShowCompleted] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (studentId) {

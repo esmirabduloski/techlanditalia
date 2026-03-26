@@ -286,6 +286,8 @@ export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupI
                     const date = new Date(lesson.lesson_date);
                     const isPastLesson = isPast(date) && !isToday(date);
                     const isTodayLesson = isToday(date);
+                    const courseId = lesson.group.course.id;
+                    const hasLessonMaterial = existingLessons.has(`${courseId}_${lesson.lesson_number}`);
                     
                     return (
                       <div
@@ -294,8 +296,14 @@ export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupI
                           "p-2 rounded-lg border text-center transition-colors",
                           isTodayLesson && "bg-primary/10 border-primary",
                           isPastLesson && "bg-muted/50 border-muted",
-                          isFuture(date) && !isTodayLesson && "bg-card border-border hover:border-primary/50"
+                          isFuture(date) && !isTodayLesson && "bg-card border-border hover:border-primary/50",
+                          hasLessonMaterial && "cursor-pointer hover:shadow-sm"
                         )}
+                        onClick={() => {
+                          if (hasLessonMaterial) {
+                            navigate(`/area-riservata/corso/${courseId}/lezione/${lesson.lesson_number}`);
+                          }
+                        }}
                       >
                         <p className={cn(
                           "text-sm font-semibold",
@@ -310,6 +318,16 @@ export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupI
                             <span>· {(lesson.lesson_time || lesson.group.lesson_time)?.substring(0, 5)}</span>
                           )}
                         </p>
+                        {hasLessonMaterial ? (
+                          <p className="text-[10px] text-primary flex items-center justify-center gap-1 mt-1 font-medium">
+                            <BookOpen className="w-3 h-3" />
+                            Vai alla lezione
+                          </p>
+                        ) : (
+                          <p className="text-[10px] text-muted-foreground mt-1 italic">
+                            Link alla lezione non disponibile
+                          </p>
+                        )}
                         {isTodayLesson && (
                           <div className="flex flex-col items-center gap-1">
                             <Badge className="text-[10px] bg-primary text-primary-foreground">
@@ -320,6 +338,7 @@ export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupI
                                 href={lesson.group.student_meeting_link}
                                 target="_blank"
                                 rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
                                 className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary text-primary-foreground text-[10px] font-semibold hover:bg-primary/90 transition-colors"
                               >
                                 <Video className="w-2.5 h-2.5" />

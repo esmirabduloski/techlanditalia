@@ -311,6 +311,16 @@ export default function Dashboard() {
             </div>
           </div>
 
+          {/* Background Color Picker - Students only */}
+          {!effectiveIsTeacher && !effectiveIsParent && (
+            <div className="mb-6">
+              <BackgroundColorPicker
+                currentColor={bgColor}
+                onColorChange={(color) => updateColor(color)}
+              />
+            </div>
+          )}
+
           {/* Stats Cards - Hide for parents and teachers */}
           {!effectiveIsTeacher && !effectiveIsParent && (
             <>

@@ -321,6 +321,8 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
               const displayTime = lesson.lesson_time || lesson.group.lesson_time;
               const label = getLessonLabel(lesson.lesson_number);
               const realTitle = lesson.realLessonTitle || lesson.lesson_title;
+              const courseId = lesson.group.course.id;
+              const hasLessonMaterial = existingLessons.has(`${courseId}_${lesson.lesson_number}`);
               
               return (
                 <div
@@ -329,8 +331,14 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
                     "p-3 rounded-lg border transition-colors",
                     isTodayLesson && "bg-primary/10 border-primary",
                     isPastLesson && "bg-muted/50 border-muted",
-                    isFuture(date) && !isTodayLesson && "bg-card border-border hover:border-primary/50"
+                    isFuture(date) && !isTodayLesson && "bg-card border-border hover:border-primary/50",
+                    hasLessonMaterial && "cursor-pointer hover:shadow-sm"
                   )}
+                  onClick={() => {
+                    if (hasLessonMaterial) {
+                      navigate(`/area-riservata/corso/${courseId}/lezione/${lesson.lesson_number}`);
+                    }
+                  }}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
@@ -367,17 +375,30 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
                     </div>
                   </div>
                   <div className="mt-2 flex items-center justify-between">
-                    {isTodayLesson && lesson.group.student_meeting_link ? (
-                      <a
-                        href={lesson.group.student_meeting_link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors"
-                      >
-                        <Video className="w-3 h-3" />
-                        Entra
-                      </a>
-                    ) : <span />}
+                    <div className="flex items-center gap-2">
+                      {isTodayLesson && lesson.group.student_meeting_link ? (
+                        <a
+                          href={lesson.group.student_meeting_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors"
+                        >
+                          <Video className="w-3 h-3" />
+                          Entra
+                        </a>
+                      ) : <span />}
+                      {hasLessonMaterial ? (
+                        <span className="text-[10px] text-primary flex items-center gap-1 font-medium">
+                          <BookOpen className="w-3 h-3" />
+                          Vai alla lezione
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-muted-foreground italic">
+                          Link alla lezione non disponibile
+                        </span>
+                      )}
+                    </div>
                     {getStatusBadge(lesson.lesson_date)}
                   </div>
                 </div>

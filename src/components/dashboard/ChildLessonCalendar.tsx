@@ -25,6 +25,7 @@ interface LessonSchedule {
     status: string;
     student_meeting_link: string | null;
     course: {
+      id: string;
       title: string;
       emoji: string;
     };

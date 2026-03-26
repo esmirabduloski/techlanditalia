@@ -192,15 +192,15 @@ export default function FAQ() {
               Il nostro team è sempre pronto ad aiutarti. Prenota una lezione di prova gratuita e parlaci delle tue esigenze.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button variant="outline" size="lg" asChild>
+                <Link to="/contatti">
+                  Contattaci
+                </Link>
+              </Button>
               <Button variant="cta" size="lg" asChild>
                 <Link to="/prenota">
                   Prenota lezione gratuita
                   <ArrowRight className="w-5 h-5 ml-2" />
-                </Link>
-              </Button>
-              <Button variant="outline" size="lg" asChild>
-                <Link to="/chi-siamo">
-                  Scopri chi siamo
                 </Link>
               </Button>
             </div>

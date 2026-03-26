@@ -1,0 +1,1 @@
+UPDATE blog_posts SET category = 'Consigli per genitori' WHERE category = 'consigli-genitori';

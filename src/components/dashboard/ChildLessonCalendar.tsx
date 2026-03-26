@@ -4,12 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, CalendarDays, Clock, AlertCircle, RefreshCw, Video, Eye, EyeOff } from "lucide-react";
+import { Loader2, CalendarDays, Clock, AlertCircle, RefreshCw, Video, Eye, EyeOff, BookOpen } from "lucide-react";
 import { format, isPast, isToday, isFuture } from "date-fns";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 interface LessonSchedule {
   id: string;

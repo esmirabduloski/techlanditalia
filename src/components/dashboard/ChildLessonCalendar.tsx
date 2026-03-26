@@ -103,6 +103,7 @@ export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupI
             status,
             student_meeting_link,
             course:course_id (
+              id,
               title,
               emoji
             )
@@ -132,12 +133,26 @@ export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupI
             status: s.group.status || 'active',
             student_meeting_link: s.group.student_meeting_link || null,
             course: {
+              id: s.group.course.id,
               title: s.group.course.title,
               emoji: s.group.course.emoji,
             },
           },
         }));
         setLessons(typedLessons);
+
+        // Fetch which lessons actually have material
+        const courseIds = [...new Set(typedLessons.map(l => l.group.course.id))];
+        if (courseIds.length > 0) {
+          const { data: lessonData } = await supabase
+            .from("lessons")
+            .select("course_id, lesson_number")
+            .in("course_id", courseIds);
+          if (lessonData) {
+            const set = new Set(lessonData.map(l => `${l.course_id}_${l.lesson_number}`));
+            setExistingLessons(set);
+          }
+        }
       }
     } catch (err: any) {
       console.error("Error fetching lesson schedule:", err);

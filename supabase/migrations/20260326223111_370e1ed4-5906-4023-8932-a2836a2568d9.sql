@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN bg_color text DEFAULT NULL;

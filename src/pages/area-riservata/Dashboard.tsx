@@ -30,6 +30,9 @@ import { useCelebration } from '@/hooks/useCelebration';
 import { Loader2, BookOpen, Trophy, Target, Settings, LogOut, Rocket, Shield, GraduationCap, CreditCard, Bookmark } from 'lucide-react';
 import { useBookmarks } from '@/hooks/useBookmarks';
 import { BugReportButton } from '@/components/BugReportButton';
+import { BackgroundColorPicker } from '@/components/dashboard/BackgroundColorPicker';
+import { useBackgroundColor, LIGHT_COLORS, DARK_COLORS } from '@/hooks/useBackgroundColor';
+import { useTheme } from 'next-themes';
 import { supabase } from '@/integrations/supabase/client';
 
 interface CourseProgress {
@@ -46,6 +49,8 @@ export default function Dashboard() {
   const { isTeacher, isLoading: teacherLoading } = useTeacherRole();
   const { celebration, isVisible: showCelebration, hideCelebration } = useCelebration();
   const { bookmarks } = useBookmarks();
+  const { bgColor, updateColor } = useBackgroundColor();
+  const { resolvedTheme } = useTheme();
   const navigate = useNavigate();
   const [courseProgressMap, setCourseProgressMap] = useState<CourseProgress[]>([]);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -238,7 +243,19 @@ export default function Dashboard() {
       {/* Deadline Notifications */}
       <DeadlineNotifications />
 
-      <div className="min-h-screen bg-gradient-to-br from-background via-tech-green-light/20 to-tech-cyan-light/20 dark:from-background dark:via-background dark:to-background">
+      <div className="min-h-screen" style={(() => {
+        const isDark = resolvedTheme === 'dark';
+        const isStudent = profile?.role === 'student';
+        if (isStudent && bgColor) {
+          const palette = isDark ? DARK_COLORS : LIGHT_COLORS;
+          const match = palette.find(c => c.id === bgColor);
+          if (match) return { backgroundColor: match.value };
+        }
+        if (isStudent) {
+          return { backgroundColor: isDark ? '#1a2e1a' : '#daffcb' };
+        }
+        return {};
+      })()}>
         <div className="max-w-6xl mx-auto px-4 py-8">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
@@ -287,6 +304,16 @@ export default function Dashboard() {
               </Button>
             </div>
           </div>
+
+          {/* Background Color Picker - Students only */}
+          {!effectiveIsTeacher && !effectiveIsParent && (
+            <div className="mb-6">
+              <BackgroundColorPicker
+                currentColor={bgColor}
+                onColorChange={(color) => updateColor(color)}
+              />
+            </div>
+          )}
 
           {/* Stats Cards - Hide for parents and teachers */}
           {!effectiveIsTeacher && !effectiveIsParent && (

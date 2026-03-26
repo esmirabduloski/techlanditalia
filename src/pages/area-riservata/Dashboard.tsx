@@ -49,6 +49,8 @@ export default function Dashboard() {
   const { isTeacher, isLoading: teacherLoading } = useTeacherRole();
   const { celebration, isVisible: showCelebration, hideCelebration } = useCelebration();
   const { bookmarks } = useBookmarks();
+  const { bgColor, updateColor } = useBackgroundColor();
+  const { resolvedTheme } = useTheme();
   const navigate = useNavigate();
   const [courseProgressMap, setCourseProgressMap] = useState<CourseProgress[]>([]);
   const [showOnboarding, setShowOnboarding] = useState(false);

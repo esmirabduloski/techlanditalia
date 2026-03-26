@@ -6,10 +6,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Loader2, CalendarDays, Clock, Video, Eye, EyeOff } from "lucide-react";
+import { Loader2, CalendarDays, Clock, Video, Eye, EyeOff, BookOpen } from "lucide-react";
 import { format, isPast, isToday, isFuture } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 interface LessonSchedule {
   id: string;

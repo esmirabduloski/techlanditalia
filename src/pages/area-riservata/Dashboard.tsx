@@ -248,16 +248,10 @@ export default function Dashboard() {
         const isStudent = profile?.role === 'student';
         if (isStudent && bgColor) {
           const palette = isDark ? DARK_COLORS : LIGHT_COLORS;
-          const found = palette.find(c => c.id === bgColor || c.id === bgColor.replace('-dark', '') + (isDark ? '-dark' : ''));
-          // Match by base id (e.g. 'green' matches 'green' in light, 'green-dark' in dark)
-          const baseId = bgColor.replace('-dark', '');
-          const match = isDark
-            ? DARK_COLORS.find(c => c.id === baseId + '-dark')
-            : LIGHT_COLORS.find(c => c.id === baseId);
+          const match = palette.find(c => c.id === bgColor);
           if (match) return { backgroundColor: match.value };
         }
         if (isStudent) {
-          // Default green for students
           return { backgroundColor: isDark ? '#1a2e1a' : '#daffcb' };
         }
         return {};

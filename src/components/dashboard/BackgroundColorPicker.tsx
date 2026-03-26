@@ -27,27 +27,28 @@ export function BackgroundColorPicker({ currentColor, onColorChange }: Backgroun
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-3 flex-wrap">
           {colors.map((color) => (
             <button
               key={color.id}
               onClick={() => onColorChange(color.id)}
-              className="relative w-8 h-8 rounded-full border-2 transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-primary/50"
+              className="relative w-9 h-9 rounded-full border-2 transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-primary/50"
               style={{
                 backgroundColor: color.value,
                 borderColor: currentColor === color.id ? 'hsl(var(--primary))' : 'hsl(var(--border))',
+                boxShadow: currentColor === color.id ? '0 0 0 2px hsl(var(--primary) / 0.3)' : 'none',
               }}
               title={color.label}
             >
               {currentColor === color.id && (
-                <Check className="w-4 h-4 absolute inset-0 m-auto" style={{ color: isDark ? '#fff' : '#333' }} />
+                <Check className="w-4 h-4 absolute inset-0 m-auto" style={{ color: isDark ? '#ccc' : '#555' }} />
               )}
             </button>
           ))}
           <Button
             variant="ghost"
             size="icon"
-            className="w-8 h-8"
+            className="w-9 h-9"
             onClick={() => onColorChange(null)}
             title="Ripristina default"
           >

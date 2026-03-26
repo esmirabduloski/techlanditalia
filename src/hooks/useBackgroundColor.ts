@@ -13,11 +13,11 @@ export const LIGHT_COLORS = [
 
 // Dark theme colors (toni scuri, buon contrasto con testo chiaro)
 export const DARK_COLORS = [
-  { id: 'green-dark', label: 'Verde', value: '#1a2e1a' },
-  { id: 'blue-dark', label: 'Azzurro', value: '#1a2230' },
-  { id: 'pink-dark', label: 'Rosa', value: '#2e1a24' },
-  { id: 'yellow-dark', label: 'Giallo', value: '#2e2a1a' },
-  { id: 'orange-dark', label: 'Arancione', value: '#2e221a' },
+  { id: 'green', label: 'Verde', value: '#1a2e1a' },
+  { id: 'blue', label: 'Azzurro', value: '#1a2230' },
+  { id: 'pink', label: 'Rosa', value: '#2e1a24' },
+  { id: 'yellow', label: 'Giallo', value: '#2e2a1a' },
+  { id: 'orange', label: 'Arancione', value: '#2e221a' },
 ];
 
 export function useBackgroundColor() {
@@ -32,7 +32,7 @@ export function useBackgroundColor() {
         .from('profiles')
         .select('bg_color, role')
         .eq('id', user.id)
-        .maybeSingle();
+        .maybeSingle() as { data: { bg_color: string | null; role: string } | null };
       if (data?.role === 'student') {
         setBgColor(data.bg_color || null);
       }
@@ -45,7 +45,7 @@ export function useBackgroundColor() {
     if (!user) return false;
     const { error } = await supabase
       .from('profiles')
-      .update({ bg_color: color })
+      .update({ bg_color: color } as any)
       .eq('id', user.id);
     if (!error) {
       setBgColor(color);

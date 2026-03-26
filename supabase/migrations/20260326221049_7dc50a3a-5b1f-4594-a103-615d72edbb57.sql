@@ -1,0 +1,1 @@
+UPDATE blog_posts SET category = 'Attività' WHERE category = 'attivita';

@@ -201,9 +201,9 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
     return result;
   }, [lessons, selectedCourseId, showCompleted]);
 
-  // Find today's lessons with meeting links (across ALL courses)
+  // Find today's lessons (across ALL courses)
   const todayLessons = useMemo(() => 
-    lessons.filter(l => isToday(new Date(l.lesson_date)) && l.group.student_meeting_link),
+    lessons.filter(l => isToday(new Date(l.lesson_date))),
     [lessons]
   );
 
@@ -293,21 +293,31 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
         {todayLessons.length > 0 && (
           <div className="mb-4 space-y-2">
             {todayLessons.map((lesson) => (
-              <a
-                key={`join-${lesson.id}`}
-                href={lesson.group.student_meeting_link!}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-3 w-full px-6 py-4 rounded-xl bg-primary text-primary-foreground font-bold text-base shadow-tech-glow hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300"
-              >
-                <Video className="w-5 h-5" />
-                🚀 Entra a Lezione — {lesson.group.course.emoji} {getLessonLabel(lesson.lesson_number)}
-                {(lesson.lesson_time || lesson.group.lesson_time) && (
-                  <span className="text-primary-foreground/80 text-sm font-normal ml-1">
-                    ore {(lesson.lesson_time || lesson.group.lesson_time)?.substring(0, 5)}
-                  </span>
-                )}
-              </a>
+              lesson.group.student_meeting_link ? (
+                <a
+                  key={`join-${lesson.id}`}
+                  href={lesson.group.student_meeting_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-3 w-full px-6 py-4 rounded-xl bg-primary text-primary-foreground font-bold text-base shadow-tech-glow hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300"
+                >
+                  <Video className="w-5 h-5" />
+                  🚀 Entra a Lezione — {lesson.group.course.emoji} {getLessonLabel(lesson.lesson_number)}
+                  {(lesson.lesson_time || lesson.group.lesson_time) && (
+                    <span className="text-primary-foreground/80 text-sm font-normal ml-1">
+                      ore {(lesson.lesson_time || lesson.group.lesson_time)?.substring(0, 5)}
+                    </span>
+                  )}
+                </a>
+              ) : (
+                <div
+                  key={`join-${lesson.id}`}
+                  className="flex items-center justify-center gap-3 w-full px-6 py-4 rounded-xl bg-muted border-2 border-dashed border-border text-muted-foreground font-bold text-base"
+                >
+                  <Video className="w-5 h-5" />
+                  {lesson.group.course.emoji} {getLessonLabel(lesson.lesson_number)} — Link non disponibile
+                </div>
+              )
             ))}
           </div>
         )}
@@ -376,18 +386,23 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
                   </div>
                   <div className="mt-2 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      {isTodayLesson && lesson.group.student_meeting_link ? (
+                      {lesson.group.student_meeting_link ? (
                         <a
                           href={lesson.group.student_meeting_link}
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={(e) => e.stopPropagation()}
-                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors"
+                          className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors shadow-sm"
                         >
-                          <Video className="w-3 h-3" />
-                          Entra
+                          <Video className="w-4 h-4" />
+                          ENTRA
                         </a>
-                      ) : <span />}
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-muted text-muted-foreground text-sm font-medium border border-dashed border-border">
+                          <Video className="w-4 h-4" />
+                          Link non disponibile
+                        </span>
+                      )}
                       {hasLessonMaterial ? (
                         <span className="text-[10px] text-primary flex items-center gap-1 font-medium">
                           <BookOpen className="w-3 h-3" />
@@ -395,7 +410,7 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
                         </span>
                       ) : (
                         <span className="text-[10px] text-muted-foreground italic">
-                          Link alla lezione non disponibile
+                          Materiale non disponibile
                         </span>
                       )}
                     </div>

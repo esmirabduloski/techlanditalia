@@ -121,6 +121,9 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
             lessonsData.forEach((l: any) => {
               lessonTitlesMap[`${l.course_id}-${l.lesson_number}`] = l.title;
             });
+            // Build set of existing lessons for clickability
+            const set = new Set(lessonsData.map((l: any) => `${l.course_id}_${l.lesson_number}`));
+            setExistingLessons(set);
           }
         }
 

@@ -462,6 +462,20 @@ export default function Dashboard() {
             </div>
           )}
 
+          {/* Homework Section - after courses */}
+          {!effectiveIsTeacher && !effectiveIsParent && (
+            <div className="mb-8">
+              <HomeworkSection />
+            </div>
+          )}
+
+          {/* Student Comments Section - after homework */}
+          {effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (
+            <div className="mb-8">
+              <StudentCommentsSection studentId={effectiveUserId} />
+            </div>
+          )}
+
           {/* Attendance History + Streaks - Hide for teachers and parents */}
           {streaks && !effectiveIsTeacher && !effectiveIsParent && (
             <div className="mb-8">
@@ -507,24 +521,10 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Homework Section */}
-          {!effectiveIsTeacher && !effectiveIsParent && (
-            <div className="mb-8">
-              <HomeworkSection />
-            </div>
-          )}
-
           {/* Teacher Info Card */}
           {effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (
             <div className="mb-8">
               <TeacherBioCard studentId={effectiveUserId} />
-            </div>
-          )}
-
-          {/* Student Comments Section */}
-          {effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (
-            <div className="mb-8">
-              <StudentCommentsSection studentId={effectiveUserId} />
             </div>
           )}
 

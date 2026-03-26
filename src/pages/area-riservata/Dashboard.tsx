@@ -243,7 +243,25 @@ export default function Dashboard() {
       {/* Deadline Notifications */}
       <DeadlineNotifications />
 
-      <div className="min-h-screen bg-gradient-to-br from-background via-tech-green-light/20 to-tech-cyan-light/20 dark:from-background dark:via-background dark:to-background">
+      <div className="min-h-screen" style={(() => {
+        const isDark = resolvedTheme === 'dark';
+        const isStudent = profile?.role === 'student';
+        if (isStudent && bgColor) {
+          const palette = isDark ? DARK_COLORS : LIGHT_COLORS;
+          const found = palette.find(c => c.id === bgColor || c.id === bgColor.replace('-dark', '') + (isDark ? '-dark' : ''));
+          // Match by base id (e.g. 'green' matches 'green' in light, 'green-dark' in dark)
+          const baseId = bgColor.replace('-dark', '');
+          const match = isDark
+            ? DARK_COLORS.find(c => c.id === baseId + '-dark')
+            : LIGHT_COLORS.find(c => c.id === baseId);
+          if (match) return { backgroundColor: match.value };
+        }
+        if (isStudent) {
+          // Default green for students
+          return { backgroundColor: isDark ? '#1a2e1a' : '#daffcb' };
+        }
+        return {};
+      })()}>
         <div className="max-w-6xl mx-auto px-4 py-8">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">

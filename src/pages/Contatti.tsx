@@ -253,7 +253,7 @@ export default function Contatti() {
             <p className="text-muted-foreground mb-6">Contattaci su WhatsApp per una risposta immediata!</p>
             <Button variant="cta" size="lg" asChild>
               <a
-                href="https://wa.me/393512508851"
+                href="https://wa.me/393505813140"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2"

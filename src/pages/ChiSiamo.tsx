@@ -82,7 +82,7 @@ const organizationSchema = {
   areaServed: "IT",
   contactPoint: {
     "@type": "ContactPoint",
-    telephone: "+39-351-250-8851",
+    telephone: "+39-350-581-3140",
     contactType: "customer service",
     availableLanguage: "Italian",
   },

@@ -23,6 +23,7 @@ const logoMap: Record<string, { src: string; alt: string }> = {
   '🐍': { src: '/images/python-logo.png', alt: 'Python' },
   '🤖': { src: '/images/python-logo.png', alt: 'Python PRO & AI' },
   '🧩': { src: '/images/scratch-logo.svg', alt: 'Scratch' },
+  '🐱': { src: '/images/scratch-logo.svg', alt: 'Scratch' },
   '🏗️': { src: '/images/roblox-logo.png', alt: 'Roblox' },
   '🎮': { src: '/images/roblox-logo.png', alt: 'Roblox' },
   '🚀': { src: '/images/roblox-logo.png', alt: 'Roblox Avanzato' },

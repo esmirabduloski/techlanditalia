@@ -18,12 +18,19 @@ const textSizeMap = {
   xl: 'text-4xl',
 };
 
+const logoMap: Record<string, { src: string; alt: string }> = {
+  '⛏️': { src: '/images/minecraft-logo.png', alt: 'Minecraft' },
+  '🐍': { src: '/images/python-logo.png', alt: 'Python' },
+  '🤖': { src: '/images/python-logo.png', alt: 'Python PRO & AI' },
+};
+
 export function CourseEmoji({ emoji, className = '', size = 'md' }: CourseEmojiProps) {
-  if (emoji === '⛏️') {
+  const logo = logoMap[emoji];
+  if (logo) {
     return (
       <img
-        src="/images/minecraft-logo.png"
-        alt="Minecraft"
+        src={logo.src}
+        alt={logo.alt}
         className={`${sizeMap[size]} object-contain ${className}`}
       />
     );

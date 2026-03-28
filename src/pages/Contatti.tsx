@@ -34,8 +34,8 @@ const contactInfo = [
   {
     icon: MessageCircle,
     title: "WhatsApp",
-    value: "+39 351 250 8851",
-    href: "https://wa.me/393512508851",
+    value: "+39 350 581 3140",
+    href: "https://wa.me/393505813140",
     description: "Contattaci su WhatsApp",
   },
   {

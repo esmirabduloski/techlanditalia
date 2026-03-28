@@ -4,6 +4,7 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Users, ArrowRight, Filter, Loader2 } from "lucide-react";
+import { CourseEmoji } from "@/components/ui/CourseEmoji";
 import { SEOHead, generateBreadcrumbSchema } from "@/components/seo/SEOHead";
 import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
 import { supabase } from "@/integrations/supabase/client";

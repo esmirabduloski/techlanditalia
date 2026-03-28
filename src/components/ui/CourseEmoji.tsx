@@ -27,7 +27,9 @@ const logoMap: Record<string, { src: string; alt: string }> = {
 };
 
 export function CourseEmoji({ emoji, className = '', size = 'md' }: CourseEmojiProps) {
-  const logo = logoMap[emoji];
+  // Normalize emoji by removing variant selectors (️ = \uFE0F) for reliable matching
+  const normalized = emoji?.replace(/\uFE0F/g, '');
+  const logo = logoMap[emoji] || Object.entries(logoMap).find(([key]) => key.replace(/\uFE0F/g, '') === normalized)?.[1];
   if (logo) {
     return (
       <img

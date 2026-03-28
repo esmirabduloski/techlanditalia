@@ -193,8 +193,8 @@ export default function Corsi() {
                 className="tech-card tech-card-hover p-6 group"
               >
                 <div className="flex items-start justify-between mb-4">
-                  <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-2xl">
-                    {course.emoji}
+                  <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                    <CourseEmoji emoji={course.emoji} size="lg" />
                   </div>
                   <Badge variant="outline" className={levelColors[course.level]}>
                     {levelLabels[course.level] || course.level}

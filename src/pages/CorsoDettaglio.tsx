@@ -1248,8 +1248,8 @@ export default function CorsoDettaglio() {
 
           <div className="tech-card p-8 md:p-12">
             <div className="flex items-start gap-4 mb-6">
-              <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center text-4xl" aria-hidden="true">
-                {course.emoji}
+              <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center" aria-hidden="true">
+                <CourseEmoji emoji={course.emoji} size="xl" />
               </div>
               <div>
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-2">{getSEOTitle().replace(" | TECHLAND", "")}</h1>

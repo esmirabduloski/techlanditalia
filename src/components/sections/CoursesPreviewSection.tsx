@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Clock, Users } from "lucide-react";
+import { CourseEmoji } from "@/components/ui/CourseEmoji";
 
 const courses = [
   {

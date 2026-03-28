@@ -142,14 +142,14 @@ export function Footer() {
                 info@techlanditalia.it
               </a>
               <a 
-                href="https://wa.me/393512508851" 
+                href="https://wa.me/393505813140" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 title="Contattaci su WhatsApp"
                 className="flex items-center gap-2 text-background/70 hover:text-background text-sm"
               >
                 <WhatsAppIcon />
-                +39 351 250 8851 (WhatsApp)
+                +39 350 581 3140 (WhatsApp)
               </a>
             </div>
           </nav>

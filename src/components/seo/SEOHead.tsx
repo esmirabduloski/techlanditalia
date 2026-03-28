@@ -108,7 +108,7 @@ export const organizationSchema = {
   "foundingDate": "2019",
   "contactPoint": {
     "@type": "ContactPoint",
-    "telephone": "+39-351-250-8851",
+    "telephone": "+39-350-581-3140",
     "contactType": "customer service",
     "email": "info@techlanditalia.it",
     "availableLanguage": "Italian"

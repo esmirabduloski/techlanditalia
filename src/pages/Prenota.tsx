@@ -58,12 +58,13 @@ const benefits = [
 const bookingSchema = z.object({
   parentName: z.string().trim().min(2, "Il nome deve avere almeno 2 caratteri").max(100, "Nome troppo lungo"),
   email: z.string().trim().email("Inserisci un'email valida").max(255, "Email troppo lunga"),
-  phone: z.string().trim().max(20, "Numero troppo lungo").optional().or(z.literal("")),
-  childAge: z.string().min(1, "Seleziona l'età del bambino"),
-  interest: z.string().min(1, "Seleziona un'area di interesse"),
+  phone: z.string().trim().min(1, "Inserisci il numero di telefono").max(20, "Numero troppo lungo"),
+  childAge: z.string().optional().or(z.literal("")),
+  interest: z.string().optional().or(z.literal("")),
   preferredDay: z.string().optional(),
   preferredTime: z.string().optional(),
   message: z.string().trim().max(1000, "Messaggio troppo lungo").optional(),
+  privacyAccepted: z.literal(true, { errorMap: () => ({ message: "Devi accettare la Privacy Policy" }) }),
 });
 
 type BookingFormData = z.infer<typeof bookingSchema>;

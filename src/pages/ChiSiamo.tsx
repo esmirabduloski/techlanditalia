@@ -27,8 +27,8 @@ const stats = [
 const values = [
   {
     emoji: "👦",
-    title: "Il ragazzo al centro",
-    description: "Percorsi pensati sulle esigenze, l'età e i talenti di ogni bambino e ragazzo.",
+    title: "L'alunno al centro",
+    description: "Percorsi pensati sulle esigenze, l'età e i talenti di ogni alunno.",
   },
   {
     emoji: "🎮",

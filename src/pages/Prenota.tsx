@@ -333,72 +333,24 @@ export default function Prenota() {
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="childAge"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Età del bambino (opzionale)</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="h-12">
-                              <SelectValue placeholder="Seleziona l'età" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {Array.from({ length: 13 }, (_, i) => i + 6).map((age) => (
-                              <SelectItem key={age} value={String(age)}>
-                                {age} anni
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="interest"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Interesse principale (opzionale)</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="h-12">
-                              <SelectValue placeholder="Seleziona un'area di interesse" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {interests.map((interest) => (
-                              <SelectItem key={interest.value} value={interest.value}>
-                                {interest.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
-                      name="preferredDay"
+                      name="childAge"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Giorno preferito</FormLabel>
+                          <FormLabel>Età dell'alunno (opzionale)</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger className="h-12">
-                                <SelectValue placeholder="Seleziona giorno" />
+                                <SelectValue placeholder="Seleziona" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {weekDays.map((day) => (
-                                <SelectItem key={day.value} value={day.value}>{day.label}</SelectItem>
+                              {Array.from({ length: 13 }, (_, i) => i + 6).map((age) => (
+                                <SelectItem key={age} value={String(age)}>
+                                  {age} anni
+                                </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -409,19 +361,21 @@ export default function Prenota() {
 
                     <FormField
                       control={form.control}
-                      name="preferredTime"
+                      name="interest"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Ora preferita</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <FormLabel>Interesse (opzionale)</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value} defaultValue="non-so">
                             <FormControl>
                               <SelectTrigger className="h-12">
-                                <SelectValue placeholder="Seleziona ora" />
+                                <SelectValue placeholder="Non sono sicuro" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {timeSlots.map((slot) => (
-                                <SelectItem key={slot.value} value={slot.value}>{slot.label}</SelectItem>
+                              {interests.map((interest) => (
+                                <SelectItem key={interest.value} value={interest.value}>
+                                  {interest.label}
+                                </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -430,24 +384,6 @@ export default function Prenota() {
                       )}
                     />
                   </div>
-
-                  <FormField
-                    control={form.control}
-                    name="message"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Messaggio (opzionale)</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Raccontaci qualcosa sul tuo bambino o facci delle domande..."
-                            rows={4}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
 
                   <FormField
                     control={form.control}

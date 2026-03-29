@@ -35,7 +35,7 @@ const contactInfo = [
     icon: MessageCircle,
     title: "WhatsApp",
     value: "+39 350 581 3140",
-    href: "https://wa.me/393505813140",
+    href: "https://wa.me/message/KHFBHZDEY3S7H1",
     description: "Contattaci su WhatsApp",
   },
   {
@@ -253,7 +253,7 @@ export default function Contatti() {
             <p className="text-muted-foreground mb-6">Contattaci su WhatsApp per una risposta immediata!</p>
             <Button variant="cta" size="lg" asChild>
               <a
-                href="https://wa.me/393505813140"
+                href="https://wa.me/message/KHFBHZDEY3S7H1"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2"

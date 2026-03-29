@@ -171,7 +171,7 @@ const handler = async (req: Request): Promise<Response> => {
               <p><strong>Messaggio:</strong></p>
               <p style="white-space: pre-wrap;">${safeMessaggio}</p>
             </div>
-            <p>Nel frattempo, puoi anche contattarci su <a href="https://wa.me/393505813140" style="color: #0ea5e9;">WhatsApp</a> per una risposta più rapida.</p>
+            <p>Nel frattempo, puoi anche contattarci su <a href="https://wa.me/message/KHFBHZDEY3S7H1" style="color: #0ea5e9;">WhatsApp</a> per una risposta più rapida.</p>
             <hr style="margin: 30px 0; border: none; border-top: 1px solid #e4e4e7;">
             <p style="color: #71717a; font-size: 12px;">
               TechLand Italia - Corsi di programmazione per bambini e ragazzi
@@ -179,7 +179,7 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
         `,
         undefined,
-        `Grazie per averci contattato, ${nome.trim()}!\n\nAbbiamo ricevuto il tuo messaggio e ti risponderemo il prima possibile.\n\nOggetto: ${oggetto.trim()}\n\nMessaggio:\n${messaggio.trim()}\n\nWhatsApp: https://wa.me/393505813140` 
+        `Grazie per averci contattato, ${nome.trim()}!\n\nAbbiamo ricevuto il tuo messaggio e ti risponderemo il prima possibile.\n\nOggetto: ${oggetto.trim()}\n\nMessaggio:\n${messaggio.trim()}\n\nWhatsApp: https://wa.me/message/KHFBHZDEY3S7H1` 
       );
 
       console.log("User confirmation email sent:", userEmailResponse);

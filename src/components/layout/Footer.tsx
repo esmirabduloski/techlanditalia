@@ -142,7 +142,7 @@ export function Footer() {
                 info@techlanditalia.it
               </a>
               <a 
-                href="https://wa.me/393505813140" 
+                href="https://wa.me/message/KHFBHZDEY3S7H1" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 title="Contattaci su WhatsApp"

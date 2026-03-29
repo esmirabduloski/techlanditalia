@@ -138,10 +138,8 @@ export default function Prenota() {
           phone: data.phone,
           childAge: data.childAge ? parseInt(data.childAge) : null,
           interest: data.interest || null,
-          availability: data.preferredDay && data.preferredTime 
-            ? `${data.preferredDay} - ${data.preferredTime}` 
-            : data.preferredDay || data.preferredTime || null,
-          message: data.message,
+          availability: null,
+          message: null,
           adminEmail: ADMIN_EMAIL,
         },
       });

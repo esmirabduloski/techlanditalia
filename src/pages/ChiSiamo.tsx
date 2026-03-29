@@ -298,7 +298,7 @@ export default function ChiSiamo() {
                 <p>I nostri standard sono elevati: solo il 15% dei candidati supera il processo di selezione.</p>
               </div>
               <Button variant="cta" size="lg" className="mt-6" asChild>
-                <Link to="/prenota">Conosci i nostri docenti</Link>
+                <Link to="/contatti">Conosci i nostri docenti</Link>
               </Button>
             </div>
             <div className="grid grid-cols-2 gap-4">

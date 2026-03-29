@@ -143,7 +143,7 @@ export default function Prenota() {
           email: data.email,
           phone: data.phone,
           childAge: data.childAge ? parseInt(data.childAge) : null,
-          interest: data.interest,
+          interest: data.interest || null,
           availability: data.preferredDay && data.preferredTime 
             ? `${data.preferredDay} - ${data.preferredTime}` 
             : data.preferredDay || data.preferredTime || null,

@@ -91,6 +91,26 @@ export default function Prenota() {
     },
   });
 
+  // Fetch courses from DB to populate interests dropdown
+  useEffect(() => {
+    const fetchCourses = async () => {
+      const { data, error } = await supabase
+        .from('courses')
+        .select('slug, title, emoji, age_range')
+        .eq('is_visible', true)
+        .order('title');
+
+      if (!error && data && data.length > 0) {
+        const courseInterests = data.map(c => ({
+          value: c.slug,
+          label: `${c.emoji} ${c.title}${c.age_range ? ` (${c.age_range})` : ''}`,
+        }));
+        setInterests([...courseInterests, { value: "non-so", label: "Non sono sicuro, vorrei consigli" }]);
+      }
+    };
+    fetchCourses();
+  }, []);
+
   // Track funnel step: page visit
   useEffect(() => {
     trackFunnelStep('booking_funnel', 1, 'page_visit');

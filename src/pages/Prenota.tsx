@@ -34,19 +34,6 @@ const fallbackInterests = [
   { value: "non-so", label: "Non sono sicuro, vorrei consigli" },
 ];
 
-const weekDays = [
-  { value: "lunedi", label: "Lunedì" },
-  { value: "martedi", label: "Martedì" },
-  { value: "mercoledi", label: "Mercoledì" },
-  { value: "giovedi", label: "Giovedì" },
-  { value: "venerdi", label: "Venerdì" },
-  { value: "sabato", label: "Sabato" },
-];
-
-const timeSlots = Array.from({ length: 12 }, (_, i) => {
-  const hour = i + 9;
-  return { value: `${hour}:00`, label: `${hour}:00` };
-});
 
 const benefits = [
   { icon: Calendar, text: "Ti contatteremo entro 24h" },

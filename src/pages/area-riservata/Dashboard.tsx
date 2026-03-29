@@ -564,6 +564,31 @@ export default function Dashboard() {
             </div>
           )}
 
+          {/* Trustpilot Review Collector - Parents only */}
+          {effectiveIsParent && (
+            <div className="mb-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">⭐ Lascia una recensione</CardTitle>
+                  <CardDescription>La tua opinione è importante! Aiutaci a migliorare lasciando una recensione su Trustpilot.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div
+                    className="trustpilot-widget"
+                    data-locale="it-IT"
+                    data-template-id="56278e9abfbbba0bdcd568bc"
+                    data-businessunit-id="69bc7e2f17d431052b1a4fbf"
+                    data-style-height="52px"
+                    data-style-width="100%"
+                    data-token="417b8337-b35f-46d8-b135-90345962311e"
+                  >
+                    <a href="https://it.trustpilot.com/review/techlanditalia.it" target="_blank" rel="noopener">Trustpilot</a>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
           {/* Quick Actions */}
           <Card>
             <CardHeader>

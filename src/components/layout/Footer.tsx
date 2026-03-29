@@ -155,21 +155,6 @@ export function Footer() {
           </nav>
         </div>
 
-        {/* Trustpilot Widget */}
-        <div className="border-t border-background/10 mt-12 pt-8">
-          <div
-            className="trustpilot-widget"
-            data-locale="it-IT"
-            data-template-id="56278e9abfbbba0bdcd568bc"
-            data-businessunit-id="69bc7e2f17d431052b1a4fbf"
-            data-style-height="52px"
-            data-style-width="100%"
-            data-token="417b8337-b35f-46d8-b135-90345962311e"
-          >
-            <a href="https://it.trustpilot.com/review/techlanditalia.it" target="_blank" rel="noopener">Trustpilot</a>
-          </div>
-        </div>
-
         {/* Bottom Bar */}
         <div className="border-t border-background/10 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="text-background/50 text-sm text-center md:text-left space-y-1">

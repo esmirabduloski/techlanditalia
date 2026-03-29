@@ -28,12 +28,7 @@ import { SEOHead } from "@/components/seo/SEOHead";
 import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
 import { useAnalytics } from "@/hooks/useAnalytics";
 
-const interests = [
-  { value: "coding-base", label: "Coding Base (6-8 anni)" },
-  { value: "game-dev", label: "Game Development" },
-  { value: "roblox", label: "Roblox Studio" },
-  { value: "web", label: "Web Development" },
-  { value: "python-ai", label: "Python & AI" },
+const fallbackInterests = [
   { value: "non-so", label: "Non sono sicuro, vorrei consigli" },
 ];
 

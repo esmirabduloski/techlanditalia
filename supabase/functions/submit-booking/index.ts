@@ -70,17 +70,22 @@ function validateBookingData(data: any): { valid: boolean; errors: string[] } {
     }
   }
 
-  // Child age validation
-  if (!data.childAge || typeof data.childAge !== "number") {
-    errors.push("Età bambino richiesta");
-  } else if (data.childAge < 6 || data.childAge > 18) {
-    errors.push("Età deve essere tra 6 e 18 anni");
+  // Phone validation (now required)
+  if (!data.phone || typeof data.phone !== "string" || data.phone.trim().length === 0) {
+    errors.push("Numero di telefono richiesto");
   }
 
-  // Interest validation
-  const validInterests = ["coding-base", "game-dev", "roblox", "web", "python-ai", "non-so"];
-  if (!data.interest || !validInterests.includes(data.interest)) {
-    errors.push("Seleziona un interesse valido");
+  // Child age validation (now optional)
+  if (data.childAge !== null && data.childAge !== undefined) {
+    if (typeof data.childAge !== "number" || data.childAge < 6 || data.childAge > 18) {
+      errors.push("Età deve essere tra 6 e 18 anni");
+    }
+  }
+
+  // Interest validation (now optional)
+  if (data.interest) {
+    const validInterests = ["coding-base", "game-dev", "roblox", "web", "python-ai", "non-so"];
+    // Allow any string since courses are dynamic
   }
 
   // Availability validation (optional)

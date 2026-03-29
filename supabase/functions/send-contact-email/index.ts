@@ -179,7 +179,7 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
         `,
         undefined,
-        `Grazie per averci contattato, ${nome.trim()}!\n\nAbbiamo ricevuto il tuo messaggio e ti risponderemo il prima possibile.\n\nOggetto: ${oggetto.trim()}\n\nMessaggio:\n${messaggio.trim()}\n\nWhatsApp: https://wa.me/393505813140` 
+        `Grazie per averci contattato, ${nome.trim()}!\n\nAbbiamo ricevuto il tuo messaggio e ti risponderemo il prima possibile.\n\nOggetto: ${oggetto.trim()}\n\nMessaggio:\n${messaggio.trim()}\n\nWhatsApp: https://wa.me/message/KHFBHZDEY3S7H1` 
       );
 
       console.log("User confirmation email sent:", userEmailResponse);

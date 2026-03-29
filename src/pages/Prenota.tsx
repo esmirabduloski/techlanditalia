@@ -28,12 +28,7 @@ import { SEOHead } from "@/components/seo/SEOHead";
 import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
 import { useAnalytics } from "@/hooks/useAnalytics";
 
-const interests = [
-  { value: "coding-base", label: "Coding Base (6-8 anni)" },
-  { value: "game-dev", label: "Game Development" },
-  { value: "roblox", label: "Roblox Studio" },
-  { value: "web", label: "Web Development" },
-  { value: "python-ai", label: "Python & AI" },
+const fallbackInterests = [
   { value: "non-so", label: "Non sono sicuro, vorrei consigli" },
 ];
 
@@ -78,6 +73,7 @@ export default function Prenota() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [interests, setInterests] = useState(fallbackInterests);
   const { trackFormStart, trackFormSubmit, trackFormError, trackBookingConversion, trackFunnelStep } = useAnalytics();
   const formStartTracked = useRef(false);
 
@@ -94,6 +90,26 @@ export default function Prenota() {
       message: "",
     },
   });
+
+  // Fetch courses from DB to populate interests dropdown
+  useEffect(() => {
+    const fetchCourses = async () => {
+      const { data, error } = await supabase
+        .from('courses')
+        .select('slug, title, emoji, age_range')
+        .eq('is_visible', true)
+        .order('title');
+
+      if (!error && data && data.length > 0) {
+        const courseInterests = data.map(c => ({
+          value: c.slug,
+          label: `${c.emoji} ${c.title}${c.age_range ? ` (${c.age_range})` : ''}`,
+        }));
+        setInterests([...courseInterests, { value: "non-so", label: "Non sono sicuro, vorrei consigli" }]);
+      }
+    };
+    fetchCourses();
+  }, []);
 
   // Track funnel step: page visit
   useEffect(() => {

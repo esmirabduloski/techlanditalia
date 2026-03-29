@@ -186,8 +186,8 @@ serve(async (req: Request): Promise<Response> => {
       parent_name: data.parentName.trim(),
       email: data.email.trim().toLowerCase(),
       phone: data.phone?.trim() || null,
-      child_age: data.childAge,
-      interest: data.interest,
+      child_age: data.childAge || 0,
+      interest: data.interest || "non-so",
       availability: data.availability || null,
       message: data.message?.trim() || null,
     });

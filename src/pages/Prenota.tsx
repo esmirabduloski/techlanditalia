@@ -473,6 +473,31 @@ export default function Prenota() {
                     )}
                   />
 
+                  <FormField
+                    control={form.control}
+                    name="privacyAccepted"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value === true}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel className="text-sm font-normal cursor-pointer">
+                            Accetto la{" "}
+                            <Link to="/privacy" className="text-primary hover:underline" target="_blank">
+                              Privacy Policy
+                            </Link>{" "}
+                            di TECHLAND e acconsento a essere contattato. *
+                          </FormLabel>
+                          <FormMessage />
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+
                   <Button 
                     type="submit" 
                     variant="hero" 
@@ -482,12 +507,6 @@ export default function Prenota() {
                   >
                     {isSubmitting ? "Invio in corso..." : "Prenota lezione gratuita"}
                   </Button>
-
-                  <p className="text-xs text-center text-muted-foreground">
-                    Inviando questo form accetti la nostra{" "}
-                    <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>
-                    {" "}e acconsenti a essere contattato da TECHLAND.
-                  </p>
                 </form>
               </Form>
             </div>

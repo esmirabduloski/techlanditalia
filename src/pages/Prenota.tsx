@@ -169,14 +169,11 @@ export default function Prenota() {
         interest: data.interest,
         child_age: data.childAge,
         has_phone: !!data.phone,
-        has_message: !!data.message
       });
       
       trackBookingConversion({
         interest: data.interest,
         child_age: data.childAge,
-        preferred_day: data.preferredDay,
-        preferred_time: data.preferredTime
       });
 
       setIsSubmitted(true);

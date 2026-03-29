@@ -343,7 +343,7 @@ export default function Prenota() {
                     name="phone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Telefono (opzionale)</FormLabel>
+                        <FormLabel>Telefono *</FormLabel>
                         <FormControl>
                           <Input 
                             type="tel" 

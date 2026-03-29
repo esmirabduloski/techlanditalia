@@ -58,13 +58,12 @@ function validateBookingData(data: any): { valid: boolean; errors: string[] } {
     }
   }
 
-  // Phone validation (optional)
+  // Phone format validation
   if (data.phone && typeof data.phone === "string") {
     const phone = data.phone.trim();
     if (phone.length > 20) {
       errors.push("Numero di telefono troppo lungo");
     }
-    // Only allow numbers, spaces, +, -, ()
     if (!/^[\d\s+\-()]*$/.test(phone)) {
       errors.push("Numero di telefono contiene caratteri non validi");
     }

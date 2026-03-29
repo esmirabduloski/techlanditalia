@@ -362,7 +362,7 @@ export default function Prenota() {
                     name="childAge"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Età del bambino *</FormLabel>
+                        <FormLabel>Età del bambino (opzionale)</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger className="h-12">

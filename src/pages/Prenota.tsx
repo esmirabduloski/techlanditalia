@@ -85,9 +85,6 @@ export default function Prenota() {
       phone: "",
       childAge: "",
       interest: "",
-      preferredDay: "",
-      preferredTime: "",
-      message: "",
       privacyAccepted: undefined as unknown as true,
     },
   });

@@ -109,8 +109,8 @@ interface BookingRequest {
   parentName: string;
   email: string;
   phone?: string;
-  childAge: number;
-  interest: string;
+  childAge: number | null;
+  interest: string | null;
   availability?: string;
   message?: string;
   adminEmail?: string;

@@ -91,6 +91,7 @@ export default function Prenota() {
       preferredDay: "",
       preferredTime: "",
       message: "",
+      privacyAccepted: undefined as unknown as true,
     },
   });
 

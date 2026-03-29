@@ -39,7 +39,6 @@ const benefits = [
   { icon: Calendar, text: "Ti contatteremo entro 24h" },
   { icon: Video, text: "Lezione 1:1 con un docente" },
   { icon: Shield, text: "Nessun impegno, zero costi" },
-  { icon: Clock, text: "Durata: 30-45 minuti" },
 ];
 
 const bookingSchema = z.object({

@@ -5,7 +5,7 @@ import { z } from "zod";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+
 import {
   Select,
   SelectContent,
@@ -21,7 +21,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { CheckCircle2, Calendar, Video, Shield, Clock } from "lucide-react";
+import { CheckCircle2, Calendar, Video, Shield } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -34,25 +34,11 @@ const fallbackInterests = [
   { value: "non-so", label: "Non sono sicuro, vorrei consigli" },
 ];
 
-const weekDays = [
-  { value: "lunedi", label: "Lunedì" },
-  { value: "martedi", label: "Martedì" },
-  { value: "mercoledi", label: "Mercoledì" },
-  { value: "giovedi", label: "Giovedì" },
-  { value: "venerdi", label: "Venerdì" },
-  { value: "sabato", label: "Sabato" },
-];
-
-const timeSlots = Array.from({ length: 12 }, (_, i) => {
-  const hour = i + 9;
-  return { value: `${hour}:00`, label: `${hour}:00` };
-});
 
 const benefits = [
   { icon: Calendar, text: "Ti contatteremo entro 24h" },
   { icon: Video, text: "Lezione 1:1 con un docente" },
   { icon: Shield, text: "Nessun impegno, zero costi" },
-  { icon: Clock, text: "Durata: 30-45 minuti" },
 ];
 
 const bookingSchema = z.object({
@@ -61,9 +47,6 @@ const bookingSchema = z.object({
   phone: z.string().trim().min(1, "Inserisci il numero di telefono").max(20, "Numero troppo lungo"),
   childAge: z.string().optional().or(z.literal("")),
   interest: z.string().optional().or(z.literal("")),
-  preferredDay: z.string().optional(),
-  preferredTime: z.string().optional(),
-  message: z.string().trim().max(1000, "Messaggio troppo lungo").optional(),
   privacyAccepted: z.literal(true, { errorMap: () => ({ message: "Devi accettare la Privacy Policy" }) }),
 });
 
@@ -88,9 +71,6 @@ export default function Prenota() {
       phone: "",
       childAge: "",
       interest: "",
-      preferredDay: "",
-      preferredTime: "",
-      message: "",
       privacyAccepted: undefined as unknown as true,
     },
   });
@@ -144,10 +124,8 @@ export default function Prenota() {
           phone: data.phone,
           childAge: data.childAge ? parseInt(data.childAge) : null,
           interest: data.interest || null,
-          availability: data.preferredDay && data.preferredTime 
-            ? `${data.preferredDay} - ${data.preferredTime}` 
-            : data.preferredDay || data.preferredTime || null,
-          message: data.message,
+          availability: null,
+          message: null,
           adminEmail: ADMIN_EMAIL,
         },
       });
@@ -190,14 +168,11 @@ export default function Prenota() {
         interest: data.interest,
         child_age: data.childAge,
         has_phone: !!data.phone,
-        has_message: !!data.message
       });
       
       trackBookingConversion({
         interest: data.interest,
         child_age: data.childAge,
-        preferred_day: data.preferredDay,
-        preferred_time: data.preferredTime
       });
 
       setIsSubmitted(true);
@@ -357,72 +332,24 @@ export default function Prenota() {
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="childAge"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Età del bambino (opzionale)</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="h-12">
-                              <SelectValue placeholder="Seleziona l'età" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {Array.from({ length: 13 }, (_, i) => i + 6).map((age) => (
-                              <SelectItem key={age} value={String(age)}>
-                                {age} anni
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="interest"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Interesse principale (opzionale)</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="h-12">
-                              <SelectValue placeholder="Seleziona un'area di interesse" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {interests.map((interest) => (
-                              <SelectItem key={interest.value} value={interest.value}>
-                                {interest.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
-                      name="preferredDay"
+                      name="childAge"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Giorno preferito</FormLabel>
+                          <FormLabel>Età dell'alunno (opzionale)</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger className="h-12">
-                                <SelectValue placeholder="Seleziona giorno" />
+                                <SelectValue placeholder="Seleziona" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {weekDays.map((day) => (
-                                <SelectItem key={day.value} value={day.value}>{day.label}</SelectItem>
+                              {Array.from({ length: 13 }, (_, i) => i + 6).map((age) => (
+                                <SelectItem key={age} value={String(age)}>
+                                  {age} anni
+                                </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -433,19 +360,21 @@ export default function Prenota() {
 
                     <FormField
                       control={form.control}
-                      name="preferredTime"
+                      name="interest"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Ora preferita</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <FormLabel>Interesse (opzionale)</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value} defaultValue="non-so">
                             <FormControl>
                               <SelectTrigger className="h-12">
-                                <SelectValue placeholder="Seleziona ora" />
+                                <SelectValue placeholder="Non sono sicuro" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {timeSlots.map((slot) => (
-                                <SelectItem key={slot.value} value={slot.value}>{slot.label}</SelectItem>
+                              {interests.map((interest) => (
+                                <SelectItem key={interest.value} value={interest.value}>
+                                  {interest.label}
+                                </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -454,24 +383,6 @@ export default function Prenota() {
                       )}
                     />
                   </div>
-
-                  <FormField
-                    control={form.control}
-                    name="message"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Messaggio (opzionale)</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Raccontaci qualcosa sul tuo bambino o facci delle domande..."
-                            rows={4}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
 
                   <FormField
                     control={form.control}

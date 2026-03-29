@@ -22,6 +22,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { CheckCircle2, Calendar, Video, Shield, Clock } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SEOHead } from "@/components/seo/SEOHead";
@@ -56,12 +58,13 @@ const benefits = [
 const bookingSchema = z.object({
   parentName: z.string().trim().min(2, "Il nome deve avere almeno 2 caratteri").max(100, "Nome troppo lungo"),
   email: z.string().trim().email("Inserisci un'email valida").max(255, "Email troppo lunga"),
-  phone: z.string().trim().max(20, "Numero troppo lungo").optional().or(z.literal("")),
-  childAge: z.string().min(1, "Seleziona l'età del bambino"),
-  interest: z.string().min(1, "Seleziona un'area di interesse"),
+  phone: z.string().trim().min(1, "Inserisci il numero di telefono").max(20, "Numero troppo lungo"),
+  childAge: z.string().optional().or(z.literal("")),
+  interest: z.string().optional().or(z.literal("")),
   preferredDay: z.string().optional(),
   preferredTime: z.string().optional(),
   message: z.string().trim().max(1000, "Messaggio troppo lungo").optional(),
+  privacyAccepted: z.literal(true, { errorMap: () => ({ message: "Devi accettare la Privacy Policy" }) }),
 });
 
 type BookingFormData = z.infer<typeof bookingSchema>;
@@ -88,6 +91,7 @@ export default function Prenota() {
       preferredDay: "",
       preferredTime: "",
       message: "",
+      privacyAccepted: undefined as unknown as true,
     },
   });
 
@@ -138,8 +142,8 @@ export default function Prenota() {
           parentName: data.parentName,
           email: data.email,
           phone: data.phone,
-          childAge: parseInt(data.childAge),
-          interest: data.interest,
+          childAge: data.childAge ? parseInt(data.childAge) : null,
+          interest: data.interest || null,
           availability: data.preferredDay && data.preferredTime 
             ? `${data.preferredDay} - ${data.preferredTime}` 
             : data.preferredDay || data.preferredTime || null,
@@ -339,7 +343,7 @@ export default function Prenota() {
                     name="phone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Telefono (opzionale)</FormLabel>
+                        <FormLabel>Telefono *</FormLabel>
                         <FormControl>
                           <Input 
                             type="tel" 
@@ -358,7 +362,7 @@ export default function Prenota() {
                     name="childAge"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Età del bambino *</FormLabel>
+                        <FormLabel>Età del bambino (opzionale)</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger className="h-12">
@@ -383,7 +387,7 @@ export default function Prenota() {
                     name="interest"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Interesse principale *</FormLabel>
+                        <FormLabel>Interesse principale (opzionale)</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger className="h-12">
@@ -469,6 +473,31 @@ export default function Prenota() {
                     )}
                   />
 
+                  <FormField
+                    control={form.control}
+                    name="privacyAccepted"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value === true}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel className="text-sm font-normal cursor-pointer">
+                            Accetto la{" "}
+                            <Link to="/privacy" className="text-primary hover:underline" target="_blank">
+                              Privacy Policy
+                            </Link>{" "}
+                            di TECHLAND e acconsento a essere contattato. *
+                          </FormLabel>
+                          <FormMessage />
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+
                   <Button 
                     type="submit" 
                     variant="hero" 
@@ -478,12 +507,6 @@ export default function Prenota() {
                   >
                     {isSubmitting ? "Invio in corso..." : "Prenota lezione gratuita"}
                   </Button>
-
-                  <p className="text-xs text-center text-muted-foreground">
-                    Inviando questo form accetti la nostra{" "}
-                    <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>
-                    {" "}e acconsenti a essere contattato da TECHLAND.
-                  </p>
                 </form>
               </Form>
             </div>

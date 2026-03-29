@@ -58,29 +58,33 @@ function validateBookingData(data: any): { valid: boolean; errors: string[] } {
     }
   }
 
-  // Phone validation (optional)
+  // Phone format validation
   if (data.phone && typeof data.phone === "string") {
     const phone = data.phone.trim();
     if (phone.length > 20) {
       errors.push("Numero di telefono troppo lungo");
     }
-    // Only allow numbers, spaces, +, -, ()
     if (!/^[\d\s+\-()]*$/.test(phone)) {
       errors.push("Numero di telefono contiene caratteri non validi");
     }
   }
 
-  // Child age validation
-  if (!data.childAge || typeof data.childAge !== "number") {
-    errors.push("Età bambino richiesta");
-  } else if (data.childAge < 6 || data.childAge > 18) {
-    errors.push("Età deve essere tra 6 e 18 anni");
+  // Phone validation (now required)
+  if (!data.phone || typeof data.phone !== "string" || data.phone.trim().length === 0) {
+    errors.push("Numero di telefono richiesto");
   }
 
-  // Interest validation
-  const validInterests = ["coding-base", "game-dev", "roblox", "web", "python-ai", "non-so"];
-  if (!data.interest || !validInterests.includes(data.interest)) {
-    errors.push("Seleziona un interesse valido");
+  // Child age validation (now optional)
+  if (data.childAge !== null && data.childAge !== undefined) {
+    if (typeof data.childAge !== "number" || data.childAge < 6 || data.childAge > 18) {
+      errors.push("Età deve essere tra 6 e 18 anni");
+    }
+  }
+
+  // Interest validation (now optional)
+  if (data.interest) {
+    const validInterests = ["coding-base", "game-dev", "roblox", "web", "python-ai", "non-so"];
+    // Allow any string since courses are dynamic
   }
 
   // Availability validation (optional)
@@ -105,8 +109,8 @@ interface BookingRequest {
   parentName: string;
   email: string;
   phone?: string;
-  childAge: number;
-  interest: string;
+  childAge: number | null;
+  interest: string | null;
   availability?: string;
   message?: string;
   adminEmail?: string;
@@ -182,8 +186,8 @@ serve(async (req: Request): Promise<Response> => {
       parent_name: data.parentName.trim(),
       email: data.email.trim().toLowerCase(),
       phone: data.phone?.trim() || null,
-      child_age: data.childAge,
-      interest: data.interest,
+      child_age: data.childAge || 0,
+      interest: data.interest || "non-so",
       availability: data.availability || null,
       message: data.message?.trim() || null,
     });

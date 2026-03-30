@@ -51,10 +51,14 @@ export function SEOHead({
       <meta name="title" content={fullTitle} />
       <meta name="description" content={truncatedDescription} />
       {keywords && <meta name="keywords" content={keywords} />}
-      <meta name="robots" content={noIndex ? "noindex, nofollow" : "index, follow"} />
+      <meta name="robots" content={noIndex ? "noindex, nofollow" : "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"} />
       
       {/* Canonical */}
       {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
+      
+      {/* Hreflang */}
+      {canonicalUrl && <link rel="alternate" hrefLang="it" href={canonicalUrl} />}
+      {canonicalUrl && <link rel="alternate" hrefLang="x-default" href={canonicalUrl} />}
       
       {/* Open Graph / Facebook */}
       <meta property="og:type" content={ogType} />

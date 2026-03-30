@@ -98,9 +98,9 @@ export default function ChiSiamo() {
     <Layout>
       <SEOHead
         title="Chi Siamo - Scuola di Coding per Bambini | TECHLAND"
-        description="Scopri TECHLAND: la scuola italiana leader nei corsi di programmazione per bambini e ragazzi 6-18 anni. 15.000+ studenti formati, 50+ docenti esperti. La nostra missione."
-        canonical="https://techlanditalia.it/chi-siamo"
-        keywords="chi siamo techland, scuola coding bambini italia, corsi programmazione ragazzi, insegnanti coding, formazione digitale giovani"
+        description="Scopri TECHLAND: la scuola italiana di corsi di programmazione per bambini e ragazzi 6-18 anni. 1.200+ studenti formati, docenti esperti. La nostra missione."
+        canonical="/chi-siamo"
+        keywords="chi siamo techland, scuola coding bambini italia, corsi programmazione ragazzi, insegnanti coding qualificati, formazione digitale giovani, storia techland"
         schemaData={organizationSchema}
       />
 

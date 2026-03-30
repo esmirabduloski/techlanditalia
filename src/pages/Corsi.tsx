@@ -130,6 +130,7 @@ export default function Corsi() {
         title="Corsi di Programmazione per Bambini e Ragazzi Online | TECHLAND"
         description="Scopri tutti i corsi di coding per bambini e ragazzi 6-18 anni: Scratch, Roblox, Minecraft, Python, Unity, Web Development. Lezioni online in piccoli gruppi."
         canonical="/corsi"
+        keywords="corsi programmazione bambini online, corsi coding ragazzi, corso Scratch, corso Roblox, corso Minecraft, corso Python, corso Unity, corso web development, lezioni coding bambini, scuola programmazione online"
         structuredData={[breadcrumbSchema, coursesListSchema]}
       />
       

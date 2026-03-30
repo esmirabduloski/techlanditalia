@@ -234,6 +234,32 @@ export default function Prenota() {
         title="Prenota Lezione di Prova Gratuita | Corsi Coding Bambini | TECHLAND"
         description="Prenota una lezione di prova gratuita per il tuo bambino. Scopri i nostri corsi di programmazione per bambini e ragazzi 6-18 anni. Nessun impegno!"
         canonical="/prenota"
+        keywords="lezione prova gratuita coding bambini, prenotare corso programmazione, lezione gratuita coding, prova gratis corso bambini, iscrizione corso programmazione"
+        structuredData={[
+          {
+            "@context": "https://schema.org",
+            "@type": "Offer",
+            "name": "Lezione di Prova Gratuita di Coding per Bambini",
+            "description": "Prenota una lezione di prova completamente gratuita e senza impegno per il tuo bambino",
+            "price": "0",
+            "priceCurrency": "EUR",
+            "availability": "https://schema.org/InStock",
+            "url": "https://techlanditalia.it/prenota",
+            "seller": {
+              "@type": "EducationalOrganization",
+              "name": "TECHLAND",
+              "url": "https://techlanditalia.it"
+            }
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://techlanditalia.it/" },
+              { "@type": "ListItem", "position": 2, "name": "Prenota Lezione Gratuita", "item": "https://techlanditalia.it/prenota" }
+            ]
+          }
+        ]}
       />
       <section className="tech-section bg-gradient-to-b from-tech-green-light to-background dark:from-background dark:to-background">
         <div className="tech-container">

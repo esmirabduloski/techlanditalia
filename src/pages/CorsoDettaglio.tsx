@@ -1226,12 +1226,29 @@ export default function CorsoDettaglio() {
     { name: course?.title || "", url: `/corsi/${id}` }
   ]);
 
+  const getSEOKeywords = () => {
+    const keywordsMap: Record<string, string> = {
+      "minecraft-education": "corso Minecraft bambini, Minecraft Education, programmazione Minecraft, MakeCode bambini, coding Minecraft",
+      "abc-creativita-digitale": "corso creatività digitale bambini, design digitale bambini, Canva bambini, animazione bambini",
+      "abc-informatica": "corso informatica bambini, Scratch Junior, programmazione a blocchi, alfabetizzazione digitale bambini",
+      "scratch": "corso Scratch, programmazione visiva bambini, Scratch coding, creare giochi Scratch, animazioni Scratch",
+      "roblox-base": "corso Roblox, Roblox Studio bambini, creare giochi Roblox, programmare Roblox, Lua bambini",
+      "roblox-avanzato": "corso Roblox avanzato, Roblox scripting, game design ragazzi, Lua avanzato, sviluppo giochi Roblox",
+      "web-development": "corso web development ragazzi, HTML CSS JavaScript, creare siti web, programmazione web ragazzi",
+      "unity": "corso Unity ragazzi, sviluppo giochi 3D, C# ragazzi, game development Unity, creare videogiochi",
+      "python-base": "corso Python ragazzi, Python base, imparare Python, programmazione Python bambini",
+      "python-pro-ai": "corso Python avanzato, intelligenza artificiale ragazzi, machine learning bambini, Python AI corso",
+    };
+    return keywordsMap[id!] || `corso ${course?.title}, programmazione bambini`;
+  };
+
   return (
     <Layout>
       <SEOHead
         title={getSEOTitle()}
         description={getSEODescription()}
         canonical={`/corsi/${id}`}
+        keywords={getSEOKeywords()}
         structuredData={courseSchema ? [courseSchema, breadcrumbSchema] : [breadcrumbSchema]}
       />
       

@@ -95,7 +95,35 @@ export default function LavoraConNoi() {
         title="Lavora Con Noi - Insegnanti Coding per Bambini | TECHLAND"
         description="Unisciti al team TECHLAND! Cerchiamo insegnanti di programmazione per bambini e ragazzi. Lavoro remoto, orari flessibili, formazione continua."
         canonical="/lavora-con-noi"
-        keywords="lavora con noi techland, insegnante coding bambini, lavoro insegnante programmazione, docente scratch python roblox"
+        keywords="lavora con noi techland, insegnante coding bambini, lavoro insegnante programmazione, docente scratch python roblox, lavoro remoto insegnante"
+        structuredData={[
+          ...positions.map((pos, i) => ({
+            "@context": "https://schema.org",
+            "@type": "JobPosting",
+            "title": pos.title,
+            "description": pos.description,
+            "employmentType": "PART_TIME",
+            "jobLocationType": "TELECOMMUTE",
+            "hiringOrganization": {
+              "@type": "EducationalOrganization",
+              "name": "TECHLAND",
+              "sameAs": "https://techlanditalia.it",
+            },
+            "applicantLocationRequirements": {
+              "@type": "Country",
+              "name": "Italia",
+            },
+            "datePosted": "2026-01-15",
+          })),
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://techlanditalia.it/" },
+              { "@type": "ListItem", "position": 2, "name": "Lavora Con Noi", "item": "https://techlanditalia.it/lavora-con-noi" }
+            ]
+          }
+        ]}
       />
       
       {/* Hero Section */}

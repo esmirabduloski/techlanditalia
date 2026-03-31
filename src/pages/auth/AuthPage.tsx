@@ -378,6 +378,7 @@ export default function AuthPage() {
                       onChange={(e) => setResetEmail(e.target.value)}
                       required
                       disabled={isLoading}
+                      autoComplete="email"
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>

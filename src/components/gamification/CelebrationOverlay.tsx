@@ -60,13 +60,13 @@ export function CelebrationOverlay({
 
   // Reduced motion: simple static variants
   const cardVariants = useMemo(() => prefersReducedMotion ? {
-    initial: { opacity: 0 },
-    animate: { opacity: 1 },
-    exit: { opacity: 0 },
+    initial: { opacity: 0 } as const,
+    animate: { opacity: 1 } as const,
+    exit: { opacity: 0 } as const,
   } : {
-    initial: { scale: 0, rotate: -10 },
-    animate: { scale: 1, rotate: 0, transition: { type: 'spring', stiffness: 200, damping: 15, delay: 0.1 } },
-    exit: { scale: 0, rotate: 10 },
+    initial: { scale: 0, rotate: -10 } as const,
+    animate: { scale: 1, rotate: 0, transition: { type: 'spring' as const, stiffness: 200, damping: 15, delay: 0.1 } },
+    exit: { scale: 0, rotate: 10 } as const,
   }, [prefersReducedMotion]);
 
   useEffect(() => {

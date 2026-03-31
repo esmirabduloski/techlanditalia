@@ -155,7 +155,6 @@
   /* Minimum touch target size for accessibility (44x44px) */
   button,
   [role="button"],
-  a,
   input[type="checkbox"],
   input[type="radio"],
   select {
@@ -163,13 +162,11 @@
     min-width: 44px;
   }
 
-  /* Exception for inline links within text */
-  p a,
-  li a,
-  span a,
-  td a {
-    min-height: unset;
-    min-width: unset;
+  /* Links get touch target only on touch devices */
+  @media (pointer: coarse) {
+    a {
+      min-height: 44px;
+    }
   }
 
   /* Respect reduced motion preference */

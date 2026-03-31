@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Trophy, Star, Sparkles } from 'lucide-react';
 import { SocialShareButton } from './SocialShareButton';
 
@@ -38,8 +38,13 @@ export function CelebrationOverlay({
   onClose 
 }: CelebrationOverlayProps) {
   const [confetti, setConfetti] = useState<Confetti[]>([]);
+  const prefersReducedMotion = useReducedMotion();
 
   const generateConfetti = useCallback(() => {
+    if (prefersReducedMotion) {
+      setConfetti([]);
+      return;
+    }
     const pieces: Confetti[] = [];
     for (let i = 0; i < 50; i++) {
       pieces.push({
@@ -51,7 +56,18 @@ export function CelebrationOverlay({
       });
     }
     setConfetti(pieces);
-  }, []);
+  }, [prefersReducedMotion]);
+
+  // Reduced motion: simple static variants
+  const cardVariants = useMemo(() => prefersReducedMotion ? {
+    initial: { opacity: 0 } as const,
+    animate: { opacity: 1 } as const,
+    exit: { opacity: 0 } as const,
+  } : {
+    initial: { scale: 0, rotate: -10 } as const,
+    animate: { scale: 1, rotate: 0, transition: { type: 'spring' as const, stiffness: 200, damping: 15, delay: 0.1 } },
+    exit: { scale: 0, rotate: 10 } as const,
+  }, [prefersReducedMotion]);
 
   useEffect(() => {
     if (isVisible) {
@@ -79,53 +95,46 @@ export function CelebrationOverlay({
             className="absolute inset-0 bg-background/60 backdrop-blur-sm pointer-events-auto"
           />
 
-          {/* Confetti */}
-          <div className="absolute inset-0 overflow-hidden">
-            {confetti.map((piece) => (
-              <motion.div
-                key={piece.id}
-                initial={{ 
-                  y: -20, 
-                  x: `${piece.x}vw`,
-                  rotate: 0,
-                  opacity: 1 
-                }}
-                animate={{ 
-                  y: '110vh',
-                  rotate: 720,
-                  opacity: [1, 1, 0]
-                }}
-                transition={{ 
-                  duration: 3 + Math.random() * 2,
-                  delay: piece.delay,
-                  ease: 'linear'
-                }}
-                className="absolute"
-                style={{
-                  width: piece.size,
-                  height: piece.size,
-                  backgroundColor: piece.color,
-                  borderRadius: Math.random() > 0.5 ? '50%' : '2px',
-                }}
-              />
-            ))}
-          </div>
+          {/* Confetti - skip if user prefers reduced motion */}
+          {!prefersReducedMotion && (
+            <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
+              {confetti.map((piece) => (
+                <motion.div
+                  key={piece.id}
+                  initial={{ 
+                    y: -20, 
+                    x: `${piece.x}vw`,
+                    rotate: 0,
+                    opacity: 1 
+                  }}
+                  animate={{ 
+                    y: '110vh',
+                    rotate: 720,
+                    opacity: [1, 1, 0]
+                  }}
+                  transition={{ 
+                    duration: 3 + Math.random() * 2,
+                    delay: piece.delay,
+                    ease: 'linear'
+                  }}
+                  className="absolute"
+                  style={{
+                    width: piece.size,
+                    height: piece.size,
+                    backgroundColor: piece.color,
+                    borderRadius: Math.random() > 0.5 ? '50%' : '2px',
+                  }}
+                />
+              ))}
+            </div>
+          )}
 
           {/* Celebration Card */}
           <motion.div
-            initial={{ scale: 0, rotate: -10 }}
-            animate={{ 
-              scale: 1, 
-              rotate: 0,
-              transition: { 
-                type: 'spring', 
-                stiffness: 200, 
-                damping: 15,
-                delay: 0.1 
-              }
-            }}
-            exit={{ scale: 0, rotate: 10 }}
+            {...cardVariants}
             className="relative z-10 pointer-events-auto"
+            role="alert"
+            aria-live="assertive"
           >
             <div className="relative">
               {/* Glow effect */}
@@ -141,29 +150,31 @@ export function CelebrationOverlay({
               <div className="relative bg-card border-2 border-primary/30 rounded-3xl p-8 shadow-2xl max-w-sm mx-4">
                 {/* Sparkles decoration */}
                 <motion.div
-                  animate={{ 
+                  animate={prefersReducedMotion ? {} : { 
                     rotate: 360,
                     scale: [1, 1.2, 1]
                   }}
-                  transition={{ 
+                  transition={prefersReducedMotion ? {} : { 
                     rotate: { duration: 20, repeat: Infinity, ease: 'linear' },
                     scale: { duration: 2, repeat: Infinity }
                   }}
                   className="absolute -top-4 -right-4"
+                  aria-hidden="true"
                 >
                   <Sparkles className="w-8 h-8 text-yellow-400" />
                 </motion.div>
                 
                 <motion.div
-                  animate={{ 
+                  animate={prefersReducedMotion ? {} : { 
                     rotate: -360,
                     scale: [1, 1.3, 1]
                   }}
-                  transition={{ 
+                  transition={prefersReducedMotion ? {} : { 
                     rotate: { duration: 15, repeat: Infinity, ease: 'linear' },
                     scale: { duration: 1.5, repeat: Infinity, delay: 0.5 }
                   }}
                   className="absolute -bottom-3 -left-3"
+                  aria-hidden="true"
                 >
                   <Star className="w-6 h-6 text-primary fill-primary" />
                 </motion.div>
@@ -171,11 +182,11 @@ export function CelebrationOverlay({
                 {/* Icon */}
                 <motion.div 
                   className="flex justify-center mb-4"
-                  animate={{ 
+                  animate={prefersReducedMotion ? {} : { 
                     y: [0, -10, 0],
                     scale: [1, 1.1, 1]
                   }}
-                  transition={{ 
+                  transition={prefersReducedMotion ? {} : { 
                     duration: 1.5, 
                     repeat: Infinity,
                     ease: 'easeInOut'

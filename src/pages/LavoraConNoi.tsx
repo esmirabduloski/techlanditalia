@@ -207,6 +207,7 @@ export default function LavoraConNoi() {
                     value={formData.nome}
                     onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                     required
+                    autoComplete="name"
                     placeholder="Mario Rossi"
                   />
                 </div>
@@ -218,6 +219,7 @@ export default function LavoraConNoi() {
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     required
+                    autoComplete="email"
                     placeholder="mario@esempio.it"
                   />
                 </div>
@@ -230,6 +232,7 @@ export default function LavoraConNoi() {
                     id="telefono"
                     value={formData.telefono}
                     onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+                    autoComplete="tel"
                     placeholder="+39 123 456 7890"
                   />
                 </div>

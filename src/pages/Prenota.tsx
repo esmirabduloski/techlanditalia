@@ -312,6 +312,7 @@ export default function Prenota() {
                           <Input 
                             placeholder="Es. Maria Rossi" 
                             className="h-12"
+                            autoComplete="name"
                             {...field}
                           />
                         </FormControl>
@@ -331,6 +332,7 @@ export default function Prenota() {
                             type="email" 
                             placeholder="Es. maria.rossi@email.com" 
                             className="h-12"
+                            autoComplete="email"
                             {...field}
                           />
                         </FormControl>
@@ -350,6 +352,7 @@ export default function Prenota() {
                             type="tel" 
                             placeholder="Es. +39 333 1234567" 
                             className="h-12"
+                            autoComplete="tel"
                             {...field}
                           />
                         </FormControl>

@@ -319,6 +319,7 @@ export default function AuthPage() {
                 <form onSubmit={handleUpdatePassword} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="new-password">Nuova Password</Label>
+                    <p id="new-password-hint" className="text-xs text-muted-foreground">Minimo 6 caratteri</p>
                     <PasswordInput
                       id="new-password"
                       placeholder="Minimo 6 caratteri"
@@ -327,6 +328,8 @@ export default function AuthPage() {
                       required
                       disabled={isLoading}
                       minLength={6}
+                      autoComplete="new-password"
+                      aria-describedby="new-password-hint"
                     />
                   </div>
                   <div className="space-y-2">
@@ -339,6 +342,7 @@ export default function AuthPage() {
                       required
                       disabled={isLoading}
                       minLength={6}
+                      autoComplete="new-password"
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>
@@ -374,6 +378,7 @@ export default function AuthPage() {
                       onChange={(e) => setResetEmail(e.target.value)}
                       required
                       disabled={isLoading}
+                      autoComplete="email"
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>
@@ -448,6 +453,7 @@ export default function AuthPage() {
       <form onSubmit={handleLogin} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="login-identifier">Email o Nome Utente</Label>
+          <p id="login-identifier-hint" className="text-xs text-muted-foreground">Genitori e insegnanti: email · Studenti: username</p>
           <Input
             id="login-identifier"
             type="text"
@@ -456,8 +462,9 @@ export default function AuthPage() {
             onChange={(e) => setIdentifier(e.target.value)}
             required
             disabled={isLoading}
+            autoComplete="username"
+            aria-describedby="login-identifier-hint"
           />
-          <p className="text-xs text-muted-foreground">Genitori e insegnanti: email · Studenti: username</p>
         </div>
 
         <div className="space-y-2">
@@ -469,6 +476,7 @@ export default function AuthPage() {
             onChange={(e) => setPassword(e.target.value)}
             required
             disabled={isLoading}
+            autoComplete="current-password"
           />
         </div>
         <Button type="submit" className="w-full" disabled={isLoading}>
@@ -543,6 +551,7 @@ export default function AuthPage() {
               onChange={(e) => setFullName(e.target.value)}
               required
               disabled={isLoading}
+              autoComplete="name"
             />
           </div>
           <div className="space-y-2">
@@ -555,10 +564,12 @@ export default function AuthPage() {
               onChange={(e) => setRegEmail(e.target.value)}
               required
               disabled={isLoading}
+              autoComplete="email"
             />
           </div>
           <div className="space-y-2">
             <Label htmlFor="signup-password">Password</Label>
+            <p id="signup-password-hint" className="text-xs text-muted-foreground">Minimo 6 caratteri</p>
             <PasswordInput
               id="signup-password"
               placeholder="Minimo 6 caratteri"
@@ -567,6 +578,8 @@ export default function AuthPage() {
               required
               disabled={isLoading}
               minLength={6}
+              autoComplete="new-password"
+              aria-describedby="signup-password-hint"
             />
           </div>
         </div>

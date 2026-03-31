@@ -46,7 +46,7 @@ export function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8" aria-label="Navigazione principale">
+          <nav className="hidden lg:flex items-center gap-6" aria-label="Navigazione principale">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -63,7 +63,7 @@ export function Navbar() {
           </nav>
 
           {/* CTA Buttons */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-3">
             <ThemeToggle />
             {!user ? (
               <Button variant="ghost" asChild>
@@ -93,7 +93,7 @@ export function Navbar() {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden p-2 rounded-lg hover:bg-muted min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="lg:hidden p-2 rounded-lg hover:bg-muted min-w-[44px] min-h-[44px] flex items-center justify-center"
             onClick={() => setIsOpen(!isOpen)}
             aria-label={isOpen ? "Chiudi menu di navigazione" : "Apri menu di navigazione"}
             aria-expanded={isOpen}
@@ -105,7 +105,7 @@ export function Navbar() {
 
         {/* Mobile Menu */}
         {isOpen && (
-          <div id="mobile-menu" className="md:hidden py-4 border-t border-border/50 animate-fade-in" role="menu">
+          <div id="mobile-menu" className="lg:hidden py-4 border-t border-border/50 animate-fade-in" role="menu">
             <div className="flex flex-col gap-2">
               {navLinks.map((link) => (
                 <Link

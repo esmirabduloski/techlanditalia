@@ -95,53 +95,46 @@ export function CelebrationOverlay({
             className="absolute inset-0 bg-background/60 backdrop-blur-sm pointer-events-auto"
           />
 
-          {/* Confetti */}
-          <div className="absolute inset-0 overflow-hidden">
-            {confetti.map((piece) => (
-              <motion.div
-                key={piece.id}
-                initial={{ 
-                  y: -20, 
-                  x: `${piece.x}vw`,
-                  rotate: 0,
-                  opacity: 1 
-                }}
-                animate={{ 
-                  y: '110vh',
-                  rotate: 720,
-                  opacity: [1, 1, 0]
-                }}
-                transition={{ 
-                  duration: 3 + Math.random() * 2,
-                  delay: piece.delay,
-                  ease: 'linear'
-                }}
-                className="absolute"
-                style={{
-                  width: piece.size,
-                  height: piece.size,
-                  backgroundColor: piece.color,
-                  borderRadius: Math.random() > 0.5 ? '50%' : '2px',
-                }}
-              />
-            ))}
-          </div>
+          {/* Confetti - skip if user prefers reduced motion */}
+          {!prefersReducedMotion && (
+            <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
+              {confetti.map((piece) => (
+                <motion.div
+                  key={piece.id}
+                  initial={{ 
+                    y: -20, 
+                    x: `${piece.x}vw`,
+                    rotate: 0,
+                    opacity: 1 
+                  }}
+                  animate={{ 
+                    y: '110vh',
+                    rotate: 720,
+                    opacity: [1, 1, 0]
+                  }}
+                  transition={{ 
+                    duration: 3 + Math.random() * 2,
+                    delay: piece.delay,
+                    ease: 'linear'
+                  }}
+                  className="absolute"
+                  style={{
+                    width: piece.size,
+                    height: piece.size,
+                    backgroundColor: piece.color,
+                    borderRadius: Math.random() > 0.5 ? '50%' : '2px',
+                  }}
+                />
+              ))}
+            </div>
+          )}
 
           {/* Celebration Card */}
           <motion.div
-            initial={{ scale: 0, rotate: -10 }}
-            animate={{ 
-              scale: 1, 
-              rotate: 0,
-              transition: { 
-                type: 'spring', 
-                stiffness: 200, 
-                damping: 15,
-                delay: 0.1 
-              }
-            }}
-            exit={{ scale: 0, rotate: 10 }}
+            {...cardVariants}
             className="relative z-10 pointer-events-auto"
+            role="alert"
+            aria-live="assertive"
           >
             <div className="relative">
               {/* Glow effect */}

@@ -9,6 +9,8 @@ import { ThemeProvider } from "next-themes";
 import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
 import { ImpersonationProvider } from "@/contexts/ImpersonationContext";
 import { ImpersonationBanner } from "@/components/admin/ImpersonationBanner";
+import { SkipToContent } from "@/components/accessibility/SkipToContent";
+import { RouteAnnouncer } from "@/components/accessibility/RouteAnnouncer";
 import ScrollToTop from "./components/ScrollToTop";
 import Index from "./pages/Index";
 

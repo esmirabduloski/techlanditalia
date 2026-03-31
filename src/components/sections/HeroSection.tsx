@@ -96,7 +96,7 @@ export function HeroSection() {
             >
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-red-500/20 flex items-center justify-center">
-                  <img src="/images/roblox-logo.png" alt="Roblox" className="w-7 h-7 object-contain" />
+                  <img src="/images/roblox-logo.png" alt="" className="w-7 h-7 object-contain" aria-hidden="true" />
                 </div>
                 <div>
                   <p className="font-semibold text-sm">Roblox</p>

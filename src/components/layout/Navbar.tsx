@@ -101,7 +101,6 @@ export function Navbar() {
           >
             {isOpen ? <X className="w-6 h-6" aria-hidden="true" /> : <Menu className="w-6 h-6" aria-hidden="true" />}
           </button>
-          </button>
         </div>
 
         {/* Mobile Menu */}

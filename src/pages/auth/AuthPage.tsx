@@ -448,6 +448,7 @@ export default function AuthPage() {
       <form onSubmit={handleLogin} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="login-identifier">Email o Nome Utente</Label>
+          <p id="login-identifier-hint" className="text-xs text-muted-foreground">Genitori e insegnanti: email · Studenti: username</p>
           <Input
             id="login-identifier"
             type="text"
@@ -456,8 +457,9 @@ export default function AuthPage() {
             onChange={(e) => setIdentifier(e.target.value)}
             required
             disabled={isLoading}
+            autoComplete="username"
+            aria-describedby="login-identifier-hint"
           />
-          <p className="text-xs text-muted-foreground">Genitori e insegnanti: email · Studenti: username</p>
         </div>
 
         <div className="space-y-2">
@@ -469,6 +471,7 @@ export default function AuthPage() {
             onChange={(e) => setPassword(e.target.value)}
             required
             disabled={isLoading}
+            autoComplete="current-password"
           />
         </div>
         <Button type="submit" className="w-full" disabled={isLoading}>

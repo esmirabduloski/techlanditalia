@@ -74,6 +74,15 @@ const Leaderboard = lazy(() => import("./pages/area-riservata/Leaderboard"));
 
 const queryClient = new QueryClient();
 
+const lazyRetry = (importFn: () => Promise<any>) =>
+  lazy(() =>
+    importFn().catch(() => {
+      // Force reload on stale chunk errors
+      window.location.reload();
+      return importFn();
+    })
+  );
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>

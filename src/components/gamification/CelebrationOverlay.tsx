@@ -150,29 +150,31 @@ export function CelebrationOverlay({
               <div className="relative bg-card border-2 border-primary/30 rounded-3xl p-8 shadow-2xl max-w-sm mx-4">
                 {/* Sparkles decoration */}
                 <motion.div
-                  animate={{ 
+                  animate={prefersReducedMotion ? {} : { 
                     rotate: 360,
                     scale: [1, 1.2, 1]
                   }}
-                  transition={{ 
+                  transition={prefersReducedMotion ? {} : { 
                     rotate: { duration: 20, repeat: Infinity, ease: 'linear' },
                     scale: { duration: 2, repeat: Infinity }
                   }}
                   className="absolute -top-4 -right-4"
+                  aria-hidden="true"
                 >
                   <Sparkles className="w-8 h-8 text-yellow-400" />
                 </motion.div>
                 
                 <motion.div
-                  animate={{ 
+                  animate={prefersReducedMotion ? {} : { 
                     rotate: -360,
                     scale: [1, 1.3, 1]
                   }}
-                  transition={{ 
+                  transition={prefersReducedMotion ? {} : { 
                     rotate: { duration: 15, repeat: Infinity, ease: 'linear' },
                     scale: { duration: 1.5, repeat: Infinity, delay: 0.5 }
                   }}
                   className="absolute -bottom-3 -left-3"
+                  aria-hidden="true"
                 >
                   <Star className="w-6 h-6 text-primary fill-primary" />
                 </motion.div>
@@ -180,11 +182,11 @@ export function CelebrationOverlay({
                 {/* Icon */}
                 <motion.div 
                   className="flex justify-center mb-4"
-                  animate={{ 
+                  animate={prefersReducedMotion ? {} : { 
                     y: [0, -10, 0],
                     scale: [1, 1.1, 1]
                   }}
-                  transition={{ 
+                  transition={prefersReducedMotion ? {} : { 
                     duration: 1.5, 
                     repeat: Infinity,
                     ease: 'easeInOut'

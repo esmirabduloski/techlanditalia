@@ -551,6 +551,7 @@ export default function AuthPage() {
               onChange={(e) => setFullName(e.target.value)}
               required
               disabled={isLoading}
+              autoComplete="name"
             />
           </div>
           <div className="space-y-2">
@@ -563,10 +564,12 @@ export default function AuthPage() {
               onChange={(e) => setRegEmail(e.target.value)}
               required
               disabled={isLoading}
+              autoComplete="email"
             />
           </div>
           <div className="space-y-2">
             <Label htmlFor="signup-password">Password</Label>
+            <p id="signup-password-hint" className="text-xs text-muted-foreground">Minimo 6 caratteri</p>
             <PasswordInput
               id="signup-password"
               placeholder="Minimo 6 caratteri"
@@ -575,6 +578,8 @@ export default function AuthPage() {
               required
               disabled={isLoading}
               minLength={6}
+              autoComplete="new-password"
+              aria-describedby="signup-password-hint"
             />
           </div>
         </div>

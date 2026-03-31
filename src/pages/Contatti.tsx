@@ -218,10 +218,13 @@ export default function Contatti() {
                     onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                     required
                     maxLength={100}
+                    autoComplete="name"
                     placeholder="Il tuo nome"
+                    aria-describedby={errors.nome ? "nome-error" : undefined}
+                    aria-invalid={!!errors.nome}
                     className={errors.nome ? "border-destructive" : ""}
                   />
-                  {errors.nome && <p className="text-sm text-destructive">{errors.nome}</p>}
+                  {errors.nome && <p id="nome-error" className="text-sm text-destructive flex items-center gap-1" role="alert"><span aria-hidden="true">⚠</span> {errors.nome}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email *</Label>
@@ -232,10 +235,13 @@ export default function Contatti() {
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     required
                     maxLength={254}
+                    autoComplete="email"
                     placeholder="la-tua@email.it"
+                    aria-describedby={errors.email ? "email-error" : undefined}
+                    aria-invalid={!!errors.email}
                     className={errors.email ? "border-destructive" : ""}
                   />
-                  {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+                  {errors.email && <p id="email-error" className="text-sm text-destructive flex items-center gap-1" role="alert"><span aria-hidden="true">⚠</span> {errors.email}</p>}
                 </div>
               </div>
 
@@ -247,14 +253,18 @@ export default function Contatti() {
                   onChange={(e) => setFormData({ ...formData, oggetto: e.target.value })}
                   required
                   maxLength={200}
+                  autoComplete="off"
                   placeholder="Di cosa vuoi parlarci?"
+                  aria-describedby={errors.oggetto ? "oggetto-error" : undefined}
+                  aria-invalid={!!errors.oggetto}
                   className={errors.oggetto ? "border-destructive" : ""}
                 />
-                {errors.oggetto && <p className="text-sm text-destructive">{errors.oggetto}</p>}
+                {errors.oggetto && <p id="oggetto-error" className="text-sm text-destructive flex items-center gap-1" role="alert"><span aria-hidden="true">⚠</span> {errors.oggetto}</p>}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="messaggio">Messaggio *</Label>
+                <p id="messaggio-hint" className="text-xs text-muted-foreground">Massimo 5000 caratteri</p>
                 <Textarea
                   id="messaggio"
                   value={formData.messaggio}
@@ -263,11 +273,13 @@ export default function Contatti() {
                   maxLength={5000}
                   placeholder="Scrivi qui il tuo messaggio..."
                   rows={5}
+                  aria-describedby={`messaggio-hint${errors.messaggio ? " messaggio-error" : ""}`}
+                  aria-invalid={!!errors.messaggio}
                   className={errors.messaggio ? "border-destructive" : ""}
                 />
                 <div className="flex justify-between text-sm text-muted-foreground">
-                  {errors.messaggio && <p className="text-destructive">{errors.messaggio}</p>}
-                  <span className="ml-auto">{formData.messaggio.length}/5000</span>
+                  {errors.messaggio && <p id="messaggio-error" className="text-destructive flex items-center gap-1" role="alert"><span aria-hidden="true">⚠</span> {errors.messaggio}</p>}
+                  <span className="ml-auto" aria-live="polite">{formData.messaggio.length}/5000</span>
                 </div>
               </div>
 

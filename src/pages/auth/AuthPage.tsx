@@ -319,6 +319,7 @@ export default function AuthPage() {
                 <form onSubmit={handleUpdatePassword} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="new-password">Nuova Password</Label>
+                    <p id="new-password-hint" className="text-xs text-muted-foreground">Minimo 6 caratteri</p>
                     <PasswordInput
                       id="new-password"
                       placeholder="Minimo 6 caratteri"
@@ -327,6 +328,8 @@ export default function AuthPage() {
                       required
                       disabled={isLoading}
                       minLength={6}
+                      autoComplete="new-password"
+                      aria-describedby="new-password-hint"
                     />
                   </div>
                   <div className="space-y-2">
@@ -339,6 +342,7 @@ export default function AuthPage() {
                       required
                       disabled={isLoading}
                       minLength={6}
+                      autoComplete="new-password"
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>

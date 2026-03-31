@@ -77,7 +77,7 @@ export function HeroSection() {
                 <div className="w-full h-full rounded-3xl bg-card flex items-center justify-center overflow-hidden">
                   <img
                     src={heroImage}
-                    alt="Corsi di Roblox, Minecraft, Scratch, Python e Web per bambini e ragazzi"
+                    alt="Bambini che imparano programmazione con corsi di Roblox, Minecraft, Scratch, Python e Web Development su TECHLAND"
                     className="w-full h-full object-cover"
                     width={504}
                     height={504}

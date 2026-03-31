@@ -128,7 +128,7 @@ export function HeroSection() {
             >
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-blue-500/20 flex items-center justify-center">
-                  <img src="/images/python-logo.png" alt="Python" className="w-7 h-7 object-contain" />
+                  <img src="/images/python-logo.png" alt="" className="w-7 h-7 object-contain" aria-hidden="true" />
                 </div>
                 <div>
                   <p className="font-semibold text-sm">Python</p>

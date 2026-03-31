@@ -77,7 +77,7 @@ export function HeroSection() {
                 <div className="w-full h-full rounded-3xl bg-card flex items-center justify-center overflow-hidden">
                   <img
                     src={heroImage}
-                    alt="Corsi di Roblox, Minecraft, Scratch, Python e Web per bambini e ragazzi"
+                    alt="Bambini che imparano programmazione con corsi di Roblox, Minecraft, Scratch, Python e Web Development su TECHLAND"
                     className="w-full h-full object-cover"
                     width={504}
                     height={504}
@@ -96,7 +96,7 @@ export function HeroSection() {
             >
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-red-500/20 flex items-center justify-center">
-                  <img src="/images/roblox-logo.png" alt="Roblox" className="w-7 h-7 object-contain" />
+                  <img src="/images/roblox-logo.png" alt="" className="w-7 h-7 object-contain" aria-hidden="true" />
                 </div>
                 <div>
                   <p className="font-semibold text-sm">Roblox</p>
@@ -112,7 +112,7 @@ export function HeroSection() {
             >
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-orange-500/20 flex items-center justify-center">
-                  <img src="/images/scratch-logo.svg" alt="Scratch" className="w-7 h-7 object-contain" />
+                  <img src="/images/scratch-logo.svg" alt="" className="w-7 h-7 object-contain" aria-hidden="true" />
                 </div>
                 <div>
                   <p className="font-semibold text-sm">Scratch</p>
@@ -128,7 +128,7 @@ export function HeroSection() {
             >
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-blue-500/20 flex items-center justify-center">
-                  <img src="/images/python-logo.png" alt="Python" className="w-7 h-7 object-contain" />
+                  <img src="/images/python-logo.png" alt="" className="w-7 h-7 object-contain" aria-hidden="true" />
                 </div>
                 <div>
                   <p className="font-semibold text-sm">Python</p>
@@ -160,7 +160,7 @@ export function HeroSection() {
             >
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-green-600/20 flex items-center justify-center">
-                  <img src="/images/minecraft-logo.png" alt="Minecraft" className="w-7 h-7 object-contain" />
+                  <img src="/images/minecraft-logo.png" alt="" className="w-7 h-7 object-contain" aria-hidden="true" />
                 </div>
                 <div>
                   <p className="font-semibold text-sm">Minecraft</p>

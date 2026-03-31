@@ -31,11 +31,11 @@ export function Navbar() {
   const showTrialButton = !user || (!hasEnrollments && !isStudent && !isTeacher);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50" role="navigation" aria-label="Navigazione principale del sito">
       <div className="tech-container">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2" aria-label="TECHLAND - Torna alla homepage">
             <div className="w-10 h-10 rounded-xl bg-gradient-hero flex items-center justify-center">
               <span className="text-primary-foreground font-bold text-xl">T</span>
             </div>
@@ -93,17 +93,19 @@ export function Navbar() {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden p-2 rounded-lg hover:bg-muted"
+            className="md:hidden p-2 rounded-lg hover:bg-muted min-w-[44px] min-h-[44px] flex items-center justify-center"
             onClick={() => setIsOpen(!isOpen)}
-            aria-label={isOpen ? "Chiudi menu" : "Apri menu"}
+            aria-label={isOpen ? "Chiudi menu di navigazione" : "Apri menu di navigazione"}
+            aria-expanded={isOpen}
+            aria-controls="mobile-menu"
           >
-            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {isOpen ? <X className="w-6 h-6" aria-hidden="true" /> : <Menu className="w-6 h-6" aria-hidden="true" />}
           </button>
         </div>
 
         {/* Mobile Menu */}
         {isOpen && (
-          <div className="md:hidden py-4 border-t border-border/50 animate-fade-in">
+          <div id="mobile-menu" className="md:hidden py-4 border-t border-border/50 animate-fade-in" role="menu">
             <div className="flex flex-col gap-2">
               {navLinks.map((link) => (
                 <Link

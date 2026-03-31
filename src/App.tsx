@@ -9,6 +9,8 @@ import { ThemeProvider } from "next-themes";
 import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
 import { ImpersonationProvider } from "@/contexts/ImpersonationContext";
 import { ImpersonationBanner } from "@/components/admin/ImpersonationBanner";
+import { SkipToContent } from "@/components/accessibility/SkipToContent";
+import { RouteAnnouncer } from "@/components/accessibility/RouteAnnouncer";
 import ScrollToTop from "./components/ScrollToTop";
 import Index from "./pages/Index";
 
@@ -92,10 +94,12 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
+              <SkipToContent />
               <ImpersonationBanner />
               <AnalyticsProvider>
                 <ScrollToTop />
-                <Suspense fallback={null}>
+                <RouteAnnouncer />
+                <Suspense fallback={<div role="status" aria-busy="true" aria-label="Caricamento pagina" className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
                   <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/corsi" element={<Corsi />} />

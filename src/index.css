@@ -97,7 +97,7 @@
     --secondary-foreground: 0 0% 100%;
 
     --muted: 160 20% 15%;
-    --muted-foreground: 150 15% 65%;
+    --muted-foreground: 150 12% 55%;
 
     --accent: 180 55% 45%;
     --accent-foreground: 0 0% 100%;
@@ -145,12 +145,39 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-bold tracking-tight;
   }
+
+  /* Global focus-visible styles for accessibility */
+  *:focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary rounded-sm;
+    outline-style: solid;
+  }
+
+  /* Respect reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
 @layer components {
   .tech-gradient-text {
     @apply bg-clip-text text-transparent;
     background-image: var(--gradient-hero);
+    /* Fallback for high-contrast mode and screen readers */
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Dark mode: use solid high-contrast color instead of gradient for readability */
+  .dark .tech-gradient-text {
+    background-image: none;
+    -webkit-text-fill-color: hsl(152 55% 55%);
+    color: hsl(152 55% 55%);
   }
 
   .tech-card {

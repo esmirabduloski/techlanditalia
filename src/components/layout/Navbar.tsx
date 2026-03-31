@@ -35,7 +35,7 @@ export function Navbar() {
       <div className="tech-container">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2" aria-label="TECHLAND - Torna alla homepage">
             <div className="w-10 h-10 rounded-xl bg-gradient-hero flex items-center justify-center">
               <span className="text-primary-foreground font-bold text-xl">T</span>
             </div>

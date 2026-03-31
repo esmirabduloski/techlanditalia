@@ -169,6 +169,15 @@
   .tech-gradient-text {
     @apply bg-clip-text text-transparent;
     background-image: var(--gradient-hero);
+    /* Fallback for high-contrast mode and screen readers */
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Dark mode: use solid high-contrast color instead of gradient for readability */
+  .dark .tech-gradient-text {
+    background-image: none;
+    -webkit-text-fill-color: hsl(152 55% 55%);
+    color: hsl(152 55% 55%);
   }
 
   .tech-card {

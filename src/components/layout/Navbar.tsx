@@ -31,7 +31,7 @@ export function Navbar() {
   const showTrialButton = !user || (!hasEnrollments && !isStudent && !isTeacher);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50" role="navigation" aria-label="Navigazione principale del sito">
       <div className="tech-container">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}

@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Trophy, Star, Sparkles } from 'lucide-react';
 import { SocialShareButton } from './SocialShareButton';
 

@@ -19,9 +19,6 @@ const Toaster = ({ ...props }: ToasterProps) => {
           cancelButton: "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
         },
       }}
-      aria-live="polite"
-      aria-atomic="true"
-      role="status"
       {...props}
     />
   );

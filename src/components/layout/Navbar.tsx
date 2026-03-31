@@ -105,7 +105,7 @@ export function Navbar() {
 
         {/* Mobile Menu */}
         {isOpen && (
-          <div className="md:hidden py-4 border-t border-border/50 animate-fade-in">
+          <div id="mobile-menu" className="md:hidden py-4 border-t border-border/50 animate-fade-in" role="menu">
             <div className="flex flex-col gap-2">
               {navLinks.map((link) => (
                 <Link

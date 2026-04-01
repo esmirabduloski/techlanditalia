@@ -161,9 +161,9 @@ export function Navbar() {
                     <Link to="/prenota" onClick={() => setIsOpen(false)}>Lezione gratuita</Link>
                   </Button>
                 )}
-              </div>
-            </div>
-          </div>
+              </li>
+            </ul>
+          </nav>
         )}
       </div>
     </nav>

@@ -233,6 +233,25 @@
   .tech-container {
     @apply max-w-7xl mx-auto px-4 md:px-6 lg:px-8;
   }
+
+  /* Links in prose/text content must be underlined for accessibility (not just color) */
+  .prose a,
+  p a,
+  li a {
+    @apply underline underline-offset-2 decoration-primary/40 hover:decoration-primary transition-colors;
+  }
+
+  /* External link indicator */
+  a[target="_blank"]::after {
+    content: " ↗";
+    font-size: 0.75em;
+    vertical-align: super;
+  }
+
+  /* Don't show external indicator on icon-only links */
+  a[target="_blank"][aria-label]::after {
+    content: none;
+  }
 }
 
 @layer utilities {

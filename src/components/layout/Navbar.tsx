@@ -128,7 +128,11 @@ export function Navbar() {
                   </Link>
                 </li>
               ))}
-              <div className="flex flex-col gap-2 mt-4 px-4">
+              <li className="mt-4 px-4 flex flex-col gap-2">
+                <div className="flex items-center justify-between py-2">
+                  <span className="text-sm text-muted-foreground">Dimensione testo</span>
+                  <FontSizeWidget />
+                </div>
                 <div className="flex items-center justify-between py-2">
                   <span className="text-sm text-muted-foreground">Tema</span>
                   <ThemeToggle />

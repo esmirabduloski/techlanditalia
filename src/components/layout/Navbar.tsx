@@ -8,6 +8,7 @@ import { useHasEnrollments } from "@/hooks/useHasEnrollments";
 import { useStudentRole } from "@/hooks/useStudentRole";
 import { useTeacherRole } from "@/hooks/useTeacherRole";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { FontSizeWidget } from "@/components/accessibility/FontSizeWidget";
 
 const navLinks = [
   { href: "/corsi", label: "Corsi", title: "Corsi di programmazione per bambini e ragazzi" },

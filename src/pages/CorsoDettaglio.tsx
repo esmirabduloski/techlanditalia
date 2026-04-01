@@ -1366,21 +1366,21 @@ export default function CorsoDettaglio() {
           </div>
           <div className="space-y-6">
             {course.modules.map((module, i) => (
-              <div key={i} className="tech-card p-6">
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <span className="font-bold text-primary">{i + 1}</span>
+              <div key={i} className="tech-card p-4 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-4 mb-3 sm:mb-4">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <span className="font-bold text-primary text-sm sm:text-base">{i + 1}</span>
                   </div>
-                  <h3 className="text-xl font-semibold">{module.title}</h3>
+                  <h3 className="text-base sm:text-xl font-semibold">{module.title}</h3>
                 </div>
-                <ul className="space-y-2 ml-14 mb-4">
+                <ul className="space-y-2 ml-10 sm:ml-14 mb-4">
                   {module.lessons.map((lesson, j) => (
                     <li key={j} className="text-muted-foreground text-sm">
                       • {lesson}
                     </li>
                   ))}
                 </ul>
-                <div className="ml-14 p-4 bg-tech-green/5 rounded-lg border border-tech-green/20">
+                <div className="ml-10 sm:ml-14 p-3 sm:p-4 bg-tech-green/5 rounded-lg border border-tech-green/20">
                   <p className="text-sm">
                     <strong className="text-tech-green">Risultato:</strong> {module.result}
                   </p>

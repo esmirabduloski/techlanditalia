@@ -10,7 +10,9 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
+      <header>
+        <Navbar />
+      </header>
       <main id="main-content" role="main" className="flex-1 pt-16" tabIndex={-1}>
         {children}
       </main>

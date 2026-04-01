@@ -71,7 +71,7 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 rounded-xl bg-background/10 flex items-center justify-center hover:bg-background/20 transition-colors"
-                  aria-label={`Seguici su ${social.label}`}
+                  aria-label={`Seguici su ${social.label} (si apre in una nuova finestra)`}
                   title={`TECHLAND su ${social.label}`}
                 >
                   <social.icon className="w-5 h-5" />
@@ -146,6 +146,7 @@ export function Footer() {
                 target="_blank" 
                 rel="noopener noreferrer" 
                 title="Contattaci su WhatsApp"
+                aria-label="Contattaci su WhatsApp (si apre in una nuova finestra)"
                 className="flex items-center gap-2 text-background/70 hover:text-background text-sm"
               >
                 <WhatsAppIcon />
@@ -161,9 +162,12 @@ export function Footer() {
             <p>© {new Date().getFullYear()} TECHLAND. Tutti i diritti riservati.</p>
             <p>P.IVA: 05596490267 — Sede legale: Vedelago (TV)</p>
           </div>
-          <p className="text-background/50 text-sm">
-            Made with ❤️ in Italia
-          </p>
+          <div className="flex items-center gap-4 text-background/50 text-sm">
+            <Link to="/accessibilita" className="hover:text-background transition-colors underline">
+              Accessibilità
+            </Link>
+            <span>Made with ❤️ in Italia</span>
+          </div>
         </div>
       </div>
     </footer>

@@ -8,6 +8,7 @@ import { useHasEnrollments } from "@/hooks/useHasEnrollments";
 import { useStudentRole } from "@/hooks/useStudentRole";
 import { useTeacherRole } from "@/hooks/useTeacherRole";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { FontSizeWidget } from "@/components/accessibility/FontSizeWidget";
 
 const navLinks = [
   { href: "/corsi", label: "Corsi", title: "Corsi di programmazione per bambini e ragazzi" },
@@ -47,23 +48,27 @@ export function Navbar() {
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-6" aria-label="Navigazione principale">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                to={link.href}
-                title={link.title}
-                className={cn(
-                  "text-sm font-medium transition-colors hover:text-primary",
-                  location.pathname === link.href ? "text-primary" : "text-muted-foreground"
-                )}
-              >
-                {link.label}
-              </Link>
-            ))}
+            <ul className="flex items-center gap-6 list-none m-0 p-0">
+              {navLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    to={link.href}
+                    title={link.title}
+                    className={cn(
+                      "text-sm font-medium transition-colors hover:text-primary",
+                      location.pathname === link.href ? "text-primary" : "text-muted-foreground"
+                    )}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </nav>
 
           {/* CTA Buttons */}
           <div className="hidden lg:flex items-center gap-3">
+            <FontSizeWidget />
             <ThemeToggle />
             {!user ? (
               <Button variant="ghost" asChild>
@@ -105,24 +110,29 @@ export function Navbar() {
 
         {/* Mobile Menu */}
         {isOpen && (
-          <div id="mobile-menu" className="lg:hidden py-4 border-t border-border/50 animate-fade-in" role="menu">
-            <div className="flex flex-col gap-2">
+          <nav id="mobile-menu" className="lg:hidden py-4 border-t border-border/50 animate-fade-in" aria-label="Menu di navigazione mobile">
+            <ul className="flex flex-col gap-2 list-none m-0 p-0">
               {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  to={link.href}
-                  onClick={() => setIsOpen(false)}
-                  className={cn(
-                    "px-4 py-3 rounded-lg text-sm font-medium transition-colors",
-                    location.pathname === link.href
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-muted"
-                  )}
-                >
-                  {link.label}
-                </Link>
+                <li key={link.href}>
+                  <Link
+                    to={link.href}
+                    onClick={() => setIsOpen(false)}
+                    className={cn(
+                      "block px-4 py-3 rounded-lg text-sm font-medium transition-colors",
+                      location.pathname === link.href
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:bg-muted"
+                    )}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
               ))}
-              <div className="flex flex-col gap-2 mt-4 px-4">
+              <li className="mt-4 px-4 flex flex-col gap-2">
+                <div className="flex items-center justify-between py-2">
+                  <span className="text-sm text-muted-foreground">Dimensione testo</span>
+                  <FontSizeWidget />
+                </div>
                 <div className="flex items-center justify-between py-2">
                   <span className="text-sm text-muted-foreground">Tema</span>
                   <ThemeToggle />
@@ -151,9 +161,9 @@ export function Navbar() {
                     <Link to="/prenota" onClick={() => setIsOpen(false)}>Lezione gratuita</Link>
                   </Button>
                 )}
-              </div>
-            </div>
-          </div>
+              </li>
+            </ul>
+          </nav>
         )}
       </div>
     </nav>

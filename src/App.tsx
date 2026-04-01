@@ -73,6 +73,7 @@ const AdminLessonReports = lazy(() => import("./pages/admin/AdminLessonReports")
 const AdminDocumentation = lazy(() => import("./pages/admin/AdminDocumentation"));
 const Acquisti = lazy(() => import("./pages/area-riservata/Acquisti"));
 const Leaderboard = lazy(() => import("./pages/area-riservata/Leaderboard"));
+const Accessibilita = lazy(() => import("./pages/Accessibilita"));
 
 const queryClient = new QueryClient();
 
@@ -114,6 +115,7 @@ const App = () => (
                     <Route path="/cookie" element={<Cookie />} />
                     <Route path="/contatti" element={<Contatti />} />
                     <Route path="/lavora-con-noi" element={<LavoraConNoi />} />
+                    <Route path="/accessibilita" element={<Accessibilita />} />
                     <Route path="/auth" element={<AuthPage />} />
                     <Route path="/area-riservata" element={<AreaRiservataDashboard />} />
                     <Route path="/area-riservata/profilo" element={<AreaRiservataProfile />} />

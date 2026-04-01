@@ -146,6 +146,7 @@ export function Footer() {
                 target="_blank" 
                 rel="noopener noreferrer" 
                 title="Contattaci su WhatsApp"
+                aria-label="Contattaci su WhatsApp (si apre in una nuova finestra)"
                 className="flex items-center gap-2 text-background/70 hover:text-background text-sm"
               >
                 <WhatsAppIcon />

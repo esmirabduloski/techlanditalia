@@ -71,7 +71,7 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 rounded-xl bg-background/10 flex items-center justify-center hover:bg-background/20 transition-colors"
-                  aria-label={`Seguici su ${social.label}`}
+                  aria-label={`Seguici su ${social.label} (si apre in una nuova finestra)`}
                   title={`TECHLAND su ${social.label}`}
                 >
                   <social.icon className="w-5 h-5" />

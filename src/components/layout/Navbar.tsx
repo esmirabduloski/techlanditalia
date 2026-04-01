@@ -110,22 +110,23 @@ export function Navbar() {
 
         {/* Mobile Menu */}
         {isOpen && (
-          <div id="mobile-menu" className="lg:hidden py-4 border-t border-border/50 animate-fade-in" role="menu">
-            <div className="flex flex-col gap-2">
+          <nav id="mobile-menu" className="lg:hidden py-4 border-t border-border/50 animate-fade-in" aria-label="Menu di navigazione mobile">
+            <ul className="flex flex-col gap-2 list-none m-0 p-0">
               {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  to={link.href}
-                  onClick={() => setIsOpen(false)}
-                  className={cn(
-                    "px-4 py-3 rounded-lg text-sm font-medium transition-colors",
-                    location.pathname === link.href
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-muted"
-                  )}
-                >
-                  {link.label}
-                </Link>
+                <li key={link.href}>
+                  <Link
+                    to={link.href}
+                    onClick={() => setIsOpen(false)}
+                    className={cn(
+                      "block px-4 py-3 rounded-lg text-sm font-medium transition-colors",
+                      location.pathname === link.href
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:bg-muted"
+                    )}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
               ))}
               <div className="flex flex-col gap-2 mt-4 px-4">
                 <div className="flex items-center justify-between py-2">

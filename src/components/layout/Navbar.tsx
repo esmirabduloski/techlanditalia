@@ -68,6 +68,7 @@ export function Navbar() {
 
           {/* CTA Buttons */}
           <div className="hidden lg:flex items-center gap-3">
+            <FontSizeWidget />
             <ThemeToggle />
             {!user ? (
               <Button variant="ghost" asChild>

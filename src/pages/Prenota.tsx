@@ -132,8 +132,19 @@ export default function Prenota() {
 
       if (bookingError) {
         console.error("Booking error:", bookingError);
-        trackFormError('booking_form', bookingError.message || 'Booking error');
-        throw new Error("Errore nell'invio della richiesta");
+        // Try to extract the actual error message from the edge function response
+        let errorMessage = "Errore nell'invio della richiesta";
+        try {
+          const errorContext = bookingError?.context;
+          if (errorContext && typeof errorContext === 'object') {
+            const body = await errorContext.json?.();
+            if (body?.error) errorMessage = body.error;
+          } else if (bookingError.message?.includes('429')) {
+            errorMessage = "Hai già inviato una richiesta di recente. Ti contatteremo presto!";
+          }
+        } catch {}
+        trackFormError('booking_form', errorMessage);
+        throw new Error(errorMessage);
       }
 
       if (!bookingResult?.success) {

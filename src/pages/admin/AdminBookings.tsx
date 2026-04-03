@@ -706,6 +706,18 @@ export default function AdminBookings() {
                           </div>
                         )}
                       </div>
+
+                      {/* Action Buttons */}
+                      <div className="mt-4 pt-4 border-t flex justify-end gap-2">
+                        <Button size="sm" variant="outline" onClick={() => openEditDialog(booking)}>
+                          <Edit className="w-4 h-4 mr-2" />
+                          Modifica
+                        </Button>
+                        <Button size="sm" variant="destructive" onClick={() => openDeleteDialog(booking)}>
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Elimina
+                        </Button>
+                      </div>
                     </div>
                   </CollapsibleContent>
                 </div>

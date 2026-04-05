@@ -306,13 +306,13 @@ export default function Prenota() {
           }
         ]}
       />
-      <section className="tech-section bg-gradient-to-b from-tech-green-light to-background dark:from-background dark:to-background">
+      <section className="tech-section bg-gradient-to-b from-tech-green-light to-background dark:from-background dark:to-background px-4">
         <div className="tech-container">
           <SEOBreadcrumb 
             items={[{ label: "Prenota Lezione Gratuita" }]} 
-            className="mb-8"
+            className="mb-6 sm:mb-8"
           />
-          <div className="grid lg:grid-cols-2 gap-12 items-start">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
             {/* Info Column */}
             <div>
               <h1 className="text-4xl md:text-5xl font-bold mb-6">
@@ -406,7 +406,7 @@ export default function Prenota() {
                     )}
                   />
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="childAge"

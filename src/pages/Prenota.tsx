@@ -44,7 +44,7 @@ const benefits = [
 const bookingSchema = z.object({
   parentName: z.string().trim().min(2, "Il nome deve avere almeno 2 caratteri").max(100, "Nome troppo lungo"),
   email: z.string().trim().email("Inserisci un'email valida").max(255, "Email troppo lunga"),
-  phone: z.string().trim().min(1, "Inserisci il numero di telefono").max(20, "Numero troppo lungo"),
+  phone: z.string().trim().min(1, "Inserisci il numero di telefono").max(20, "Numero troppo lungo").regex(/^[\d\s+\-()]{6,}$/, "Inserisci un numero di telefono valido (almeno 6 cifre)"),
   childAge: z.string().optional().or(z.literal("")),
   interest: z.string().optional().or(z.literal("")),
   privacyAccepted: z.literal(true, { errorMap: () => ({ message: "Devi accettare la Privacy Policy" }) }),
@@ -85,10 +85,15 @@ export default function Prenota() {
         .order('title');
 
       if (!error && data && data.length > 0) {
-        const courseInterests = data.map(c => ({
-          value: c.slug,
-          label: `${c.emoji} ${c.title}${c.age_range ? ` (${c.age_range})` : ''}`,
-        }));
+        const courseInterests = data.map(c => {
+          // Extract the first number from age_range to show as "X+"
+          const ageMatch = c.age_range?.match(/(\d+)/);
+          const ageLabel = ageMatch ? ` (${ageMatch[1]}+)` : '';
+          return {
+            value: c.slug,
+            label: `${c.emoji} ${c.title}${ageLabel}`,
+          };
+        });
         setInterests([...courseInterests, { value: "non-so", label: "Non sono sicuro, vorrei consigli" }]);
       }
     };
@@ -203,7 +208,7 @@ export default function Prenota() {
   if (isSubmitted) {
     return (
       <Layout>
-        <section className="tech-section min-h-[60vh] flex items-center px-4">
+        <section className="tech-section min-h-[60vh] flex items-center px-2 sm:px-4 overflow-hidden">
           <div className="tech-container">
             <div className="max-w-xl mx-auto text-center">
               <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 rounded-full bg-tech-green/20 flex items-center justify-center">
@@ -420,7 +425,7 @@ export default function Prenota() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {Array.from({ length: 13 }, (_, i) => i + 6).map((age) => (
+                              {Array.from({ length: 16 }, (_, i) => i + 5).map((age) => (
                                 <SelectItem key={age} value={String(age)}>
                                   {age} anni
                                 </SelectItem>
@@ -437,7 +442,7 @@ export default function Prenota() {
                       name="interest"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Interesse (opzionale)</FormLabel>
+                          <FormLabel>Corso d'interesse (opzionale)</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value} defaultValue="non-so">
                             <FormControl>
                               <SelectTrigger className="h-12">

@@ -85,10 +85,15 @@ export default function Prenota() {
         .order('title');
 
       if (!error && data && data.length > 0) {
-        const courseInterests = data.map(c => ({
-          value: c.slug,
-          label: `${c.emoji} ${c.title}${c.age_range ? ` (${c.age_range})` : ''}`,
-        }));
+        const courseInterests = data.map(c => {
+          // Extract the first number from age_range to show as "X+"
+          const ageMatch = c.age_range?.match(/(\d+)/);
+          const ageLabel = ageMatch ? ` (${ageMatch[1]}+)` : '';
+          return {
+            value: c.slug,
+            label: `${c.emoji} ${c.title}${ageLabel}`,
+          };
+        });
         setInterests([...courseInterests, { value: "non-so", label: "Non sono sicuro, vorrei consigli" }]);
       }
     };

@@ -76,7 +76,7 @@ function validateBookingData(data: any): { valid: boolean; errors: string[] } {
 
   // Child age validation (now optional)
   if (data.childAge !== null && data.childAge !== undefined) {
-    if (typeof data.childAge !== "number" || data.childAge < 6 || data.childAge > 18) {
+    if (typeof data.childAge !== "number" || data.childAge < 5 || data.childAge > 20) {
       errors.push("Età deve essere tra 6 e 18 anni");
     }
   }

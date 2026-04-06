@@ -342,7 +342,7 @@ export default function Prenota() {
             </div>
 
             {/* Form Column */}
-            <div className="tech-card p-8">
+            <div className="tech-card p-4 sm:p-6 lg:p-8 overflow-hidden">
               <h2 className="text-2xl font-semibold mb-6">Compila il form</h2>
               
               <Form {...form}>

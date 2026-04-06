@@ -437,7 +437,7 @@ export default function Prenota() {
                       name="interest"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Interesse (opzionale)</FormLabel>
+                          <FormLabel>Corso d'interesse (opzionale)</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value} defaultValue="non-so">
                             <FormControl>
                               <SelectTrigger className="h-12">

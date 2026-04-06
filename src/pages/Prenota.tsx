@@ -334,7 +334,7 @@ export default function Prenota() {
                 ))}
               </div>
 
-              <div className="tech-card p-6 bg-secondary/10 border-secondary/20">
+              <div className="tech-card p-4 sm:p-6 bg-secondary/10 border-secondary/20 overflow-hidden">
                 <p className="text-sm">
                   <strong>💡 Suggerimento:</strong> Fai partecipare il tuo bambino alla chiamata! Così potrà conoscere l'ambiente e fare domande direttamente al docente.
                 </p>

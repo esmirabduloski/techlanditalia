@@ -44,7 +44,7 @@ const benefits = [
 const bookingSchema = z.object({
   parentName: z.string().trim().min(2, "Il nome deve avere almeno 2 caratteri").max(100, "Nome troppo lungo"),
   email: z.string().trim().email("Inserisci un'email valida").max(255, "Email troppo lunga"),
-  phone: z.string().trim().min(1, "Inserisci il numero di telefono").max(20, "Numero troppo lungo"),
+  phone: z.string().trim().min(1, "Inserisci il numero di telefono").max(20, "Numero troppo lungo").regex(/^[\d\s+\-()]{6,}$/, "Inserisci un numero di telefono valido (almeno 6 cifre)"),
   childAge: z.string().optional().or(z.literal("")),
   interest: z.string().optional().or(z.literal("")),
   privacyAccepted: z.literal(true, { errorMap: () => ({ message: "Devi accettare la Privacy Policy" }) }),

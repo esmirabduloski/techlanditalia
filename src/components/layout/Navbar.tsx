@@ -85,7 +85,7 @@ export function Navbar() {
               <Button variant="ghost" asChild>
                 <Link to="/area-riservata" className="flex items-center gap-2">
                   <User className="w-4 h-4" />
-                  Dashboard
+                  Area riservata
                 </Link>
               </Button>
             ) : null}

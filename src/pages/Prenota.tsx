@@ -306,7 +306,7 @@ export default function Prenota() {
           }
         ]}
       />
-      <section className="tech-section bg-gradient-to-b from-tech-green-light to-background dark:from-background dark:to-background px-4">
+      <section className="tech-section bg-gradient-to-b from-tech-green-light to-background dark:from-background dark:to-background px-4 overflow-hidden">
         <div className="tech-container">
           <SEOBreadcrumb 
             items={[{ label: "Prenota Lezione Gratuita" }]} 

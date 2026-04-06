@@ -78,14 +78,14 @@ export function Navbar() {
               <Button variant="ghost" asChild>
                 <Link to="/insegnante" className="flex items-center gap-2">
                   <User className="w-4 h-4" />
-                  Dashboard
+                  Area riservata
                 </Link>
               </Button>
             ) : !isTeacher && !isInAreaRiservata ? (
               <Button variant="ghost" asChild>
                 <Link to="/area-riservata" className="flex items-center gap-2">
                   <User className="w-4 h-4" />
-                  Dashboard
+                  Area riservata
                 </Link>
               </Button>
             ) : null}
@@ -145,14 +145,14 @@ export function Navbar() {
                   <Button variant="outline" asChild>
                     <Link to="/insegnante" onClick={() => setIsOpen(false)} className="flex items-center gap-2">
                       <User className="w-4 h-4" />
-                      Dashboard
+                      Area riservata
                     </Link>
                   </Button>
                 ) : !isTeacher && !isInAreaRiservata ? (
                   <Button variant="outline" asChild>
                     <Link to="/area-riservata" onClick={() => setIsOpen(false)} className="flex items-center gap-2">
                       <User className="w-4 h-4" />
-                      Dashboard
+                      Area riservata
                     </Link>
                   </Button>
                 ) : null}

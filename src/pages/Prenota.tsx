@@ -203,7 +203,7 @@ export default function Prenota() {
   if (isSubmitted) {
     return (
       <Layout>
-        <section className="tech-section min-h-[60vh] flex items-center px-4">
+        <section className="tech-section min-h-[60vh] flex items-center px-2 sm:px-4 overflow-hidden">
           <div className="tech-container">
             <div className="max-w-xl mx-auto text-center">
               <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 rounded-full bg-tech-green/20 flex items-center justify-center">

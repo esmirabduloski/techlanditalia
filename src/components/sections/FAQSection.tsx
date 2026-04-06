@@ -8,7 +8,7 @@ import {
 const faqs = [
   {
     question: "Qual è l'età minima per iniziare?",
-    answer: "I nostri corsi partono dai 6 anni. Per i bambini più piccoli (6-8 anni) utilizziamo strumenti visivi come Scratch, che permettono di imparare la logica della programmazione senza dover scrivere codice complesso.",
+    answer: "I nostri corsi partono dai 5 anni. Per i bambini più piccoli (5-8 anni) utilizziamo strumenti visivi come Scratch, che permettono di imparare la logica della programmazione senza dover scrivere codice complesso.",
   },
   {
     question: "Quanto costano i corsi?",

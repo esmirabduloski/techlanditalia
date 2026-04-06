@@ -19,7 +19,7 @@ const courses = [
     id: "minecraft-education",
     title: "Minecraft Education",
     description: "Programmazione e automazione nell'amato mondo di Minecraft.",
-    age: "8-9 anni",
+    age: "8+ anni",
     level: "Principiante",
     duration: "40 lezioni",
     emoji: "⛏️",
@@ -29,7 +29,7 @@ const courses = [
     id: "abc-informatica",
     title: "L'ABC dell'informatica",
     description: "Introduzione alle componenti del computer, programmazione a blocchi e uso del PC.",
-    age: "5-7 anni",
+    age: "6-8 anni",
     level: "Principiante",
     duration: "32 lezioni",
     emoji: "💻",
@@ -88,9 +88,7 @@ export function CoursesPreviewSection() {
       <div className="tech-container">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
           <div>
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-              Percorsi di studio
-            </h2>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">Percorsi di studio</h2>
             <p className="text-lg text-muted-foreground max-w-xl">
               Ogni percorso è progettato per l'età e il livello del tuo bambino. Scopri quello perfetto per lui.
             </p>
@@ -105,11 +103,7 @@ export function CoursesPreviewSection() {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {courses.slice(0, 6).map((course) => (
-            <Link
-              key={course.id}
-              to={`/corsi/${course.id}`}
-              className="tech-card tech-card-hover p-6 group"
-            >
+            <Link key={course.id} to={`/corsi/${course.id}`} className="tech-card tech-card-hover p-6 group">
               <div className="flex items-start justify-between mb-4">
                 <div className={`w-14 h-14 rounded-2xl bg-${course.color}/10 flex items-center justify-center`}>
                   <CourseEmoji emoji={course.emoji} size="lg" />
@@ -118,15 +112,11 @@ export function CoursesPreviewSection() {
                   {course.level}
                 </Badge>
               </div>
-              
-              <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
-                {course.title}
-              </h3>
-              
-              <p className="text-muted-foreground mb-4 line-clamp-2">
-                {course.description}
-              </p>
-              
+
+              <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors">{course.title}</h3>
+
+              <p className="text-muted-foreground mb-4 line-clamp-2">{course.description}</p>
+
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <Users className="w-4 h-4" />
@@ -137,7 +127,7 @@ export function CoursesPreviewSection() {
                   <span>{course.duration}</span>
                 </div>
               </div>
-              
+
               <div className="mt-4 pt-4 border-t border-border/50">
                 <span className="text-primary font-medium flex items-center gap-2 group-hover:gap-3 transition-all">
                   Scopri di più

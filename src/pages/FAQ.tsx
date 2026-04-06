@@ -17,7 +17,7 @@ const faqCategories = [
     faqs: [
       {
         question: "A quali fasce d'età si riferisce il corso?",
-        answer: "I nostri corsi sono pensati per bambini e ragazzi dai 6 ai 17 anni. Abbiamo programmi specifici per ogni fascia d'età: 6-9 anni (corsi base con Scratch), 10-12 anni (programmazione visuale avanzata e Roblox), 13-17 anni (Python, sviluppo web e game design)."
+        answer: "I nostri corsi sono pensati per bambini e ragazzi dai 5 ai 17 anni. Abbiamo programmi specifici per ogni fascia d'età: 5-9 anni (corsi base con Scratch), 10-12 anni (programmazione visuale avanzata e Roblox), 13-17 anni (Python, sviluppo web e game design)."
       },
       {
         question: "Quali competenze otterrà mio/a figlio/a?",

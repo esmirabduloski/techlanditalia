@@ -420,7 +420,7 @@ export default function Prenota() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {Array.from({ length: 13 }, (_, i) => i + 6).map((age) => (
+                              {Array.from({ length: 16 }, (_, i) => i + 5).map((age) => (
                                 <SelectItem key={age} value={String(age)}>
                                   {age} anni
                                 </SelectItem>

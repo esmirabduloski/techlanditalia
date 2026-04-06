@@ -152,7 +152,7 @@ export function Navbar() {
                   <Button variant="outline" asChild>
                     <Link to="/area-riservata" onClick={() => setIsOpen(false)} className="flex items-center gap-2">
                       <User className="w-4 h-4" />
-                      Dashboard
+                      Area riservata
                     </Link>
                   </Button>
                 ) : null}

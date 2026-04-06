@@ -306,7 +306,7 @@ export default function Prenota() {
           }
         ]}
       />
-      <section className="tech-section bg-gradient-to-b from-tech-green-light to-background dark:from-background dark:to-background px-4">
+      <section className="tech-section bg-gradient-to-b from-tech-green-light to-background dark:from-background dark:to-background px-4 overflow-hidden">
         <div className="tech-container">
           <SEOBreadcrumb 
             items={[{ label: "Prenota Lezione Gratuita" }]} 
@@ -334,7 +334,7 @@ export default function Prenota() {
                 ))}
               </div>
 
-              <div className="tech-card p-6 bg-secondary/10 border-secondary/20">
+              <div className="tech-card p-4 sm:p-6 bg-secondary/10 border-secondary/20 overflow-hidden">
                 <p className="text-sm">
                   <strong>💡 Suggerimento:</strong> Fai partecipare il tuo bambino alla chiamata! Così potrà conoscere l'ambiente e fare domande direttamente al docente.
                 </p>
@@ -342,7 +342,7 @@ export default function Prenota() {
             </div>
 
             {/* Form Column */}
-            <div className="tech-card p-8">
+            <div className="tech-card p-4 sm:p-6 lg:p-8 overflow-hidden">
               <h2 className="text-2xl font-semibold mb-6">Compila il form</h2>
               
               <Form {...form}>

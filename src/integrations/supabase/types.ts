@@ -899,6 +899,71 @@ export type Database = {
         }
         Relationships: []
       }
+      landing_pages: {
+        Row: {
+          course_id: string | null
+          created_at: string
+          cta_text: string | null
+          features: Json | null
+          hero_subtitle: string | null
+          hero_title: string | null
+          id: string
+          is_active: boolean
+          meta_description: string | null
+          meta_title: string | null
+          slug: string
+          spots_remaining: number | null
+          testimonials: Json | null
+          title: string
+          updated_at: string
+          whatsapp_message: string | null
+        }
+        Insert: {
+          course_id?: string | null
+          created_at?: string
+          cta_text?: string | null
+          features?: Json | null
+          hero_subtitle?: string | null
+          hero_title?: string | null
+          id?: string
+          is_active?: boolean
+          meta_description?: string | null
+          meta_title?: string | null
+          slug: string
+          spots_remaining?: number | null
+          testimonials?: Json | null
+          title: string
+          updated_at?: string
+          whatsapp_message?: string | null
+        }
+        Update: {
+          course_id?: string | null
+          created_at?: string
+          cta_text?: string | null
+          features?: Json | null
+          hero_subtitle?: string | null
+          hero_title?: string | null
+          id?: string
+          is_active?: boolean
+          meta_description?: string | null
+          meta_title?: string | null
+          slug?: string
+          spots_remaining?: number | null
+          testimonials?: Json | null
+          title?: string
+          updated_at?: string
+          whatsapp_message?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "landing_pages_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lesson_balance_log: {
         Row: {
           amount: number

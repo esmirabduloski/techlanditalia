@@ -41,6 +41,7 @@ const navItems: NavItem[] = [
   { to: '/admin/report-lezioni', label: 'Report', icon: ClipboardList },
   { to: '/admin/backup', label: 'Backup', icon: Database },
   { to: '/admin/documentazione', label: 'Docs', icon: BookText },
+  { to: '/admin/landing-pages', label: 'Landing', icon: Megaphone },
 ];
 
 export function AdminNav() {

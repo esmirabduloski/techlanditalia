@@ -74,6 +74,8 @@ const AdminDocumentation = lazy(() => import("./pages/admin/AdminDocumentation")
 const Acquisti = lazy(() => import("./pages/area-riservata/Acquisti"));
 const Leaderboard = lazy(() => import("./pages/area-riservata/Leaderboard"));
 const Accessibilita = lazy(() => import("./pages/Accessibilita"));
+const LandingPage = lazy(() => import("./pages/LandingPage"));
+const AdminLandingPages = lazy(() => import("./pages/admin/AdminLandingPages"));
 
 const queryClient = new QueryClient();
 
@@ -156,6 +158,8 @@ const App = () => (
                     <Route path="/admin/backup" element={<AdminBackups />} />
                     <Route path="/admin/report-lezioni" element={<AdminLessonReports />} />
                     <Route path="/admin/documentazione" element={<AdminDocumentation />} />
+                    <Route path="/admin/landing-pages" element={<AdminLandingPages />} />
+                    <Route path="/lp/:slug" element={<LandingPage />} />
                     <Route path="/insegnante" element={<TeacherDashboard />} />
                     <Route path="/insegnante/valutazioni" element={<TeacherGrading />} />
                     <Route path="/insegnante/registro-voti" element={<TeacherGradebook />} />

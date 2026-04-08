@@ -187,8 +187,8 @@ export default function Termini() {
                   Per qualsiasi domanda relativa a questi Termini e Condizioni, puoi contattarci:
                 </p>
                 <ul className="list-disc pl-6 space-y-2 text-muted-foreground mt-4">
-                  <li>Email: <a href="mailto:info@techland.it" className="text-primary hover:underline">info@techland.it</a></li>
-                  <li>Sito web: <Link to="/" className="text-primary hover:underline">www.techland.it</Link></li>
+                  <li>Email: <a href="mailto:info@techlanditalia.it" className="text-primary hover:underline">info@techlanditalia.it</a></li>
+                  <li>Sito web: <a href="https://www.techlanditalia.it" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">www.techlanditalia.it</a></li>
                 </ul>
               </section>
             </div>

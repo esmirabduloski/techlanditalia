@@ -20,7 +20,12 @@ export function LandingFeatures({ features }: LandingFeaturesProps) {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-foreground mb-4">
+          {/* Scratch context */}
+          <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-5 py-2 mb-6">
+            <img src="/images/scratch-logo.svg" alt="Scratch" className="w-5 h-5" />
+            <span className="text-sm font-medium text-primary">Sviluppato dal MIT per bambini dai 5 anni</span>
+          </div>
+          <h2 className="text-2xl sm:text-4xl font-extrabold text-foreground mb-4">
             Perché scegliere <span className="text-primary">TECHLAND</span>?
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">

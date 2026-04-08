@@ -21,7 +21,7 @@ export function LandingHero({ title, subtitle, ctaText, spotsRemaining, whatsapp
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-secondary rounded-full mix-blend-multiply filter blur-3xl animate-pulse delay-500" />
       </div>
 
-      {/* Floating code blocks */}
+      {/* Floating emoji */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {['🎮', '🧩', '🐱', '⭐', '🚀', '💡'].map((emoji, i) => (
           <motion.div
@@ -46,25 +46,31 @@ export function LandingHero({ title, subtitle, ctaText, spotsRemaining, whatsapp
         ))}
       </div>
 
-      <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
-        {/* Urgency badge */}
+      <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
+        {/* Scratch badge */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 bg-secondary/20 backdrop-blur-sm border border-secondary/30 text-secondary-foreground rounded-full px-5 py-2 mb-8"
+          className="flex flex-col items-center gap-3 mb-6"
         >
-          <Clock className="w-4 h-4 text-secondary" />
-          <span className="text-sm font-bold text-white">
-            ⚡ Solo {spotsRemaining} posti rimasti!
-          </span>
+          <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm border border-white/20 rounded-full px-5 py-2">
+            <img src="/images/scratch-logo.svg" alt="Scratch" className="w-6 h-6" />
+            <span className="text-sm font-bold text-white">Corso di Scratch</span>
+          </div>
+          <div className="inline-flex items-center gap-2 bg-destructive/80 backdrop-blur-sm rounded-full px-4 py-1.5">
+            <Clock className="w-3.5 h-3.5 text-white" />
+            <span className="text-xs font-bold text-white">
+              ⚡ Solo {spotsRemaining} posti rimasti!
+            </span>
+          </div>
         </motion.div>
 
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.2 }}
-          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-tight mb-6"
+          className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-tight mb-6"
         >
           {title}
         </motion.h1>
@@ -73,7 +79,7 @@ export function LandingHero({ title, subtitle, ctaText, spotsRemaining, whatsapp
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.4 }}
-          className="text-lg sm:text-xl md:text-2xl text-white/80 mb-10 max-w-3xl mx-auto leading-relaxed"
+          className="text-base sm:text-xl md:text-2xl text-white/80 mb-10 max-w-3xl mx-auto leading-relaxed"
         >
           {subtitle}
         </motion.p>
@@ -82,15 +88,15 @@ export function LandingHero({ title, subtitle, ctaText, spotsRemaining, whatsapp
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.6 }}
-          className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+          className="flex flex-col gap-4 justify-center items-center"
         >
           <Button
-            size="xl"
-            className="bg-secondary hover:bg-secondary/90 text-secondary-foreground shadow-2xl hover:shadow-secondary/30 hover:-translate-y-1 transition-all group text-lg px-10"
+            size="lg"
+            className="bg-secondary hover:bg-secondary/90 text-secondary-foreground shadow-2xl hover:shadow-secondary/30 hover:-translate-y-1 transition-all group text-base sm:text-lg px-8 sm:px-10 w-full max-w-sm"
             asChild
           >
             <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-              <MessageCircle className="w-6 h-6 mr-2 group-hover:animate-bounce" />
+              <MessageCircle className="w-5 h-5 mr-2 group-hover:animate-bounce" />
               {ctaText}
             </a>
           </Button>
@@ -105,11 +111,11 @@ export function LandingHero({ title, subtitle, ctaText, spotsRemaining, whatsapp
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1, duration: 0.8 }}
-          className="mt-12 flex flex-wrap justify-center gap-6 text-white/50 text-sm"
+          className="mt-12 flex flex-wrap justify-center gap-4 sm:gap-6 text-white/50 text-xs sm:text-sm"
         >
-          <span className="flex items-center gap-2">✅ +200 studenti iscritti</span>
-          <span className="flex items-center gap-2">⭐ 4.9/5 valutazione</span>
-          <span className="flex items-center gap-2">🎓 Insegnanti certificati</span>
+          <span className="flex items-center gap-1.5">✅ +200 studenti</span>
+          <span className="flex items-center gap-1.5">⭐ 4.9/5 valutazione</span>
+          <span className="flex items-center gap-1.5">🎓 Insegnanti certificati</span>
         </motion.div>
       </div>
 

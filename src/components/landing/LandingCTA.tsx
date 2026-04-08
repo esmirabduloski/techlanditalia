@@ -13,16 +13,16 @@ export function LandingCTA({ ctaText, whatsappUrl, spots }: LandingCTAProps) {
     <section className="py-24 px-4 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/95 to-tech-teal" />
       
-      <div className="relative z-10 max-w-3xl mx-auto text-center">
+      <div className="relative z-10 max-w-3xl mx-auto text-center px-2">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white mb-6">
-            Regala a tuo figlio il <span className="text-secondary">superpotere</span> del futuro
+          <h2 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-white mb-6">
+            Regala a tuo figlio il <span className="text-white font-extrabold underline decoration-secondary decoration-4 underline-offset-4">superpotere</span> del futuro
           </h2>
-          <p className="text-white/80 text-lg mb-4 max-w-xl mx-auto">
+          <p className="text-white/80 text-base sm:text-lg mb-4 max-w-xl mx-auto">
             La prima lezione è completamente gratuita. Scrivi su WhatsApp e ti organizziamo tutto noi.
           </p>
           <p className="text-white/60 text-sm mb-10">
@@ -30,14 +30,13 @@ export function LandingCTA({ ctaText, whatsappUrl, spots }: LandingCTAProps) {
           </p>
 
           <Button
-            size="xl"
-            className="bg-secondary hover:bg-secondary/90 text-secondary-foreground shadow-2xl hover:shadow-secondary/40 hover:-translate-y-1 transition-all group text-xl px-12 py-6 h-auto"
+            size="lg"
+            className="bg-secondary hover:bg-secondary/90 text-secondary-foreground shadow-2xl hover:shadow-secondary/40 hover:-translate-y-1 transition-all group text-base sm:text-xl px-8 sm:px-12 w-full max-w-sm"
             asChild
           >
             <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-              <MessageCircle className="w-7 h-7 mr-3 group-hover:animate-bounce" />
+              <MessageCircle className="w-6 h-6 mr-2 group-hover:animate-bounce" />
               {ctaText}
-              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </a>
           </Button>
         </motion.div>

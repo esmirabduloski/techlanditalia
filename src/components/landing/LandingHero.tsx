@@ -8,9 +8,13 @@ interface LandingHeroProps {
   ctaText: string;
   spotsRemaining: number;
   whatsappUrl: string;
+  courseName?: string;
+  courseEmoji?: string;
+  courseLogo?: string;
+  courseTagline?: string;
 }
 
-export function LandingHero({ title, subtitle, ctaText, spotsRemaining, whatsappUrl }: LandingHeroProps) {
+export function LandingHero({ title, subtitle, ctaText, spotsRemaining, whatsappUrl, courseName, courseEmoji, courseLogo, courseTagline }: LandingHeroProps) {
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
       {/* Animated background */}
@@ -55,8 +59,14 @@ export function LandingHero({ title, subtitle, ctaText, spotsRemaining, whatsapp
           className="flex flex-col items-center gap-3 mb-6"
         >
           <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm border border-white/20 rounded-full px-5 py-2">
-            <img src="/images/scratch-logo.svg" alt="Scratch" className="w-6 h-6" />
-            <span className="text-sm font-bold text-white">Corso di Scratch</span>
+            {courseLogo ? (
+              <img src={courseLogo} alt={courseName || ''} className="w-6 h-6" />
+            ) : courseEmoji ? (
+              <span className="text-lg">{courseEmoji}</span>
+            ) : (
+              <img src="/images/scratch-logo.svg" alt="Scratch" className="w-6 h-6" />
+            )}
+            <span className="text-sm font-bold text-white">{courseName || 'Corso di Scratch'}</span>
           </div>
           <div className="inline-flex items-center gap-2 bg-destructive/80 backdrop-blur-sm rounded-full px-4 py-1.5">
             <Clock className="w-3.5 h-3.5 text-white" />

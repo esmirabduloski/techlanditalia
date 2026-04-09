@@ -911,6 +911,7 @@ export type Database = {
           is_active: boolean
           meta_description: string | null
           meta_title: string | null
+          metadata: Json | null
           slug: string
           spots_remaining: number | null
           testimonials: Json | null
@@ -929,6 +930,7 @@ export type Database = {
           is_active?: boolean
           meta_description?: string | null
           meta_title?: string | null
+          metadata?: Json | null
           slug: string
           spots_remaining?: number | null
           testimonials?: Json | null
@@ -947,6 +949,7 @@ export type Database = {
           is_active?: boolean
           meta_description?: string | null
           meta_title?: string | null
+          metadata?: Json | null
           slug?: string
           spots_remaining?: number | null
           testimonials?: Json | null

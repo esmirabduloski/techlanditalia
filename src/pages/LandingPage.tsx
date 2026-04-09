@@ -47,6 +47,13 @@ export default function LandingPage() {
   const whatsappUrl = `https://wa.me/message/KHFBHZDEY3S7H1`;
   const features = (page.features as any[]) || [];
   const testimonials = (page.testimonials as any[]) || [];
+  
+  // Extract course-specific display info from page metadata
+  const metadata = (page as any).metadata || {};
+  const courseName = metadata.course_name || page.title;
+  const courseEmoji = metadata.course_emoji;
+  const courseLogo = metadata.course_logo;
+  const courseTagline = metadata.course_tagline;
 
   return (
     <>
@@ -61,8 +68,12 @@ export default function LandingPage() {
           ctaText={page.cta_text || 'Prenota ora'}
           spotsRemaining={page.spots_remaining || 0}
           whatsappUrl={whatsappUrl}
+          courseName={courseName}
+          courseEmoji={courseEmoji}
+          courseLogo={courseLogo}
+          courseTagline={courseTagline}
         />
-        <LandingFeatures features={features} />
+        <LandingFeatures features={features} courseName={courseName} courseLogo={courseLogo} courseTagline={courseTagline} />
         <LandingUrgency spots={page.spots_remaining || 0} whatsappUrl={whatsappUrl} ctaText={page.cta_text || 'Prenota ora'} />
         <LandingTestimonials testimonials={testimonials} />
         <LandingCTA

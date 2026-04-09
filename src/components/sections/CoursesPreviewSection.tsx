@@ -31,7 +31,7 @@ const courses = [
     description: "Introduzione alle componenti del computer, programmazione a blocchi e uso del PC.",
     age: "6-8 anni",
     level: "Principiante",
-    duration: "32 lezioni",
+    duration: "8 mesi",
     emoji: "💻",
     color: "tech-green",
   },

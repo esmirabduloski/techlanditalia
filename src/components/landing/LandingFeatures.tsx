@@ -8,6 +8,9 @@ interface Feature {
 
 interface LandingFeaturesProps {
   features: Feature[];
+  courseName?: string;
+  courseLogo?: string;
+  courseTagline?: string;
 }
 
 export function LandingFeatures({ features }: LandingFeaturesProps) {

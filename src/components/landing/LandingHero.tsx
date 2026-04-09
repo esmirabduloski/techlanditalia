@@ -8,6 +8,10 @@ interface LandingHeroProps {
   ctaText: string;
   spotsRemaining: number;
   whatsappUrl: string;
+  courseName?: string;
+  courseEmoji?: string;
+  courseLogo?: string;
+  courseTagline?: string;
 }
 
 export function LandingHero({ title, subtitle, ctaText, spotsRemaining, whatsappUrl }: LandingHeroProps) {

@@ -13,7 +13,7 @@ interface LandingFeaturesProps {
   courseTagline?: string;
 }
 
-export function LandingFeatures({ features }: LandingFeaturesProps) {
+export function LandingFeatures({ features, courseName, courseLogo, courseTagline }: LandingFeaturesProps) {
   return (
     <section className="py-20 px-4 bg-background">
       <div className="max-w-6xl mx-auto">
@@ -24,10 +24,12 @@ export function LandingFeatures({ features }: LandingFeaturesProps) {
           className="text-center mb-16"
         >
           {/* Scratch context */}
-          <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-5 py-2 mb-6">
-            <img src="/images/scratch-logo.svg" alt="Scratch" className="w-5 h-5" />
-            <span className="text-sm font-medium text-primary">Sviluppato dal MIT per bambini dai 5 anni</span>
-          </div>
+          {(courseLogo || courseTagline) && (
+            <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-5 py-2 mb-6">
+              {courseLogo && <img src={courseLogo} alt={courseName || ''} className="w-5 h-5" />}
+              <span className="text-sm font-medium text-primary">{courseTagline || `Corso di ${courseName}`}</span>
+            </div>
+          )}
           <h2 className="text-2xl sm:text-4xl font-extrabold text-foreground mb-4">
             Perché scegliere <span className="text-primary">TECHLAND</span>?
           </h2>

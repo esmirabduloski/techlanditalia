@@ -8,6 +8,7 @@ import { LandingFeatures } from '@/components/landing/LandingFeatures';
 import { LandingTestimonials } from '@/components/landing/LandingTestimonials';
 import { LandingUrgency } from '@/components/landing/LandingUrgency';
 import { LandingCTA } from '@/components/landing/LandingCTA';
+import { LandingCourseInfo } from '@/components/landing/LandingCourseInfo';
 import { LandingFooter } from '@/components/landing/LandingFooter';
 
 export default function LandingPage() {
@@ -54,6 +55,7 @@ export default function LandingPage() {
   const courseEmoji = metadata.course_emoji;
   const courseLogo = metadata.course_logo;
   const courseTagline = metadata.course_tagline;
+  const courseInfo = metadata.course_info;
 
   return (
     <>
@@ -74,6 +76,9 @@ export default function LandingPage() {
           courseTagline={courseTagline}
         />
         <LandingFeatures features={features} courseName={courseName} courseLogo={courseLogo} courseTagline={courseTagline} />
+        {courseInfo && (
+          <LandingCourseInfo courseInfo={courseInfo} courseName={courseName} courseEmoji={courseEmoji} />
+        )}
         <LandingUrgency spots={page.spots_remaining || 0} whatsappUrl={whatsappUrl} ctaText={page.cta_text || 'Prenota ora'} />
         <LandingTestimonials testimonials={testimonials} />
         <LandingCTA

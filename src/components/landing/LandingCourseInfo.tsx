@@ -81,7 +81,7 @@ export function LandingCourseInfo({ courseInfo, courseName, courseEmoji }: Landi
             transition={{ delay: 0.2 }}
             className="flex flex-wrap justify-center gap-2"
           >
-            {courseInfo.tags.map((tag, i) => (
+            {(courseInfo.tags || []).map((tag, i) => (
               <Badge key={i} variant="secondary" className="text-sm px-3 py-1">
                 {tag}
               </Badge>

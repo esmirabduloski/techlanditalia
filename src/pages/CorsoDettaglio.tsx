@@ -1345,6 +1345,20 @@ export default function CorsoDettaglio() {
               </div>
             ))}
           </div>
+          <div className="mt-8 p-5 rounded-xl bg-accent/10 border border-accent/20 text-center">
+            <p className="text-muted-foreground text-sm md:text-base">
+              📌 Gli esempi dettagliati dei progetti verranno aggiunti a breve. Se hai bisogno immediato di vedere un esempio di progetto,{" "}
+              <a
+                href="https://wa.me/message/KHFBHZDEY3S7H1"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary font-semibold hover:underline"
+              >
+                contattaci su WhatsApp
+              </a>
+              !
+            </p>
+          </div>
         </div>
       </section>
 

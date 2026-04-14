@@ -105,10 +105,10 @@ export const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "EducationalOrganization",
   "name": "TECHLAND",
-  "alternateName": "TECHLAND Italia",
+  "alternateName": ["TECHLAND Italia", "Techland", "Techland Corsi", "Techland Coding"],
   "url": "https://techlanditalia.it",
   "logo": "https://techlanditalia.it/logo.png",
-  "description": "Corsi di programmazione e coding per bambini e ragazzi dai 6 ai 18 anni. Lezioni online in piccoli gruppi con docenti esperti.",
+  "description": "TECHLAND è la scuola di coding online per bambini e ragazzi dai 6 ai 18 anni. Corsi di programmazione in piccoli gruppi con docenti esperti.",
   "foundingDate": "2019",
   "contactPoint": {
     "@type": "ContactPoint",

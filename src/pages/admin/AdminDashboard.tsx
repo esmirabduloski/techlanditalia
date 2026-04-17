@@ -37,6 +37,15 @@ interface BlogPost {
   category: string;
   published: boolean;
   created_at: string;
+  scheduled_publish_at: string | null;
+  auto_publish_queue: boolean;
+  queue_order: number | null;
+}
+
+interface BlogSettings {
+  id: string;
+  auto_publish_enabled: boolean;
+  publish_hour: number;
 }
 
 export default function AdminDashboard() {

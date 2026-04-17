@@ -101,7 +101,7 @@ export default function AdminDashboard() {
   const fetchPosts = async () => {
     const { data, error } = await supabase
       .from('blog_posts')
-      .select('id, title, slug, category, published, created_at')
+      .select('id, title, slug, category, published, created_at, scheduled_publish_at, auto_publish_queue, queue_order')
       .order('created_at', { ascending: false });
 
     if (error) {

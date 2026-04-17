@@ -220,8 +220,8 @@ export default function Prenota() {
               <p className="text-base sm:text-lg text-muted-foreground mb-6 sm:mb-8">
                 Grazie per aver scelto TECHLAND. Ti contatteremo entro 24 ore per confermare la lezione di prova gratuita e rispondere a tutte le tue domande.
               </p>
-              <div className="tech-card p-4 sm:p-6 text-left">
-                <h3 className="font-semibold mb-3 sm:mb-4">Cosa succede ora?</h3>
+              <div className="tech-card p-4 sm:p-6 text-left w-full">
+                <h3 className="font-semibold mb-3 sm:mb-4 text-center">Cosa succede ora?</h3>
                 <ol className="space-y-3 text-sm sm:text-base text-muted-foreground">
                   <li className="flex items-start gap-3">
                     <span className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 text-sm font-bold text-primary">1</span>
@@ -238,7 +238,7 @@ export default function Prenota() {
                 </ol>
               </div>
 
-              <div className="flex flex-col gap-3 sm:gap-4 mt-6 sm:mt-8">
+              <div className="flex flex-col gap-3 sm:gap-4 mt-6 sm:mt-8 w-full">
                 <Button
                   asChild
                   variant="hero"

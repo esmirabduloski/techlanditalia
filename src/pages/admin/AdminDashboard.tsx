@@ -37,10 +37,20 @@ interface BlogPost {
   category: string;
   published: boolean;
   created_at: string;
+  scheduled_publish_at: string | null;
+  auto_publish_queue: boolean;
+  queue_order: number | null;
+}
+
+interface BlogSettings {
+  id: string;
+  auto_publish_enabled: boolean;
+  publish_hour: number;
 }
 
 export default function AdminDashboard() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [settings, setSettings] = useState<BlogSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
@@ -55,8 +65,38 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (user && isAdmin) {
       fetchPosts();
+      fetchSettings();
     }
   }, [user, isAdmin]);
+
+  const fetchSettings = async () => {
+    const { data } = await supabase.from('blog_settings').select('*').limit(1).maybeSingle();
+    if (data) setSettings(data as BlogSettings);
+  };
+
+  const updateSettings = async (updates: Partial<BlogSettings>) => {
+    if (!settings) return;
+    const { error } = await supabase.from('blog_settings').update(updates).eq('id', settings.id);
+    if (!error) {
+      setSettings({ ...settings, ...updates });
+      toast({ title: 'Impostazioni aggiornate' });
+    }
+  };
+
+  const updateSchedule = async (id: string, scheduled_publish_at: string | null) => {
+    const { error } = await supabase.from('blog_posts').update({ scheduled_publish_at }).eq('id', id);
+    if (!error) {
+      setPosts(posts.map(p => p.id === id ? { ...p, scheduled_publish_at } : p));
+      toast({ title: scheduled_publish_at ? 'Pubblicazione programmata' : 'Programmazione rimossa' });
+    }
+  };
+
+  const toggleQueue = async (id: string, current: boolean) => {
+    const { error } = await supabase.from('blog_posts').update({ auto_publish_queue: !current }).eq('id', id);
+    if (!error) {
+      setPosts(posts.map(p => p.id === id ? { ...p, auto_publish_queue: !current } : p));
+    }
+  };
 
   const fetchPosts = async () => {
     const { data, error } = await supabase

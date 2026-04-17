@@ -181,6 +181,7 @@ export type Database = {
       blog_posts: {
         Row: {
           author_id: string | null
+          auto_publish_queue: boolean
           category: string
           content: string
           created_at: string
@@ -188,13 +189,16 @@ export type Database = {
           featured_image: string | null
           id: string
           published: boolean
+          queue_order: number | null
           read_time: string | null
+          scheduled_publish_at: string | null
           slug: string
           title: string
           updated_at: string
         }
         Insert: {
           author_id?: string | null
+          auto_publish_queue?: boolean
           category?: string
           content: string
           created_at?: string
@@ -202,13 +206,16 @@ export type Database = {
           featured_image?: string | null
           id?: string
           published?: boolean
+          queue_order?: number | null
           read_time?: string | null
+          scheduled_publish_at?: string | null
           slug: string
           title: string
           updated_at?: string
         }
         Update: {
           author_id?: string | null
+          auto_publish_queue?: boolean
           category?: string
           content?: string
           created_at?: string
@@ -216,9 +223,38 @@ export type Database = {
           featured_image?: string | null
           id?: string
           published?: boolean
+          queue_order?: number | null
           read_time?: string | null
+          scheduled_publish_at?: string | null
           slug?: string
           title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      blog_settings: {
+        Row: {
+          auto_publish_enabled: boolean
+          created_at: string
+          id: string
+          last_auto_publish_at: string | null
+          publish_hour: number
+          updated_at: string
+        }
+        Insert: {
+          auto_publish_enabled?: boolean
+          created_at?: string
+          id?: string
+          last_auto_publish_at?: string | null
+          publish_hour?: number
+          updated_at?: string
+        }
+        Update: {
+          auto_publish_enabled?: boolean
+          created_at?: string
+          id?: string
+          last_auto_publish_at?: string | null
+          publish_hour?: number
           updated_at?: string
         }
         Relationships: []

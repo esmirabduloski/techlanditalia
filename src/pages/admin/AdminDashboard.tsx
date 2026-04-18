@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { BugReportButton } from '@/components/BugReportButton';
 import { Switch } from '@/components/ui/switch';
+import { MiniSwitch } from '@/components/ui/mini-switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {

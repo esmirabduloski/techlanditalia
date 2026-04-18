@@ -24,7 +24,6 @@ import {
 } from 'lucide-react';
 import { BugReportButton } from '@/components/BugReportButton';
 import { Switch } from '@/components/ui/switch';
-import { MiniSwitch } from '@/components/ui/mini-switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -240,7 +239,7 @@ export default function AdminDashboard() {
               </div>
               <div className="flex items-center gap-6">
                 <div className="flex items-center gap-2">
-                  <MiniSwitch
+                  <Switch
                     id="auto-publish"
                     checked={settings.auto_publish_enabled}
                     onCheckedChange={(checked) => updateSettings({ auto_publish_enabled: checked })}
@@ -404,7 +403,7 @@ export default function AdminDashboard() {
                         )}
                       </div>
                       <div className="flex items-center gap-2">
-                        <MiniSwitch
+                        <Switch
                           id={`queue-${post.id}`}
                           checked={post.auto_publish_queue}
                           onCheckedChange={() => toggleQueue(post.id, post.auto_publish_queue)}

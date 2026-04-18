@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AdminNav } from '@/components/admin/AdminNav';
+import { AdminHeader } from '@/components/admin/AdminHeader';
 import { useToast } from '@/hooks/use-toast';
 import { LogOut, Loader2, ArrowLeft, Save, User } from 'lucide-react';
 import { useAutoBackup } from '@/hooks/useAutoBackup';
@@ -198,29 +199,7 @@ export default function LessonEditor() {
   return (
     <div className="min-h-screen bg-muted/30">
       {/* Header */}
-      <header className="bg-background border-b sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/" className="text-2xl font-bold">
-              <span className="text-primary">TECH</span>
-              <span className="text-tech-teal">LAND</span>
-            </Link>
-            <Badge variant="secondary">Admin</Badge>
-          </div>
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/area-riservata">
-                <User className="w-4 h-4 mr-2" />
-                Dashboard
-              </Link>
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleSignOut}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Esci
-            </Button>
-          </div>
-        </div>
-      </header>
+      <AdminHeader />
 
       <AdminNav />
 

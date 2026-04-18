@@ -407,7 +407,7 @@ export default function AdminDashboard() {
                           id={`queue-${post.id}`}
                           checked={post.auto_publish_queue}
                           onCheckedChange={() => toggleQueue(post.id, post.auto_publish_queue)}
-                          className="h-4 w-8 rounded-full border-0 [&>span]:h-3 [&>span]:w-3 [&>span]:rounded-full [&>span]:data-[state=checked]:translate-x-4 [&>span]:data-[state=unchecked]:translate-x-0.5"
+                          className="!h-3 !w-7 border-0 rounded-full [&>span]:!h-2.5 [&>span]:!w-2.5 [&>span]:rounded-full [&>span]:shadow-none [&>span]:data-[state=checked]:translate-x-[18px] [&>span]:data-[state=unchecked]:translate-x-0.5"
                         />
                         <Label htmlFor={`queue-${post.id}`} className="text-xs cursor-pointer">
                           Aggiungi alla coda automatica

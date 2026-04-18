@@ -182,6 +182,8 @@ export default function BlogEditor() {
       featured_image: featuredImage || null,
       read_time: readTime,
       published,
+      scheduled_publish_at: scheduledPublishAt ? new Date(scheduledPublishAt).toISOString() : null,
+      auto_publish_queue: autoPublishQueue,
       author_id: user?.id,
     };
 

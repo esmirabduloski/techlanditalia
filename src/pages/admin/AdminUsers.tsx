@@ -1172,7 +1172,7 @@ export default function AdminUsers() {
                       </div>
                       {group.children.map(child => (
                         <div key={child.id} className="px-4 py-3 border-t">
-                          <div className="flex items-center justify-between gap-4">
+                          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 lg:gap-4">
                             <div className="flex items-center gap-3 min-w-0 flex-1">
                               <div className="w-8 h-8 rounded-full bg-tech-teal/20 flex items-center justify-center flex-shrink-0">
                                 <GraduationCap className="w-4 h-4 text-tech-teal" />
@@ -1205,7 +1205,7 @@ export default function AdminUsers() {
                                 </div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-2 flex-shrink-0">
+                            <div className="flex items-center gap-2 flex-wrap lg:flex-shrink-0 lg:flex-nowrap">
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>

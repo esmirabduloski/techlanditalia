@@ -314,7 +314,7 @@ export default function HomeworkEditor() {
       <AdminNav />
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 py-8">
+      <main className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 mb-6 flex-wrap">
           <Button variant="ghost" size="sm" asChild>
@@ -347,7 +347,7 @@ export default function HomeworkEditor() {
                     placeholder="Esercizio 1"
                   />
                 </div>
-                <div className="grid gap-4 grid-cols-2">
+                <div className="grid gap-3 grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="points">Punti</Label>
                     <Input
@@ -588,11 +588,11 @@ export default function HomeworkEditor() {
           </Card>
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-3">
-            <Button type="button" variant="outline" asChild>
+          <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3">
+            <Button type="button" variant="outline" asChild className="w-full sm:w-auto">
               <Link to={`/admin/corsi/${courseId}/lezioni/${lessonId}/compiti`}>Annulla</Link>
             </Button>
-            <Button type="submit" disabled={isSaving}>
+            <Button type="submit" disabled={isSaving} className="w-full sm:w-auto">
               {isSaving ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
               ) : (

@@ -47,6 +47,8 @@ export default function BlogEditor() {
   const [featuredImage, setFeaturedImage] = useState('');
   const [readTime, setReadTime] = useState('5 min');
   const [published, setPublished] = useState(false);
+  const [scheduledPublishAt, setScheduledPublishAt] = useState('');
+  const [autoPublishQueue, setAutoPublishQueue] = useState(false);
   const [courses, setCourses] = useState<{ title: string; slug: string; emoji: string }[]>([]);
   const [blogPosts, setBlogPosts] = useState<{ title: string; slug: string; category: string }[]>([]);
   const [copiedLink, setCopiedLink] = useState<string | null>(null);

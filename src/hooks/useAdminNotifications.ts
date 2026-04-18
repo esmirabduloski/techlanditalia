@@ -12,47 +12,36 @@ export function useAdminNotifications() {
     newContacts: 0,
   });
 
+  const fetchCounts = async () => {
+    const [bookingsResult, contactsResult] = await Promise.all([
+      // Conta solo le prenotazioni ancora "in attesa" (non ancora gestite)
+      supabase
+        .from('trial_bookings')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'pending'),
+      // Conta solo i contatti non ancora gestiti (email non inviata)
+      supabase
+        .from('contact_submissions')
+        .select('id', { count: 'exact', head: true })
+        .eq('email_sent', false),
+    ]);
+
+    setNotifications({
+      newBookings: bookingsResult.count || 0,
+      newContacts: contactsResult.count || 0,
+    });
+  };
+
   useEffect(() => {
-    // Load initial counts from localStorage
-    const storedBookings = localStorage.getItem('admin_last_seen_bookings');
-    const storedContacts = localStorage.getItem('admin_last_seen_contacts');
-    
-    const lastSeenBookings = storedBookings ? new Date(storedBookings) : new Date(0);
-    const lastSeenContacts = storedContacts ? new Date(storedContacts) : new Date(0);
-
-    // Fetch initial unread counts
-    const fetchCounts = async () => {
-      const [bookingsResult, contactsResult] = await Promise.all([
-        supabase
-          .from('trial_bookings')
-          .select('id', { count: 'exact', head: true })
-          .gt('created_at', lastSeenBookings.toISOString()),
-        supabase
-          .from('contact_submissions')
-          .select('id', { count: 'exact', head: true })
-          .gt('created_at', lastSeenContacts.toISOString()),
-      ]);
-
-      setNotifications({
-        newBookings: bookingsResult.count || 0,
-        newContacts: contactsResult.count || 0,
-      });
-    };
-
     fetchCounts();
 
-    // Subscribe to realtime changes
+    // Subscribe to realtime changes - ricalcola tutto al cambio
     const bookingsChannel = supabase
       .channel('admin-bookings-count')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'trial_bookings' },
-        () => {
-          setNotifications(prev => ({
-            ...prev,
-            newBookings: prev.newBookings + 1,
-          }));
-        }
+        { event: '*', schema: 'public', table: 'trial_bookings' },
+        () => fetchCounts()
       )
       .subscribe();
 
@@ -60,13 +49,8 @@ export function useAdminNotifications() {
       .channel('admin-contacts-count')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'contact_submissions' },
-        () => {
-          setNotifications(prev => ({
-            ...prev,
-            newContacts: prev.newContacts + 1,
-          }));
-        }
+        { event: '*', schema: 'public', table: 'contact_submissions' },
+        () => fetchCounts()
       )
       .subscribe();
 
@@ -76,14 +60,14 @@ export function useAdminNotifications() {
     };
   }, []);
 
+  // Manteniamo le funzioni per compatibilità ma ora il conteggio si aggiorna
+  // automaticamente quando lo status cambia (es. da pending a contacted)
   const markBookingsAsSeen = () => {
-    localStorage.setItem('admin_last_seen_bookings', new Date().toISOString());
-    setNotifications(prev => ({ ...prev, newBookings: 0 }));
+    fetchCounts();
   };
 
   const markContactsAsSeen = () => {
-    localStorage.setItem('admin_last_seen_contacts', new Date().toISOString());
-    setNotifications(prev => ({ ...prev, newContacts: 0 }));
+    fetchCounts();
   };
 
   return {

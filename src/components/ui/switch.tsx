@@ -1,27 +1,88 @@
 import * as React from "react";
-import * as SwitchPrimitives from "@radix-ui/react-switch";
-
 import { cn } from "@/lib/utils";
 
-const Switch = React.forwardRef<
-  React.ElementRef<typeof SwitchPrimitives.Root>,
-  React.ComponentPropsWithoutRef<typeof SwitchPrimitives.Root>
->(({ className, ...props }, ref) => (
-  <SwitchPrimitives.Root
-    className={cn(
-      "peer inline-flex h-[10px] w-[25px] shrink-0 cursor-pointer items-center rounded-full border-0 px-[1px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=unchecked]:bg-input",
+interface SwitchProps {
+  checked?: boolean;
+  defaultChecked?: boolean;
+  onCheckedChange?: (checked: boolean) => void;
+  disabled?: boolean;
+  id?: string;
+  name?: string;
+  value?: string;
+  className?: string;
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
+}
+
+const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(
+  (
+    {
+      checked,
+      defaultChecked,
+      onCheckedChange,
+      disabled,
+      id,
+      name,
+      value,
       className,
-    )}
-    {...props}
-    ref={ref}
-  >
-    <SwitchPrimitives.Thumb
-      className={cn(
-        "pointer-events-none block h-[8px] w-[8px] rounded-full bg-white shadow-md ring-0 transition-transform data-[state=checked]:translate-x-[15px] data-[state=unchecked]:translate-x-0",
-      )}
-    />
-  </SwitchPrimitives.Root>
-));
-Switch.displayName = SwitchPrimitives.Root.displayName;
+      ...props
+    },
+    ref,
+  ) => {
+    const isControlled = checked !== undefined;
+    const [internalChecked, setInternalChecked] = React.useState(
+      defaultChecked ?? false,
+    );
+    const isOn = isControlled ? checked : internalChecked;
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const next = e.target.checked;
+      if (!isControlled) setInternalChecked(next);
+      onCheckedChange?.(next);
+    };
+
+    return (
+      <label
+        className={cn(
+          "relative inline-block h-[10px] w-[25px] shrink-0 align-middle",
+          disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
+          className,
+        )}
+      >
+        <input
+          ref={ref}
+          type="checkbox"
+          role="switch"
+          checked={isOn}
+          onChange={handleChange}
+          disabled={disabled}
+          id={id}
+          name={name}
+          value={value}
+          className="peer sr-only"
+          {...props}
+        />
+        {/* Track */}
+        <span
+          aria-hidden="true"
+          className={cn(
+            "absolute inset-0 rounded-full transition-colors",
+            isOn ? "bg-primary" : "bg-input",
+            "peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2",
+          )}
+        />
+        {/* Thumb */}
+        <span
+          aria-hidden="true"
+          className={cn(
+            "absolute top-1/2 left-[1px] block h-[8px] w-[8px] -translate-y-1/2 rounded-full bg-white shadow-md transition-transform",
+            isOn && "translate-x-[15px]",
+          )}
+        />
+      </label>
+    );
+  },
+);
+Switch.displayName = "Switch";
 
 export { Switch };

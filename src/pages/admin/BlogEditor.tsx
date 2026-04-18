@@ -123,6 +123,12 @@ export default function BlogEditor() {
       setFeaturedImage(data.featured_image || '');
       setReadTime(data.read_time || '5 min');
       setPublished(data.published);
+      if (data.scheduled_publish_at) {
+        const d = new Date(data.scheduled_publish_at);
+        const pad = (n: number) => String(n).padStart(2, '0');
+        setScheduledPublishAt(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`);
+      }
+      setAutoPublishQueue(data.auto_publish_queue || false);
     }
     setIsLoading(false);
   };

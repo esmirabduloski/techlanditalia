@@ -420,10 +420,10 @@ export default function AdminCourses() {
       <AdminNav />
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-8 flex items-center justify-between">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
+        <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold">Gestione Corsi</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold">Gestione Corsi</h1>
             <p className="text-muted-foreground mt-1">{courses.length} corsi totali</p>
           </div>
           

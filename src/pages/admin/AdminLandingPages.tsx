@@ -86,10 +86,10 @@ export default function AdminLandingPages() {
 
       <AdminNav />
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-3">
               <Megaphone className="w-8 h-8 text-primary" />
               Landing Pages
             </h1>

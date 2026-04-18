@@ -535,10 +535,10 @@ export default function AdminGroups() {
 
       <AdminNav />
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-3">
               <UsersRound className="w-8 h-8 text-primary" />
               Gestione Gruppi
             </h1>
@@ -565,21 +565,22 @@ export default function AdminGroups() {
                 </Button>
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                     <TableHead className="w-24">ID</TableHead>
-                     <TableHead>Titolo</TableHead>
-                     <TableHead>Stato</TableHead>
-                     <TableHead>Insegnante</TableHead>
-                     <TableHead>Corso</TableHead>
-                     <TableHead>Data Inizio</TableHead>
-                     <TableHead>Orario</TableHead>
-                     <TableHead className="text-center">Studenti</TableHead>
-                     <TableHead>Ultima Lezione</TableHead>
-                     <TableHead className="w-28">Azioni</TableHead>
-                  </TableRow>
-                </TableHeader>
+              <div className="-mx-6 overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                       <TableHead className="w-24">ID</TableHead>
+                       <TableHead>Titolo</TableHead>
+                       <TableHead>Stato</TableHead>
+                       <TableHead>Insegnante</TableHead>
+                       <TableHead>Corso</TableHead>
+                       <TableHead>Data Inizio</TableHead>
+                       <TableHead>Orario</TableHead>
+                       <TableHead className="text-center">Studenti</TableHead>
+                       <TableHead>Ultima Lezione</TableHead>
+                       <TableHead className="w-28">Azioni</TableHead>
+                    </TableRow>
+                  </TableHeader>
                 <TableBody>
                   {groups.map(group => (
                     <TableRow key={group.id}>
@@ -688,6 +689,7 @@ export default function AdminGroups() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             )}
           </CardContent>
         </Card>

@@ -176,7 +176,7 @@ export default function AdminLessonReports() {
       </header>
       <AdminNav />
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         <h1 className="text-2xl font-bold mb-6 flex items-center gap-2">
           <FileText className="w-6 h-6" />
           Report Lezioni

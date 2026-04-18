@@ -235,10 +235,10 @@ export default function AdminBackups() {
 
       <AdminNav />
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Backup & Ripristino</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold">Backup & Ripristino</h1>
             <p className="text-muted-foreground mt-1">{snapshots.length} snapshot salvati</p>
           </div>
           <div className="flex items-center gap-3">

@@ -261,7 +261,7 @@ export default function AdminGrading() {
       <main className="max-w-5xl mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Valutazione Compiti</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold">Valutazione Compiti</h1>
             <p className="text-muted-foreground mt-1">{submissions.length} consegne</p>
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>

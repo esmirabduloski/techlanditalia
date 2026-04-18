@@ -315,7 +315,7 @@ export default function AdminStudentComments() {
       <main className="max-w-5xl mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Commenti Studenti</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold">Commenti Studenti</h1>
             <p className="text-muted-foreground mt-1">{comments.length} commenti totali</p>
           </div>
           <div className="flex items-center gap-3 w-full md:w-auto">

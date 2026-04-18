@@ -226,10 +226,10 @@ export default function AdminContatti() {
       <AdminNav />
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Invii Form Contatti</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold">Invii Form Contatti</h1>
             <p className="text-muted-foreground mt-1">{submissions.length} invii totali</p>
           </div>
         </div>
@@ -327,7 +327,7 @@ export default function AdminContatti() {
 
         {/* Job Applications Section */}
         <div className="mt-12">
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 sm:mb-8">
             <div>
               <h2 className="text-3xl font-bold flex items-center gap-2">
                 <Briefcase className="w-7 h-7" />

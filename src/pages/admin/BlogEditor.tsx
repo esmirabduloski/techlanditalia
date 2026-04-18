@@ -271,6 +271,49 @@ export default function BlogEditor() {
       {/* Editor */}
       <main className="max-w-4xl mx-auto px-4 py-8">
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Pubblicazione */}
+          <div className="tech-card p-6 space-y-4 border-l-4 border-l-primary">
+            <h2 className="font-semibold">Pubblicazione</h2>
+            <p className="text-xs text-muted-foreground">
+              Scegli <strong>una</strong> modalità: pubblica subito, programma una data specifica, oppure aggiungi alla coda automatica.
+            </p>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="scheduled" className="text-sm">Data pubblicazione programmata</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="scheduled"
+                    type="datetime-local"
+                    value={scheduledPublishAt}
+                    onChange={(e) => setScheduledPublishAt(e.target.value)}
+                    disabled={published}
+                  />
+                  {scheduledPublishAt && (
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setScheduledPublishAt('')}>
+                      Rimuovi
+                    </Button>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">L'articolo verrà pubblicato automaticamente a questa data/ora.</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm">Coda automatica</Label>
+                <div className="flex items-center gap-2 h-10">
+                  <Switch
+                    id="auto-queue"
+                    checked={autoPublishQueue}
+                    onCheckedChange={setAutoPublishQueue}
+                    disabled={published}
+                  />
+                  <Label htmlFor="auto-queue" className="text-sm cursor-pointer">
+                    Aggiungi alla coda auto-publish
+                  </Label>
+                </div>
+                <p className="text-xs text-muted-foreground">Verrà pubblicato uno al giorno all'orario impostato nelle impostazioni globali.</p>
+              </div>
+            </div>
+          </div>
+
           <div className="tech-card p-6 space-y-6">
             <div className="space-y-2">
               <Label htmlFor="title">Titolo *</Label>

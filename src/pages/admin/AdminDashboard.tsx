@@ -15,9 +15,17 @@ import {
   LogOut,
   FileText,
   Loader2,
-  User
+  User,
+  Calendar,
+  Clock,
+  ListOrdered,
+  Info,
+  X
 } from 'lucide-react';
 import { BugReportButton } from '@/components/BugReportButton';
+import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -203,6 +211,78 @@ export default function AdminDashboard() {
           </Button>
         </div>
 
+        {/* Info Box: 3 modalità di pubblicazione */}
+        <div className="tech-card p-5 mb-6 border-l-4 border-l-primary">
+          <div className="flex items-start gap-3">
+            <Info className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+            <div className="space-y-2 text-sm">
+              <h3 className="font-semibold text-base">Come funziona la pubblicazione</h3>
+              <ul className="space-y-1 text-muted-foreground">
+                <li><strong className="text-foreground">1. Pubblica subito</strong> → attiva il toggle "Pubblicato" sull'articolo</li>
+                <li><strong className="text-foreground">2. Data programmata</strong> → bozza + scegli data/ora nel campo "Programma" (si pubblica automaticamente)</li>
+                <li><strong className="text-foreground">3. Coda automatica</strong> → bozza + attiva "Aggiungi alla coda" (uno al giorno all'orario impostato qui sotto)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Pannello Auto-publish globale */}
+        {settings && (
+          <div className="tech-card p-5 mb-8">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <ListOrdered className="w-5 h-5 text-primary" />
+                <div>
+                  <h3 className="font-semibold">Coda Auto-publish</h3>
+                  <p className="text-xs text-muted-foreground">Pubblica automaticamente un articolo dalla coda ogni giorno</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="auto-publish"
+                    checked={settings.auto_publish_enabled}
+                    onCheckedChange={(checked) => updateSettings({ auto_publish_enabled: checked })}
+                  />
+                  <Label htmlFor="auto-publish" className="text-sm">
+                    {settings.auto_publish_enabled ? 'Attivo' : 'Disattivato'}
+                  </Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-muted-foreground" />
+                  <Label htmlFor="publish-hour" className="text-sm whitespace-nowrap">Ora (UTC):</Label>
+                  <Input
+                    id="publish-hour"
+                    type="number"
+                    min={0}
+                    max={23}
+                    value={settings.publish_hour}
+                    onChange={(e) => {
+                      const val = Math.max(0, Math.min(23, parseInt(e.target.value) || 0));
+                      setSettings({ ...settings, publish_hour: val });
+                    }}
+                    onBlur={() => updateSettings({ publish_hour: settings.publish_hour })}
+                    className="w-20"
+                  />
+                </div>
+              </div>
+            </div>
+            {settings.auto_publish_enabled && (() => {
+              const queued = posts.filter(p => !p.published && p.auto_publish_queue).sort((a, b) => (a.queue_order ?? 999) - (b.queue_order ?? 999));
+              if (queued.length === 0) {
+                return <p className="text-xs text-muted-foreground mt-3 pt-3 border-t">Nessun articolo in coda.</p>;
+              }
+              return (
+                <div className="mt-3 pt-3 border-t text-xs">
+                  <span className="font-medium">Prossimo: </span>
+                  <span className="text-muted-foreground">"{queued[0].title}" — {String(settings.publish_hour).padStart(2, '0')}:00 UTC</span>
+                  <span className="ml-2 text-muted-foreground">({queued.length} in coda)</span>
+                </div>
+              );
+            })()}
+          </div>
+        )}
+
         {/* Posts List */}
         {posts.length === 0 ? (
           <div className="tech-card p-12 text-center">
@@ -218,59 +298,125 @@ export default function AdminDashboard() {
           </div>
         ) : (
           <div className="space-y-4">
-            {posts.map((post) => (
-              <div key={post.id} className="tech-card p-4 flex items-center justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-semibold truncate">{post.title}</h3>
-                    <Badge variant={post.published ? 'default' : 'secondary'}>
-                      {post.published ? 'Pubblicato' : 'Bozza'}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                    <span>{post.category}</span>
-                    <span>•</span>
-                    <span>{new Date(post.created_at).toLocaleDateString('it-IT')}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => togglePublished(post.id, post.published)}
-                    title={post.published ? 'Nascondi' : 'Pubblica'}
-                  >
-                    {post.published ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </Button>
-                  <Button variant="ghost" size="icon" asChild>
-                    <Link to={`/admin/blog/${post.id}/modifica`}>
-                      <Edit className="w-4 h-4" />
-                    </Link>
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                        <Trash2 className="w-4 h-4" />
+            {posts.map((post) => {
+              const isScheduled = !post.published && post.scheduled_publish_at;
+              const isInQueue = !post.published && post.auto_publish_queue;
+              const scheduledLocal = post.scheduled_publish_at
+                ? (() => {
+                    const d = new Date(post.scheduled_publish_at);
+                    const pad = (n: number) => String(n).padStart(2, '0');
+                    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                  })()
+                : '';
+              return (
+                <div key={post.id} className="tech-card p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <h3 className="font-semibold truncate">{post.title}</h3>
+                        {post.published ? (
+                          <Badge variant="default">Pubblicato</Badge>
+                        ) : isScheduled ? (
+                          <Badge variant="secondary" className="gap-1">
+                            <Calendar className="w-3 h-3" />
+                            Programmato {new Date(post.scheduled_publish_at!).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          </Badge>
+                        ) : isInQueue ? (
+                          <Badge variant="secondary" className="gap-1">
+                            <ListOrdered className="w-3 h-3" />
+                            In coda{post.queue_order ? ` (#${post.queue_order})` : ''}
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary">Bozza</Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                        <span>{post.category}</span>
+                        <span>•</span>
+                        <span>{new Date(post.created_at).toLocaleDateString('it-IT')}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => togglePublished(post.id, post.published)}
+                        title={post.published ? 'Nascondi' : 'Pubblica'}
+                      >
+                        {post.published ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Elimina articolo</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Sei sicuro di voler eliminare "{post.title}"? Questa azione non può essere annullata.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Annulla</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => deletePost(post.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                          Elimina
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                      <Button variant="ghost" size="icon" asChild>
+                        <Link to={`/admin/blog/${post.id}/modifica`}>
+                          <Edit className="w-4 h-4" />
+                        </Link>
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Elimina articolo</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Sei sicuro di voler eliminare "{post.title}"? Questa azione non può essere annullata.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Annulla</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => deletePost(post.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                              Elimina
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </div>
+
+                  {/* Controlli scheduling (solo bozze) */}
+                  {!post.published && (
+                    <div className="mt-3 pt-3 border-t flex flex-wrap items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-muted-foreground" />
+                        <Label htmlFor={`sched-${post.id}`} className="text-xs whitespace-nowrap">Programma:</Label>
+                        <Input
+                          id={`sched-${post.id}`}
+                          type="datetime-local"
+                          value={scheduledLocal}
+                          onChange={(e) => {
+                            const val = e.target.value ? new Date(e.target.value).toISOString() : null;
+                            updateSchedule(post.id, val);
+                          }}
+                          className="w-auto h-8 text-xs"
+                        />
+                        {post.scheduled_publish_at && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => updateSchedule(post.id, null)}
+                            title="Rimuovi programmazione"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          id={`queue-${post.id}`}
+                          checked={post.auto_publish_queue}
+                          onCheckedChange={() => toggleQueue(post.id, post.auto_publish_queue)}
+                        />
+                        <Label htmlFor={`queue-${post.id}`} className="text-xs cursor-pointer">
+                          Aggiungi alla coda automatica
+                        </Label>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </main>

@@ -281,11 +281,11 @@ export default function LessonEditor() {
           </Card>
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-3">
-            <Button type="button" variant="outline" asChild>
+          <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3">
+            <Button type="button" variant="outline" asChild className="w-full sm:w-auto">
               <Link to={`/admin/corsi/${courseId}/lezioni`}>Annulla</Link>
             </Button>
-            <Button type="submit" disabled={isSaving}>
+            <Button type="submit" disabled={isSaving} className="w-full sm:w-auto">
               {isSaving ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
               ) : (

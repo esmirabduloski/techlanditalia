@@ -864,7 +864,7 @@ export default function AdminUsers() {
                     <Collapsible open={isExpanded} onOpenChange={() => toggleFamily(familyId)}>
                       <CollapsibleTrigger asChild>
                         <div className="p-4 cursor-pointer hover:bg-muted/50 transition-colors">
-                          <div className="flex items-center justify-between gap-4">
+                          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 lg:gap-4">
                             <div className="flex items-center gap-3 min-w-0">
                               {hasChildren ? (
                                 isExpanded ? <ChevronDown className="w-5 h-5 text-muted-foreground flex-shrink-0" /> : <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
@@ -902,7 +902,7 @@ export default function AdminUsers() {
                                 )}
                               </div>
                             </div>
-                            <div className="flex items-center gap-2 flex-shrink-0">
+                            <div className="flex items-center gap-2 flex-wrap lg:flex-shrink-0 lg:flex-nowrap">
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -1050,7 +1050,7 @@ export default function AdminUsers() {
                       <CollapsibleContent>
                         {group.children.map(child => (
                           <div key={child.id} className="px-4 py-3 border-t bg-muted/20 ml-8">
-                            <div className="flex items-center justify-between gap-4">
+                            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 lg:gap-4">
                               <div className="flex items-center gap-3 min-w-0 flex-1">
                                 <div className="w-8 h-8 rounded-full bg-tech-teal/20 flex items-center justify-center flex-shrink-0">
                                   <GraduationCap className="w-4 h-4 text-tech-teal" />
@@ -1082,7 +1082,7 @@ export default function AdminUsers() {
                                   </div>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2 flex-shrink-0">
+                              <div className="flex items-center gap-2 flex-wrap lg:flex-shrink-0 lg:flex-nowrap">
                                 <TooltipProvider>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
@@ -1172,7 +1172,7 @@ export default function AdminUsers() {
                       </div>
                       {group.children.map(child => (
                         <div key={child.id} className="px-4 py-3 border-t">
-                          <div className="flex items-center justify-between gap-4">
+                          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 lg:gap-4">
                             <div className="flex items-center gap-3 min-w-0 flex-1">
                               <div className="w-8 h-8 rounded-full bg-tech-teal/20 flex items-center justify-center flex-shrink-0">
                                 <GraduationCap className="w-4 h-4 text-tech-teal" />
@@ -1205,7 +1205,7 @@ export default function AdminUsers() {
                                 </div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-2 flex-shrink-0">
+                            <div className="flex items-center gap-2 flex-wrap lg:flex-shrink-0 lg:flex-nowrap">
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>

@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { BugReportButton } from '@/components/BugReportButton';
 import { Switch } from '@/components/ui/switch';
+import { MiniSwitch } from '@/components/ui/mini-switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -403,11 +404,10 @@ export default function AdminDashboard() {
                         )}
                       </div>
                       <div className="flex items-center gap-2">
-                        <Switch
+                        <MiniSwitch
                           id={`queue-${post.id}`}
                           checked={post.auto_publish_queue}
                           onCheckedChange={() => toggleQueue(post.id, post.auto_publish_queue)}
-                          className="!h-3 !w-7 border-0 rounded-full [&>span]:!h-2.5 [&>span]:!w-2.5 [&>span]:rounded-full [&>span]:shadow-none [&>span]:data-[state=checked]:translate-x-[18px] [&>span]:data-[state=unchecked]:translate-x-0.5"
                         />
                         <Label htmlFor={`queue-${post.id}`} className="text-xs cursor-pointer">
                           Aggiungi alla coda automatica

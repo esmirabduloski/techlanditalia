@@ -44,7 +44,7 @@ const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(
     return (
       <label
         className={cn(
-          "relative inline-block h-[10px] w-[25px] shrink-0 align-middle",
+          "relative inline-block h-[18px] w-[34px] shrink-0 align-middle",
           disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
           className,
         )}
@@ -75,8 +75,8 @@ const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(
         <span
           aria-hidden="true"
           className={cn(
-            "absolute top-1/2 left-[1px] block h-[8px] w-[8px] -translate-y-1/2 rounded-full bg-white shadow-md transition-transform",
-            isOn && "translate-x-[15px]",
+            "absolute top-1/2 left-[2px] block h-[14px] w-[14px] -translate-y-1/2 rounded-full bg-white shadow-md transition-transform",
+            isOn && "translate-x-[16px]",
           )}
         />
       </label>

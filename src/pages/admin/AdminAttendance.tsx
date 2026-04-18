@@ -195,7 +195,7 @@ export default function AdminAttendance() {
       <AdminNav />
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-foreground">Registro Presenze</h1>
           <p className="text-muted-foreground">Segna le presenze degli studenti per ogni lezione programmata</p>

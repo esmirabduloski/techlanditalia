@@ -138,7 +138,7 @@ export default function AdminTasks() {
       <AdminNav />
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 mb-6 flex-wrap">
           <Button variant="ghost" size="sm" asChild>
@@ -157,9 +157,9 @@ export default function AdminTasks() {
           <span className="font-medium">L{lesson.lesson_number}: {lesson.title}</span>
         </div>
 
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Task della Lezione</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold">Task della Lezione</h1>
             <p className="text-muted-foreground mt-1">{tasks.length} task</p>
           </div>
           <Button asChild>

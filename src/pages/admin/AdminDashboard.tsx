@@ -170,10 +170,10 @@ export default function AdminDashboard() {
       <AdminNav />
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Gestione Blog</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold">Gestione Blog</h1>
             <p className="text-muted-foreground mt-1">{posts.length} articoli totali</p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <Badge variant="secondary">UTC oggi: {new Date().toISOString().slice(0, 10)}</Badge>

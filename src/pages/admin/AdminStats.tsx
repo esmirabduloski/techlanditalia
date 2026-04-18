@@ -172,9 +172,9 @@ export default function AdminStats() {
 
       <AdminNav />
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold">Statistiche</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Statistiche</h1>
           <p className="text-muted-foreground mt-1">Panoramica generale della piattaforma</p>
         </div>
 

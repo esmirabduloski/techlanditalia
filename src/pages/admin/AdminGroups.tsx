@@ -565,21 +565,22 @@ export default function AdminGroups() {
                 </Button>
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                     <TableHead className="w-24">ID</TableHead>
-                     <TableHead>Titolo</TableHead>
-                     <TableHead>Stato</TableHead>
-                     <TableHead>Insegnante</TableHead>
-                     <TableHead>Corso</TableHead>
-                     <TableHead>Data Inizio</TableHead>
-                     <TableHead>Orario</TableHead>
-                     <TableHead className="text-center">Studenti</TableHead>
-                     <TableHead>Ultima Lezione</TableHead>
-                     <TableHead className="w-28">Azioni</TableHead>
-                  </TableRow>
-                </TableHeader>
+              <div className="-mx-6 overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                       <TableHead className="w-24">ID</TableHead>
+                       <TableHead>Titolo</TableHead>
+                       <TableHead>Stato</TableHead>
+                       <TableHead>Insegnante</TableHead>
+                       <TableHead>Corso</TableHead>
+                       <TableHead>Data Inizio</TableHead>
+                       <TableHead>Orario</TableHead>
+                       <TableHead className="text-center">Studenti</TableHead>
+                       <TableHead>Ultima Lezione</TableHead>
+                       <TableHead className="w-28">Azioni</TableHead>
+                    </TableRow>
+                  </TableHeader>
                 <TableBody>
                   {groups.map(group => (
                     <TableRow key={group.id}>

@@ -15,9 +15,17 @@ import {
   LogOut,
   FileText,
   Loader2,
-  User
+  User,
+  Calendar,
+  Clock,
+  ListOrdered,
+  Info,
+  X
 } from 'lucide-react';
 import { BugReportButton } from '@/components/BugReportButton';
+import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   AlertDialog,
   AlertDialogAction,

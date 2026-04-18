@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { AdminNav } from '@/components/admin/AdminNav';
+import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Eye, EyeOff, ExternalLink, Loader2, Megaphone, Copy
@@ -81,17 +82,7 @@ export default function AdminLandingPages() {
 
   return (
     <div className="min-h-screen bg-muted/30">
-      <header className="bg-background border-b sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/" className="text-2xl font-bold">
-              <span className="text-primary">TECH</span>
-              <span className="text-tech-teal">LAND</span>
-            </Link>
-            <Badge variant="secondary">Admin</Badge>
-          </div>
-        </div>
-      </header>
+      <AdminHeader />
 
       <AdminNav />
 

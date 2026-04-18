@@ -689,6 +689,7 @@ export default function AdminGroups() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             )}
           </CardContent>
         </Card>

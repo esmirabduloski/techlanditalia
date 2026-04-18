@@ -44,7 +44,7 @@ const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(
     return (
       <label
         className={cn(
-          "relative inline-block h-[10px] w-[25px] shrink-0 align-middle",
+          "relative inline-block h-[18px] w-[34px] shrink-0 align-middle",
           disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
           className,
         )}

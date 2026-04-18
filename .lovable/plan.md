@@ -1,45 +1,48 @@
 
 
-## Piano: Bottone Segnala Bug + Integrazione Jira Service
+## Situazione attuale
 
-### Integrazione con Atlassian Jira
+La logica c'è già nel codice (funzioni `updateSchedule`, `toggleQueue`, `updateSettings` in `AdminDashboard.tsx`) e i dati sono nel database (`scheduled_publish_at`, `auto_publish_queue`, tabella `blog_settings`), ma **non sono visibili nell'interfaccia admin**. Per questo non trovi dove settare la data: i campi non sono renderizzati.
 
-Jira non è disponibile come connettore standard in Lovable, quindi l'integrazione avverrà tramite le **API REST di Jira Cloud** con autenticazione via API token. Ecco cosa serve da parte tua:
+Inoltre nella `BlogEditor.tsx` (pagina di creazione/modifica articolo) manca completamente il campo "Data di pubblicazione programmata".
 
-1. **Crea un API Token Atlassian**: Vai su [https://id.atlassian.com/manage-profile/security/api-tokens](https://id.atlassian.com/manage-profile/security/api-tokens) e crea un nuovo token
-2. **Informazioni necessarie**:
-   - **Email Atlassian** associata all'account (es. `tuaemail@esempio.com`)
-   - **API Token** appena creato
-   - **URL del tuo sito Jira** (es. `https://tuosito.atlassian.net`)
-   - **Project Key** del progetto Jira Service dove vuoi ricevere i ticket (es. `TECH` o `SUP`)
+## Cosa aggiungere
 
-Questi verranno salvati come secrets sicuri nel backend e usati solo dalla edge function.
+### 1. Pannello globale "Auto-publish" in cima alla lista articoli (`AdminDashboard.tsx`)
 
-### Implementazione tecnica
+Una card riassuntiva con:
+- **Toggle "Auto-publish coda attivo"** → attiva/disattiva la pubblicazione automatica giornaliera (1 articolo al giorno alle 12:00).
+- **Selettore orario** (numerico 0-23) → ora UTC in cui pubblicare.
+- **Indicatore "Prossima pubblicazione"** → mostra il prossimo articolo in coda e quando uscirà.
+- **Spiegazione testuale** breve di come funziona il sistema (data programmata vs coda).
 
-1. **Creare componente `BugReportButton`** — Un bottone floating o posizionato nell'header della dashboard che apre un dialog con:
-   - Campo titolo (obbligatorio)
-   - Campo descrizione (textarea)
-   - Priorità (bassa/media/alta)
-   - Screenshot opzionale
-   - Il componente invia i dati alla edge function
+### 2. Per ogni articolo nella lista (`AdminDashboard.tsx`)
 
-2. **Creare edge function `create-jira-ticket`** — Riceve titolo, descrizione, priorità e info utente, poi chiama l'API Jira REST per creare un issue:
-   ```
-   POST https://{site}.atlassian.net/rest/api/3/issue
-   ```
-   con autenticazione Basic (email:apitoken in base64)
+Sotto al titolo/categoria aggiungo una riga compatta con:
+- **Badge stato esteso**: `Pubblicato` / `Bozza` / `Programmato il GG/MM/AAAA HH:MM` / `In coda (#N)`.
+- **Input datetime-local** "Programma pubblicazione" → setta `scheduled_publish_at` (con bottone "rimuovi" se già impostata).
+- **Toggle "Aggiungi alla coda automatica"** → setta `auto_publish_queue`.
 
-3. **Aggiungere il bottone in tutte e 3 le dashboard** — Student (`Dashboard.tsx`), Teacher (`TeacherDashboard.tsx`), Admin (`AdminDashboard.tsx`)
+### 3. Nel `BlogEditor.tsx` (pagina nuovo/modifica articolo)
 
-4. **Salvare i secrets** — `JIRA_EMAIL`, `JIRA_API_TOKEN`, `JIRA_SITE_URL`, `JIRA_PROJECT_KEY`
+Aggiungo nell'header, accanto al toggle "Pubblicato/Bozza", una nuova sezione:
+- **Campo "Programma pubblicazione"** (datetime-local) → permette di salvare un articolo come bozza con data futura.
+- **Checkbox "Aggiungi a coda auto-publish"**.
 
-### Prossimi passi
+### 4. Spiegazione delle 3 modalità (mostrata in UI come info-box)
 
-Prima di procedere con l'implementazione ho bisogno che tu:
-1. Confermi di avere un progetto Jira Service Management creato
-2. Mi fornisca il **Project Key** del progetto
-3. Mi fornisca l'**URL del sito** (es. `https://tuosito.atlassian.net`)
+```text
+1. PUBBLICA SUBITO       → toggle "Pubblicato" attivo
+2. DATA PROGRAMMATA      → bozza + data futura nel campo "Programma"
+                            → si pubblica automaticamente a quella data/ora
+3. CODA AUTOMATICA       → bozza + toggle "Aggiungi alla coda"
+                            → uno al giorno alle 12:00 UTC, in ordine
+```
 
-Poi ti chiederò di inserire email e API token tramite il sistema sicuro di secrets.
+## File da modificare
+
+- `src/pages/admin/AdminDashboard.tsx` → aggiungere pannello settings + controlli per articolo
+- `src/pages/admin/BlogEditor.tsx` → aggiungere campi data programmata e toggle coda
+
+Nessuna modifica al database o all'edge function: tutto è già pronto lato backend (cron job ogni ora, tabella `blog_settings`, campi su `blog_posts`).
 

@@ -766,8 +766,8 @@ export default function AdminUsers() {
 
         {/* Search and Filter */}
         <div className="flex flex-col gap-4 mb-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1 max-w-md">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <div className="relative flex-1 sm:max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Cerca per nome, username o email..."
@@ -776,40 +776,42 @@ export default function AdminUsers() {
                 className="pl-10"
               />
             </div>
-            <Select value={filterRole} onValueChange={(v) => setFilterRole(v as 'all' | 'parent' | 'student' | 'admin' | 'teacher' | 'parentRole')}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filtra per ruolo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tutti i ruoli</SelectItem>
-                <SelectItem value="parent">Genitori</SelectItem>
-                <SelectItem value="student">Studenti</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="teacher">Insegnanti</SelectItem>
-                <SelectItem value="parentRole">Ruolo Genitore</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={filterCourse} onValueChange={setFilterCourse}>
-              <SelectTrigger className="w-52">
-                <SelectValue placeholder="Filtra per corso" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tutti i corsi</SelectItem>
-                {courses.map(c => (
-                  <SelectItem key={c.id} value={c.id}>{c.emoji} {c.title}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as 'all' | 'enrolled' | 'no_enrollment')}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Stato iscrizione" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tutti gli stati</SelectItem>
-                <SelectItem value="enrolled">Iscritti a corsi</SelectItem>
-                <SelectItem value="no_enrollment">Senza iscrizioni</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="grid grid-cols-1 sm:flex sm:flex-row gap-2 sm:gap-4">
+              <Select value={filterRole} onValueChange={(v) => setFilterRole(v as 'all' | 'parent' | 'student' | 'admin' | 'teacher' | 'parentRole')}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="Filtra per ruolo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tutti i ruoli</SelectItem>
+                  <SelectItem value="parent">Genitori</SelectItem>
+                  <SelectItem value="student">Studenti</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="teacher">Insegnanti</SelectItem>
+                  <SelectItem value="parentRole">Ruolo Genitore</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filterCourse} onValueChange={setFilterCourse}>
+                <SelectTrigger className="w-full sm:w-52">
+                  <SelectValue placeholder="Filtra per corso" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tutti i corsi</SelectItem>
+                  {courses.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.emoji} {c.title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as 'all' | 'enrolled' | 'no_enrollment')}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="Stato iscrizione" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tutti gli stati</SelectItem>
+                  <SelectItem value="enrolled">Iscritti a corsi</SelectItem>
+                  <SelectItem value="no_enrollment">Senza iscrizioni</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           {(filterRole !== 'all' || filterCourse !== 'all' || filterStatus !== 'all' || searchQuery) && (
             <div className="flex items-center gap-2 flex-wrap">

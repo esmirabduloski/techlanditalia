@@ -243,12 +243,15 @@ export default function AdminAttendance() {
                 <>
                   <div className="space-y-4">
                     {students.map(student => (
-                      <div key={student.id} className="flex items-center gap-4 p-3 bg-muted/30 rounded-lg">
-                        <div className="flex-1">
-                          <p className="font-medium text-foreground">{student.full_name}</p>
-                          <p className="text-sm text-muted-foreground">{student.email}</p>
+                      <div
+                        key={student.id}
+                        className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 p-3 bg-muted/30 rounded-lg"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-foreground truncate">{student.full_name}</p>
+                          <p className="text-sm text-muted-foreground truncate">{student.email}</p>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           {getStatusButton(
                             student.id,
                             'present',
@@ -275,7 +278,7 @@ export default function AdminAttendance() {
                           placeholder="Note..."
                           value={attendanceRecords[student.id]?.notes || ''}
                           onChange={(e) => updateAttendance(student.id, 'notes', e.target.value)}
-                          className="w-48"
+                          className="w-full md:w-48"
                         />
                       </div>
                     ))}

@@ -103,7 +103,7 @@ export function HeroSection() {
             >
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-red-500/20 flex items-center justify-center">
-                  <img src="/images/roblox-logo.png" alt="" className="w-7 h-7 object-contain" aria-hidden="true" />
+                  <img src="/images/roblox-logo.webp" alt="" className="w-7 h-7 object-contain" aria-hidden="true" loading="lazy" decoding="async" />
                 </div>
                 <div>
                   <p className="font-semibold text-sm">Roblox</p>
@@ -135,7 +135,7 @@ export function HeroSection() {
             >
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-blue-500/20 flex items-center justify-center">
-                  <img src="/images/python-logo.png" alt="" className="w-7 h-7 object-contain" aria-hidden="true" />
+                  <img src="/images/python-logo.webp" alt="" className="w-7 h-7 object-contain" aria-hidden="true" loading="lazy" decoding="async" />
                 </div>
                 <div>
                   <p className="font-semibold text-sm">Python</p>
@@ -167,7 +167,7 @@ export function HeroSection() {
             >
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-green-600/20 flex items-center justify-center">
-                  <img src="/images/minecraft-logo.png" alt="" className="w-7 h-7 object-contain" aria-hidden="true" />
+                  <img src="/images/minecraft-logo.webp" alt="" className="w-7 h-7 object-contain" aria-hidden="true" loading="lazy" decoding="async" />
                 </div>
                 <div>
                   <p className="font-semibold text-sm">Minecraft</p>

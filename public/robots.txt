@@ -21,8 +21,7 @@ Allow: /
 User-agent: *
 Allow: /
 
-# Sitemap (dynamic, generated from database)
-Sitemap: https://aedpckxjyyklqwrzrnmg.supabase.co/functions/v1/generate-sitemap
+# Sitemap
 Sitemap: https://techlanditalia.it/sitemap.xml
 
 # Disallow admin and private areas

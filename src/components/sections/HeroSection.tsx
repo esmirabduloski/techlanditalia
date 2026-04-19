@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Play, Sparkles, Users, Award, Shield } from "lucide-react";
-const heroImage = "/images/home_page_techland.jpeg";
 
 export function HeroSection() {
   return (
@@ -75,15 +74,23 @@ export function HeroSection() {
             <div className="relative z-10 animate-float">
               <div className="aspect-square max-w-lg mx-auto rounded-3xl bg-gradient-hero p-1">
                 <div className="w-full h-full rounded-3xl bg-card flex items-center justify-center overflow-hidden">
-                  <img
-                    src={heroImage}
-                    alt="Bambini che imparano programmazione con corsi di Roblox, Minecraft, Scratch, Python e Web Development su TECHLAND"
-                    className="w-full h-full object-cover"
-                    width={504}
-                    height={504}
-                    loading="eager"
-                    fetchPriority="high"
-                  />
+                  <picture>
+                    <source
+                      type="image/webp"
+                      srcSet="/images/home_page_techland-mobile.webp 504w, /images/home_page_techland.webp 1008w"
+                      sizes="504px"
+                    />
+                    <img
+                      src="/images/home_page_techland.webp"
+                      alt="Bambini che imparano programmazione con corsi di Roblox, Minecraft, Scratch, Python e Web Development su TECHLAND"
+                      className="w-full h-full object-cover"
+                      width={504}
+                      height={504}
+                      loading="eager"
+                      fetchPriority="high"
+                      decoding="async"
+                    />
+                  </picture>
                 </div>
               </div>
             </div>
@@ -96,7 +103,7 @@ export function HeroSection() {
             >
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-red-500/20 flex items-center justify-center">
-                  <img src="/images/roblox-logo.png" alt="" className="w-7 h-7 object-contain" aria-hidden="true" />
+                  <img src="/images/roblox-logo.webp" alt="" className="w-7 h-7 object-contain" aria-hidden="true" loading="lazy" decoding="async" />
                 </div>
                 <div>
                   <p className="font-semibold text-sm">Roblox</p>
@@ -128,7 +135,7 @@ export function HeroSection() {
             >
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-blue-500/20 flex items-center justify-center">
-                  <img src="/images/python-logo.png" alt="" className="w-7 h-7 object-contain" aria-hidden="true" />
+                  <img src="/images/python-logo.webp" alt="" className="w-7 h-7 object-contain" aria-hidden="true" loading="lazy" decoding="async" />
                 </div>
                 <div>
                   <p className="font-semibold text-sm">Python</p>
@@ -160,7 +167,7 @@ export function HeroSection() {
             >
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-green-600/20 flex items-center justify-center">
-                  <img src="/images/minecraft-logo.png" alt="" className="w-7 h-7 object-contain" aria-hidden="true" />
+                  <img src="/images/minecraft-logo.webp" alt="" className="w-7 h-7 object-contain" aria-hidden="true" loading="lazy" decoding="async" />
                 </div>
                 <div>
                   <p className="font-semibold text-sm">Minecraft</p>

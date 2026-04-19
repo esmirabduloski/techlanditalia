@@ -1,0 +1,37 @@
+# Cache long per asset versionati (Vite genera hash nel filename)
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Cache long per immagini
+/images/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/favicon.png
+  Cache-Control: public, max-age=2592000
+
+/favicon.ico
+  Cache-Control: public, max-age=2592000
+
+/og-image.png
+  Cache-Control: public, max-age=2592000
+
+# Font auto-hosted
+/*.woff2
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.woff
+  Cache-Control: public, max-age=31536000, immutable
+
+# Sitemap e robots: cache breve, devono aggiornarsi
+/sitemap.xml
+  Cache-Control: public, max-age=3600, must-revalidate
+
+/robots.txt
+  Cache-Control: public, max-age=3600, must-revalidate
+
+# HTML: no cache (SPA, deve sempre prendere ultima versione)
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+/
+  Cache-Control: public, max-age=0, must-revalidate

@@ -22,11 +22,19 @@ export default defineConfig(({ mode }) => ({
         manualChunks(id) {
           if (!id.includes("node_modules")) return;
 
-          // Core React (always needed)
-          if (id.includes("/react/") || id.includes("/react-dom/") || id.includes("/scheduler/")) {
+          // Keep React + ALL libs that import react together to avoid duplicate React copies
+          if (
+            id.includes("/react/") ||
+            id.includes("/react-dom/") ||
+            id.includes("/scheduler/") ||
+            id.includes("/react-router") ||
+            id.includes("/react-helmet-async") ||
+            id.includes("/next-themes") ||
+            id.includes("/use-sync-external-store") ||
+            id.includes("/react-is/")
+          ) {
             return "vendor-react";
           }
-          if (id.includes("react-router")) return "vendor-router";
 
           // Supabase: split heavy realtime/postgrest from core auth
           if (id.includes("@supabase/realtime-js")) return "vendor-supabase-realtime";

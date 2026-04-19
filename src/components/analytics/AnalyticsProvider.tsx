@@ -125,19 +125,21 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Track route changes
+  // Track route changes (deferred to idle to avoid blocking FCP/TBT)
   useEffect(() => {
-    // Update previous page view before tracking new one
     if (currentPageViewId.current) {
       updatePageView();
     }
-
-    // Reset tracking for new page
     pageEnteredAt.current = Date.now();
     maxScrollDepth.current = 0;
-    
-    // Track new page view
-    trackPageView();
+
+    const idle =
+      (window as any).requestIdleCallback ||
+      ((cb: () => void) => setTimeout(cb, 1500));
+    const cancelIdle =
+      (window as any).cancelIdleCallback || ((id: number) => clearTimeout(id));
+    const handle = idle(() => trackPageView(), { timeout: 3000 });
+    return () => cancelIdle(handle);
   }, [location.pathname, trackPageView, updatePageView]);
 
   // Set up scroll tracking

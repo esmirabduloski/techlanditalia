@@ -573,6 +573,7 @@ export default function Dashboard() {
                   <CardDescription>La tua opinione è importante! Aiutaci a migliorare lasciando una recensione su Trustpilot.</CardDescription>
                 </CardHeader>
                 <CardContent>
+                  <TrustpilotLoader />
                   <div
                     className="trustpilot-widget"
                     data-locale="it-IT"

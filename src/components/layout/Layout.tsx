@@ -1,13 +1,29 @@
-import { ReactNode } from "react";
+import { ReactNode, lazy, Suspense, useEffect, useState } from "react";
 import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
-import { ChatWidget } from "@/components/chat/ChatWidget";
+
+const ChatWidget = lazy(() =>
+  import("@/components/chat/ChatWidget").then((m) => ({ default: m.ChatWidget }))
+);
 
 interface LayoutProps {
   children: ReactNode;
 }
 
 export function Layout({ children }: LayoutProps) {
+  const [showChat, setShowChat] = useState(false);
+
+  useEffect(() => {
+    // Defer chat widget loading until browser is idle to keep TBT/FCP low.
+    const idle =
+      (window as any).requestIdleCallback ||
+      ((cb: () => void) => setTimeout(cb, 2500));
+    const cancelIdle =
+      (window as any).cancelIdleCallback || ((id: number) => clearTimeout(id));
+    const handle = idle(() => setShowChat(true), { timeout: 4000 });
+    return () => cancelIdle(handle);
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col">
       <header>
@@ -17,7 +33,11 @@ export function Layout({ children }: LayoutProps) {
         {children}
       </main>
       <Footer />
-      <ChatWidget />
+      {showChat && (
+        <Suspense fallback={null}>
+          <ChatWidget />
+        </Suspense>
+      )}
     </div>
   );
 }

@@ -82,8 +82,8 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
       if (!error && data) {
         currentPageViewId.current = data.id;
       }
-    } catch (error) {
-      console.error('Page view tracking error:', error);
+    } catch {
+      // Silent fail - analytics should never break UX or pollute console
     }
 
     isFirstLoad.current = false;
@@ -104,8 +104,8 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
           exited_at: new Date().toISOString()
         })
         .eq('id', currentPageViewId.current);
-    } catch (error) {
-      console.error('Page view update error:', error);
+    } catch {
+      // Silent fail
     }
   }, []);
 
@@ -228,8 +228,8 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
               timestamp: new Date().toISOString()
             }
           });
-        } catch (error) {
-          console.error('CTA tracking error:', error);
+        } catch {
+          // Silent fail
         }
       } else {
         // Track general clicks on interactive elements for heatmap
@@ -252,8 +252,8 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
                 timestamp: new Date().toISOString()
               }
             });
-          } catch (error) {
-            console.error('Click tracking error:', error);
+          } catch {
+            // Silent fail
           }
         }
       }

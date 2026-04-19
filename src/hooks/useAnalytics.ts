@@ -131,8 +131,8 @@ export function useAnalytics(): AnalyticsHook {
           timestamp: new Date().toISOString()
         }
       });
-    } catch (error) {
-      console.error('Analytics tracking error:', error);
+    } catch {
+      // Silent fail - analytics should never break UX or pollute console
     }
   }, [user?.id, sessionId, deviceInfo]);
 
@@ -297,8 +297,8 @@ export function useAnalytics(): AnalyticsHook {
           timestamp: new Date().toISOString()
         }
       });
-    } catch (error) {
-      console.error('Funnel tracking error:', error);
+    } catch {
+      // Silent fail
     }
   }, [sessionId, user?.id]);
 

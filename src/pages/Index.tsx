@@ -1,23 +1,12 @@
-import { lazy, Suspense } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { WhyTechlandSection } from "@/components/sections/WhyTechlandSection";
 import { CoursesPreviewSection } from "@/components/sections/CoursesPreviewSection";
+import { HowItWorksSection } from "@/components/sections/HowItWorksSection";
+import { ParentsSection } from "@/components/sections/ParentsSection";
+import { FAQSection } from "@/components/sections/FAQSection";
+import { CTASection } from "@/components/sections/CTASection";
 import { SEOHead, organizationSchema, websiteSchema, generateFAQSchema } from "@/components/seo/SEOHead";
-
-// Below-the-fold heavy sections: lazy-loaded to reduce initial JS bundle for mobile FCP/TBT
-const HowItWorksSection = lazy(() =>
-  import("@/components/sections/HowItWorksSection").then((m) => ({ default: m.HowItWorksSection }))
-);
-const ParentsSection = lazy(() =>
-  import("@/components/sections/ParentsSection").then((m) => ({ default: m.ParentsSection }))
-);
-const FAQSection = lazy(() =>
-  import("@/components/sections/FAQSection").then((m) => ({ default: m.FAQSection }))
-);
-const CTASection = lazy(() =>
-  import("@/components/sections/CTASection").then((m) => ({ default: m.CTASection }))
-);
 
 const homepageFaqs = [
   { question: "Qual è l'età minima per iniziare?", answer: "I nostri corsi partono dai 5 anni. Per i bambini più piccoli (5-8 anni) utilizziamo strumenti visivi come Scratch, che permettono di imparare la logica della programmazione senza dover scrivere codice complesso." },
@@ -58,12 +47,10 @@ const Index = () => {
       <HeroSection />
       <WhyTechlandSection />
       <CoursesPreviewSection />
-      <Suspense fallback={<div className="min-h-[400px]" aria-hidden="true" />}>
-        <HowItWorksSection />
-        <ParentsSection />
-        <FAQSection />
-        <CTASection />
-      </Suspense>
+      <HowItWorksSection />
+      <ParentsSection />
+      <FAQSection />
+      <CTASection />
     </Layout>
   );
 };

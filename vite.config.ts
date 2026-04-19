@@ -19,11 +19,48 @@ export default defineConfig(({ mode }) => ({
     sourcemap: true,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-supabase': ['@supabase/supabase-js'],
-          'vendor-query': ['@tanstack/react-query'],
-          'vendor-ui': ['@radix-ui/react-dialog', '@radix-ui/react-popover', '@radix-ui/react-tooltip', '@radix-ui/react-dropdown-menu', '@radix-ui/react-navigation-menu', '@radix-ui/react-toast', '@radix-ui/react-accordion', '@radix-ui/react-tabs'],
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return;
+
+          // Core React (always needed)
+          if (id.includes("/react/") || id.includes("/react-dom/") || id.includes("/scheduler/")) {
+            return "vendor-react";
+          }
+          if (id.includes("react-router")) return "vendor-router";
+
+          // Supabase: split heavy realtime/postgrest from core auth
+          if (id.includes("@supabase/realtime-js")) return "vendor-supabase-realtime";
+          if (id.includes("@supabase/postgrest-js")) return "vendor-supabase-postgrest";
+          if (id.includes("@supabase/")) return "vendor-supabase-core";
+
+          // Tanstack query
+          if (id.includes("@tanstack/")) return "vendor-query";
+
+          // Radix UI: split per primitive to avoid one giant chunk
+          if (id.includes("@radix-ui/react-dialog") || id.includes("@radix-ui/react-alert-dialog")) {
+            return "vendor-radix-dialog";
+          }
+          if (id.includes("@radix-ui/react-dropdown-menu") || id.includes("@radix-ui/react-context-menu") || id.includes("@radix-ui/react-menubar")) {
+            return "vendor-radix-menu";
+          }
+          if (id.includes("@radix-ui/react-popover") || id.includes("@radix-ui/react-tooltip") || id.includes("@radix-ui/react-hover-card")) {
+            return "vendor-radix-popover";
+          }
+          if (id.includes("@radix-ui/react-navigation-menu")) return "vendor-radix-nav";
+          if (id.includes("@radix-ui/react-toast")) return "vendor-radix-toast";
+          if (id.includes("@radix-ui/react-accordion") || id.includes("@radix-ui/react-tabs") || id.includes("@radix-ui/react-collapsible")) {
+            return "vendor-radix-disclosure";
+          }
+          if (id.includes("@radix-ui/")) return "vendor-radix-misc";
+
+          // Heavy libs: isolate so they only load when used
+          if (id.includes("recharts") || id.includes("d3-")) return "vendor-charts";
+          if (id.includes("@tiptap/") || id.includes("prosemirror")) return "vendor-editor";
+          if (id.includes("framer-motion")) return "vendor-motion";
+          if (id.includes("embla-carousel")) return "vendor-carousel";
+          if (id.includes("react-day-picker") || id.includes("date-fns")) return "vendor-date";
+          if (id.includes("dompurify")) return "vendor-sanitize";
+          if (id.includes("lucide-react")) return "vendor-icons";
         },
       },
     },

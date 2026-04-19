@@ -142,12 +142,24 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
     return () => cancelIdle(handle);
   }, [location.pathname, trackPageView, updatePageView]);
 
-  // Set up scroll tracking
+  // Set up scroll tracking — deferred to idle to keep mobile FCP/TBT low
   useEffect(() => {
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    
+    const idle =
+      (window as any).requestIdleCallback ||
+      ((cb: () => void) => setTimeout(cb, 3000));
+    const cancelIdle =
+      (window as any).cancelIdleCallback || ((id: number) => clearTimeout(id));
+    let attached = false;
+    const handle = idle(
+      () => {
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        attached = true;
+      },
+      { timeout: 5000 }
+    );
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      cancelIdle(handle);
+      if (attached) window.removeEventListener('scroll', handleScroll);
     };
   }, [handleScroll]);
 

@@ -19,14 +19,14 @@ const textSizeMap = {
 };
 
 const logoMap: Record<string, { src: string; alt: string }> = {
-  '⛏️': { src: '/images/minecraft-logo.png', alt: 'Minecraft' },
-  '🐍': { src: '/images/python-logo.png', alt: 'Python' },
-  '🤖': { src: '/images/python-logo.png', alt: 'Python PRO & AI' },
+  '⛏️': { src: '/images/minecraft-logo.webp', alt: 'Minecraft' },
+  '🐍': { src: '/images/python-logo.webp', alt: 'Python' },
+  '🤖': { src: '/images/python-logo.webp', alt: 'Python PRO & AI' },
   '🧩': { src: '/images/scratch-logo.svg', alt: 'Scratch' },
   '🐱': { src: '/images/scratch-logo.svg', alt: 'Scratch' },
-  '🏗️': { src: '/images/roblox-logo.png', alt: 'Roblox' },
-  '🎮': { src: '/images/roblox-logo.png', alt: 'Roblox' },
-  '🚀': { src: '/images/roblox-logo.png', alt: 'Roblox Avanzato' },
+  '🏗️': { src: '/images/roblox-logo.webp', alt: 'Roblox' },
+  '🎮': { src: '/images/roblox-logo.webp', alt: 'Roblox' },
+  '🚀': { src: '/images/roblox-logo.webp', alt: 'Roblox Avanzato' },
 };
 
 export function CourseEmoji({ emoji, className = '', size = 'md' }: CourseEmojiProps) {
@@ -38,6 +38,8 @@ export function CourseEmoji({ emoji, className = '', size = 'md' }: CourseEmojiP
       <img
         src={logo.src}
         alt={logo.alt}
+        loading="lazy"
+        decoding="async"
         className={`${sizeMap[size]} object-contain ${className}`}
       />
     );

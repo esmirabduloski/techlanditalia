@@ -1,15 +1,11 @@
 import { lazy, Suspense } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { HeroSection } from "@/components/sections/HeroSection";
+import { WhyTechlandSection } from "@/components/sections/WhyTechlandSection";
+import { CoursesPreviewSection } from "@/components/sections/CoursesPreviewSection";
 import { SEOHead, organizationSchema, websiteSchema, generateFAQSchema } from "@/components/seo/SEOHead";
 
-// Below-the-fold sections: lazy-loaded to reduce initial JS bundle for mobile FCP/TBT
-const WhyTechlandSection = lazy(() =>
-  import("@/components/sections/WhyTechlandSection").then((m) => ({ default: m.WhyTechlandSection }))
-);
-const CoursesPreviewSection = lazy(() =>
-  import("@/components/sections/CoursesPreviewSection").then((m) => ({ default: m.CoursesPreviewSection }))
-);
+// Below-the-fold heavy sections: lazy-loaded to reduce initial JS bundle for mobile FCP/TBT
 const HowItWorksSection = lazy(() =>
   import("@/components/sections/HowItWorksSection").then((m) => ({ default: m.HowItWorksSection }))
 );
@@ -60,9 +56,9 @@ const Index = () => {
         structuredData={[organizationSchema, websiteSchema, homepageFaqSchema, howItWorksSchema]}
       />
       <HeroSection />
+      <WhyTechlandSection />
+      <CoursesPreviewSection />
       <Suspense fallback={<div className="min-h-[400px]" aria-hidden="true" />}>
-        <WhyTechlandSection />
-        <CoursesPreviewSection />
         <HowItWorksSection />
         <ParentsSection />
         <FAQSection />

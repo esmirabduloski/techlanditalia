@@ -28,6 +28,7 @@ import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { CelebrationOverlay } from '@/components/gamification/CelebrationOverlay';
 import { useCelebration } from '@/hooks/useCelebration';
 import { Loader2, BookOpen, Trophy, Target, Settings, LogOut, Rocket, Shield, GraduationCap, CreditCard, Bookmark } from 'lucide-react';
+import { TrustpilotLoader } from '@/components/TrustpilotLoader';
 import { useBookmarks } from '@/hooks/useBookmarks';
 import { BugReportButton } from '@/components/BugReportButton';
 import { BackgroundColorPicker } from '@/components/dashboard/BackgroundColorPicker';
@@ -573,6 +574,7 @@ export default function Dashboard() {
                   <CardDescription>La tua opinione è importante! Aiutaci a migliorare lasciando una recensione su Trustpilot.</CardDescription>
                 </CardHeader>
                 <CardContent>
+                  <TrustpilotLoader />
                   <div
                     className="trustpilot-widget"
                     data-locale="it-IT"

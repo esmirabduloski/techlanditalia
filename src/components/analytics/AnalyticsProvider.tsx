@@ -191,7 +191,9 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Auto-track CTA clicks via data attributes + position tracking
+  // Deferred: only attach after browser is idle to keep TBT/FCP low on mobile.
   useEffect(() => {
+    let attached = false;
     const handleClick = async (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       const ctaElement = target.closest('[data-track-cta]');
@@ -261,10 +263,22 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    document.addEventListener('click', handleClick);
-    
+    const idle =
+      (window as any).requestIdleCallback ||
+      ((cb: () => void) => setTimeout(cb, 3000));
+    const cancelIdle =
+      (window as any).cancelIdleCallback || ((id: number) => clearTimeout(id));
+    const handle = idle(
+      () => {
+        document.addEventListener('click', handleClick);
+        attached = true;
+      },
+      { timeout: 5000 }
+    );
+
     return () => {
-      document.removeEventListener('click', handleClick);
+      cancelIdle(handle);
+      if (attached) document.removeEventListener('click', handleClick);
     };
   }, [location.pathname, sessionId, user?.id]);
 

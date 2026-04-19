@@ -41,3 +41,6 @@ verify_jwt = false
 
 [functions.create-jira-ticket]
 verify_jwt = false
+
+[functions.generate-sitemap]
+verify_jwt = false

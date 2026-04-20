@@ -1,3 +1,4 @@
+import * as React from "react";
 import { ReactNode, lazy, Suspense, useEffect, useState } from "react";
 import { Navbar } from "./Navbar";
 

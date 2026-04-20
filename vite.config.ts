@@ -19,19 +19,11 @@ export default defineConfig(({ mode }) => ({
     sourcemap: true,
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          if (id.includes('node_modules')) {
-            if (id.includes('react-dom') || id.includes('react-router') || id.includes('/react/')) {
-              return 'vendor-react';
-            }
-            if (id.includes('@supabase')) return 'vendor-supabase';
-            if (id.includes('@tanstack')) return 'vendor-query';
-            if (id.includes('@radix-ui')) return 'vendor-radix';
-            if (id.includes('lucide-react')) return 'vendor-icons';
-            if (id.includes('recharts') || id.includes('d3-')) return 'vendor-charts';
-            if (id.includes('@tiptap') || id.includes('prosemirror')) return 'vendor-editor';
-            if (id.includes('framer-motion')) return 'vendor-motion';
-          }
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-supabase': ['@supabase/supabase-js'],
+          'vendor-query': ['@tanstack/react-query'],
+          'vendor-ui': ['@radix-ui/react-dialog', '@radix-ui/react-popover', '@radix-ui/react-tooltip', '@radix-ui/react-dropdown-menu', '@radix-ui/react-navigation-menu', '@radix-ui/react-toast', '@radix-ui/react-accordion', '@radix-ui/react-tabs'],
         },
       },
     },

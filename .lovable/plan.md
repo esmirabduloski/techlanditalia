@@ -1,35 +1,33 @@
 
 ## Problema
-PageSpeed/GSC segnala errore 401 in console su `POST /rest/v1/page_views`. Causa: la RLS policy di INSERT su `page_views` richiede utenti autenticati, ma `AnalyticsProvider` traccia ogni page view anche per visitatori anonimi (homepage pubblica) → ogni visita anonima genera un 401 visibile in console e penalizza il punteggio "Best Practices".
+Google Search Console segnala "Tipo di oggetto non valido per campo `hiringOrganization`" sullo schema JobPosting della pagina `/lavora-con-noi`. Causa probabile: `hiringOrganization` è definito come stringa o gli manca il `@type: "Organization"` richiesto da schema.org.
 
-## Soluzione
-Permettere insert anonimi su `page_views` (è una tabella di sola scrittura per analytics, già pensata per tracking pubblico — vedi memoria `analytics-page-views-policy`).
+## Indagine
+Leggo `src/pages/LavoraConNoi.tsx` per vedere come è generato lo schema JSON-LD dei 4 JobPosting (Python, Roblox, Scratch, Unity) e correggere il campo.
 
-### Step 1 — Migrazione DB
-Aggiungere policy RLS che permetta INSERT anche al ruolo `anon`:
-```sql
-CREATE POLICY "Anyone can insert page views"
-ON public.page_views
-FOR INSERT
-TO anon, authenticated
-WITH CHECK (true);
-```
-(Mantengo le policy SELECT esistenti restrittive: solo admin può leggere.)
-
-Stesso fix per `analytics_events` (tracciato anch'esso da utenti anonimi in `AnalyticsProvider`):
-```sql
-CREATE POLICY "Anyone can insert analytics events"
-ON public.analytics_events
-FOR INSERT
-TO anon, authenticated
-WITH CHECK (true);
+## Fix previsto
+Per ogni JobPosting, `hiringOrganization` deve essere un oggetto valido:
+```json
+"hiringOrganization": {
+  "@type": "Organization",
+  "name": "TECHLAND",
+  "sameAs": "https://techlanditalia.it",
+  "logo": "https://techlanditalia.it/logo.png"
+}
 ```
 
-### Step 2 — Hardening client
-In `AnalyticsProvider.tsx`, rendere il tracking silenzioso (no `console.error`) per evitare rumore in console anche in caso di futuri fallimenti:
-- Sostituire `console.error(...)` con un no-op o `console.debug` nei catch.
+Verifico anche che siano presenti gli altri campi obbligatori/raccomandati di JobPosting per evitare warning correlati:
+- `title`, `description`, `datePosted`, `validThrough`
+- `jobLocation` oppure `jobLocationType: "TELECOMMUTE"` + `applicantLocationRequirements` (per lavoro remoto in Italia)
+- `employmentType`
+- `identifier` con `@type: "PropertyValue"`
+
+## Step
+1. Leggere `src/pages/LavoraConNoi.tsx` per ispezionare lo schema attuale.
+2. Sostituire `hiringOrganization` con l'oggetto `Organization` completo nei 4 JobPosting.
+3. Aggiungere/correggere campi mancanti (jobLocationType, applicantLocationRequirements, identifier) se assenti.
+4. Validare mentalmente con la struttura richiesta dal Rich Results Test di Google.
 
 ## Risultato atteso
-- Niente più 401 in console su `/page_views`
-- Punteggio "Best Practices" di PageSpeed sale (era penalizzato dagli errori console)
-- Analytics continua a funzionare regolarmente per tutti i visitatori
+- Zero warning "Tipo di oggetto non valido" su Search Console dopo re-indicizzazione.
+- I 4 annunci diventano idonei ai risultati avanzati Google for Jobs.

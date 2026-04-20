@@ -101,19 +101,33 @@ export default function LavoraConNoi() {
             "@context": "https://schema.org",
             "@type": "JobPosting",
             "title": pos.title,
-            "description": pos.description,
+            "description": `<p>${pos.description}</p><p>Posizione part-time in modalità remota presso TECHLAND, scuola di coding online per alunni dai 5 ai 20 anni.</p>`,
+            "identifier": {
+              "@type": "PropertyValue",
+              "name": "TECHLAND",
+              "value": `techland-job-${i + 1}`,
+            },
             "employmentType": "PART_TIME",
-            "jobLocationType": "TELECOMMUTE",
+            "datePosted": "2026-01-15",
+            "validThrough": "2026-12-31T23:59:00+01:00",
             "hiringOrganization": {
-              "@type": "EducationalOrganization",
+              "@type": "Organization",
               "name": "TECHLAND",
               "sameAs": "https://techlanditalia.it",
+              "logo": "https://techlanditalia.it/logo.png",
             },
+            "jobLocationType": "TELECOMMUTE",
             "applicantLocationRequirements": {
               "@type": "Country",
-              "name": "Italia",
+              "name": "IT",
             },
-            "datePosted": "2026-01-15",
+            "jobLocation": {
+              "@type": "Place",
+              "address": {
+                "@type": "PostalAddress",
+                "addressCountry": "IT",
+              },
+            },
           })),
           {
             "@context": "https://schema.org",

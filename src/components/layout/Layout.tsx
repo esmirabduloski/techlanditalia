@@ -1,10 +1,8 @@
 import { ReactNode, lazy, Suspense, useEffect, useState } from "react";
 import { Navbar } from "./Navbar";
+import { Footer } from "./Footer";
+import { useIsMobile } from "@/hooks/use-mobile";
 
-// Lazy: footer is below-the-fold and triggers a Supabase query for courses
-const Footer = lazy(() =>
-  import("./Footer").then((m) => ({ default: m.Footer }))
-);
 const ChatWidget = lazy(() =>
   import("@/components/chat/ChatWidget").then((m) => ({ default: m.ChatWidget }))
 );
@@ -15,6 +13,7 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const [showDeferred, setShowDeferred] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     // Defer footer + chat widget until the browser is idle to keep TBT/FCP low.
@@ -35,9 +34,9 @@ export function Layout({ children }: LayoutProps) {
       <main id="main-content" role="main" className="flex-1 pt-16" tabIndex={-1}>
         {children}
       </main>
-      {showDeferred && (
+      {showDeferred && <Footer />}
+      {showDeferred && !isMobile && (
         <Suspense fallback={null}>
-          <Footer />
           <ChatWidget />
         </Suspense>
       )}

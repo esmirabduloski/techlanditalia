@@ -3,14 +3,6 @@ import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-const lazyRetry = <T,>(importFn: () => Promise<T>) =>
-  lazy(() =>
-    importFn().catch(() => {
-      window.location.reload();
-      return importFn();
-    })
-  );
-
 const ChatWidget = lazy(() =>
   import("@/components/chat/ChatWidget").then((m) => ({ default: m.ChatWidget }))
 );

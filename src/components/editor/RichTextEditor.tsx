@@ -243,7 +243,7 @@ export default function RichTextEditor({ content, onChange }: RichTextEditorProp
   }, []);
 
   const editor = useEditor({
-    extensions: [
+    extensions: ([
       StarterKit.configure({
         heading: {
           levels: [1, 2, 3],

@@ -271,7 +271,7 @@ export default function RichTextEditor({ content, onChange }: RichTextEditorProp
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
-    ],
+    ] as any),
     content: content,
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
@@ -381,7 +381,7 @@ export default function RichTextEditor({ content, onChange }: RichTextEditorProp
 
   const addVideo = useCallback(() => {
     if (videoUrl && editor) {
-      editor.chain().focus().setVideo({ src: videoUrl }).run();
+      (editor.chain().focus() as any).setVideo({ src: videoUrl }).run();
       setVideoUrl('');
       setVideoDialogOpen(false);
     }

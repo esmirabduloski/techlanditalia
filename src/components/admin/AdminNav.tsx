@@ -66,7 +66,7 @@ export function AdminNav() {
 
   // Mark notifications as seen when visiting the respective pages
   useEffect(() => {
-    if (location.pathname === '/admin/prenotazioni') {
+    if (location.pathname === '/admin/crm' || location.pathname === '/admin/prenotazioni') {
       markBookingsAsSeen();
     }
     if (location.pathname === '/admin/contatti') {

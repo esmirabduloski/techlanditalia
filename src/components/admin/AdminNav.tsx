@@ -3,7 +3,7 @@ import { useRef, useState, useEffect } from 'react';
 import { 
   FileText, GraduationCap, BookOpen, Mail, User, BarChart3, 
   Award, Calendar, ClipboardCheck, Users, Newspaper, UsersRound, CalendarClock, Link as LinkIcon,
-  ChevronLeft, ChevronRight, Menu, X, Database, ClipboardList, BookText, Megaphone
+  ChevronLeft, ChevronRight, Menu, X, Database, ClipboardList, BookText, Megaphone, Briefcase
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,7 +30,7 @@ const navItems: NavItem[] = [
   { to: '/admin/gruppi', label: 'Gruppi', icon: UsersRound },
   { to: '/admin/lezioni-programmate', label: 'Calendario', icon: Calendar },
   { to: '/admin/presenze', label: 'Presenze', icon: ClipboardCheck },
-  { to: '/admin/prenotazioni', label: 'Prenotazioni', icon: BookOpen, notificationKey: 'newBookings' },
+  { to: '/admin/crm', label: 'CRM', icon: Briefcase, notificationKey: 'newBookings' },
   { to: '/admin/contatti', label: 'Contatti', icon: Mail, notificationKey: 'newContacts' },
   { to: '/admin/newsletter', label: 'Newsletter', icon: Newspaper },
   { to: '/admin/utenti', label: 'Utenti', icon: Users },
@@ -66,7 +66,7 @@ export function AdminNav() {
 
   // Mark notifications as seen when visiting the respective pages
   useEffect(() => {
-    if (location.pathname === '/admin/prenotazioni') {
+    if (location.pathname === '/admin/crm' || location.pathname === '/admin/prenotazioni') {
       markBookingsAsSeen();
     }
     if (location.pathname === '/admin/contatti') {

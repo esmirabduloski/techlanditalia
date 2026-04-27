@@ -139,7 +139,8 @@ const App = () => (
                     <Route path="/admin/corsi/:courseId/lezioni/:lessonId/compiti" element={<AdminHomework />} />
                     <Route path="/admin/corsi/:courseId/lezioni/:lessonId/compiti/nuovo" element={<HomeworkEditor />} />
                     <Route path="/admin/corsi/:courseId/lezioni/:lessonId/compiti/:homeworkId/modifica" element={<HomeworkEditor />} />
-                    <Route path="/admin/prenotazioni" element={<AdminBookings />} />
+                    <Route path="/admin/prenotazioni" element={<AdminCRM />} />
+                    <Route path="/admin/crm" element={<AdminCRM />} />
                     <Route path="/admin/contatti" element={<AdminContatti />} />
                     <Route path="/admin/blog/nuovo" element={<BlogEditor />} />
                     <Route path="/admin/blog/:id/modifica" element={<BlogEditor />} />

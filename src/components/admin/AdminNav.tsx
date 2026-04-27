@@ -30,7 +30,7 @@ const navItems: NavItem[] = [
   { to: '/admin/gruppi', label: 'Gruppi', icon: UsersRound },
   { to: '/admin/lezioni-programmate', label: 'Calendario', icon: Calendar },
   { to: '/admin/presenze', label: 'Presenze', icon: ClipboardCheck },
-  { to: '/admin/prenotazioni', label: 'Prenotazioni', icon: BookOpen, notificationKey: 'newBookings' },
+  { to: '/admin/crm', label: 'CRM', icon: Briefcase, notificationKey: 'newBookings' },
   { to: '/admin/contatti', label: 'Contatti', icon: Mail, notificationKey: 'newContacts' },
   { to: '/admin/newsletter', label: 'Newsletter', icon: Newspaper },
   { to: '/admin/utenti', label: 'Utenti', icon: Users },

@@ -494,6 +494,140 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_interactions: {
+        Row: {
+          admin_id: string | null
+          content: string | null
+          created_at: string
+          id: string
+          lead_id: string
+          metadata: Json
+          subject: string | null
+          type: Database["public"]["Enums"]["crm_interaction_type"]
+        }
+        Insert: {
+          admin_id?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          lead_id: string
+          metadata?: Json
+          subject?: string | null
+          type: Database["public"]["Enums"]["crm_interaction_type"]
+        }
+        Update: {
+          admin_id?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          lead_id?: string
+          metadata?: Json
+          subject?: string | null
+          type?: Database["public"]["Enums"]["crm_interaction_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_interactions_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_leads: {
+        Row: {
+          assigned_to: string | null
+          child_age: number | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          interest: string | null
+          last_contacted_at: string | null
+          lead_score: number
+          lifetime_value_cents: number
+          linked_profile_id: string | null
+          next_followup_at: string | null
+          notes: string | null
+          original_message: string | null
+          phone: string | null
+          pipeline_stage: Database["public"]["Enums"]["crm_pipeline_stage"]
+          quote_genie_client_id: string | null
+          source: Database["public"]["Enums"]["crm_lead_source"]
+          source_record_id: string | null
+          tags: string[]
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          child_age?: number | null
+          created_at?: string
+          email: string
+          full_name?: string
+          id?: string
+          interest?: string | null
+          last_contacted_at?: string | null
+          lead_score?: number
+          lifetime_value_cents?: number
+          linked_profile_id?: string | null
+          next_followup_at?: string | null
+          notes?: string | null
+          original_message?: string | null
+          phone?: string | null
+          pipeline_stage?: Database["public"]["Enums"]["crm_pipeline_stage"]
+          quote_genie_client_id?: string | null
+          source?: Database["public"]["Enums"]["crm_lead_source"]
+          source_record_id?: string | null
+          tags?: string[]
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          child_age?: number | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          interest?: string | null
+          last_contacted_at?: string | null
+          lead_score?: number
+          lifetime_value_cents?: number
+          linked_profile_id?: string | null
+          next_followup_at?: string | null
+          notes?: string | null
+          original_message?: string | null
+          phone?: string | null
+          pipeline_stage?: Database["public"]["Enums"]["crm_pipeline_stage"]
+          quote_genie_client_id?: string | null
+          source?: Database["public"]["Enums"]["crm_lead_source"]
+          source_record_id?: string | null
+          tags?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      crm_tags: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       enrollments: {
         Row: {
           course_id: string
@@ -2012,6 +2146,30 @@ export type Database = {
         | "scheduled"
         | "completed"
         | "cancelled"
+      crm_interaction_type:
+        | "email"
+        | "whatsapp"
+        | "call"
+        | "note"
+        | "quote_sent"
+        | "meeting"
+        | "status_change"
+        | "sms"
+      crm_lead_source:
+        | "trial_booking"
+        | "contact_form"
+        | "newsletter"
+        | "registered"
+        | "manual"
+        | "import"
+      crm_pipeline_stage:
+        | "new"
+        | "contacted"
+        | "qualified"
+        | "proposal_sent"
+        | "won"
+        | "lost"
+        | "nurture"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2146,6 +2304,33 @@ export const Constants = {
         "scheduled",
         "completed",
         "cancelled",
+      ],
+      crm_interaction_type: [
+        "email",
+        "whatsapp",
+        "call",
+        "note",
+        "quote_sent",
+        "meeting",
+        "status_change",
+        "sms",
+      ],
+      crm_lead_source: [
+        "trial_booking",
+        "contact_form",
+        "newsletter",
+        "registered",
+        "manual",
+        "import",
+      ],
+      crm_pipeline_stage: [
+        "new",
+        "contacted",
+        "qualified",
+        "proposal_sent",
+        "won",
+        "lost",
+        "nurture",
       ],
     },
   },

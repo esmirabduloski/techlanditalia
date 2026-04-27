@@ -58,7 +58,7 @@ export default function AdminCRM() {
 
   return (
     <div className="min-h-screen bg-background">
-      <AdminHeader title="CRM" />
+      <AdminHeader />
       <div className="border-b">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">

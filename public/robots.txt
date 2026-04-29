@@ -1,6 +1,8 @@
 # Robots.txt for TECHLAND
 # https://techlanditalia.it
+# llms.txt: https://techlanditalia.it/llms.txt
 
+# === Search engines ===
 User-agent: Googlebot
 Allow: /
 Crawl-delay: 1
@@ -18,23 +20,74 @@ Allow: /
 User-agent: LinkedInBot
 Allow: /
 
+# === AI / LLM crawlers (explicitly allowed) ===
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: Meta-ExternalAgent
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+User-agent: DuckAssistBot
+Allow: /
+
+User-agent: MistralAI-User
+Allow: /
+
+User-agent: YouBot
+Allow: /
+
+User-agent: Diffbot
+Allow: /
+
+# === Default ===
 User-agent: *
 Allow: /
 
-# Sitemap
-Sitemap: https://techlanditalia.it/sitemap.xml
-
-# Disallow admin and private areas
+# === Restricted areas ===
 Disallow: /admin
 Disallow: /admin/*
 Disallow: /area-riservata
 Disallow: /area-riservata/*
 Disallow: /auth
 
-# Allow important resources
-Allow: /corsi
-Allow: /blog
-Allow: /prenota
-Allow: /faq
-Allow: /chi-siamo
-Allow: /contatti
+# === Sitemap ===
+Sitemap: https://techlanditalia.it/sitemap.xml

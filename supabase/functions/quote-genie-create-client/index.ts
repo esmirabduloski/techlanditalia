@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
     }
 
     const qgKey = Deno.env.get("QUOTE_GENIE_API_KEY");
-    const qgBase = Deno.env.get("QUOTE_GENIE_BASE_URL");
+    const qgBase = Deno.env.get("QUOTE_GENIE_BASE_URL"); // public domain for redirect, e.g. https://preventivi.techlanditalia.it
 
     if (!qgKey || !qgBase) {
       return new Response(
@@ -83,8 +83,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Call Quote Genie import endpoint
-    const qgUrl = `${qgBase.replace(/\/$/, "")}/functions/v1/crm-import-client`;
+    // Quote Genie Supabase project ref (edge functions are hosted here, NOT on the public domain)
+    const QG_SUPABASE_REF = "liskieqtlrphhykbjdfh";
+    const qgUrl = `https://${QG_SUPABASE_REF}.supabase.co/functions/v1/crm-import-client`;
     let redirectUrl: string | null = null;
     let qgClientId: string | null = null;
     let qgError: string | null = null;

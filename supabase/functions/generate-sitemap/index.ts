@@ -27,6 +27,15 @@ const STATIC_PAGES: UrlEntry[] = [
   { loc: '/privacy', changefreq: 'yearly', priority: '0.3' },
   { loc: '/termini', changefreq: 'yearly', priority: '0.3' },
   { loc: '/cookie', changefreq: 'yearly', priority: '0.3' },
+  // Markdown mirrors per AI/LLM e search engine
+  { loc: '/llms.txt', changefreq: 'weekly', priority: '0.8' },
+  { loc: '/llms-full.txt', changefreq: 'weekly', priority: '0.8' },
+  { loc: '/index.md', changefreq: 'weekly', priority: '0.7' },
+  { loc: '/corsi.md', changefreq: 'weekly', priority: '0.7' },
+  { loc: '/chi-siamo.md', changefreq: 'monthly', priority: '0.5' },
+  { loc: '/faq.md', changefreq: 'monthly', priority: '0.5' },
+  { loc: '/prenota.md', changefreq: 'monthly', priority: '0.6' },
+  { loc: '/contatti.md', changefreq: 'monthly', priority: '0.5' },
 ];
 
 function escapeXml(s: string): string {

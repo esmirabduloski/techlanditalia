@@ -1,0 +1,153 @@
+# TECHLAND — Documentazione completa per LLM
+
+> TECHLAND è la scuola di coding online italiana per alunni dai 5 ai 20 anni. Lezioni live in piccoli gruppi (max 6 alunni) con docenti esperti. Prima lezione gratuita.
+
+Sito: https://techlanditalia.it
+Email: info@techlanditalia.it
+Telefono: +39 350 581 3140
+
+---
+
+## Chi è TECHLAND
+
+TECHLAND è una scuola di programmazione e coding 100% online dedicata a bambini, ragazzi e giovani adulti dai 5 ai 20 anni. Operiamo in tutta Italia dal 2019 con un metodo strutturato per età e livello, dal pensiero computazionale con Scratch fino a percorsi avanzati di Python, Intelligenza Artificiale, Game Development e Web Development.
+
+### Cosa ci rende diversi
+
+- **Piccoli gruppi (max 6 alunni)**: ogni alunno riceve attenzione personalizzata
+- **Docenti esperti**: professionisti del settore tech formati sulla didattica per ragazzi
+- **Lezioni live registrate**: si possono rivedere in qualsiasi momento dall'area riservata
+- **Dashboard genitori**: report settimanali, feedback dei docenti, progetti realizzati
+- **Prima lezione gratuita**: prova senza impegno prima di iscriversi
+- **Nessun vincolo**: si può disdire o mettere in pausa in qualsiasi momento
+- **Percorsi pluriennali**: dai 5 anni fino al diploma, con curriculum strutturato
+
+### Target
+
+Alunni dai 5 ai 20 anni residenti in Italia (lezioni in italiano).
+
+### Modalità
+
+Lezioni live online via piattaforma dedicata. Servono PC/Mac, connessione internet stabile e webcam. Durata 60–90 minuti a seconda dell'età, frequenza settimanale.
+
+---
+
+## Catalogo Corsi Completo
+
+### L'ABC della creatività digitale
+- **Età**: 5–7 anni
+- **Livello**: Base
+- **Durata**: 8 mesi
+- **Descrizione**: Corso pensato per bambini piccoli, incentrato sulle basi del design digitale e dell'alfabetizzazione informatica. I bambini imparano a usare editor grafici, creare biglietti di auguri, poster, animazioni e semplici presentazioni. Acquisiscono padronanza di Google Docs, Canva e competenze informatiche di base. Sviluppa pensiero creativo e logico in formato ludico.
+- **URL**: https://techlanditalia.it/corsi/abc-creativita-digitale
+
+### L'ABC dell'informatica
+- **Età**: 6–8 anni
+- **Livello**: Base
+- **Durata**: 8 mesi
+- **Descrizione**: Corso introduttivo ai fondamenti dell'informatica: come funziona un computer, file, cartelle, internet sicuro, primi passi con strumenti digitali e logica computazionale.
+- **URL**: https://techlanditalia.it/corsi/abc-informatica
+
+### Programmazione visiva con Scratch
+- **Età**: 8–10 anni
+- **Livello**: Base
+- **Durata**: 8 mesi
+- **Descrizione**: Primo vero corso di coding. Con Scratch i bambini imparano la logica della programmazione (cicli, condizioni, variabili, eventi) creando giochi, animazioni e storie interattive senza dover scrivere codice testuale.
+- **URL**: https://techlanditalia.it/corsi/scratch
+
+### Minecraft Education
+- **Età**: 8–9 anni
+- **Livello**: Base
+- **Durata**: 10 mesi
+- **Descrizione**: Logica, programmazione e automazione dentro Minecraft Education. Si programma con MakeCode (blocchi e poi JavaScript), si costruiscono fattorie automatizzate e minigiochi personalizzati.
+- **URL**: https://techlanditalia.it/corsi/minecraft-education
+
+### Sviluppo giochi con Roblox
+- **Età**: 10–14 anni
+- **Livello**: Intermedio
+- **Durata**: 8 mesi
+- **Descrizione**: Creazione di videogiochi con Roblox Studio. Si imparano gli strumenti di modellazione 3D, scripting in Lua, gestione di player e oggetti, pubblicazione di esperienze sulla piattaforma Roblox.
+- **URL**: https://techlanditalia.it/corsi/roblox
+
+### Roblox Avanzato
+- **Età**: 12–16 anni
+- **Livello**: Avanzato
+- **Durata**: 8 mesi
+- **Descrizione**: Per chi ha già basi di Roblox. Sviluppo avanzato in Lua, sistemi multiplayer, monetizzazione, ottimizzazione delle performance, deploy professionale.
+- **URL**: https://techlanditalia.it/corsi/roblox-avanzato
+
+### Web Development
+- **Età**: 12–16 anni
+- **Livello**: Intermedio
+- **Durata**: 8 mesi
+- **Descrizione**: HTML, CSS e JavaScript per costruire siti web da zero. Si imparano responsive design, animazioni, manipolazione del DOM e si pubblica online il proprio primo sito.
+- **URL**: https://techlanditalia.it/corsi/web-development
+
+### Python Base
+- **Età**: 12–16 anni
+- **Livello**: Base
+- **Durata**: 8 mesi
+- **Descrizione**: Introduzione al linguaggio Python, oggi il più richiesto al mondo. Variabili, strutture dati, funzioni, OOP, primi mini-progetti (giochi, automazioni, calcolatrici).
+- **URL**: https://techlanditalia.it/corsi/python-base
+
+### Python PRO & AI
+- **Età**: 14–18 anni
+- **Livello**: Avanzato
+- **Durata**: 8 mesi
+- **Descrizione**: Curriculum 8 moduli x 4 lezioni. Python avanzato (decoratori, generatori, async), librerie di Data Science (NumPy, Pandas), Machine Learning con scikit-learn, introduzione al Deep Learning e ai Large Language Models.
+- **URL**: https://techlanditalia.it/corsi/python-ai
+
+---
+
+## FAQ — Domande frequenti
+
+**Qual è l'età minima per iniziare?**
+I corsi partono dai 5 anni. Per i più piccoli (5–8 anni) usiamo strumenti visivi come Scratch e ambienti grafici per imparare la logica senza scrivere codice complesso.
+
+**Quanto costano i corsi?**
+I prezzi variano in base al corso e alla durata. Piani mensili a partire da €99/mese con lezioni settimanali. La prima lezione è sempre gratuita e senza impegno.
+
+**Come funzionano le lezioni?**
+Lezioni online in diretta, in piccoli gruppi di massimo 6 alunni. Durata 60–90 minuti a seconda dell'età. Interazione costante con il docente.
+
+**Di cosa ha bisogno mio figlio per partecipare?**
+Computer (PC o Mac), connessione internet stabile e webcam. Per alcuni corsi avanzati ci sono requisiti specifici comunicati prima dell'iscrizione.
+
+**Posso recuperare le lezioni perse?**
+Sì. Tutte le lezioni vengono registrate e sono disponibili nell'area riservata. Si possono concordare lezioni di recupero con il tutor.
+
+**Come monitoro i progressi?**
+Dashboard genitori con report settimanali, feedback dei docenti, registrazioni delle lezioni e progetti realizzati.
+
+**I docenti sono qualificati?**
+Sì, tutti professionisti del settore tech con formazione specifica sulla didattica per ragazzi.
+
+**Posso disdire in qualsiasi momento?**
+Sì, nessun vincolo di durata. Si può mettere in pausa o disdire dall'area riservata.
+
+**Le lezioni sono individuali o di gruppo?**
+Di gruppo, max 6 alunni divisi per età e livello. I gruppi piccoli garantiscono attenzione personalizzata.
+
+**C'è un attestato finale?**
+Sì, al termine di ogni corso TECHLAND rilascia un attestato di partecipazione con i progetti realizzati.
+
+---
+
+## Come prenotare la prima lezione gratuita
+
+1. Visita https://techlanditalia.it/prenota
+2. Compila il form con nome del genitore, email, telefono, età dell'alunno e corso di interesse
+3. Riceverai conferma via email entro 24h con il link per la lezione di prova
+4. Dopo la prova decidi se iscriverti, senza alcun impegno
+
+---
+
+## Contatti
+
+- **Email generale**: info@techlanditalia.it
+- **Telefono / WhatsApp**: +39 350 581 3140
+- **Sito**: https://techlanditalia.it
+- **Facebook**: https://www.facebook.com/profile.php?id=61573749912297
+- **Instagram**: https://www.instagram.com/techlanditalia/
+- **LinkedIn**: https://www.linkedin.com/in/techlanditalia/
+- **Orari assistenza**: Lun–Ven 9:00–19:00

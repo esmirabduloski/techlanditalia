@@ -1,0 +1,45 @@
+# TECHLAND
+
+> TECHLAND è la scuola di coding online italiana per alunni dai 5 ai 20 anni. Lezioni live in piccoli gruppi (max 6 alunni) con docenti esperti, dal pensiero computazionale con Scratch fino a Python, Intelligenza Artificiale, Roblox, Minecraft, Unity e sviluppo web. Prima lezione di prova sempre gratuita e senza impegno.
+
+TECHLAND opera in tutta Italia con corsi 100% online, lezioni settimanali registrate, dashboard genitori per monitorare i progressi e percorsi pluriennali strutturati per età e livello.
+
+- **Sede**: Italia (online)
+- **Età alunni**: 5–20 anni
+- **Modalità**: Lezioni live online in piccoli gruppi (max 6 alunni)
+- **Lingua**: Italiano
+- **Sito**: https://techlanditalia.it
+- **Contatti**: info@techlanditalia.it · +39 350 581 3140
+
+## Pagine principali
+
+- [Homepage TECHLAND](https://techlanditalia.it/index.md): Panoramica della scuola, perché scegliere TECHLAND, percorsi disponibili
+- [Catalogo corsi](https://techlanditalia.it/corsi.md): Tutti i corsi di programmazione disponibili con età, livello e durata
+- [Chi siamo](https://techlanditalia.it/chi-siamo.md): Storia, mission e team di TECHLAND
+- [FAQ](https://techlanditalia.it/faq.md): Risposte alle domande più frequenti dei genitori
+- [Prenota lezione gratuita](https://techlanditalia.it/prenota.md): Come prenotare la prima lezione di prova gratuita
+- [Contatti](https://techlanditalia.it/contatti.md): Telefono, email, social e orari di assistenza
+
+## Corsi di programmazione
+
+- [L'ABC della creatività digitale (5-7 anni)](https://techlanditalia.it/corsi/abc-creativita-digitale.md): Corso base di alfabetizzazione informatica e design digitale per bambini piccoli
+- [L'ABC dell'informatica (6-8 anni)](https://techlanditalia.it/corsi/abc-informatica.md): Fondamenti dell'informatica per i più piccoli
+- [Programmazione visiva con Scratch (8-10 anni)](https://techlanditalia.it/corsi/scratch.md): Primo corso di coding con Scratch per imparare la logica della programmazione divertendosi
+- [Minecraft Education (8-9 anni)](https://techlanditalia.it/corsi/minecraft-education.md): Logica e programmazione con MakeCode dentro Minecraft Education
+- [Sviluppo giochi con Roblox (10-14 anni)](https://techlanditalia.it/corsi/roblox.md): Creazione videogiochi con Roblox Studio e linguaggio Lua
+- [Roblox Avanzato (12-16 anni)](https://techlanditalia.it/corsi/roblox-avanzato.md): Sviluppo avanzato di esperienze Roblox e monetizzazione
+- [Web Development (12-16 anni)](https://techlanditalia.it/corsi/web-development.md): HTML, CSS e JavaScript per costruire siti web da zero
+- [Python Base (12-16 anni)](https://techlanditalia.it/corsi/python-base.md): Introduzione a Python, il linguaggio più richiesto al mondo
+- [Python PRO & AI (14-18 anni)](https://techlanditalia.it/corsi/python-ai.md): Python avanzato e introduzione all'Intelligenza Artificiale e Machine Learning
+
+## Blog
+
+- [Blog TECHLAND](https://techlanditalia.it/blog.md): Articoli, guide e consigli su coding, AI ed educazione tecnologica per ragazzi
+
+## Optional
+
+- [Privacy Policy](https://techlanditalia.it/privacy)
+- [Termini e Condizioni](https://techlanditalia.it/termini)
+- [Cookie Policy](https://techlanditalia.it/cookie)
+- [Accessibilità](https://techlanditalia.it/accessibilita)
+- [Lavora con noi](https://techlanditalia.it/lavora-con-noi)

@@ -90,6 +90,8 @@ Deno.serve(async (req) => {
     let qgClientId: string | null = null;
     let qgError: string | null = null;
 
+    console.log("[QG] Calling crm-import-client", { qgUrl, lead_id: lead.id, email: lead.email });
+
     try {
       const qgRes = await fetch(qgUrl, {
         method: "POST",
@@ -111,24 +113,39 @@ Deno.serve(async (req) => {
         }),
       });
 
+      const responseText = await qgRes.text();
+      console.log("[QG] Response status:", qgRes.status, "body:", responseText.slice(0, 500));
+
       if (qgRes.ok) {
-        const qgData = await qgRes.json();
-        qgClientId = qgData.client_id ?? null;
-        redirectUrl = qgData.redirect_url ?? null;
+        try {
+          const qgData = JSON.parse(responseText);
+          qgClientId = qgData.client_id ?? null;
+          redirectUrl = qgData.redirect_url ?? null;
+          // Append action=new_quote so Quote Genie auto-opens the new-quote dialog
+          if (redirectUrl) {
+            const sep = redirectUrl.includes("?") ? "&" : "?";
+            redirectUrl = `${redirectUrl}${sep}action=new_quote`;
+          }
+        } catch (parseErr) {
+          qgError = `Invalid JSON from Quote Genie: ${(parseErr as Error).message}`;
+        }
       } else {
-        qgError = `Quote Genie returned ${qgRes.status}`;
+        qgError = `Quote Genie returned ${qgRes.status}: ${responseText.slice(0, 200)}`;
       }
     } catch (e) {
       qgError = `Network error contacting Quote Genie: ${(e as Error).message}`;
+      console.error("[QG] Network error:", e);
     }
 
     // Fallback: open Quote Genie clients page with prefill query params
     if (!redirectUrl) {
+      console.warn("[QG] Using fallback redirect. Reason:", qgError);
       const params = new URLSearchParams({
         nome: lead.full_name || "",
         email: lead.email || "",
         telefono: lead.phone || "",
         external_id: lead.id,
+        action: "new_quote",
       });
       redirectUrl = `${qgBase.replace(/\/$/, "")}/app/clients?${params.toString()}`;
     }

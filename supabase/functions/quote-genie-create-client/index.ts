@@ -129,7 +129,7 @@ Deno.serve(async (req) => {
         telefono: lead.phone || "",
         external_id: lead.id,
       });
-      redirectUrl = `${qgBase.replace(/\/$/, "")}/clienti/nuovo?${params.toString()}`;
+      redirectUrl = `${qgBase.replace(/\/$/, "")}/app/clients?${params.toString()}`;
     }
 
     // Update lead and log interaction

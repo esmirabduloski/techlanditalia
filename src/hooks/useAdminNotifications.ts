@@ -4,38 +4,43 @@ import { supabase } from '@/integrations/supabase/client';
 interface AdminNotifications {
   newBookings: number;
   newContacts: number;
+  newCrmLeads: number;
 }
 
 export function useAdminNotifications() {
   const [notifications, setNotifications] = useState<AdminNotifications>({
     newBookings: 0,
     newContacts: 0,
+    newCrmLeads: 0,
   });
 
   const fetchCounts = async () => {
-    const [bookingsResult, contactsResult] = await Promise.all([
-      // Conta solo le prenotazioni ancora "in attesa" (non ancora gestite)
+    const [bookingsResult, contactsResult, leadsResult] = await Promise.all([
       supabase
         .from('trial_bookings')
         .select('id', { count: 'exact', head: true })
         .eq('status', 'pending'),
-      // Conta solo i contatti non ancora gestiti (email non inviata)
       supabase
         .from('contact_submissions')
         .select('id', { count: 'exact', head: true })
         .eq('email_sent', false),
+      // CRM: conta solo i lead ancora nello stage "new" (non ancora gestiti)
+      supabase
+        .from('crm_leads' as any)
+        .select('id', { count: 'exact', head: true })
+        .eq('pipeline_stage', 'new'),
     ]);
 
     setNotifications({
       newBookings: bookingsResult.count || 0,
       newContacts: contactsResult.count || 0,
+      newCrmLeads: leadsResult.count || 0,
     });
   };
 
   useEffect(() => {
     fetchCounts();
 
-    // Subscribe to realtime changes - ricalcola tutto al cambio
     const bookingsChannel = supabase
       .channel('admin-bookings-count')
       .on(
@@ -54,14 +59,22 @@ export function useAdminNotifications() {
       )
       .subscribe();
 
+    const leadsChannel = supabase
+      .channel('admin-crm-leads-count')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'crm_leads' },
+        () => fetchCounts()
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(bookingsChannel);
       supabase.removeChannel(contactsChannel);
+      supabase.removeChannel(leadsChannel);
     };
   }, []);
 
-  // Manteniamo le funzioni per compatibilità ma ora il conteggio si aggiorna
-  // automaticamente quando lo status cambia (es. da pending a contacted)
   const markBookingsAsSeen = () => {
     fetchCounts();
   };

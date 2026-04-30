@@ -21,7 +21,7 @@ interface NavItem {
   to: string;
   label: string;
   icon: React.ElementType;
-  notificationKey?: 'newBookings' | 'newContacts';
+  notificationKey?: 'newBookings' | 'newContacts' | 'newCrmLeads';
 }
 
 const navItems: NavItem[] = [
@@ -30,7 +30,7 @@ const navItems: NavItem[] = [
   { to: '/admin/gruppi', label: 'Gruppi', icon: UsersRound },
   { to: '/admin/lezioni-programmate', label: 'Calendario', icon: Calendar },
   { to: '/admin/presenze', label: 'Presenze', icon: ClipboardCheck },
-  { to: '/admin/crm', label: 'CRM', icon: Briefcase, notificationKey: 'newBookings' },
+  { to: '/admin/crm', label: 'CRM', icon: Briefcase, notificationKey: 'newCrmLeads' },
   { to: '/admin/contatti', label: 'Contatti', icon: Mail, notificationKey: 'newContacts' },
   { to: '/admin/newsletter', label: 'Newsletter', icon: Newspaper },
   { to: '/admin/utenti', label: 'Utenti', icon: Users },
@@ -110,12 +110,12 @@ export function AdminNav() {
     }
   };
 
-  const getNotificationCount = (key?: 'newBookings' | 'newContacts') => {
+  const getNotificationCount = (key?: 'newBookings' | 'newContacts' | 'newCrmLeads') => {
     if (!key) return 0;
     return notifications[key];
   };
 
-  const totalNotifications = notifications.newBookings + notifications.newContacts;
+  const totalNotifications = notifications.newBookings + notifications.newContacts + notifications.newCrmLeads;
 
   // Find current active item for mobile label
   const activeItem = navItems.find(item => isActive(item.to));

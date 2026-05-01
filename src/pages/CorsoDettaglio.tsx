@@ -1440,6 +1440,7 @@ export default function CorsoDettaglio() {
             <div className="bg-card rounded-2xl p-8 shadow-xl">
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <input {...honeypotProps} />
                   <FormField
                     control={form.control}
                     name="name"

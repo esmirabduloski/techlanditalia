@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_access_logs: {
+        Row: {
+          action: string
+          admin_id: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          path: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          path?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          path?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           browser: string | null
@@ -177,6 +210,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      blocked_emails: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          pattern: string
+          reason: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          pattern: string
+          reason?: string | null
+          type: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          pattern?: string
+          reason?: string | null
+          type?: string
+        }
+        Relationships: []
       }
       blog_posts: {
         Row: {
@@ -1394,6 +1454,30 @@ export type Database = {
           },
         ]
       }
+      login_attempts: {
+        Row: {
+          attempted_at: string
+          email: string
+          id: string
+          ip_address: string | null
+          success: boolean
+        }
+        Insert: {
+          attempted_at?: string
+          email: string
+          id?: string
+          ip_address?: string | null
+          success?: boolean
+        }
+        Update: {
+          attempted_at?: string
+          email?: string
+          id?: string
+          ip_address?: string | null
+          success?: boolean
+        }
+        Relationships: []
+      }
       newsletter_subscribers: {
         Row: {
           confirmation_token: string
@@ -2093,6 +2177,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_login_rate_limit: {
+        Args: {
+          _email: string
+          _max_attempts?: number
+          _window_minutes?: number
+        }
+        Returns: Json
+      }
+      cleanup_old_logs: { Args: never; Returns: Json }
       generate_slug: { Args: { title: string }; Returns: string }
       get_children_ids: { Args: { _parent_id: string }; Returns: string[] }
       get_leaderboard: {
@@ -2113,6 +2206,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_email_blocked: { Args: { _email: string }; Returns: boolean }
       is_parent_of: {
         Args: { _parent_id: string; _student_id: string }
         Returns: boolean

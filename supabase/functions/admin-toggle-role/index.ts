@@ -1,5 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://esm.sh/zod@3.23.8";
+
+const BodySchema = z.object({
+  userId: z.string().uuid(),
+  action: z.enum(["add", "remove"]),
+  role: z.enum(["teacher", "admin", "user"]).default("teacher"),
+});
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,7 +26,12 @@ serve(async (req) => {
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
     
     // Verify the requesting user is an admin
-    const authHeader = req.headers.get("Authorization")!;
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Non autorizzato" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     const token = authHeader.replace("Bearer ", "");
     
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
@@ -45,14 +57,14 @@ serve(async (req) => {
       });
     }
 
-    const { userId, action, role = "teacher" } = await req.json();
-
-    if (!userId || !action) {
-      return new Response(JSON.stringify({ error: "Parametri mancanti" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    const raw = await req.json();
+    const parsed = BodySchema.safeParse(raw);
+    if (!parsed.success) {
+      return new Response(JSON.stringify({ error: "Dati non validi", details: parsed.error.flatten().fieldErrors }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const { userId, action, role } = parsed.data;
 
     // Validate role - allow teacher, admin, and user (parent) roles to be toggled
     if (role !== "teacher" && role !== "admin" && role !== "user") {

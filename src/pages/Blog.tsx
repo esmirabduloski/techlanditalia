@@ -10,6 +10,7 @@ import { OptimizedImage } from "@/components/ui/optimized-image";
 import { ArrowRight, Clock, Loader2, Mail, CheckCircle, Search, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
+import { useFormAntiSpam } from "@/hooks/useFormAntiSpam";
 
 // Animation variants
 const containerVariants = {
@@ -156,6 +157,7 @@ export default function Blog() {
   const [email, setEmail] = useState('');
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
+  const { formOpenedAt, honeypotProps, honeypotValue } = useFormAntiSpam();
   
   // Search and filter states
   const [searchQuery, setSearchQuery] = useState('');
@@ -250,7 +252,7 @@ export default function Blog() {
 
     try {
       const { data, error } = await supabase.functions.invoke('newsletter-subscribe', {
-        body: { email: email.trim() }
+        body: { email: email.trim(), website: honeypotValue, formOpenedAt }
       });
 
       if (error) throw error;
@@ -737,6 +739,7 @@ export default function Blog() {
             </p>
             {!subscribed && (
               <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+                <input {...honeypotProps} />
                 <input
                   type="email"
                   value={email}

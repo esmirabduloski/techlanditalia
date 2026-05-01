@@ -10,6 +10,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
+import { useFormAntiSpam } from "@/hooks/useFormAntiSpam";
 
 // Validation schema
 const contactSchema = z.object({
@@ -63,6 +64,7 @@ export default function Contatti() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { formOpenedAt, honeypotProps, honeypotValue } = useFormAntiSpam();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,7 +88,7 @@ export default function Contatti() {
 
     try {
       const { data, error } = await supabase.functions.invoke("send-contact-email", {
-        body: result.data,
+        body: { ...result.data, website: honeypotValue, formOpenedAt },
       });
 
       if (error) {
@@ -209,6 +211,7 @@ export default function Contatti() {
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-6 p-8 rounded-2xl bg-card border border-border">
+              <input {...honeypotProps} />
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="nome">Nome *</Label>

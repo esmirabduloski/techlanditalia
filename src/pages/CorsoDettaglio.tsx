@@ -1,5 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useFormAntiSpam } from "@/hooks/useFormAntiSpam";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -1118,6 +1119,7 @@ export default function CorsoDettaglio() {
       consent: false,
     },
   });
+  const { formOpenedAt, honeypotProps, honeypotValue } = useFormAntiSpam();
 
   const onSubmit = async (data: TrialFormData) => {
     if (!course) return;
@@ -1134,6 +1136,8 @@ export default function CorsoDettaglio() {
           availability: "qualsiasi",
           message: `Richiesta da pagina corso: ${course.title}`,
           adminEmail: "info@techland.it",
+          website: honeypotValue,
+          formOpenedAt,
         },
       });
 
@@ -1436,6 +1440,7 @@ export default function CorsoDettaglio() {
             <div className="bg-card rounded-2xl p-8 shadow-xl">
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <input {...honeypotProps} />
                   <FormField
                     control={form.control}
                     name="name"

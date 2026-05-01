@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.generate-sitemap]
 verify_jwt = false
+
+[functions.check-login-attempts]
+verify_jwt = false

@@ -29,6 +29,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SEOHead } from "@/components/seo/SEOHead";
 import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
 import { useAnalytics } from "@/hooks/useAnalytics";
+import { useFormAntiSpam } from "@/hooks/useFormAntiSpam";
 
 const fallbackInterests = [
   { value: "non-so", label: "Non sono sicuro, vorrei consigli" },

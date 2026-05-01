@@ -1,192 +1,91 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://esm.sh/zod@3.23.8";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Simple in-memory rate limiting
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-
-const RATE_LIMIT_MAX = 3; // Max 3 bookings per window
-const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour window
-
-function checkRateLimit(identifier: string): { allowed: boolean; retryAfterMs?: number } {
-  const now = Date.now();
-  const limit = rateLimitMap.get(identifier);
-
-  if (!limit || now > limit.resetTime) {
-    rateLimitMap.set(identifier, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
-    return { allowed: true };
-  }
-
-  if (limit.count >= RATE_LIMIT_MAX) {
-    return { allowed: false, retryAfterMs: limit.resetTime - now };
-  }
-
-  limit.count++;
-  return { allowed: true };
-}
-
-// Input validation
-function validateBookingData(data: any): { valid: boolean; errors: string[] } {
-  const errors: string[] = [];
-
-  // Parent name validation
-  if (!data.parentName || typeof data.parentName !== "string") {
-    errors.push("Nome genitore richiesto");
-  } else {
-    const name = data.parentName.trim();
-    if (name.length < 2 || name.length > 100) {
-      errors.push("Nome deve essere tra 2 e 100 caratteri");
-    }
-    // Block suspicious patterns
-    if (/<script|javascript:|data:/i.test(name)) {
-      errors.push("Nome contiene caratteri non validi");
-    }
-  }
-
-  // Email validation
-  if (!data.email || typeof data.email !== "string") {
-    errors.push("Email richiesta");
-  } else {
-    const email = data.email.trim().toLowerCase();
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email) || email.length > 255) {
-      errors.push("Email non valida");
-    }
-  }
-
-  // Phone format validation
-  if (data.phone && typeof data.phone === "string") {
-    const phone = data.phone.trim();
-    if (phone.length > 20) {
-      errors.push("Numero di telefono troppo lungo");
-    }
-    if (!/^[\d\s+\-()]*$/.test(phone)) {
-      errors.push("Numero di telefono contiene caratteri non validi");
-    }
-  }
-
-  // Phone validation (now required)
-  if (!data.phone || typeof data.phone !== "string" || data.phone.trim().length === 0) {
-    errors.push("Numero di telefono richiesto");
-  }
-
-  // Child age validation (now optional)
-  if (data.childAge !== null && data.childAge !== undefined) {
-    if (typeof data.childAge !== "number" || data.childAge < 5 || data.childAge > 20) {
-      errors.push("Età deve essere tra 6 e 18 anni");
-    }
-  }
-
-  // Interest validation (now optional)
-  if (data.interest) {
-    const validInterests = ["coding-base", "game-dev", "roblox", "web", "python-ai", "non-so"];
-    // Allow any string since courses are dynamic
-  }
-
-  // Availability validation (optional)
-  if (data.availability) {
-    const validAvailability = ["mattina", "pomeriggio", "sera", "weekend", "qualsiasi"];
-    if (!validAvailability.includes(data.availability)) {
-      errors.push("Disponibilità non valida");
-    }
-  }
-
-  // Message validation (optional)
-  if (data.message && typeof data.message === "string") {
-    if (data.message.length > 1000) {
-      errors.push("Messaggio troppo lungo (max 1000 caratteri)");
-    }
-  }
-
-  return { valid: errors.length === 0, errors };
-}
-
-interface BookingRequest {
-  parentName: string;
-  email: string;
-  phone?: string;
-  childAge: number | null;
-  interest: string | null;
-  availability?: string;
-  message?: string;
-  adminEmail?: string;
-}
+// Zod schema with built-in honeypot + time-trap validation
+const BookingSchema = z.object({
+  parentName: z.string().trim().min(2).max(100)
+    .refine((v) => !/<script|javascript:|data:/i.test(v), "Caratteri non validi"),
+  email: z.string().trim().toLowerCase().email().max(255),
+  phone: z.string().trim().min(1).max(20)
+    .regex(/^[\d\s+\-()]*$/, "Numero non valido"),
+  childAge: z.number().int().min(5).max(20).nullable().optional(),
+  interest: z.string().max(100).nullable().optional(),
+  availability: z.enum(["mattina","pomeriggio","sera","weekend","qualsiasi"]).optional(),
+  message: z.string().max(1000).optional(),
+  adminEmail: z.string().email().optional(),
+  // Honeypot: deve restare vuoto
+  website: z.string().max(0).optional().or(z.literal("")),
+  // Time-trap: timestamp apertura form (ms da epoch)
+  formOpenedAt: z.number().optional(),
+});
 
 serve(async (req: Request): Promise<Response> => {
-  // Handle CORS preflight
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    // Get client IP for rate limiting
-    const clientIP = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
-                     req.headers.get("x-real-ip") || 
-                     "unknown";
-
-    // Check rate limit
-    const rateLimitResult = checkRateLimit(clientIP);
-    if (!rateLimitResult.allowed) {
-      const retryAfterSeconds = Math.ceil((rateLimitResult.retryAfterMs || 3600000) / 1000);
+    const raw = await req.json();
+    const parsed = BookingSchema.safeParse(raw);
+    if (!parsed.success) {
       return new Response(
-        JSON.stringify({ 
-          error: "Troppe richieste. Riprova più tardi.",
-          retryAfterSeconds 
-        }),
-        { 
-          status: 429, 
-          headers: { 
-            ...corsHeaders, 
-            "Content-Type": "application/json",
-            "Retry-After": String(retryAfterSeconds)
-          } 
-        }
-      );
-    }
-
-    const data: BookingRequest = await req.json();
-
-    // Validate input
-    const validation = validateBookingData(data);
-    if (!validation.valid) {
-      return new Response(
-        JSON.stringify({ error: "Dati non validi", details: validation.errors }),
+        JSON.stringify({ error: "Dati non validi", details: parsed.error.flatten().fieldErrors }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    const data = parsed.data;
 
-    // Create Supabase client with service role to bypass RLS
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // Honeypot triggered → silent reject (200 to mislead bots)
+    if (data.website && data.website.length > 0) {
+      console.warn("[submit-booking] honeypot triggered for", data.email);
+      return new Response(JSON.stringify({ success: true, message: "Prenotazione ricevuta" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
-    // Check for duplicate email submissions within last hour
+    // Time-trap: form compilato in meno di 2s = bot
+    if (data.formOpenedAt && (Date.now() - data.formOpenedAt) < 2000) {
+      console.warn("[submit-booking] time-trap triggered for", data.email);
+      return new Response(JSON.stringify({ success: true, message: "Prenotazione ricevuta" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    // Blocked email check
+    const { data: blocked } = await supabase.rpc("is_email_blocked", { _email: data.email });
+    if (blocked === true) {
+      console.warn("[submit-booking] blocked email", data.email);
+      return new Response(JSON.stringify({ success: true, message: "Prenotazione ricevuta" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // Duplicate check (last hour)
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-    const { data: existingBookings, error: checkError } = await supabase
+    const { data: existing } = await supabase
       .from("trial_bookings")
       .select("id")
-      .eq("email", data.email.trim().toLowerCase())
+      .eq("email", data.email)
       .gte("created_at", oneHourAgo);
 
-    if (checkError) {
-      console.error("Error checking existing bookings:", checkError);
-    } else if (existingBookings && existingBookings.length > 0) {
+    if (existing && existing.length > 0) {
       return new Response(
         JSON.stringify({ error: "Hai già inviato una richiesta di recente. Ti contatteremo presto!" }),
         { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Insert booking
     const { error: dbError } = await supabase.from("trial_bookings").insert({
       parent_name: data.parentName.trim(),
-      email: data.email.trim().toLowerCase(),
-      phone: data.phone?.trim() || null,
-      child_age: data.childAge || 0,
+      email: data.email,
+      phone: data.phone.trim(),
+      child_age: data.childAge ?? 0,
       interest: data.interest || "non-so",
       availability: data.availability || null,
       message: data.message?.trim() || null,
@@ -194,35 +93,30 @@ serve(async (req: Request): Promise<Response> => {
 
     if (dbError) {
       console.error("Database error:", dbError);
-      return new Response(
-        JSON.stringify({ error: "Errore nel salvataggio della richiesta" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Errore nel salvataggio" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Return success - email notification will be triggered separately if needed
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         message: "Prenotazione ricevuta con successo",
         sendEmailNotification: {
           parentName: data.parentName.trim(),
-          email: data.email.trim().toLowerCase(),
-          phone: data.phone?.trim(),
+          email: data.email,
+          phone: data.phone.trim(),
           childAge: data.childAge,
           interest: data.interest,
           availability: data.availability,
           message: data.message?.trim(),
-          adminEmail: data.adminEmail
-        }
+          adminEmail: data.adminEmail,
+        },
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {
     console.error("Error in submit-booking:", error);
-    return new Response(
-      JSON.stringify({ error: "Errore interno del server" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: "Errore interno del server" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

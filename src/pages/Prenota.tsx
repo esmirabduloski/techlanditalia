@@ -63,6 +63,7 @@ export default function Prenota() {
   const [interests, setInterests] = useState(fallbackInterests);
   const { trackFormStart, trackFormSubmit, trackFormError, trackBookingConversion, trackFunnelStep } = useAnalytics();
   const formStartTracked = useRef(false);
+  const { formOpenedAt, honeypotProps, honeypotValue } = useFormAntiSpam();
 
   const form = useForm<BookingFormData>({
     resolver: zodResolver(bookingSchema),
@@ -133,6 +134,8 @@ export default function Prenota() {
           availability: null,
           message: null,
           adminEmail: ADMIN_EMAIL,
+          website: honeypotValue,
+          formOpenedAt,
         },
       });
 
@@ -353,6 +356,7 @@ export default function Prenota() {
               
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" onFocus={handleFormFocus}>
+                  <input {...honeypotProps} />
                   <FormField
                     control={form.control}
                     name="parentName"

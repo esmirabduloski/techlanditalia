@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { ArrowLeft, Save, Loader2, Link2, BookOpen, GraduationCap, Copy, Check } from 'lucide-react';
 import { z } from 'zod';
+import DOMPurify from 'dompurify';
 import { Badge } from '@/components/ui/badge';
 import {
   Collapsible,
@@ -173,11 +174,23 @@ export default function BlogEditor() {
 
     setIsSaving(true);
 
+    // Sanitize HTML content prima del salvataggio (doppia protezione: anche al rendering)
+    const sanitizedContent = DOMPurify.sanitize(content, {
+      ALLOWED_TAGS: [
+        'p','br','strong','em','u','s','h1','h2','h3','h4','h5','h6',
+        'ul','ol','li','blockquote','code','pre','a','img','figure','figcaption',
+        'hr','table','thead','tbody','tr','th','td','span','div','iframe'
+      ],
+      ALLOWED_ATTR: ['href','src','alt','title','target','rel','class','width','height','allow','allowfullscreen','frameborder'],
+      ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+    });
+    const sanitizedExcerpt = excerpt ? DOMPurify.sanitize(excerpt, { ALLOWED_TAGS: [] }) : null;
+
     const postData = {
       title,
       slug,
-      excerpt: excerpt || null,
-      content,
+      excerpt: sanitizedExcerpt,
+      content: sanitizedContent,
       category,
       featured_image: featuredImage || null,
       read_time: readTime,

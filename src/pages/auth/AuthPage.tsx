@@ -177,12 +177,45 @@ export default function AuthPage() {
     setIsLoading(true);
 
     try {
+      const idTrim = identifier.trim();
+      const looksLikeEmail = idTrim.includes("@");
+
+      // Rate-limit check (solo per email, gli username non hanno tracking diretto)
+      if (looksLikeEmail) {
+        try {
+          const { data: rl } = await supabase.functions.invoke("check-login-attempts", {
+            body: { email: idTrim, action: "check" },
+          });
+          if (rl?.blocked) {
+            const min = Math.ceil((rl.retry_after_seconds || 60) / 60);
+            toast({
+              variant: "destructive",
+              title: "Account temporaneamente bloccato",
+              description: `Troppi tentativi falliti. Riprova tra ~${min} minuti.`,
+            });
+            setIsLoading(false);
+            return;
+          }
+        } catch {
+          // se il check fallisce, non blocchiamo il login
+        }
+      }
+
       // Unified login: use the edge function which handles both email and username
       const { data: loginData, error: loginError } = await supabase.functions.invoke("student-login", {
-        body: { identifier: identifier.trim(), password },
+        body: { identifier: idTrim, password },
       });
 
-      if (loginError || loginData?.error) {
+      const success = !loginError && !loginData?.error && !!loginData?.session;
+
+      // Registra esito (solo per email)
+      if (looksLikeEmail) {
+        supabase.functions.invoke("check-login-attempts", {
+          body: { email: idTrim, action: "record", success },
+        }).catch(() => {});
+      }
+
+      if (!success) {
         toast({
           variant: "destructive",
           title: "Errore di accesso",
@@ -190,6 +223,21 @@ export default function AuthPage() {
         });
       } else if (loginData?.session) {
         await supabase.auth.setSession(loginData.session);
+        // Log admin login (best effort)
+        const uid = loginData.session?.user?.id;
+        if (uid) {
+          supabase.from("user_roles").select("role").eq("user_id", uid).eq("role", "admin").maybeSingle()
+            .then(({ data }) => {
+              if (data) {
+                supabase.from("admin_access_logs").insert({
+                  admin_id: uid,
+                  action: "login",
+                  path: "/auth",
+                  user_agent: navigator.userAgent.slice(0, 500),
+                }).then(() => {});
+              }
+            });
+        }
         toast({ title: "Benvenuto!", description: "Accesso effettuato con successo" });
       }
     } catch {

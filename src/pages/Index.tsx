@@ -48,6 +48,7 @@ const Index = () => {
       <HeroSection />
       <WhyTechlandSection />
       <CoursesPreviewSection />
+      <SEOKeywordsSection />
       <HowItWorksSection />
       <ParentsSection />
       <FAQSection />

@@ -1185,32 +1185,36 @@ export default function CorsoDettaglio() {
   // SEO meta data generation
   const getSEOTitle = () => {
     const titleMap: Record<string, string> = {
-      "minecraft-education": "Corso Minecraft Education per Bambini (8-9 anni)",
-      "abc-creativita-digitale": "Corso Creatività Digitale per Bambini (5-7 anni)",
-      "abc-informatica": "Corso Informatica Base per Bambini (5-7 anni)",
-      "scratch": "Corso Scratch per Bambini - Programmazione Visiva (8-10 anni)",
-      "roblox-base": "Corso Roblox per Bambini - Sviluppo Giochi (8-12 anni)",
-      "roblox-avanzato": "Corso Roblox Avanzato per Ragazzi (10-14 anni)",
-      "web-development": "Corso Web Development per Ragazzi (13-18 anni)",
-      "unity": "Corso Unity per Ragazzi - Sviluppo Giochi 3D (13-18 anni)",
-      "python-base": "Corso Python Base per Ragazzi (13-18 anni)",
-      "python-pro-ai": "Corso Python PRO & Intelligenza Artificiale (13-18 anni)"
+      "minecraft-education": "Corso Minecraft per Bambini Online (8-9 anni) | Coding con MakeCode",
+      "abc-creativita-digitale": "Corso Creatività Digitale per Bambini Online (5-7 anni)",
+      "abc-informatica": "Corso di Informatica per Bambini Online (5-7 anni)",
+      "scratch": "Corso Scratch per Bambini Online (8-10 anni) | Programmazione Visiva",
+      "roblox-base": "Corso Roblox per Bambini Online (8-12 anni) | Sviluppo Giochi",
+      "roblox": "Corso Roblox per Bambini Online (10-14 anni) | Crea Videogiochi con Lua",
+      "roblox-avanzato": "Corso Roblox Avanzato per Ragazzi Online (10-14 anni) | Lua Avanzato",
+      "web-development": "Corso Web Development per Ragazzi Online (12-16 anni) | HTML CSS JavaScript",
+      "unity": "Corso Unity per Ragazzi Online (13-18 anni) | Sviluppo Giochi 3D",
+      "python-base": "Corso Python per Ragazzi Online (12-16 anni) | Programmazione Python da Zero",
+      "python-pro-ai": "Corso Python Avanzato e AI per Ragazzi Online (14-18 anni)",
+      "python-ai": "Corso Python e Intelligenza Artificiale per Ragazzi Online (14-18 anni)"
     };
-    return titleMap[id!] || `Corso ${course?.title}`;
+    return titleMap[id!] || `Corso ${course?.title} per Bambini Online`;
   };
 
   const getSEODescription = () => {
     const descMap: Record<string, string> = {
-      "minecraft-education": "Corso di programmazione con Minecraft Education per bambini 8-9 anni. Impara coding, automazione e logica con MakeCode. Lezione di prova gratuita!",
-      "abc-creativita-digitale": "Corso di creatività digitale per bambini 5-7 anni. Canva, animazioni e design. Sviluppa il pensiero creativo. Prima lezione gratis!",
-      "abc-informatica": "Corso di informatica base per bambini 5-7 anni. Programmazione a blocchi, Scratch Junior e uso del PC. Lezione di prova gratuita!",
-      "scratch": "Corso Scratch per bambini 8-10 anni. Crea giochi e animazioni con la programmazione visiva. Docenti esperti. Prima lezione gratis!",
-      "roblox-base": "Corso Roblox Studio per bambini 8-12 anni. Crea e pubblica i tuoi giochi. Impara LUA e game design. Lezione di prova gratuita!",
-      "roblox-avanzato": "Corso Roblox avanzato per ragazzi 10-14 anni. Script complessi e meccaniche avanzate. Diventa un pro developer!",
-      "web-development": "Corso Web Development per ragazzi 13-18 anni. HTML, CSS, JavaScript. Crea il tuo sito web. Prima lezione gratuita!",
-      "unity": "Corso Unity per ragazzi 13-18 anni. Sviluppo giochi 3D con C#. Crea esperienze interattive. Lezione di prova gratis!",
-      "python-base": "Corso Python base per ragazzi 13-18 anni. Il linguaggio più richiesto. Progetti pratici. Prima lezione gratuita!",
-      "python-pro-ai": "Corso Python avanzato e AI per ragazzi 13-18 anni. Machine learning, bot e automazione. Lezione di prova gratis!"
+      "minecraft-education": "Corso di Minecraft per bambini online (8-9 anni). Impara coding, automazione e programmazione con Minecraft Education e MakeCode. Lezione di prova gratuita!",
+      "abc-creativita-digitale": "Corso di creatività digitale per bambini online (5-7 anni). Canva, animazioni e design. Sviluppa pensiero creativo e logico. Prima lezione gratis!",
+      "abc-informatica": "Corso di informatica per bambini online (5-7 anni). Programmazione a blocchi, Scratch Junior e uso del PC. Lezione di prova gratuita!",
+      "scratch": "Corso di Scratch per bambini online (8-10 anni). Crea giochi e animazioni con la programmazione visiva. Docenti esperti. Prima lezione gratis!",
+      "roblox-base": "Corso Roblox Studio per bambini online (8-12 anni). Crea e pubblica i tuoi giochi. Impara Lua e game design. Lezione di prova gratuita!",
+      "roblox": "Corso Roblox per bambini online (10-14 anni). Crea videogiochi con Roblox Studio e Lua. Lezioni live in piccoli gruppi. Prima lezione gratis!",
+      "roblox-avanzato": "Corso Roblox avanzato per ragazzi online (10-14 anni). Script Lua complessi, multiplayer, monetizzazione. Diventa un pro developer Roblox!",
+      "web-development": "Corso di Web Development per ragazzi online (12-16 anni). HTML, CSS, JavaScript da zero. Crea il tuo sito web. Prima lezione gratuita!",
+      "unity": "Corso Unity per ragazzi online (13-18 anni). Sviluppo giochi 3D con C#. Crea esperienze interattive. Lezione di prova gratis!",
+      "python-base": "Corso di Python per ragazzi online (12-16 anni). Il linguaggio di programmazione più richiesto. Progetti pratici. Prima lezione gratuita!",
+      "python-pro-ai": "Corso Python avanzato e AI per ragazzi online (14-18 anni). Machine learning, NumPy, Pandas, deep learning. Lezione di prova gratis!",
+      "python-ai": "Corso Python e Intelligenza Artificiale per ragazzi online (14-18 anni). Machine learning con scikit-learn, AI e LLM. Lezione di prova gratis!"
     };
     return descMap[id!] || course?.description || "";
   };
@@ -1232,18 +1236,20 @@ export default function CorsoDettaglio() {
 
   const getSEOKeywords = () => {
     const keywordsMap: Record<string, string> = {
-      "minecraft-education": "corso Minecraft bambini, Minecraft Education, programmazione Minecraft, MakeCode bambini, coding Minecraft",
-      "abc-creativita-digitale": "corso creatività digitale bambini, design digitale bambini, Canva bambini, animazione bambini",
-      "abc-informatica": "corso informatica bambini, Scratch Junior, programmazione a blocchi, alfabetizzazione digitale bambini",
-      "scratch": "corso Scratch, programmazione visiva bambini, Scratch coding, creare giochi Scratch, animazioni Scratch",
-      "roblox-base": "corso Roblox, Roblox Studio bambini, creare giochi Roblox, programmare Roblox, Lua bambini",
-      "roblox-avanzato": "corso Roblox avanzato, Roblox scripting, game design ragazzi, Lua avanzato, sviluppo giochi Roblox",
-      "web-development": "corso web development ragazzi, HTML CSS JavaScript, creare siti web, programmazione web ragazzi",
-      "unity": "corso Unity ragazzi, sviluppo giochi 3D, C# ragazzi, game development Unity, creare videogiochi",
-      "python-base": "corso Python ragazzi, Python base, imparare Python, programmazione Python bambini",
-      "python-pro-ai": "corso Python avanzato, intelligenza artificiale ragazzi, machine learning bambini, Python AI corso",
+      "minecraft-education": "corso minecraft, corsi di minecraft, corso minecraft bambini, minecraft education, programmazione minecraft, makecode bambini, coding minecraft, corsi minecraft online",
+      "abc-creativita-digitale": "corso creatività digitale bambini, design digitale bambini, canva bambini, animazione bambini, corsi per bambini 5 anni",
+      "abc-informatica": "corso informatica bambini, corsi di informatica per bambini, informatica per bambini, scratch junior, programmazione a blocchi, alfabetizzazione digitale bambini",
+      "scratch": "corso scratch, corsi di scratch, corso scratch bambini, programmazione visiva bambini, scratch coding, creare giochi scratch, animazioni scratch, scratch online",
+      "roblox-base": "corso roblox, corsi di roblox, corso roblox bambini, roblox studio bambini, creare giochi roblox, programmare roblox, lua bambini, roblox online",
+      "roblox": "corso roblox, corsi di roblox, corso roblox bambini, roblox studio, creare giochi roblox, lua, roblox online ragazzi",
+      "roblox-avanzato": "corso roblox avanzato, roblox scripting, game design ragazzi, lua avanzato, sviluppo giochi roblox, corsi di roblox avanzato",
+      "web-development": "corso web development ragazzi, corsi web design bambini, html css javascript per ragazzi, creare siti web, programmazione web ragazzi",
+      "unity": "corso unity ragazzi, sviluppo giochi 3d, c# ragazzi, game development unity, creare videogiochi",
+      "python-base": "corso python ragazzi, corsi di python per ragazzi, python base, imparare python, programmazione python bambini, corso python online",
+      "python-pro-ai": "corso python avanzato, intelligenza artificiale ragazzi, machine learning bambini, python ai corso, corso ai per ragazzi",
+      "python-ai": "corso python ai, intelligenza artificiale ragazzi, machine learning ragazzi, python ai corso, corso ai per ragazzi, deep learning ragazzi",
     };
-    return keywordsMap[id!] || `corso ${course?.title}, programmazione bambini`;
+    return keywordsMap[id!] || `corso ${course?.title}, corsi per bambini, corsi di programmazione per bambini, ${course?.title} online`;
   };
 
   return (

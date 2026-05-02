@@ -127,10 +127,10 @@ export default function Corsi() {
   return (
     <Layout>
       <SEOHead
-        title="Corsi di Programmazione per Bambini e Ragazzi Online | TECHLAND"
-        description="Scopri tutti i corsi di coding per bambini e ragazzi 6-18 anni: Scratch, Roblox, Minecraft, Python, Unity, Web Development. Lezioni online in piccoli gruppi."
+        title="Corsi di Programmazione per Bambini e Ragazzi Online | Scratch, Roblox, Minecraft, Python | TECHLAND"
+        description="Tutti i corsi di coding e programmazione per bambini e ragazzi online: Scratch, Roblox, Minecraft, Python, Web Development, informatica. Prima lezione gratis!"
         canonical="/corsi"
-        keywords="corsi programmazione bambini online, corsi coding ragazzi, corso Scratch, corso Roblox, corso Minecraft, corso Python, corso Unity, corso web development, lezioni coding bambini, scuola programmazione online"
+        keywords="corsi online per bambini, corsi per bambini, corsi di informatica per bambini, corsi di coding, corsi di scratch, corsi di minecraft, corsi di roblox, corsi di python per ragazzi, corsi di programmazione per bambini, corsi web development bambini, corsi coding online, scuola coding bambini, lezioni programmazione online ragazzi"
         structuredData={[breadcrumbSchema, coursesListSchema]}
       />
       
@@ -143,10 +143,13 @@ export default function Corsi() {
           />
           <div className="text-center max-w-3xl mx-auto">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-              Corsi di <span className="tech-gradient-text">programmazione per bambini</span> e ragazzi
+              Corsi di <span className="tech-gradient-text">programmazione per bambini</span> e ragazzi online
             </h1>
             <p className="text-lg text-muted-foreground">
-              Percorsi di coding studiati per ogni età e livello: da Scratch a Python, da Roblox a Unity. Trova il corso perfetto per il tuo bambino e inizia il viaggio nel mondo della programmazione.
+              Tutti i nostri <strong>corsi di coding online per bambini e ragazzi</strong> dai 5 ai 20 anni:
+              <strong> Scratch</strong>, <strong>Roblox</strong>, <strong>Minecraft</strong>,
+              <strong> Python</strong>, <strong>Web Development</strong> e <strong>informatica</strong>.
+              Trova il corso perfetto e prenota la prima lezione gratuita.
             </p>
           </div>
         </div>

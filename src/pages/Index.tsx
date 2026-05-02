@@ -38,10 +38,10 @@ const Index = () => {
   return (
     <Layout>
       <SEOHead
-        title="TECHLAND | Corsi di Programmazione e Coding per Bambini e Ragazzi Online"
-        description="TECHLAND è la scuola di coding online per bambini e ragazzi 6-18 anni. Corsi di Scratch, Roblox, Minecraft, Python, Unity in piccoli gruppi. Prima lezione gratis!"
+        title="Corsi di Programmazione per Bambini Online | Scratch, Roblox, Minecraft, Python | TECHLAND"
+        description="Corsi di coding e programmazione per bambini e ragazzi online: Scratch, Roblox, Minecraft, Python, informatica. Lezioni live in piccoli gruppi. Prima lezione gratis!"
         canonical="/"
-        keywords="TECHLAND, Techland corsi, Techland coding, Techland Italia, Techland programmazione bambini, corsi programmazione bambini, corsi coding bambini online, scuola coding bambini Italia, corso Scratch bambini, corso Roblox bambini, corso Python ragazzi, corso Minecraft bambini, imparare a programmare"
+        keywords="corsi online per bambini, corsi per bambini, corsi di informatica per bambini, corsi di coding, corsi di scratch, informatica per bambini, corsi di minecraft, corsi di roblox, corsi di python per ragazzi, corsi di programmazione per bambini, corsi coding online, scuola di coding per bambini, lezioni di programmazione online, imparare a programmare bambini, TECHLAND"
         structuredData={[organizationSchema, websiteSchema, homepageFaqSchema, howItWorksSchema]}
       />
       <HeroSection />

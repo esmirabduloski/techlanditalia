@@ -22,13 +22,15 @@ export function HeroSection() {
             </div>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-              TECHLAND: corsi di programmazione per bambini e ragazzi,{" "}
-              <span className="tech-gradient-text">online e divertenti</span>
+              Corsi di programmazione per bambini e ragazzi{" "}
+              <span className="tech-gradient-text">online</span>
             </h1>
 
             <p className="text-lg md:text-xl text-muted-foreground max-w-xl">
-              Scopri i nostri corsi di coding per bambini e ragazzi dai 6 ai 18 anni: Scratch, Roblox, Minecraft,
-              Python, Unity e molto altro. Lezioni online in piccoli gruppi con docenti esperti.
+              TECHLAND è la scuola di <strong>coding online per bambini e ragazzi</strong> dai 5 ai 20 anni:
+              corsi di <strong>Scratch</strong>, <strong>Roblox</strong>, <strong>Minecraft</strong>,
+              <strong> Python</strong>, <strong>Web Development</strong> e <strong>informatica</strong>.
+              Lezioni live in piccoli gruppi con docenti esperti.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">

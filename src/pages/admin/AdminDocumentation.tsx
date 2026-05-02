@@ -16,7 +16,7 @@ import {
   MessageSquare, CreditCard, BarChart3, Calendar, Mail,
   FileText, Award, Database, Link as LinkIcon, Eye, Key, AlertTriangle
 } from 'lucide-react';
-import { Card, CardContent as CardContentInner } from '@/components/ui/card';
+
 
 interface Feature {
   name: string;

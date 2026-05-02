@@ -14,8 +14,9 @@ import {
   Globe, GraduationCap, Users, Shield, Search,
   ExternalLink, BookOpen, Gamepad2, Code, ClipboardCheck,
   MessageSquare, CreditCard, BarChart3, Calendar, Mail,
-  FileText, Award, Database, Link as LinkIcon, Eye
+  FileText, Award, Database, Link as LinkIcon, Eye, Key, AlertTriangle
 } from 'lucide-react';
+import { Card, CardContent as CardContentInner } from '@/components/ui/card';
 
 interface Feature {
   name: string;
@@ -222,6 +223,54 @@ export default function AdminDocumentation() {
             })}
           </Accordion>
         )}
+
+        {/* Sezione rotazione chiavi API */}
+        <div className="mt-10">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
+              <Key className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold">Rotazione chiavi API</h2>
+              <p className="text-sm text-muted-foreground">Buona pratica: ruota ogni 90 giorni.</p>
+            </div>
+          </div>
+
+          <Card className="border-amber-500/30 bg-amber-500/5">
+            <CardContent className="p-4 flex gap-3">
+              <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div className="text-sm">
+                Le chiavi API non vanno mai condivise via chat/email. In caso di sospetto leak, ruotale subito dai relativi dashboard e aggiorna il valore nei Secrets di Lovable Cloud.
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="grid gap-3 mt-4">
+            {[
+              { name: 'STRIPE_SECRET_KEY', where: 'Stripe Dashboard → Developers → API keys → Roll secret key', why: 'Pagamenti e checkout.' },
+              { name: 'RESEND_API_KEY', where: 'Resend Dashboard → API Keys → Revoke + Create new', why: 'Invio email transazionali e newsletter.' },
+              { name: 'JIRA_API_TOKEN', where: 'Atlassian → Account settings → Security → API tokens', why: 'Creazione bug ticket dal frontend.' },
+              { name: 'QUOTE_GENIE_API_KEY', where: 'Progetto Quote Genie → impostazioni API', why: 'Integrazione clienti Quote Genie.' },
+              { name: 'LOVABLE_API_KEY', where: 'Bottone "Rotate" nei Secrets di Lovable Cloud', why: 'Accesso AI Gateway. Ruotala se sospetti uso non autorizzato.' },
+            ].map((k) => (
+              <Card key={k.name}>
+                <CardContent className="p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                    <Badge variant="outline" className="font-mono text-xs w-fit">{k.name}</Badge>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm">{k.why}</div>
+                      <div className="text-xs text-muted-foreground mt-1">📍 {k.where}</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <p className="text-xs text-muted-foreground mt-4">
+            ✅ Promemoria: segna in calendario un check trimestrale (es. 1° giorno del trimestre) per rivedere e ruotare le chiavi.
+          </p>
+        </div>
       </div>
     </Layout>
   );

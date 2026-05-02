@@ -6,6 +6,7 @@ import { HowItWorksSection } from "@/components/sections/HowItWorksSection";
 import { ParentsSection } from "@/components/sections/ParentsSection";
 import { FAQSection } from "@/components/sections/FAQSection";
 import { CTASection } from "@/components/sections/CTASection";
+import { SEOKeywordsSection } from "@/components/sections/SEOKeywordsSection";
 import { SEOHead, organizationSchema, websiteSchema, generateFAQSchema } from "@/components/seo/SEOHead";
 
 const homepageFaqs = [

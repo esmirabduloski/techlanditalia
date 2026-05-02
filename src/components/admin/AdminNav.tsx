@@ -8,6 +8,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
+import { useAdminAccessLog } from '@/hooks/useAdminAccessLog';
 import { cn } from '@/lib/utils';
 import {
   Sheet,
@@ -48,6 +49,7 @@ const navItems: NavItem[] = [
 export function AdminNav() {
   const location = useLocation();
   const { notifications, markBookingsAsSeen, markContactsAsSeen } = useAdminNotifications();
+  useAdminAccessLog();
   const scrollContainerRef = useRef<HTMLElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);

@@ -26,6 +26,7 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import DOMPurify from "dompurify";
 
 interface Attachment {
   name: string;
@@ -427,7 +428,12 @@ export default function HomeworkDetail() {
                 <div className="prose prose-sm dark:prose-invert max-w-none">
                   <div 
                     className="bg-muted/50 rounded-lg p-4 whitespace-pre-wrap"
-                    dangerouslySetInnerHTML={{ __html: homework.instructions }}
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(homework.instructions, {
+                        ALLOWED_TAGS: ['p','b','strong','em','i','u','ul','ol','li','br','a','h1','h2','h3','h4','code','pre','blockquote','span'],
+                        ALLOWED_ATTR: ['href','target','rel','class']
+                      })
+                    }}
                   />
                 </div>
               )}

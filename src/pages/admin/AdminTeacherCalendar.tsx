@@ -322,6 +322,14 @@ END:VCALENDAR`;
       ? teachers 
       : teachers.filter(t => t.id === selectedTeacher);
 
+    const esc = (v: unknown): string =>
+      String(v ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+
     const printContent = `
       <!DOCTYPE html>
       <html>
@@ -345,8 +353,8 @@ END:VCALENDAR`;
         <p>Esportato il: ${new Date().toLocaleDateString("it-IT")}</p>
         ${filteredTeachers.map(teacher => `
           <div class="teacher-section">
-            <div class="teacher-name">👤 ${teacher.full_name}</div>
-            <p>Email: ${teacher.email}</p>
+            <div class="teacher-name">👤 ${esc(teacher.full_name)}</div>
+            <p>Email: ${esc(teacher.email)}</p>
             ${teacher.availability.length > 0 ? `
               <table>
                 <thead>
@@ -359,9 +367,9 @@ END:VCALENDAR`;
                 <tbody>
                   ${teacher.availability.map(slot => `
                     <tr>
-                      <td>${slot.day}</td>
-                      <td>${slot.startTime}</td>
-                      <td>${slot.endTime}</td>
+                      <td>${esc(slot.day)}</td>
+                      <td>${esc(slot.startTime)}</td>
+                      <td>${esc(slot.endTime)}</td>
                     </tr>
                   `).join("")}
                 </tbody>

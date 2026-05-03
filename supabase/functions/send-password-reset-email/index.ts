@@ -9,6 +9,25 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const ALLOWED_HOSTS = new Set([
+  "techlanditalia.it",
+  "www.techlanditalia.it",
+  "techlanditalia.lovable.app",
+]);
+
+function isAllowedRedirect(url: string | undefined | null): boolean {
+  if (!url) return false;
+  try {
+    const u = new URL(url);
+    if (u.protocol !== "https:" && u.protocol !== "http:") return false;
+    if (ALLOWED_HOSTS.has(u.hostname)) return true;
+    if (u.hostname.endsWith(".lovable.app")) return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 function getPasswordResetEmailTemplate(resetLink: string): string {
   return `
 <!DOCTYPE html>
@@ -127,12 +146,17 @@ const handler = async (req: Request): Promise<Response> => {
       }
     });
 
+    // Validate redirect URL against allowlist to prevent open-redirect phishing
+    const safeRedirect = isAllowedRedirect(redirectUrl)
+      ? redirectUrl
+      : "https://techlanditalia.it/auth?reset=true";
+
     // Generate password reset link using Admin API
     const { data, error: linkError } = await supabase.auth.admin.generateLink({
       type: 'recovery',
       email: email.trim().toLowerCase(),
       options: {
-        redirectTo: redirectUrl
+        redirectTo: safeRedirect
       }
     });
 

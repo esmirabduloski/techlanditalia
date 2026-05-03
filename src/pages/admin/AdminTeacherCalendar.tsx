@@ -353,8 +353,8 @@ END:VCALENDAR`;
         <p>Esportato il: ${new Date().toLocaleDateString("it-IT")}</p>
         ${filteredTeachers.map(teacher => `
           <div class="teacher-section">
-            <div class="teacher-name">👤 ${teacher.full_name}</div>
-            <p>Email: ${teacher.email}</p>
+            <div class="teacher-name">👤 ${esc(teacher.full_name)}</div>
+            <p>Email: ${esc(teacher.email)}</p>
             ${teacher.availability.length > 0 ? `
               <table>
                 <thead>
@@ -367,9 +367,9 @@ END:VCALENDAR`;
                 <tbody>
                   ${teacher.availability.map(slot => `
                     <tr>
-                      <td>${slot.day}</td>
-                      <td>${slot.startTime}</td>
-                      <td>${slot.endTime}</td>
+                      <td>${esc(slot.day)}</td>
+                      <td>${esc(slot.startTime)}</td>
+                      <td>${esc(slot.endTime)}</td>
                     </tr>
                   `).join("")}
                 </tbody>

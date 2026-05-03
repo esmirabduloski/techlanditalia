@@ -206,8 +206,10 @@ serve(async (req) => {
         welcomeBody.childUsername = childUsername.trim();
       }
 
-      // Use anon key client to invoke edge function
-      const supabaseAnon = createClient(supabaseUrl, supabaseAnonKey);
+      // Use anon key client + admin auth header so the welcome-email function authorizes the call
+      const supabaseAnon = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
       await supabaseAnon.functions.invoke("send-welcome-email", { body: welcomeBody });
     } catch (err) {
       console.error("Welcome email error:", err);

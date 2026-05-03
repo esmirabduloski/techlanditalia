@@ -322,6 +322,14 @@ END:VCALENDAR`;
       ? teachers 
       : teachers.filter(t => t.id === selectedTeacher);
 
+    const esc = (v: unknown): string =>
+      String(v ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+
     const printContent = `
       <!DOCTYPE html>
       <html>

@@ -9,6 +9,25 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const ALLOWED_HOSTS = new Set([
+  "techlanditalia.it",
+  "www.techlanditalia.it",
+  "techlanditalia.lovable.app",
+]);
+
+function isAllowedRedirect(url: string | undefined | null): boolean {
+  if (!url) return false;
+  try {
+    const u = new URL(url);
+    if (u.protocol !== "https:" && u.protocol !== "http:") return false;
+    if (ALLOWED_HOSTS.has(u.hostname)) return true;
+    if (u.hostname.endsWith(".lovable.app")) return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 function getPasswordResetEmailTemplate(resetLink: string): string {
   return `
 <!DOCTYPE html>

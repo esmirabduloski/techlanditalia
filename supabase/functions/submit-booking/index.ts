@@ -97,11 +97,18 @@ serve(async (req: Request): Promise<Response> => {
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Prenotazione ricevuta con successo",
-        sendEmailNotification: {
+    // Send notification email server-to-server (so client doesn't need access to the open endpoint)
+    try {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      await fetch(`${supabaseUrl}/functions/v1/send-booking-notification`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-secret": serviceKey,
+          "Authorization": `Bearer ${serviceKey}`,
+        },
+        body: JSON.stringify({
           parentName: data.parentName.trim(),
           email: data.email,
           phone: data.phone.trim(),
@@ -109,8 +116,16 @@ serve(async (req: Request): Promise<Response> => {
           interest: data.interest,
           availability: data.availability,
           message: data.message?.trim(),
-          adminEmail: data.adminEmail,
-        },
+        }),
+      });
+    } catch (e) {
+      console.error("[submit-booking] notification email failed:", e);
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: "Prenotazione ricevuta con successo",
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

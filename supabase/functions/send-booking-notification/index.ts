@@ -76,8 +76,17 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Internal-only: require shared secret (service role key) so only server-to-server calls work
+    const internalSecret = req.headers.get("x-internal-secret");
+    const expectedSecret = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!internalSecret || !expectedSecret || internalSecret !== expectedSecret) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
     const data: BookingNotificationRequest = await req.json();
-    console.log("Received booking notification request:", data);
+    console.log("Received booking notification request for:", data.email);
 
     // Sanitize user inputs for safe HTML embedding
     const safeParentName = escapeHtml(data.parentName || '');
@@ -90,9 +99,12 @@ serve(async (req: Request): Promise<Response> => {
       ? availabilityLabels[data.availability] || escapeHtml(data.availability) 
       : "Non specificata";
 
+    // Force admin recipient server-side; ignore any client-supplied address
+    const ADMIN_EMAIL = Deno.env.get("ADMIN_NOTIFICATION_EMAIL") || "info@techlanditalia.it";
+
     // Email to admin (using sanitized values)
     const adminEmailResult = await sendEmail(
-      [data.adminEmail],
+      [ADMIN_EMAIL],
       `🎯 Nuova prenotazione lezione di prova - ${data.parentName?.substring(0, 50) || 'Nuovo'}`,
       `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -172,7 +184,7 @@ serve(async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error in send-booking-notification function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "Errore interno" }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

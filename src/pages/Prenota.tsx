@@ -161,27 +161,11 @@ export default function Prenota() {
         throw new Error(bookingResult?.error || "Errore nell'invio della richiesta");
       }
 
-      // Send email notification separately
-      const emailData = bookingResult.sendEmailNotification;
-      if (emailData) {
-        const { error: emailError } = await supabase.functions.invoke("send-booking-notification", {
-          body: emailData,
-        });
-
-        if (emailError) {
-          console.error("Email error:", emailError);
-          // Don't throw - booking was saved, email failed
-          toast({
-            title: "Richiesta inviata!",
-            description: "Ti contatteremo presto. (Nota: potrebbe esserci un ritardo nell'invio dell'email di conferma)",
-          });
-        } else {
-          toast({
-            title: "Richiesta inviata!",
-            description: "Ti contatteremo entro 24 ore per confermare la lezione.",
-          });
-        }
-      }
+      // Email notification is now sent server-to-server inside submit-booking
+      toast({
+        title: "Richiesta inviata!",
+        description: "Ti contatteremo entro 24 ore per confermare la lezione.",
+      });
 
       // Track successful conversion
       trackFormSubmit('booking_form', {

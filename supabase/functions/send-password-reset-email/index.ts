@@ -146,12 +146,17 @@ const handler = async (req: Request): Promise<Response> => {
       }
     });
 
+    // Validate redirect URL against allowlist to prevent open-redirect phishing
+    const safeRedirect = isAllowedRedirect(redirectUrl)
+      ? redirectUrl
+      : "https://techlanditalia.it/auth?reset=true";
+
     // Generate password reset link using Admin API
     const { data, error: linkError } = await supabase.auth.admin.generateLink({
       type: 'recovery',
       email: email.trim().toLowerCase(),
       options: {
-        redirectTo: redirectUrl
+        redirectTo: safeRedirect
       }
     });
 

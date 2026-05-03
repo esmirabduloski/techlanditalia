@@ -1344,31 +1344,74 @@ export default function CorsoDettaglio() {
           <p className="text-muted-foreground mb-8">
             Durante il corso, gli studenti realizzeranno progetti pratici come questi:
           </p>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {course.projectExamples.map((project, i) => (
-              <div key={i} className="tech-card p-6 text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-secondary/10 flex items-center justify-center">
-                  <Target className="w-8 h-8 text-secondary" />
-                </div>
-                <p className="font-medium">{project.title}</p>
-                <p className="text-sm text-muted-foreground mt-2">Esempio di progetto del corso</p>
+          {id === "scratch" ? (
+            <>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[
+                  { id: "1304833814", title: "Gioco Scratch #1" },
+                  { id: "1310221121", title: "Gioco Scratch #2" },
+                  { id: "1308790999", title: "Gioco Scratch #3" },
+                ].map((p) => (
+                  <div key={p.id} className="tech-card p-4 flex flex-col">
+                    <div className="aspect-[485/402] w-full overflow-hidden rounded-lg bg-muted">
+                      <iframe
+                        src={`https://scratch.mit.edu/projects/${p.id}/embed`}
+                        allowTransparency
+                        width="100%"
+                        height="100%"
+                        frameBorder="0"
+                        scrolling="no"
+                        allowFullScreen
+                        loading="lazy"
+                        title={p.title}
+                        className="w-full h-full"
+                      />
+                    </div>
+                    <p className="font-medium mt-3 text-center">{p.title}</p>
+                    <a
+                      href={`https://scratch.mit.edu/projects/${p.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-primary hover:underline text-center mt-1"
+                    >
+                      Apri su Scratch ↗
+                    </a>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <div className="mt-8 p-5 rounded-xl bg-accent/10 border border-accent/20 text-center">
-            <p className="text-muted-foreground text-sm md:text-base">
-              📌 Gli esempi dettagliati dei progetti verranno aggiunti a breve. Se hai bisogno immediato di vedere un esempio di progetto,{" "}
-              <a
-                href="https://wa.me/message/KHFBHZDEY3S7H1"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary font-semibold hover:underline"
-              >
-                contattaci su WhatsApp
-              </a>
-              !
-            </p>
-          </div>
+              <p className="text-center text-sm text-muted-foreground mt-6">
+                ▶️ Clicca la bandiera verde per giocare. Usa il pulsante fullscreen per ingrandire.
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {course.projectExamples.map((project, i) => (
+                  <div key={i} className="tech-card p-6 text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-secondary/10 flex items-center justify-center">
+                      <Target className="w-8 h-8 text-secondary" />
+                    </div>
+                    <p className="font-medium">{project.title}</p>
+                    <p className="text-sm text-muted-foreground mt-2">Esempio di progetto del corso</p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-8 p-5 rounded-xl bg-accent/10 border border-accent/20 text-center">
+                <p className="text-muted-foreground text-sm md:text-base">
+                  📌 Gli esempi dettagliati dei progetti verranno aggiunti a breve. Se hai bisogno immediato di vedere un esempio di progetto,{" "}
+                  <a
+                    href="https://wa.me/message/KHFBHZDEY3S7H1"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary font-semibold hover:underline"
+                  >
+                    contattaci su WhatsApp
+                  </a>
+                  !
+                </p>
+              </div>
+            </>
+          )}
         </div>
       </section>
 

@@ -162,6 +162,7 @@ const App = () => (
                     <Route path="/admin/documentazione" element={<AdminDocumentation />} />
                     <Route path="/admin/access-logs" element={<AdminAccessLogs />} />
                     <Route path="/admin/landing-pages" element={<AdminLandingPages />} />
+                    <Route path="/admin/impostazioni" element={<AdminSiteSettings />} />
                     <Route path="/lp/:slug" element={<LandingPage />} />
                     <Route path="/insegnante" element={<TeacherDashboard />} />
                     <Route path="/insegnante/valutazioni" element={<TeacherGrading />} />

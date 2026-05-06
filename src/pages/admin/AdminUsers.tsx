@@ -1672,6 +1672,103 @@ export default function AdminUsers() {
         onBalanceUpdated={fetchData}
       />
 
+      {/* Create User Dialog */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Crea nuovo utente</DialogTitle>
+            <DialogDescription>
+              Crea un account per un genitore (con figlio) oppure per un insegnante. Verrà inviata una email di benvenuto.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label>Tipo account</Label>
+              <Select value={createForm.role} onValueChange={(v) => setCreateForm(prev => ({ ...prev, role: v as 'parent' | 'teacher' }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="parent">Genitore + Figlio</SelectItem>
+                  <SelectItem value="teacher">Insegnante</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Nome completo {createForm.role === 'parent' ? 'genitore' : 'insegnante'}</Label>
+              <Input
+                value={createForm.fullName}
+                onChange={(e) => setCreateForm(prev => ({ ...prev, fullName: e.target.value }))}
+                placeholder="Mario Rossi"
+              />
+            </div>
+            <div>
+              <Label>Email</Label>
+              <Input
+                type="email"
+                value={createForm.email}
+                onChange={(e) => setCreateForm(prev => ({ ...prev, email: e.target.value }))}
+                placeholder="email@esempio.it"
+              />
+            </div>
+            <div>
+              <Label>Password (min. 6 caratteri)</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={createForm.password}
+                  onChange={(e) => setCreateForm(prev => ({ ...prev, password: e.target.value }))}
+                  placeholder="Password"
+                />
+                <Button type="button" variant="outline" onClick={generatePassword}>Genera</Button>
+              </div>
+            </div>
+
+            {createForm.role === 'parent' && (
+              <div className="border-t pt-4">
+                <h4 className="font-semibold text-sm mb-3">Dati del figlio</h4>
+                <div className="space-y-4">
+                  <div>
+                    <Label>Nome del figlio</Label>
+                    <Input
+                      value={createForm.childName}
+                      onChange={(e) => setCreateForm(prev => ({ ...prev, childName: e.target.value }))}
+                      placeholder="Luca Rossi"
+                    />
+                  </div>
+                  <div>
+                    <Label>Username del figlio (per il login)</Label>
+                    <Input
+                      value={createForm.childUsername}
+                      onChange={(e) => setCreateForm(prev => ({ ...prev, childUsername: e.target.value }))}
+                      placeholder="lucarossi"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Solo lettere, numeri e underscore.</p>
+                  </div>
+                  <div>
+                    <Label>Corso da assegnare (opzionale)</Label>
+                    <Select value={createForm.courseId} onValueChange={(v) => setCreateForm(prev => ({ ...prev, courseId: v }))}>
+                      <SelectTrigger><SelectValue placeholder="Nessun corso" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Nessun corso</SelectItem>
+                        {courses.map(c => (
+                          <SelectItem key={c.id} value={c.id}>{c.emoji} {c.title}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateDialogOpen(false)} disabled={creatingUser}>
+              Annulla
+            </Button>
+            <Button onClick={handleCreateUser} disabled={creatingUser}>
+              {creatingUser ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Creazione...</> : 'Crea utente'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }

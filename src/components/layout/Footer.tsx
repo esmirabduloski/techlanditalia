@@ -107,7 +107,7 @@ export function Footer() {
           <nav aria-label="Informazioni azienda">
             <h3 className="font-semibold text-lg mb-4">TECHLAND</h3>
             <ul className="space-y-3">
-              {footerLinks.azienda.map((link) => (
+              {aziendaLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     to={link.href}

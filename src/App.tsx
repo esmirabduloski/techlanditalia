@@ -25,7 +25,7 @@ const Privacy = lazy(() => import("./pages/Privacy"));
 const Termini = lazy(() => import("./pages/Termini"));
 const Cookie = lazy(() => import("./pages/Cookie"));
 const Contatti = lazy(() => import("./pages/Contatti"));
-const LavoraConNoi = lazy(() => import("./pages/LavoraConNoi"));
+const LavoraConNoi = lazy(() => import("./pages/LavoraConNoiGuard"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
@@ -77,6 +77,7 @@ const Leaderboard = lazy(() => import("./pages/area-riservata/Leaderboard"));
 const Accessibilita = lazy(() => import("./pages/Accessibilita"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const AdminLandingPages = lazy(() => import("./pages/admin/AdminLandingPages"));
+const AdminSiteSettings = lazy(() => import("./pages/admin/AdminSiteSettings"));
 
 const queryClient = new QueryClient();
 
@@ -161,6 +162,7 @@ const App = () => (
                     <Route path="/admin/documentazione" element={<AdminDocumentation />} />
                     <Route path="/admin/access-logs" element={<AdminAccessLogs />} />
                     <Route path="/admin/landing-pages" element={<AdminLandingPages />} />
+                    <Route path="/admin/impostazioni" element={<AdminSiteSettings />} />
                     <Route path="/lp/:slug" element={<LandingPage />} />
                     <Route path="/insegnante" element={<TeacherDashboard />} />
                     <Route path="/insegnante/valutazioni" element={<TeacherGrading />} />

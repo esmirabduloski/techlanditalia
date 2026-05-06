@@ -48,6 +48,9 @@ export function Footer() {
     fetchCourses();
   }, []);
 
+  const { value: lavoraVisible } = useSiteSetting<boolean>('lavora_con_noi_visible', true);
+  const aziendaLinks = buildAziendaLinks(lavoraVisible);
+
   return (
     <footer className="bg-foreground text-background" role="contentinfo">
       <div className="tech-container py-16 px-6 md:px-8">

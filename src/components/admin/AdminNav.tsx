@@ -44,6 +44,7 @@ const navItems: NavItem[] = [
   { to: '/admin/documentazione', label: 'Docs', icon: BookText },
   { to: '/admin/landing-pages', label: 'Landing', icon: Megaphone },
   { to: '/admin/access-logs', label: 'Sicurezza', icon: Shield },
+  { to: '/admin/impostazioni', label: 'Impostazioni', icon: Settings },
 ];
 
 export function AdminNav() {

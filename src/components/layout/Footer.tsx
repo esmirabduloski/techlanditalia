@@ -2,14 +2,16 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Facebook, Instagram, Linkedin, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useSiteSetting } from "@/hooks/useSiteSetting";
+
+const buildAziendaLinks = (lavoraVisible: boolean) => [
+  { label: "Chi Siamo", href: "/chi-siamo", title: "Scopri la scuola di coding TECHLAND" },
+  { label: "Blog Coding Bambini", href: "/blog", title: "Articoli e guide sulla programmazione per bambini" },
+  ...(lavoraVisible ? [{ label: "Lavora con noi", href: "/lavora-con-noi", title: "Lavora come insegnante di coding" }] : []),
+  { label: "Contattaci", href: "/contatti", title: "Contatta TECHLAND per informazioni" },
+];
 
 const footerLinks = {
-  azienda: [
-    { label: "Chi Siamo", href: "/chi-siamo", title: "Scopri la scuola di coding TECHLAND" },
-    { label: "Blog Coding Bambini", href: "/blog", title: "Articoli e guide sulla programmazione per bambini" },
-    { label: "Lavora con noi", href: "/lavora-con-noi", title: "Lavora come insegnante di coding" },
-    { label: "Contattaci", href: "/contatti", title: "Contatta TECHLAND per informazioni" },
-  ],
   supporto: [
     { label: "FAQ Corsi Coding", href: "/faq", title: "Domande frequenti sui corsi di programmazione" },
     { label: "Prenota Lezione Gratuita", href: "/prenota", title: "Prenota una lezione di prova gratuita" },

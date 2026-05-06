@@ -25,7 +25,7 @@ const Privacy = lazy(() => import("./pages/Privacy"));
 const Termini = lazy(() => import("./pages/Termini"));
 const Cookie = lazy(() => import("./pages/Cookie"));
 const Contatti = lazy(() => import("./pages/Contatti"));
-const LavoraConNoi = lazy(() => import("./pages/LavoraConNoi"));
+const LavoraConNoi = lazy(() => import("./pages/LavoraConNoiGuard"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));

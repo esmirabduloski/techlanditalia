@@ -77,6 +77,7 @@ const Leaderboard = lazy(() => import("./pages/area-riservata/Leaderboard"));
 const Accessibilita = lazy(() => import("./pages/Accessibilita"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const AdminLandingPages = lazy(() => import("./pages/admin/AdminLandingPages"));
+const AdminSiteSettings = lazy(() => import("./pages/admin/AdminSiteSettings"));
 
 const queryClient = new QueryClient();
 

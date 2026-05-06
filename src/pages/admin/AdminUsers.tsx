@@ -134,6 +134,78 @@ export default function AdminUsers() {
   const [assignChildrenDialog, setAssignChildrenDialog] = useState<{ open: boolean; parentId: string; parentName: string }>({ open: false, parentId: '', parentName: '' });
   const [selectedChildrenToAssign, setSelectedChildrenToAssign] = useState<string[]>([]);
   const [balanceDialog, setBalanceDialog] = useState<{ open: boolean; userId: string; userName: string; balance: number }>({ open: false, userId: '', userName: '', balance: 0 });
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [createForm, setCreateForm] = useState<{
+    role: 'parent' | 'teacher';
+    fullName: string;
+    email: string;
+    password: string;
+    childName: string;
+    childUsername: string;
+    courseId: string;
+  }>({ role: 'parent', fullName: '', email: '', password: '', childName: '', childUsername: '', courseId: 'none' });
+  const [creatingUser, setCreatingUser] = useState(false);
+
+  const generatePassword = () => {
+    const chars = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let pwd = '';
+    for (let i = 0; i < 10; i++) pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+    setCreateForm(prev => ({ ...prev, password: pwd }));
+  };
+
+  const handleCreateUser = async () => {
+    const { role, fullName, email, password, childName, childUsername, courseId } = createForm;
+    if (!fullName.trim() || !email.trim() || !password) {
+      toast({ variant: 'destructive', title: 'Campi mancanti', description: 'Compila nome, email e password.' });
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      toast({ variant: 'destructive', title: 'Email non valida', description: 'Inserisci una email valida.' });
+      return;
+    }
+    if (password.length < 6) {
+      toast({ variant: 'destructive', title: 'Password troppo corta', description: 'Almeno 6 caratteri.' });
+      return;
+    }
+    if (role === 'parent') {
+      if (!childName.trim() || !childUsername.trim()) {
+        toast({ variant: 'destructive', title: 'Dati figlio mancanti', description: 'Inserisci nome e username del figlio.' });
+        return;
+      }
+      if (!/^[a-zA-Z0-9_]+$/.test(childUsername.trim())) {
+        toast({ variant: 'destructive', title: 'Username non valido', description: 'Solo lettere, numeri e underscore.' });
+        return;
+      }
+    }
+    setCreatingUser(true);
+    try {
+      const body: Record<string, string | undefined> = {
+        role,
+        email: email.trim().toLowerCase(),
+        password,
+        fullName: fullName.trim(),
+      };
+      if (role === 'parent') {
+        body.childName = childName.trim();
+        body.childUsername = childUsername.trim();
+        body.courseId = courseId !== 'none' ? courseId : undefined;
+      }
+      const { data, error } = await supabase.functions.invoke('admin-create-user', { body });
+      if (error || data?.error) {
+        toast({ variant: 'destructive', title: 'Errore', description: data?.error || error?.message || "Impossibile creare l'account" });
+        return;
+      }
+      toast({ title: 'Account creato!', description: role === 'parent' ? 'Genitore + figlio creati con successo.' : 'Insegnante creato con successo.' });
+      setCreateDialogOpen(false);
+      setCreateForm({ role: 'parent', fullName: '', email: '', password: '', childName: '', childUsername: '', courseId: 'none' });
+      fetchData();
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'Errore', description: 'Si è verificato un errore.' });
+    } finally {
+      setCreatingUser(false);
+    }
+  };
+
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();

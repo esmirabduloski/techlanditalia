@@ -134,6 +134,78 @@ export default function AdminUsers() {
   const [assignChildrenDialog, setAssignChildrenDialog] = useState<{ open: boolean; parentId: string; parentName: string }>({ open: false, parentId: '', parentName: '' });
   const [selectedChildrenToAssign, setSelectedChildrenToAssign] = useState<string[]>([]);
   const [balanceDialog, setBalanceDialog] = useState<{ open: boolean; userId: string; userName: string; balance: number }>({ open: false, userId: '', userName: '', balance: 0 });
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [createForm, setCreateForm] = useState<{
+    role: 'parent' | 'teacher';
+    fullName: string;
+    email: string;
+    password: string;
+    childName: string;
+    childUsername: string;
+    courseId: string;
+  }>({ role: 'parent', fullName: '', email: '', password: '', childName: '', childUsername: '', courseId: 'none' });
+  const [creatingUser, setCreatingUser] = useState(false);
+
+  const generatePassword = () => {
+    const chars = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let pwd = '';
+    for (let i = 0; i < 10; i++) pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+    setCreateForm(prev => ({ ...prev, password: pwd }));
+  };
+
+  const handleCreateUser = async () => {
+    const { role, fullName, email, password, childName, childUsername, courseId } = createForm;
+    if (!fullName.trim() || !email.trim() || !password) {
+      toast({ variant: 'destructive', title: 'Campi mancanti', description: 'Compila nome, email e password.' });
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      toast({ variant: 'destructive', title: 'Email non valida', description: 'Inserisci una email valida.' });
+      return;
+    }
+    if (password.length < 6) {
+      toast({ variant: 'destructive', title: 'Password troppo corta', description: 'Almeno 6 caratteri.' });
+      return;
+    }
+    if (role === 'parent') {
+      if (!childName.trim() || !childUsername.trim()) {
+        toast({ variant: 'destructive', title: 'Dati figlio mancanti', description: 'Inserisci nome e username del figlio.' });
+        return;
+      }
+      if (!/^[a-zA-Z0-9_]+$/.test(childUsername.trim())) {
+        toast({ variant: 'destructive', title: 'Username non valido', description: 'Solo lettere, numeri e underscore.' });
+        return;
+      }
+    }
+    setCreatingUser(true);
+    try {
+      const body: Record<string, string | undefined> = {
+        role,
+        email: email.trim().toLowerCase(),
+        password,
+        fullName: fullName.trim(),
+      };
+      if (role === 'parent') {
+        body.childName = childName.trim();
+        body.childUsername = childUsername.trim();
+        body.courseId = courseId !== 'none' ? courseId : undefined;
+      }
+      const { data, error } = await supabase.functions.invoke('admin-create-user', { body });
+      if (error || data?.error) {
+        toast({ variant: 'destructive', title: 'Errore', description: data?.error || error?.message || "Impossibile creare l'account" });
+        return;
+      }
+      toast({ title: 'Account creato!', description: role === 'parent' ? 'Genitore + figlio creati con successo.' : 'Insegnante creato con successo.' });
+      setCreateDialogOpen(false);
+      setCreateForm({ role: 'parent', fullName: '', email: '', password: '', childName: '', childUsername: '', courseId: 'none' });
+      fetchData();
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'Errore', description: 'Si è verificato un errore.' });
+    } finally {
+      setCreatingUser(false);
+    }
+  };
+
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -752,7 +824,7 @@ export default function AdminUsers() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold">Gestione Utenti</h1>
             <p className="text-muted-foreground mt-1">
@@ -762,6 +834,10 @@ export default function AdminUsers() {
               }
             </p>
           </div>
+          <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
+            <UserPlus className="w-4 h-4" />
+            Crea utente
+          </Button>
         </div>
 
         {/* Search and Filter */}
@@ -1595,6 +1671,103 @@ export default function AdminUsers() {
         currentBalance={balanceDialog.balance}
         onBalanceUpdated={fetchData}
       />
+
+      {/* Create User Dialog */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Crea nuovo utente</DialogTitle>
+            <DialogDescription>
+              Crea un account per un genitore (con figlio) oppure per un insegnante. Verrà inviata una email di benvenuto.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label>Tipo account</Label>
+              <Select value={createForm.role} onValueChange={(v) => setCreateForm(prev => ({ ...prev, role: v as 'parent' | 'teacher' }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="parent">Genitore + Figlio</SelectItem>
+                  <SelectItem value="teacher">Insegnante</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Nome completo {createForm.role === 'parent' ? 'genitore' : 'insegnante'}</Label>
+              <Input
+                value={createForm.fullName}
+                onChange={(e) => setCreateForm(prev => ({ ...prev, fullName: e.target.value }))}
+                placeholder="Mario Rossi"
+              />
+            </div>
+            <div>
+              <Label>Email</Label>
+              <Input
+                type="email"
+                value={createForm.email}
+                onChange={(e) => setCreateForm(prev => ({ ...prev, email: e.target.value }))}
+                placeholder="email@esempio.it"
+              />
+            </div>
+            <div>
+              <Label>Password (min. 6 caratteri)</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={createForm.password}
+                  onChange={(e) => setCreateForm(prev => ({ ...prev, password: e.target.value }))}
+                  placeholder="Password"
+                />
+                <Button type="button" variant="outline" onClick={generatePassword}>Genera</Button>
+              </div>
+            </div>
+
+            {createForm.role === 'parent' && (
+              <div className="border-t pt-4">
+                <h4 className="font-semibold text-sm mb-3">Dati del figlio</h4>
+                <div className="space-y-4">
+                  <div>
+                    <Label>Nome del figlio</Label>
+                    <Input
+                      value={createForm.childName}
+                      onChange={(e) => setCreateForm(prev => ({ ...prev, childName: e.target.value }))}
+                      placeholder="Luca Rossi"
+                    />
+                  </div>
+                  <div>
+                    <Label>Username del figlio (per il login)</Label>
+                    <Input
+                      value={createForm.childUsername}
+                      onChange={(e) => setCreateForm(prev => ({ ...prev, childUsername: e.target.value }))}
+                      placeholder="lucarossi"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Solo lettere, numeri e underscore.</p>
+                  </div>
+                  <div>
+                    <Label>Corso da assegnare (opzionale)</Label>
+                    <Select value={createForm.courseId} onValueChange={(v) => setCreateForm(prev => ({ ...prev, courseId: v }))}>
+                      <SelectTrigger><SelectValue placeholder="Nessun corso" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Nessun corso</SelectItem>
+                        {courses.map(c => (
+                          <SelectItem key={c.id} value={c.id}>{c.emoji} {c.title}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateDialogOpen(false)} disabled={creatingUser}>
+              Annulla
+            </Button>
+            <Button onClick={handleCreateUser} disabled={creatingUser}>
+              {creatingUser ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Creazione...</> : 'Crea utente'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
     </div>
   );

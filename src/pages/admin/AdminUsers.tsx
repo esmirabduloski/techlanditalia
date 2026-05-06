@@ -752,7 +752,7 @@ export default function AdminUsers() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold">Gestione Utenti</h1>
             <p className="text-muted-foreground mt-1">
@@ -762,6 +762,10 @@ export default function AdminUsers() {
               }
             </p>
           </div>
+          <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
+            <UserPlus className="w-4 h-4" />
+            Crea utente
+          </Button>
         </div>
 
         {/* Search and Filter */}

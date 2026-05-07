@@ -101,15 +101,17 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    const { email, fullName, role, childName, childUsername }: WelcomeEmailRequest = await req.json();
+    const { email, fullName, role, childName, childUsername, password }: WelcomeEmailRequest = await req.json();
 
     console.log(`Sending welcome email to ${email} (${role})`);
 
     const safeFullName = escapeHtml(fullName || '');
     const safeChildName = escapeHtml(childName || '');
     const safeChildUsername = escapeHtml(childUsername || '');
+    const safeEmail = escapeHtml(email || '');
+    const safePassword = escapeHtml(password || '');
 
-    const htmlContent = getParentEmailTemplate(safeFullName, safeChildName, safeChildUsername);
+    const htmlContent = getParentEmailTemplate(safeFullName, safeChildName, safeChildUsername, safeEmail, safePassword);
     const subject = "Benvenuto in TECHLAND - Account creato con successo";
 
     const emailResponse = await resend.emails.send({

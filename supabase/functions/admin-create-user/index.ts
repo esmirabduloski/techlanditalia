@@ -201,6 +201,7 @@ serve(async (req) => {
         email: email.trim().toLowerCase(),
         fullName: fullName.trim(),
         role: userRole,
+        password,
       };
       if (role === "parent" && childName && childUsername) {
         welcomeBody.childName = childName.trim();

@@ -207,6 +207,23 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
     [lessons]
   );
 
+  // Map: courseId -> id of next unlocked lesson (today or first future)
+  const nextUnlockedByCourse = useMemo(() => {
+    const map = new Map<string, string>();
+    const sorted = [...lessons].sort(
+      (a, b) => new Date(a.lesson_date).getTime() - new Date(b.lesson_date).getTime()
+    );
+    for (const l of sorted) {
+      const courseId = l.group.course.id;
+      if (map.has(courseId)) continue;
+      const date = new Date(l.lesson_date);
+      if (isToday(date) || isFuture(date)) {
+        map.set(courseId, l.id);
+      }
+    }
+    return map;
+  }, [lessons]);
+
   if (isLoading) {
     return (
       <Card>
@@ -333,6 +350,8 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
               const realTitle = lesson.realLessonTitle || lesson.lesson_title;
               const courseId = lesson.group.course.id;
               const hasLessonMaterial = existingLessons.has(`${courseId}_${lesson.lesson_number}`);
+              const isUnlocked = nextUnlockedByCourse.get(courseId) === lesson.id;
+              const isClickable = hasLessonMaterial && isUnlocked;
               
               return (
                 <div
@@ -342,10 +361,12 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
                     isTodayLesson && "bg-primary/10 border-primary",
                     isPastLesson && "bg-muted/50 border-muted",
                     isFuture(date) && !isTodayLesson && "bg-card border-border hover:border-primary/50",
-                    hasLessonMaterial && "cursor-pointer hover:shadow-sm"
+                    isClickable && "cursor-pointer hover:shadow-sm",
+                    !isClickable && hasLessonMaterial && "opacity-60 cursor-not-allowed"
                   )}
+                  title={!isClickable && hasLessonMaterial ? "Lezione bloccata: disponibile solo la prossima lezione del corso" : undefined}
                   onClick={() => {
-                    if (hasLessonMaterial) {
+                    if (isClickable) {
                       navigate(`/area-riservata/corso/${courseId}/lezione/${lesson.lesson_number}`);
                     }
                   }}
@@ -404,10 +425,16 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
                         </span>
                       )}
                       {hasLessonMaterial ? (
-                        <span className="text-[10px] text-primary flex items-center gap-1 font-medium">
-                          <BookOpen className="w-3 h-3" />
-                          Vai alla lezione
-                        </span>
+                        isClickable ? (
+                          <span className="text-[10px] text-primary flex items-center gap-1 font-medium">
+                            <BookOpen className="w-3 h-3" />
+                            Vai alla lezione
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-muted-foreground flex items-center gap-1 font-medium">
+                            🔒 Bloccata
+                          </span>
+                        )
                       ) : (
                         <span className="text-[10px] text-muted-foreground italic">
                           Materiale non disponibile

@@ -207,6 +207,23 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
     [lessons]
   );
 
+  // Map: courseId -> id of next unlocked lesson (today or first future)
+  const nextUnlockedByCourse = useMemo(() => {
+    const map = new Map<string, string>();
+    const sorted = [...lessons].sort(
+      (a, b) => new Date(a.lesson_date).getTime() - new Date(b.lesson_date).getTime()
+    );
+    for (const l of sorted) {
+      const courseId = l.group.course.id;
+      if (map.has(courseId)) continue;
+      const date = new Date(l.lesson_date);
+      if (isToday(date) || isFuture(date)) {
+        map.set(courseId, l.id);
+      }
+    }
+    return map;
+  }, [lessons]);
+
   if (isLoading) {
     return (
       <Card>

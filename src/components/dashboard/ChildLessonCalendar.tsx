@@ -229,6 +229,18 @@ export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupI
     );
   }
 
+  // Determine the next upcoming lesson per course (only one unlocked)
+  const nextUnlockedByCourse = new Map<string, string>();
+  const sortedByDate = [...lessons].sort(
+    (a, b) => new Date(a.lesson_date).getTime() - new Date(b.lesson_date).getTime()
+  );
+  for (const l of sortedByDate) {
+    const d = new Date(l.lesson_date);
+    if ((isToday(d) || isFuture(d)) && !nextUnlockedByCourse.has(l.group.course.id)) {
+      nextUnlockedByCourse.set(l.group.course.id, l.id);
+    }
+  }
+
   // Group lessons by course
   const lessonsByCourse = lessons.reduce((acc, lesson) => {
     const courseTitle = lesson.group.course.title;
@@ -288,22 +300,25 @@ export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupI
                     const isTodayLesson = isToday(date);
                     const courseId = lesson.group.course.id;
                     const hasLessonMaterial = existingLessons.has(`${courseId}_${lesson.lesson_number}`);
-                    
+                    const isUnlocked = nextUnlockedByCourse.get(courseId) === lesson.id;
+                    const isClickable = hasLessonMaterial && isUnlocked;
+
                     return (
                       <div
                         key={lesson.id}
                         className={cn(
-                          "p-2 rounded-lg border text-center transition-colors",
+                          "p-2 rounded-lg border text-center transition-colors relative",
                           isTodayLesson && "bg-primary/10 border-primary",
                           isPastLesson && "bg-muted/50 border-muted",
-                          isFuture(date) && !isTodayLesson && "bg-card border-border hover:border-primary/50",
-                          hasLessonMaterial && "cursor-pointer hover:shadow-sm"
+                          isFuture(date) && !isTodayLesson && "bg-card border-border",
+                          isClickable ? "cursor-pointer hover:shadow-sm hover:border-primary/50" : "opacity-60 cursor-not-allowed"
                         )}
                         onClick={() => {
-                          if (hasLessonMaterial) {
+                          if (isClickable) {
                             navigate(`/area-riservata/corso/${courseId}/lezione/${lesson.lesson_number}`);
                           }
                         }}
+                        title={!isUnlocked ? "Lezione bloccata — disponibile solo per la prossima lezione in arrivo" : undefined}
                       >
                         <p className={cn(
                           "text-sm font-semibold",
@@ -318,14 +333,18 @@ export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupI
                             <span>· {(lesson.lesson_time || lesson.group.lesson_time)?.substring(0, 5)}</span>
                           )}
                         </p>
-                        {hasLessonMaterial ? (
+                        {isClickable ? (
                           <p className="text-[10px] text-primary flex items-center justify-center gap-1 mt-1 font-medium">
                             <BookOpen className="w-3 h-3" />
                             Vai alla lezione
                           </p>
-                        ) : (
+                        ) : !hasLessonMaterial ? (
                           <p className="text-[10px] text-muted-foreground mt-1 italic">
                             Link alla lezione non disponibile
+                          </p>
+                        ) : (
+                          <p className="text-[10px] text-muted-foreground mt-1 italic">
+                            🔒 Bloccata
                           </p>
                         )}
                         {isTodayLesson && (

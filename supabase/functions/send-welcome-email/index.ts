@@ -23,6 +23,7 @@ interface WelcomeEmailRequest {
   role: "student" | "parent";
   childName?: string;
   childUsername?: string;
+  password?: string;
 }
 
 const getParentEmailTemplate = (

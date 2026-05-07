@@ -29,7 +29,9 @@ interface WelcomeEmailRequest {
 const getParentEmailTemplate = (
   fullName: string, 
   childName: string, 
-  childUsername: string
+  childUsername: string,
+  email: string,
+  password: string
 ) => `
 <!DOCTYPE html>
 <html lang="it">
@@ -42,6 +44,12 @@ const getParentEmailTemplate = (
         <h2 style="color:#1f2937;margin:0 0 20px;font-size:22px;">Gentile ${fullName},</h2>
         <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 20px;">La ringraziamo per aver scelto TECHLAND per l'educazione tecnologica di ${childName}.</p>
         <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 20px;">Il suo account e quello di ${childName} sono stati creati con successo.</p>
+        <div style="background:linear-gradient(135deg,#eff6ff 0%,#f0f9ff 100%);border-radius:12px;padding:24px;margin:30px 0;border:2px solid #3b82f6;">
+          <h3 style="color:#1d4ed8;margin:0 0 15px;font-size:18px;">🔑 Le sue credenziali di accesso (genitore):</h3>
+          <p style="color:#1f2937;font-size:16px;font-weight:bold;margin:8px 0;"><strong>Email:</strong> ${email}</p>
+          <p style="color:#1f2937;font-size:16px;font-weight:bold;margin:8px 0;"><strong>Password:</strong> ${password}</p>
+          <p style="color:#6b7280;font-size:13px;margin:12px 0 0;font-style:italic;">Le consigliamo di conservare queste credenziali in un luogo sicuro e di cambiare la password dopo il primo accesso.</p>
+        </div>
         <div style="background:linear-gradient(135deg,#f0fdf4 0%,#ecfeff 100%);border-radius:12px;padding:24px;margin:30px 0;border:2px solid #10b981;">
           <h3 style="color:#059669;margin:0 0 15px;font-size:18px;">🔐 Accesso di ${childName}:</h3>
           <p style="color:#1f2937;font-size:16px;font-weight:bold;margin:8px 0;"><strong>Nome utente:</strong> ${childUsername}</p>

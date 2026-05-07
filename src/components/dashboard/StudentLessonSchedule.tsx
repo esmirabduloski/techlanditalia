@@ -350,6 +350,8 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
               const realTitle = lesson.realLessonTitle || lesson.lesson_title;
               const courseId = lesson.group.course.id;
               const hasLessonMaterial = existingLessons.has(`${courseId}_${lesson.lesson_number}`);
+              const isUnlocked = nextUnlockedByCourse.get(courseId) === lesson.id;
+              const isClickable = hasLessonMaterial && isUnlocked;
               
               return (
                 <div
@@ -359,10 +361,12 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
                     isTodayLesson && "bg-primary/10 border-primary",
                     isPastLesson && "bg-muted/50 border-muted",
                     isFuture(date) && !isTodayLesson && "bg-card border-border hover:border-primary/50",
-                    hasLessonMaterial && "cursor-pointer hover:shadow-sm"
+                    isClickable && "cursor-pointer hover:shadow-sm",
+                    !isClickable && hasLessonMaterial && "opacity-60 cursor-not-allowed"
                   )}
+                  title={!isClickable && hasLessonMaterial ? "Lezione bloccata: disponibile solo la prossima lezione del corso" : undefined}
                   onClick={() => {
-                    if (hasLessonMaterial) {
+                    if (isClickable) {
                       navigate(`/area-riservata/corso/${courseId}/lezione/${lesson.lesson_number}`);
                     }
                   }}

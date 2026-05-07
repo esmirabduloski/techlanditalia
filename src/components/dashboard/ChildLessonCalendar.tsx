@@ -229,6 +229,18 @@ export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupI
     );
   }
 
+  // Determine the next upcoming lesson per course (only one unlocked)
+  const nextUnlockedByCourse = new Map<string, string>();
+  const sortedByDate = [...lessons].sort(
+    (a, b) => new Date(a.lesson_date).getTime() - new Date(b.lesson_date).getTime()
+  );
+  for (const l of sortedByDate) {
+    const d = new Date(l.lesson_date);
+    if ((isToday(d) || isFuture(d)) && !nextUnlockedByCourse.has(l.group.course.id)) {
+      nextUnlockedByCourse.set(l.group.course.id, l.id);
+    }
+  }
+
   // Group lessons by course
   const lessonsByCourse = lessons.reduce((acc, lesson) => {
     const courseTitle = lesson.group.course.title;

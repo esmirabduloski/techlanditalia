@@ -167,13 +167,20 @@ export default function AdminUsers() {
       toast({ variant: 'destructive', title: 'Password troppo corta', description: 'Almeno 6 caratteri.' });
       return;
     }
+    let sanitizedChildUsername = '';
     if (role === 'parent') {
       if (!childName.trim() || !childUsername.trim()) {
         toast({ variant: 'destructive', title: 'Dati figlio mancanti', description: 'Inserisci nome e username del figlio.' });
         return;
       }
-      if (!/^[a-zA-Z0-9_]+$/.test(childUsername.trim())) {
-        toast({ variant: 'destructive', title: 'Username non valido', description: 'Solo lettere, numeri e underscore.' });
+      // Auto-sanitize: lowercase + replace spaces and invalid chars with underscores
+      sanitizedChildUsername = childUsername
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, '_')
+        .replace(/[^a-z0-9_]/g, '');
+      if (!sanitizedChildUsername) {
+        toast({ variant: 'destructive', title: 'Username non valido', description: 'Lo username deve contenere almeno una lettera o un numero.' });
         return;
       }
     }
@@ -187,7 +194,7 @@ export default function AdminUsers() {
       };
       if (role === 'parent') {
         body.childName = childName.trim();
-        body.childUsername = childUsername.trim();
+        body.childUsername = sanitizedChildUsername;
         body.courseId = courseId !== 'none' ? courseId : undefined;
       }
       const { data, error } = await supabase.functions.invoke('admin-create-user', { body });

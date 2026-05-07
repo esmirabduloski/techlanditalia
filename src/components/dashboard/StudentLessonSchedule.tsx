@@ -425,10 +425,16 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
                         </span>
                       )}
                       {hasLessonMaterial ? (
-                        <span className="text-[10px] text-primary flex items-center gap-1 font-medium">
-                          <BookOpen className="w-3 h-3" />
-                          Vai alla lezione
-                        </span>
+                        isClickable ? (
+                          <span className="text-[10px] text-primary flex items-center gap-1 font-medium">
+                            <BookOpen className="w-3 h-3" />
+                            Vai alla lezione
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-muted-foreground flex items-center gap-1 font-medium">
+                            🔒 Bloccata
+                          </span>
+                        )
                       ) : (
                         <span className="text-[10px] text-muted-foreground italic">
                           Materiale non disponibile

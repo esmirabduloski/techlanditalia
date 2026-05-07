@@ -194,7 +194,7 @@ export default function AdminUsers() {
       };
       if (role === 'parent') {
         body.childName = childName.trim();
-        body.childUsername = childUsername.trim();
+        body.childUsername = sanitizedChildUsername;
         body.courseId = courseId !== 'none' ? courseId : undefined;
       }
       const { data, error } = await supabase.functions.invoke('admin-create-user', { body });

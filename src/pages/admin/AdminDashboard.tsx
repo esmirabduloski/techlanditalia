@@ -177,7 +177,17 @@ export default function AdminDashboard() {
             <p className="text-muted-foreground mt-1">{posts.length} articoli totali</p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <Badge variant="secondary">UTC oggi: {new Date().toISOString().slice(0, 10)}</Badge>
-              <Badge variant="outline">Locale: {new Date().toLocaleString('it-IT')}</Badge>
+              {(() => {
+                const lastScheduled = posts
+                  .filter(p => p.scheduled_publish_at)
+                  .map(p => new Date(p.scheduled_publish_at!).getTime())
+                  .sort((a, b) => b - a)[0];
+                return (
+                  <Badge variant="outline">
+                    Data ultima programmazione: {lastScheduled ? new Date(lastScheduled).toLocaleDateString('it-IT') : '—'}
+                  </Badge>
+                );
+              })()}
             </div>
           </div>
           <Button asChild>

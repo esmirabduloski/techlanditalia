@@ -454,7 +454,7 @@ export default function AdminCourses() {
               </DialogDescription>
             </DialogHeader>
             
-            <CourseFormFields />
+            <CourseFormFields formData={formData} setFormData={setFormData} />
 
             <DialogFooter>
               <Button 

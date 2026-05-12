@@ -33,6 +33,13 @@ interface DetailContent {
   topics?: string[];
   projectExamples?: ProjectExample[];
   modules?: Module[];
+  sectionsVisibility?: {
+    longDescription?: boolean;
+    topics?: boolean;
+    projectExamples?: boolean;
+    modules?: boolean;
+    howItWorks?: boolean;
+  };
   seo?: {
     title?: string;
     description?: string;

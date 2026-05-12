@@ -1528,6 +1528,7 @@ export default function CorsoDettaglio() {
           </div>
         </div>
       </section>
+      )}
 
       {/* CTA with Form */}
       <section className="py-20 md:py-32 bg-gradient-hero">

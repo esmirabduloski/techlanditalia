@@ -196,6 +196,8 @@ function CourseFormFields({ formData, setFormData }: CourseFormFieldsProps) {
     </div>
   );
 }
+
+export default function AdminCourses() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);

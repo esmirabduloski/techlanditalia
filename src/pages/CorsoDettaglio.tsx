@@ -1352,6 +1352,7 @@ export default function CorsoDettaglio() {
       </section>
 
       {/* Long description */}
+      {showSection("longDescription") && (
       <section className="tech-section">
         <div className="tech-container">
           <div className="max-w-4xl">
@@ -1362,6 +1363,7 @@ export default function CorsoDettaglio() {
           </div>
         </div>
       </section>
+      )}
 
       {/* Topics */}
       <section className="tech-section bg-muted/30">

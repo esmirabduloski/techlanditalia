@@ -1466,8 +1466,10 @@ export default function CorsoDettaglio() {
           )}
         </div>
       </section>
+      )}
 
       {/* Curriculum */}
+      {showSection("modules") && (
       <section className="tech-section bg-muted/30">
         <div className="tech-container">
           <div className="flex items-center gap-3 mb-8">

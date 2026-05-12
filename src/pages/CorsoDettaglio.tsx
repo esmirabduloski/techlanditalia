@@ -1158,7 +1158,7 @@ export default function CorsoDettaglio() {
     (async () => {
       const { data, error } = await supabase
         .from("courses")
-        .select("is_visible, detail_content")
+        .select("is_visible, detail_content, title, emoji, description, age_range, level, duration")
         .eq("slug", id)
         .maybeSingle();
       if (cancelled) return;
@@ -1167,6 +1167,14 @@ export default function CorsoDettaglio() {
         if (data.detail_content && typeof data.detail_content === "object") {
           setDbContent(data.detail_content as Record<string, any>);
         }
+        setDbCourseRow({
+          title: data.title,
+          emoji: data.emoji,
+          description: data.description,
+          age_range: data.age_range,
+          level: data.level,
+          duration: data.duration,
+        });
       }
     })();
     return () => { cancelled = true; };

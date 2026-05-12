@@ -37,7 +37,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { 
-  LogOut, Loader2, ChevronRight, Plus, Sparkles, Pencil, Trash2, User, BookOpen, GraduationCap, Eye, EyeOff
+  LogOut, Loader2, ChevronRight, Plus, Sparkles, Pencil, Trash2, User, BookOpen, GraduationCap, Eye, EyeOff, FileText
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Switch } from '@/components/ui/switch';

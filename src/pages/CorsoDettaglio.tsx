@@ -1502,8 +1502,10 @@ export default function CorsoDettaglio() {
           </div>
         </div>
       </section>
+      )}
 
       {/* How it works */}
+      {showSection("howItWorks") && (
       <section className="tech-section">
         <div className="tech-container">
           <div className="flex items-center gap-3 mb-8">

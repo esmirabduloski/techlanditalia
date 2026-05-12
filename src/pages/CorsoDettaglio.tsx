@@ -1185,6 +1185,10 @@ export default function CorsoDettaglio() {
     }
   };
 
+  if (isHidden) {
+    return <NotFound />;
+  }
+
   if (!course) {
     return (
       <Layout>

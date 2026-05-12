@@ -274,7 +274,7 @@ export default function AdminCourseContent() {
             <CardDescription>Etichette tematiche del corso.</CardDescription>
           </CardHeader>
           <CardContent>
-            <StringList label="" field="tags" placeholder="es. Scratch" />
+            {renderStringList("tags", "es. Scratch")}
           </CardContent>
         </Card>
 

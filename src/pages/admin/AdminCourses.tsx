@@ -235,15 +235,6 @@ export default function AdminCourses() {
     setIsLoading(false);
   };
 
-  const generateSlug = (title: string) => {
-    return title
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .trim();
-  };
-
   const resetForm = () => {
     setFormData(initialFormState);
     setEditingCourse(null);

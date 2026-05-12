@@ -1,5 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import NotFound from "./NotFound";
 import { useFormAntiSpam } from "@/hooks/useFormAntiSpam";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -1108,7 +1109,25 @@ export default function CorsoDettaglio() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isHidden, setIsHidden] = useState(false);
   const course = id ? coursesData[id] : null;
+
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("courses")
+        .select("is_visible")
+        .eq("slug", id)
+        .maybeSingle();
+      if (cancelled) return;
+      if (!error && data && data.is_visible === false) {
+        setIsHidden(true);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [id]);
 
   const form = useForm<TrialFormData>({
     resolver: zodResolver(trialFormSchema),
@@ -1165,6 +1184,10 @@ export default function CorsoDettaglio() {
       setIsSubmitting(false);
     }
   };
+
+  if (isHidden) {
+    return <NotFound />;
+  }
 
   if (!course) {
     return (

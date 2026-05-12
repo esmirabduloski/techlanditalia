@@ -139,22 +139,14 @@ export default function AdminCourseContent() {
 
   if (!course) return null;
 
-  // ---------- helpers for list editing ----------
-  const StringList = ({
-    label,
-    field,
-    placeholder,
-    rows,
-  }: {
-    label: string;
-    field: "tags" | "topics";
-    placeholder: string;
-    rows?: number;
-  }) => {
+  const renderStringList = (
+    field: "tags" | "topics",
+    placeholder: string,
+    rows?: number,
+  ) => {
     const items = content[field] ?? [];
     return (
       <div className="space-y-2">
-        <Label>{label}</Label>
         {items.map((v, i) => (
           <div key={i} className="flex gap-2">
             {rows ? (
@@ -282,7 +274,7 @@ export default function AdminCourseContent() {
             <CardDescription>Etichette tematiche del corso.</CardDescription>
           </CardHeader>
           <CardContent>
-            <StringList label="" field="tags" placeholder="es. Scratch" />
+            {renderStringList("tags", "es. Scratch")}
           </CardContent>
         </Card>
 
@@ -293,7 +285,7 @@ export default function AdminCourseContent() {
             <CardDescription>Elenco puntato mostrato nella sezione "Argomenti trattati".</CardDescription>
           </CardHeader>
           <CardContent>
-            <StringList label="" field="topics" placeholder="Cosa imparerà l'alunno..." rows={2} />
+            {renderStringList("topics", "Cosa imparerà l'alunno...", 2)}
           </CardContent>
         </Card>
 

@@ -632,6 +632,13 @@ export default function AdminCourses() {
                       <ChevronRight className="w-4 h-4 ml-auto" />
                     </Link>
                   </Button>
+                  <Button asChild variant="outline" className="w-full">
+                    <Link to={`/admin/corsi/${course.id}/contenuto`}>
+                      <FileText className="w-4 h-4 mr-2" />
+                      Modifica contenuto pagina
+                      <ChevronRight className="w-4 h-4 ml-auto" />
+                    </Link>
+                  </Button>
                 </div>
               </CardContent>
             </Card>

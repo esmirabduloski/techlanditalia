@@ -77,7 +77,6 @@ export default function LandingPage() {
           courseTagline={courseTagline}
         />
         <LandingFeatures features={features} courseName={courseName} courseLogo={courseLogo} courseTagline={courseTagline} />
-        {slug === 'scratch' && <LandingScratchProjects />}
         {courseInfo && (
           <LandingCourseInfo courseInfo={courseInfo} courseName={courseName} courseEmoji={courseEmoji} />
         )}

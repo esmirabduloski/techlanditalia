@@ -1353,7 +1353,7 @@ export default function CorsoDettaglio() {
                 <CourseEmoji emoji={course.emoji} size="xl" />
               </div>
               <div>
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-2">{getSEOTitle().replace(" | TECHLAND", "")}</h1>
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-2">{course.title}</h1>
                 <p className="text-lg text-muted-foreground">{course.description}</p>
               </div>
             </div>

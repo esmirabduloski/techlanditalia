@@ -1,0 +1,1 @@
+ALTER TABLE public.courses ADD COLUMN IF NOT EXISTS detail_content jsonb NOT NULL DEFAULT '{}'::jsonb;

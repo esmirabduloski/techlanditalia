@@ -1110,7 +1110,20 @@ export default function CorsoDettaglio() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
-  const course = id ? coursesData[id] : null;
+  const [dbContent, setDbContent] = useState<Record<string, any>>({});
+  const baseCourse = id ? coursesData[id] : null;
+  // Merge DB overrides over hardcoded fallback. Empty/missing fields fall back.
+  const course = baseCourse
+    ? {
+        ...baseCourse,
+        ...Object.fromEntries(
+          Object.entries(dbContent).filter(([_, v]) =>
+            Array.isArray(v) ? v.length > 0 : v !== null && v !== undefined && v !== ""
+          )
+        ),
+      } as typeof baseCourse
+    : null;
+  const seoOverrides = (dbContent?.seo ?? {}) as { title?: string; description?: string; keywords?: string };
 
   useEffect(() => {
     if (!id) return;
@@ -1118,12 +1131,15 @@ export default function CorsoDettaglio() {
     (async () => {
       const { data, error } = await supabase
         .from("courses")
-        .select("is_visible")
+        .select("is_visible, detail_content")
         .eq("slug", id)
         .maybeSingle();
       if (cancelled) return;
-      if (!error && data && data.is_visible === false) {
-        setIsHidden(true);
+      if (!error && data) {
+        if (data.is_visible === false) setIsHidden(true);
+        if (data.detail_content && typeof data.detail_content === "object") {
+          setDbContent(data.detail_content as Record<string, any>);
+        }
       }
     })();
     return () => { cancelled = true; };
@@ -1221,7 +1237,7 @@ export default function CorsoDettaglio() {
       "python-pro-ai": "Corso Python Avanzato e AI per Ragazzi Online (14-18 anni)",
       "python-ai": "Corso Python e Intelligenza Artificiale per Ragazzi Online (14-18 anni)"
     };
-    return titleMap[id!] || `Corso ${course?.title} per Bambini Online`;
+    return seoOverrides.title || titleMap[id!] || `Corso ${course?.title} per Bambini Online`;
   };
 
   const getSEODescription = () => {
@@ -1239,7 +1255,7 @@ export default function CorsoDettaglio() {
       "python-pro-ai": "Corso Python avanzato e AI per ragazzi online (14-18 anni). Machine learning, NumPy, Pandas, deep learning. Lezione di prova gratis!",
       "python-ai": "Corso Python e Intelligenza Artificiale per ragazzi online (14-18 anni). Machine learning con scikit-learn, AI e LLM. Lezione di prova gratis!"
     };
-    return descMap[id!] || course?.description || "";
+    return seoOverrides.description || descMap[id!] || course?.description || "";
   };
 
   const courseSchema = course ? generateCourseSchema({
@@ -1272,7 +1288,7 @@ export default function CorsoDettaglio() {
       "python-pro-ai": "corso python avanzato, intelligenza artificiale ragazzi, machine learning bambini, python ai corso, corso ai per ragazzi",
       "python-ai": "corso python ai, intelligenza artificiale ragazzi, machine learning ragazzi, python ai corso, corso ai per ragazzi, deep learning ragazzi",
     };
-    return keywordsMap[id!] || `corso ${course?.title}, corsi per bambini, corsi di programmazione per bambini, ${course?.title} online`;
+    return seoOverrides.keywords || keywordsMap[id!] || `corso ${course?.title}, corsi per bambini, corsi di programmazione per bambini, ${course?.title} online`;
   };
 
   return (

@@ -517,6 +517,7 @@ export type Database = {
           age_range: string | null
           created_at: string
           description: string | null
+          detail_content: Json
           duration: string | null
           emoji: string
           id: string
@@ -530,6 +531,7 @@ export type Database = {
           age_range?: string | null
           created_at?: string
           description?: string | null
+          detail_content?: Json
           duration?: string | null
           emoji?: string
           id?: string
@@ -543,6 +545,7 @@ export type Database = {
           age_range?: string | null
           created_at?: string
           description?: string | null
+          detail_content?: Json
           duration?: string | null
           emoji?: string
           id?: string

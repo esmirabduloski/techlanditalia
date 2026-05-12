@@ -37,7 +37,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { 
-  LogOut, Loader2, ChevronRight, Plus, Sparkles, Pencil, Trash2, User, BookOpen, GraduationCap, Eye, EyeOff
+  LogOut, Loader2, ChevronRight, Plus, Sparkles, Pencil, Trash2, User, BookOpen, GraduationCap, Eye, EyeOff, FileText
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Switch } from '@/components/ui/switch';
@@ -629,6 +629,13 @@ export default function AdminCourses() {
                     <Link to={`/admin/corsi/${course.id}/lezioni`}>
                       <BookOpen className="w-4 h-4 mr-2" />
                       Gestisci Lezioni
+                      <ChevronRight className="w-4 h-4 ml-auto" />
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" className="w-full">
+                    <Link to={`/admin/corsi/${course.id}/contenuto`}>
+                      <FileText className="w-4 h-4 mr-2" />
+                      Modifica contenuto pagina
                       <ChevronRight className="w-4 h-4 ml-auto" />
                     </Link>
                   </Button>

@@ -36,6 +36,7 @@ const AdminContatti = lazy(() => import("./pages/admin/AdminContatti"));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
 const AdminStats = lazy(() => import("./pages/admin/AdminStats"));
 const AdminCourses = lazy(() => import("./pages/admin/AdminCourses"));
+const AdminCourseContent = lazy(() => import("./pages/admin/AdminCourseContent"));
 const AdminLessons = lazy(() => import("./pages/admin/AdminLessons"));
 const LessonEditor = lazy(() => import("./pages/admin/LessonEditor"));
 const AdminTasks = lazy(() => import("./pages/admin/AdminTasks"));
@@ -133,6 +134,7 @@ const App = () => (
                     <Route path="/admin" element={<AdminDashboard />} />
                     <Route path="/admin/corsi" element={<AdminCourses />} />
                     <Route path="/admin/corsi/:courseId/lezioni" element={<AdminLessons />} />
+                    <Route path="/admin/corsi/:courseId/contenuto" element={<AdminCourseContent />} />
                     <Route path="/admin/corsi/:courseId/lezioni/nuova" element={<LessonEditor />} />
                     <Route path="/admin/corsi/:courseId/lezioni/:lessonId/modifica" element={<LessonEditor />} />
                     <Route path="/admin/corsi/:courseId/lezioni/:lessonId/task" element={<AdminTasks />} />

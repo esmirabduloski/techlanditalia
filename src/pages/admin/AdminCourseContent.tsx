@@ -139,22 +139,14 @@ export default function AdminCourseContent() {
 
   if (!course) return null;
 
-  // ---------- helpers for list editing ----------
-  const StringList = ({
-    label,
-    field,
-    placeholder,
-    rows,
-  }: {
-    label: string;
-    field: "tags" | "topics";
-    placeholder: string;
-    rows?: number;
-  }) => {
+  const renderStringList = (
+    field: "tags" | "topics",
+    placeholder: string,
+    rows?: number,
+  ) => {
     const items = content[field] ?? [];
     return (
       <div className="space-y-2">
-        <Label>{label}</Label>
         {items.map((v, i) => (
           <div key={i} className="flex gap-2">
             {rows ? (

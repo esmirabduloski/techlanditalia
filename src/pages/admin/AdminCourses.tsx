@@ -86,6 +86,117 @@ const initialFormState: CourseFormData = {
   duration: '',
 };
 
+function generateSlug(title: string) {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim();
+}
+
+interface CourseFormFieldsProps {
+  formData: CourseFormData;
+  setFormData: React.Dispatch<React.SetStateAction<CourseFormData>>;
+}
+
+function CourseFormFields({ formData, setFormData }: CourseFormFieldsProps) {
+  return (
+    <div className="grid gap-4 py-4">
+      {/* Emoji Selection */}
+      <div className="space-y-2">
+        <Label>Emoji del corso</Label>
+        <div className="grid grid-cols-10 gap-2 p-3 border rounded-lg bg-muted/30">
+          {EMOJI_OPTIONS.map((emoji) => (
+            <button
+              key={emoji}
+              type="button"
+              onClick={() => setFormData((prev) => ({ ...prev, emoji }))}
+              className={`text-2xl p-1 rounded-lg transition-all hover:bg-primary/10 ${
+                formData.emoji === emoji 
+                  ? 'bg-primary/20 ring-2 ring-primary ring-offset-2' 
+                  : ''
+              }`}
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Title */}
+      <div className="space-y-2">
+        <Label htmlFor="title">Titolo *</Label>
+        <Input
+          id="title"
+          placeholder="es. Corso Python per Principianti"
+          value={formData.title}
+          onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
+        />
+        {formData.title && (
+          <p className="text-xs text-muted-foreground">
+            Slug: {generateSlug(formData.title)}
+          </p>
+        )}
+      </div>
+
+      {/* Level */}
+      <div className="space-y-2">
+        <Label htmlFor="level">Livello</Label>
+        <Select
+          value={formData.level}
+          onValueChange={(value) => setFormData((prev) => ({ ...prev, level: value }))}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Seleziona livello" />
+          </SelectTrigger>
+          <SelectContent>
+            {LEVEL_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Age Range & Duration */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="age_range">Fascia d'età</Label>
+          <Input
+            id="age_range"
+            placeholder="es. 8-12 anni"
+            value={formData.age_range}
+            onChange={(e) => setFormData((prev) => ({ ...prev, age_range: e.target.value }))}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="duration">Durata</Label>
+          <Input
+            id="duration"
+            placeholder="es. 3 mesi"
+            value={formData.duration}
+            onChange={(e) => setFormData((prev) => ({ ...prev, duration: e.target.value }))}
+          />
+        </div>
+      </div>
+
+      {/* Description */}
+      <div className="space-y-2">
+        <Label htmlFor="description">Descrizione</Label>
+        <Textarea
+          id="description"
+          placeholder="Descrivi brevemente il corso..."
+          rows={3}
+          value={formData.description}
+          onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function AdminCourses() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -122,15 +233,6 @@ export default function AdminCourses() {
       setCourses(data);
     }
     setIsLoading(false);
-  };
-
-  const generateSlug = (title: string) => {
-    return title
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .trim();
   };
 
   const resetForm = () => {
@@ -306,100 +408,6 @@ export default function AdminCourses() {
     navigate('/admin/login');
   };
 
-  const CourseFormFields = () => (
-    <div className="grid gap-4 py-4">
-      {/* Emoji Selection */}
-      <div className="space-y-2">
-        <Label>Emoji del corso</Label>
-        <div className="grid grid-cols-10 gap-2 p-3 border rounded-lg bg-muted/30">
-          {EMOJI_OPTIONS.map((emoji) => (
-            <button
-              key={emoji}
-              type="button"
-              onClick={() => setFormData({ ...formData, emoji })}
-              className={`text-2xl p-1 rounded-lg transition-all hover:bg-primary/10 ${
-                formData.emoji === emoji 
-                  ? 'bg-primary/20 ring-2 ring-primary ring-offset-2' 
-                  : ''
-              }`}
-            >
-              {emoji}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Title */}
-      <div className="space-y-2">
-        <Label htmlFor="title">Titolo *</Label>
-        <Input
-          id="title"
-          placeholder="es. Corso Python per Principianti"
-          value={formData.title}
-          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-        />
-        {formData.title && (
-          <p className="text-xs text-muted-foreground">
-            Slug: {generateSlug(formData.title)}
-          </p>
-        )}
-      </div>
-
-      {/* Level */}
-      <div className="space-y-2">
-        <Label htmlFor="level">Livello</Label>
-        <Select
-          value={formData.level}
-          onValueChange={(value) => setFormData({ ...formData, level: value })}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Seleziona livello" />
-          </SelectTrigger>
-          <SelectContent>
-            {LEVEL_OPTIONS.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Age Range & Duration */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="age_range">Fascia d'età</Label>
-          <Input
-            id="age_range"
-            placeholder="es. 8-12 anni"
-            value={formData.age_range}
-            onChange={(e) => setFormData({ ...formData, age_range: e.target.value })}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="duration">Durata</Label>
-          <Input
-            id="duration"
-            placeholder="es. 3 mesi"
-            value={formData.duration}
-            onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-          />
-        </div>
-      </div>
-
-      {/* Description */}
-      <div className="space-y-2">
-        <Label htmlFor="description">Descrizione</Label>
-        <Textarea
-          id="description"
-          placeholder="Descrivi brevemente il corso..."
-          rows={3}
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-        />
-      </div>
-    </div>
-  );
 
   if (authLoading || isLoading) {
     return (
@@ -435,7 +443,7 @@ export default function AdminCourses() {
 
         {/* Create Dialog */}
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-primary" />
@@ -446,7 +454,7 @@ export default function AdminCourses() {
               </DialogDescription>
             </DialogHeader>
             
-            <CourseFormFields />
+            <CourseFormFields formData={formData} setFormData={setFormData} />
 
             <DialogFooter>
               <Button 
@@ -478,7 +486,7 @@ export default function AdminCourses() {
 
         {/* Edit Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Pencil className="w-5 h-5 text-primary" />
@@ -489,7 +497,7 @@ export default function AdminCourses() {
               </DialogDescription>
             </DialogHeader>
             
-            <CourseFormFields />
+            <CourseFormFields formData={formData} setFormData={setFormData} />
 
             <DialogFooter className="flex-col sm:flex-row gap-2">
               <Button 

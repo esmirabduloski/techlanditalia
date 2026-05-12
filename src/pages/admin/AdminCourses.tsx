@@ -497,7 +497,7 @@ export default function AdminCourses() {
               </DialogDescription>
             </DialogHeader>
             
-            <CourseFormFields />
+            <CourseFormFields formData={formData} setFormData={setFormData} />
 
             <DialogFooter className="flex-col sm:flex-row gap-2">
               <Button 

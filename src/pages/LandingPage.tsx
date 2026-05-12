@@ -10,7 +10,7 @@ import { LandingUrgency } from '@/components/landing/LandingUrgency';
 import { LandingCTA } from '@/components/landing/LandingCTA';
 import { LandingCourseInfo } from '@/components/landing/LandingCourseInfo';
 import { LandingFooter } from '@/components/landing/LandingFooter';
-import { LandingScratchProjects } from '@/components/landing/LandingScratchProjects';
+
 
 export default function LandingPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -77,7 +77,6 @@ export default function LandingPage() {
           courseTagline={courseTagline}
         />
         <LandingFeatures features={features} courseName={courseName} courseLogo={courseLogo} courseTagline={courseTagline} />
-        {slug === 'scratch' && <LandingScratchProjects />}
         {courseInfo && (
           <LandingCourseInfo courseInfo={courseInfo} courseName={courseName} courseEmoji={courseEmoji} />
         )}

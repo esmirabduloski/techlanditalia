@@ -1386,6 +1386,7 @@ export default function CorsoDettaglio() {
       )}
 
       {/* Project examples */}
+      {showSection("projectExamples") && (
       <section className="tech-section">
         <div className="tech-container">
           <div className="flex items-center gap-3 mb-8">

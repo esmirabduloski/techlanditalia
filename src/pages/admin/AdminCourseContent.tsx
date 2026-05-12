@@ -238,6 +238,40 @@ export default function AdminCourseContent() {
           </Button>
         </div>
 
+        {/* Section visibility */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Sezioni visibili</CardTitle>
+            <CardDescription>
+              Mostra o nascondi le sezioni della pagina pubblica del corso. Disattivando uno switch, la sezione corrispondente non sarà più visibile sul sito.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {[
+              { key: "longDescription" as const, label: "Informazioni sul corso" },
+              { key: "topics" as const, label: "Argomenti trattati" },
+              { key: "projectExamples" as const, label: "Esempi di progetto" },
+              { key: "modules" as const, label: "Curriculum del corso" },
+              { key: "howItWorks" as const, label: "Come funzionano le lezioni" },
+            ].map(({ key, label }) => {
+              const v = content.sectionsVisibility ?? {};
+              const checked = v[key] !== false;
+              return (
+                <div key={key} className="flex items-center justify-between border rounded-lg px-4 py-3 bg-background">
+                  <Label htmlFor={`vis-${key}`} className="cursor-pointer">{label}</Label>
+                  <Switch
+                    id={`vis-${key}`}
+                    checked={checked}
+                    onCheckedChange={(val) =>
+                      update("sectionsVisibility", { ...v, [key]: val })
+                    }
+                  />
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+
         {/* Hero info overrides */}
         <Card>
           <CardHeader>

@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import { Loader2, Plus, Trash2, ArrowLeft, Save, ChevronUp, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { useAutoBackup } from "@/hooks/useAutoBackup";
@@ -33,6 +34,13 @@ interface DetailContent {
   topics?: string[];
   projectExamples?: ProjectExample[];
   modules?: Module[];
+  sectionsVisibility?: {
+    longDescription?: boolean;
+    topics?: boolean;
+    projectExamples?: boolean;
+    modules?: boolean;
+    howItWorks?: boolean;
+  };
   seo?: {
     title?: string;
     description?: string;
@@ -114,6 +122,7 @@ export default function AdminCourseContent() {
       if (content.seo.keywords?.trim()) seo.keywords = content.seo.keywords.trim();
       if (Object.keys(seo).length) cleaned.seo = seo;
     }
+    if (content.sectionsVisibility) cleaned.sectionsVisibility = content.sectionsVisibility;
 
     const { error } = await supabase
       .from("courses")
@@ -228,6 +237,40 @@ export default function AdminCourseContent() {
             Salva modifiche
           </Button>
         </div>
+
+        {/* Section visibility */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Sezioni visibili</CardTitle>
+            <CardDescription>
+              Mostra o nascondi le sezioni della pagina pubblica del corso. Disattivando uno switch, la sezione corrispondente non sarà più visibile sul sito.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {[
+              { key: "longDescription" as const, label: "Informazioni sul corso" },
+              { key: "topics" as const, label: "Argomenti trattati" },
+              { key: "projectExamples" as const, label: "Esempi di progetto" },
+              { key: "modules" as const, label: "Curriculum del corso" },
+              { key: "howItWorks" as const, label: "Come funzionano le lezioni" },
+            ].map(({ key, label }) => {
+              const v = content.sectionsVisibility ?? {};
+              const checked = v[key] !== false;
+              return (
+                <div key={key} className="flex items-center justify-between border rounded-lg px-4 py-3 bg-background">
+                  <Label htmlFor={`vis-${key}`} className="cursor-pointer">{label}</Label>
+                  <Switch
+                    id={`vis-${key}`}
+                    checked={checked}
+                    onCheckedChange={(val) =>
+                      update("sectionsVisibility", { ...v, [key]: val })
+                    }
+                  />
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
 
         {/* Hero info overrides */}
         <Card>

@@ -1124,6 +1124,14 @@ export default function CorsoDettaglio() {
       } as typeof baseCourse
     : null;
   const seoOverrides = (dbContent?.seo ?? {}) as { title?: string; description?: string; keywords?: string };
+  const visibility = (dbContent?.sectionsVisibility ?? {}) as {
+    longDescription?: boolean;
+    topics?: boolean;
+    projectExamples?: boolean;
+    modules?: boolean;
+    howItWorks?: boolean;
+  };
+  const showSection = (key: keyof typeof visibility) => visibility[key] !== false;
 
   useEffect(() => {
     if (!id) return;
@@ -1344,6 +1352,7 @@ export default function CorsoDettaglio() {
       </section>
 
       {/* Long description */}
+      {showSection("longDescription") && (
       <section className="tech-section">
         <div className="tech-container">
           <div className="max-w-4xl">
@@ -1354,8 +1363,10 @@ export default function CorsoDettaglio() {
           </div>
         </div>
       </section>
+      )}
 
       {/* Topics */}
+      {showSection("topics") && (
       <section className="tech-section bg-muted/30">
         <div className="tech-container">
           <div className="flex items-center gap-3 mb-8">
@@ -1372,8 +1383,10 @@ export default function CorsoDettaglio() {
           </div>
         </div>
       </section>
+      )}
 
       {/* Project examples */}
+      {showSection("projectExamples") && (
       <section className="tech-section">
         <div className="tech-container">
           <div className="flex items-center gap-3 mb-8">
@@ -1453,8 +1466,10 @@ export default function CorsoDettaglio() {
           )}
         </div>
       </section>
+      )}
 
       {/* Curriculum */}
+      {showSection("modules") && (
       <section className="tech-section bg-muted/30">
         <div className="tech-container">
           <div className="flex items-center gap-3 mb-8">
@@ -1487,8 +1502,10 @@ export default function CorsoDettaglio() {
           </div>
         </div>
       </section>
+      )}
 
       {/* How it works */}
+      {showSection("howItWorks") && (
       <section className="tech-section">
         <div className="tech-container">
           <div className="flex items-center gap-3 mb-8">
@@ -1511,6 +1528,7 @@ export default function CorsoDettaglio() {
           </div>
         </div>
       </section>
+      )}
 
       {/* CTA with Form */}
       <section className="py-20 md:py-32 bg-gradient-hero">

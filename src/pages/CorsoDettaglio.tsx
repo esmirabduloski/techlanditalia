@@ -1124,6 +1124,14 @@ export default function CorsoDettaglio() {
       } as typeof baseCourse
     : null;
   const seoOverrides = (dbContent?.seo ?? {}) as { title?: string; description?: string; keywords?: string };
+  const visibility = (dbContent?.sectionsVisibility ?? {}) as {
+    longDescription?: boolean;
+    topics?: boolean;
+    projectExamples?: boolean;
+    modules?: boolean;
+    howItWorks?: boolean;
+  };
+  const showSection = (key: keyof typeof visibility) => visibility[key] !== false;
 
   useEffect(() => {
     if (!id) return;

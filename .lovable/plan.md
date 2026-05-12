@@ -1,37 +1,53 @@
-## Problema
+## Obiettivo
 
-Mi sono sbagliato nella risposta precedente: la pagina `/admin/utenti` **non ha** alcun bottone per creare nuovi utenti. La edge function `admin-create-user` esiste già e funziona, ma è chiamata solo da `AuthPage.tsx` (vecchio form di registrazione). Mancava completamente la UI nel pannello admin.
+Permettere all'admin di modificare TUTTI i contenuti della pagina dettaglio di ogni corso (`/corsi/scratch`, `/corsi/roblox`, ecc.) direttamente dal pannello admin → Corsi, cliccando l'icona matita.
 
-## Cosa farò
+## Cosa potrai modificare
 
-### 1. Aggiungere bottone "Crea utente" in `src/pages/admin/AdminUsers.tsx`
-- Bottone primario "+ Crea utente" in alto a destra, vicino alla barra di ricerca
-- All'apertura mostra un Dialog con form
+Per ogni corso, dal pannello admin:
 
-### 2. Dialog di creazione (riusa logica già presente in AuthPage)
-Campi del form:
-- **Tipo account**: select tra "Genitore + Figlio" oppure "Insegnante"
-- **Nome completo** (genitore o insegnante)
-- **Email**
-- **Password** (con generatore password casuale opzionale)
+**Sezioni Hero / informazioni base** (già presenti nel DB):
+- Titolo, emoji, descrizione breve, fascia d'età, livello, durata
 
-Se tipo = Genitore, mostra anche:
-- **Nome del figlio**
-- **Username del figlio** (per login senza email)
-- **Corso da assegnare** (select dalla tabella `courses`, opzionale)
+**Sezioni di contenuto** (oggi hardcoded, da spostare in DB):
+- "Informazioni sul corso" (descrizione lunga)
+- Tag visualizzati
+- "Argomenti trattati" (lista bullet)
+- "Esempi di progetto" (lista titoli, oppure progetti Scratch embed per il corso Scratch)
+- "Curriculum del corso" → moduli, ognuno con titolo, lezioni e risultato
 
-### 3. Submit
-- Chiama `supabase.functions.invoke("admin-create-user", { body })` (già implementata)
-- Mostra toast di successo/errore
-- Ricarica la lista utenti
-- Chiude il dialog
+**SEO**:
+- SEO title, meta description, keywords (override per singolo corso)
 
-### 4. Validazioni client
-- Email valida, password ≥ 6 caratteri
-- Per genitore: nome figlio e username obbligatori
-- Username figlio: solo lettere/numeri/underscore
+## Approccio tecnico
 
-## File modificati
-- `src/pages/admin/AdminUsers.tsx` — aggiunta bottone + Dialog + handler
+1. **DB** — aggiungere alla tabella `courses` una colonna `detail_content jsonb` (default `{}`) che ospita tutti i campi sopra. Nessun nuovo JOIN, nessuna nuova tabella.
+   - Backfill: popolare `detail_content` di ogni corso esistente con i dati attualmente hardcoded in `src/pages/CorsoDettaglio.tsx`, così la pagina pubblica continua a mostrare gli stessi contenuti subito dopo la migrazione.
 
-Nessuna modifica al backend: la edge function `admin-create-user` è già pronta e invia anche email di benvenuto automaticamente.
+2. **Pagina pubblica** (`src/pages/CorsoDettaglio.tsx`) — leggere `detail_content` dal DB e usarlo come fonte verità. I dati hardcoded restano solo come fallback di sicurezza per slug non ancora migrati.
+
+3. **Admin Corsi** (`src/pages/admin/AdminCourses.tsx`) — il dialog "Modifica corso" attuale resta per i campi base. Aggiungere un secondo bottone "Modifica contenuto pagina" su ogni card corso che apre un editor dedicato (nuova pagina `src/pages/admin/AdminCourseContent.tsx` su rotta `/admin/corsi/:id/contenuto`) con form strutturato:
+   - Textarea per descrizione lunga
+   - Lista editabile di tag (aggiungi/rimuovi)
+   - Lista editabile di argomenti trattati
+   - Lista editabile di esempi di progetto (titolo + opzionale ID Scratch per embed)
+   - Editor moduli: aggiungi/rimuovi modulo, ogni modulo ha titolo, lista lezioni riordinabili, campo risultato
+   - Sezione SEO (title, description, keywords)
+   - Auto-backup pre-salvataggio (riusa `useAutoBackup` già esistente)
+
+4. **Sicurezza** — nessun cambio RLS necessario: la policy `Admins can manage courses` copre già update di `detail_content`.
+
+## File modificati / creati
+
+- migration: aggiunta colonna `detail_content jsonb` + backfill di tutti i corsi esistenti
+- modificato: `src/pages/CorsoDettaglio.tsx` (legge dal DB, fallback sui dati hardcoded)
+- modificato: `src/pages/admin/AdminCourses.tsx` (bottone "Modifica contenuto pagina" su ogni card)
+- nuovo: `src/pages/admin/AdminCourseContent.tsx` (editor dedicato)
+- modificato: `src/App.tsx` (rotta `/admin/corsi/:id/contenuto`)
+
+## Cosa NON cambia
+
+- Le rotte pubbliche `/corsi/<slug>` restano identiche
+- La gestione lezioni (`/admin/corsi/:id/lezioni`) resta separata e invariata
+- Il form "Prenota una lezione" in fondo alla pagina resta invariato
+- Layout e stile della pagina pubblica restano identici

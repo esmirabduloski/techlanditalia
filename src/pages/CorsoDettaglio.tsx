@@ -1,5 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import NotFound from "./NotFound";
 import { useFormAntiSpam } from "@/hooks/useFormAntiSpam";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

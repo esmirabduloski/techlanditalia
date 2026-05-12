@@ -285,7 +285,7 @@ export default function AdminCourseContent() {
             <CardDescription>Elenco puntato mostrato nella sezione "Argomenti trattati".</CardDescription>
           </CardHeader>
           <CardContent>
-            <StringList label="" field="topics" placeholder="Cosa imparerà l'alunno..." rows={2} />
+            {renderStringList("topics", "Cosa imparerà l'alunno...", 2)}
           </CardContent>
         </Card>
 

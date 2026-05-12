@@ -122,6 +122,7 @@ export default function AdminCourseContent() {
       if (content.seo.keywords?.trim()) seo.keywords = content.seo.keywords.trim();
       if (Object.keys(seo).length) cleaned.seo = seo;
     }
+    if (content.sectionsVisibility) cleaned.sectionsVisibility = content.sectionsVisibility;
 
     const { error } = await supabase
       .from("courses")

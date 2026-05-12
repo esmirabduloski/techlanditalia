@@ -1366,6 +1366,7 @@ export default function CorsoDettaglio() {
       )}
 
       {/* Topics */}
+      {showSection("topics") && (
       <section className="tech-section bg-muted/30">
         <div className="tech-container">
           <div className="flex items-center gap-3 mb-8">
@@ -1382,6 +1383,7 @@ export default function CorsoDettaglio() {
           </div>
         </div>
       </section>
+      )}
 
       {/* Project examples */}
       <section className="tech-section">

@@ -1110,7 +1110,20 @@ export default function CorsoDettaglio() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
-  const course = id ? coursesData[id] : null;
+  const [dbContent, setDbContent] = useState<Record<string, any>>({});
+  const baseCourse = id ? coursesData[id] : null;
+  // Merge DB overrides over hardcoded fallback. Empty/missing fields fall back.
+  const course = baseCourse
+    ? {
+        ...baseCourse,
+        ...Object.fromEntries(
+          Object.entries(dbContent).filter(([_, v]) =>
+            Array.isArray(v) ? v.length > 0 : v !== null && v !== undefined && v !== ""
+          )
+        ),
+      } as typeof baseCourse
+    : null;
+  const seoOverrides = (dbContent?.seo ?? {}) as { title?: string; description?: string; keywords?: string };
 
   useEffect(() => {
     if (!id) return;
@@ -1118,12 +1131,15 @@ export default function CorsoDettaglio() {
     (async () => {
       const { data, error } = await supabase
         .from("courses")
-        .select("is_visible")
+        .select("is_visible, detail_content")
         .eq("slug", id)
         .maybeSingle();
       if (cancelled) return;
-      if (!error && data && data.is_visible === false) {
-        setIsHidden(true);
+      if (!error && data) {
+        if (data.is_visible === false) setIsHidden(true);
+        if (data.detail_content && typeof data.detail_content === "object") {
+          setDbContent(data.detail_content as Record<string, any>);
+        }
       }
     })();
     return () => { cancelled = true; };

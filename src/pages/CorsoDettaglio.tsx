@@ -1111,8 +1111,27 @@ export default function CorsoDettaglio() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
   const [dbContent, setDbContent] = useState<Record<string, any>>({});
-  const baseCourse = id ? coursesData[id] : null;
-  // Merge DB overrides over hardcoded fallback. Empty/missing fields fall back.
+  const [dbCourseRow, setDbCourseRow] = useState<{
+    title?: string; emoji?: string; description?: string | null;
+    age_range?: string | null; level?: string | null; duration?: string | null;
+  } | null>(null);
+  const hardcodedBase = id ? coursesData[id] : null;
+  // Synthesize a base course from the DB row when there is no hardcoded entry
+  // (e.g. admin renamed the course → new slug not present in coursesData).
+  const baseCourse = hardcodedBase ?? (dbCourseRow ? {
+    title: dbCourseRow.title ?? "",
+    emoji: dbCourseRow.emoji ?? "📚",
+    description: dbCourseRow.description ?? "",
+    longDescription: "",
+    tags: [] as string[],
+    age: dbCourseRow.age_range ?? "",
+    level: dbCourseRow.level ?? "",
+    duration: dbCourseRow.duration ?? "",
+    topics: [] as string[],
+    projectExamples: [] as { title: string; image?: string }[],
+    modules: [] as { title: string; lessons: string[]; result: string }[],
+  } : null);
+  // Merge DB overrides over base. Empty/missing fields fall back.
   const course = baseCourse
     ? {
         ...baseCourse,

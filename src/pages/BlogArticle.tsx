@@ -143,6 +143,13 @@ export default function BlogArticle() {
         canonical={`https://techlanditalia.it/blog/${post.slug}`}
         keywords={`${post.category.toLowerCase()}, programmazione bambini, coding ragazzi, ${post.title.toLowerCase().split(' ').slice(0, 3).join(', ')}`}
         ogImage={post.featured_image || undefined}
+        ogType="article"
+        article={{
+          publishedTime: post.created_at,
+          modifiedTime: post.created_at,
+          author: "TECHLAND",
+          section: post.category,
+        }}
         schemaData={articleSchema}
       />
       

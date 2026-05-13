@@ -127,8 +127,8 @@ export default function Corsi() {
   return (
     <Layout>
       <SEOHead
-        title="Corsi di Programmazione per Bambini e Ragazzi Online | Scratch, Roblox, Minecraft, Python | TECHLAND"
-        description="Tutti i corsi di coding e programmazione per bambini e ragazzi online: Scratch, Roblox, Minecraft, Python, Web Development, informatica. Prima lezione gratis!"
+        title="TECHLAND | Corsi di Coding Online per Bambini e Ragazzi"
+        description="Tutti i corsi di coding online per bambini e ragazzi: Scratch, Roblox, Minecraft, Python, Web Development. Prima lezione gratis!"
         canonical="/corsi"
         keywords="corsi online per bambini, corsi per bambini, corsi di informatica per bambini, corsi di coding, corsi di scratch, corsi di minecraft, corsi di roblox, corsi di python per ragazzi, corsi di programmazione per bambini, corsi web development bambini, corsi coding online, scuola coding bambini, lezioni programmazione online ragazzi"
         structuredData={[breadcrumbSchema, coursesListSchema]}

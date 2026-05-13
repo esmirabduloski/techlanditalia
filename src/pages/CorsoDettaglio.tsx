@@ -1259,20 +1259,20 @@ export default function CorsoDettaglio() {
   // SEO meta data generation
   const getSEOTitle = () => {
     const titleMap: Record<string, string> = {
-      "minecraft-education": "Corso Minecraft per Bambini Online (8-9 anni) | Coding con MakeCode",
-      "abc-creativita-digitale": "Corso Creatività Digitale per Bambini Online (5-7 anni)",
-      "abc-informatica": "Corso di Informatica per Bambini Online (5-7 anni)",
-      "scratch": "Corso Scratch per Bambini Online (8-10 anni) | Programmazione Visiva",
-      "roblox-base": "Corso Roblox per Bambini Online (8-12 anni) | Sviluppo Giochi",
-      "roblox": "Corso Roblox per Bambini Online (10-14 anni) | Crea Videogiochi con Lua",
-      "roblox-avanzato": "Corso Roblox Avanzato per Ragazzi Online (10-14 anni) | Lua Avanzato",
-      "web-development": "Corso Web Development per Ragazzi Online (12-16 anni) | HTML CSS JavaScript",
-      "unity": "Corso Unity per Ragazzi Online (13-18 anni) | Sviluppo Giochi 3D",
-      "python-base": "Corso Python per Ragazzi Online (12-16 anni) | Programmazione Python da Zero",
-      "python-pro-ai": "Corso Python Avanzato e AI per Ragazzi Online (14-18 anni)",
-      "python-ai": "Corso Python e Intelligenza Artificiale per Ragazzi Online (14-18 anni)"
+      "minecraft-education": "TECHLAND | Corso Minecraft per Bambini (8-9 anni)",
+      "abc-creativita-digitale": "TECHLAND | Creatività Digitale Bambini (5-7 anni)",
+      "abc-informatica": "TECHLAND | Corso Informatica Bambini (5-7 anni)",
+      "scratch": "TECHLAND | Corso Scratch Bambini (8-10 anni)",
+      "roblox-base": "TECHLAND | Corso Roblox Bambini (8-12 anni)",
+      "roblox": "TECHLAND | Corso Roblox Online (10-14 anni)",
+      "roblox-avanzato": "TECHLAND | Roblox Avanzato Ragazzi (10-14 anni)",
+      "web-development": "TECHLAND | Corso Web Development (12-16 anni)",
+      "unity": "TECHLAND | Corso Unity Ragazzi (13-18 anni)",
+      "python-base": "TECHLAND | Corso Python Ragazzi (12-16 anni)",
+      "python-pro-ai": "TECHLAND | Python Avanzato e AI (14-18 anni)",
+      "python-ai": "TECHLAND | Python e AI Ragazzi (14-18 anni)"
     };
-    return seoOverrides.title || titleMap[id!] || `Corso ${course?.title} per Bambini Online`;
+    return seoOverrides.title || titleMap[id!] || `TECHLAND | Corso ${course?.title}`;
   };
 
   const getSEODescription = () => {

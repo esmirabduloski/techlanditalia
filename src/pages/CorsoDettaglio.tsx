@@ -678,6 +678,7 @@ export default function CorsoDettaglio() {
           duration: data.duration,
         });
       }
+      setDbLoaded(true);
     })();
     return () => { cancelled = true; };
   }, [id]);

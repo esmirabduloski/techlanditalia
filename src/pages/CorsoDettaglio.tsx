@@ -801,15 +801,10 @@ export default function CorsoDettaglio() {
 
   const getSEOKeywords = () => {
     const keywordsMap: Record<string, string> = {
-      "minecraft-education": "corso minecraft, corsi di minecraft, corso minecraft bambini, minecraft education, programmazione minecraft, makecode bambini, coding minecraft, corsi minecraft online",
-      "abc-creativita-digitale": "corso creatività digitale bambini, design digitale bambini, canva bambini, animazione bambini, corsi per bambini 5 anni",
-      "abc-informatica": "corso informatica bambini, corsi di informatica per bambini, informatica per bambini, scratch junior, programmazione a blocchi, alfabetizzazione digitale bambini",
-      "scratch": "corso scratch, corsi di scratch, corso scratch bambini, programmazione visiva bambini, scratch coding, creare giochi scratch, animazioni scratch, scratch online",
       "roblox-base": "corso roblox, corsi di roblox, corso roblox bambini, roblox studio bambini, creare giochi roblox, programmare roblox, lua bambini, roblox online",
       "roblox": "corso roblox, corsi di roblox, corso roblox bambini, roblox studio, creare giochi roblox, lua, roblox online ragazzi",
       "roblox-avanzato": "corso roblox avanzato, roblox scripting, game design ragazzi, lua avanzato, sviluppo giochi roblox, corsi di roblox avanzato",
       "web-development": "corso web development ragazzi, corsi web design bambini, html css javascript per ragazzi, creare siti web, programmazione web ragazzi",
-      "unity": "corso unity ragazzi, sviluppo giochi 3d, c# ragazzi, game development unity, creare videogiochi",
       "python-base": "corso python ragazzi, corsi di python per ragazzi, python base, imparare python, programmazione python bambini, corso python online",
       "python-pro-ai": "corso python avanzato, intelligenza artificiale ragazzi, machine learning bambini, python ai corso, corso ai per ragazzi",
       "python-ai": "corso python ai, intelligenza artificiale ragazzi, machine learning ragazzi, python ai corso, corso ai per ragazzi, deep learning ragazzi",

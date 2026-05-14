@@ -760,15 +760,10 @@ export default function CorsoDettaglio() {
   // SEO meta data generation
   const getSEOTitle = () => {
     const titleMap: Record<string, string> = {
-      "minecraft-education": "TECHLAND | Corso Minecraft per Bambini (8-9 anni)",
-      "abc-creativita-digitale": "TECHLAND | Creatività Digitale Bambini (5-7 anni)",
-      "abc-informatica": "TECHLAND | Corso Informatica Bambini (5-7 anni)",
-      "scratch": "TECHLAND | Corso Scratch Bambini (8-10 anni)",
       "roblox-base": "TECHLAND | Corso Roblox Bambini (8-12 anni)",
       "roblox": "TECHLAND | Corso Roblox Online (10-14 anni)",
       "roblox-avanzato": "TECHLAND | Roblox Avanzato Ragazzi (10-14 anni)",
       "web-development": "TECHLAND | Corso Web Development (12-16 anni)",
-      "unity": "TECHLAND | Corso Unity Ragazzi (13-18 anni)",
       "python-base": "TECHLAND | Corso Python Ragazzi (12-16 anni)",
       "python-pro-ai": "TECHLAND | Python Avanzato e AI (14-18 anni)",
       "python-ai": "TECHLAND | Python e AI Ragazzi (14-18 anni)"

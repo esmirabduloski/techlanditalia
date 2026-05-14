@@ -611,6 +611,7 @@ export default function CorsoDettaglio() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
+  const [dbLoaded, setDbLoaded] = useState(false);
   const [dbContent, setDbContent] = useState<Record<string, any>>({});
   const [dbCourseRow, setDbCourseRow] = useState<{
     title?: string; emoji?: string; description?: string | null;

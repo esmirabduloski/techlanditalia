@@ -42,400 +42,6 @@ const coursesData: Record<string, {
   projectExamples: { title: string; image?: string }[];
   modules: { title: string; lessons: string[]; result: string }[];
 }> = {
-  "minecraft-education": {
-    title: "Minecraft Education",
-    emoji: "⛏️",
-    description: "Impara le basi della logica, della programmazione e dell'automazione attraverso l'amato ambiente di gioco di Minecraft Education.",
-    longDescription: "Questo corso è perfetto sia per i bambini appassionati di Minecraft che per quelli che stanno appena iniziando a esplorare questo mondo. Offre una nuova prospettiva sul gioco, collegandolo alla programmazione, alla meccanica, al design e al pensiero ingegneristico. Passo dopo passo, gli studenti acquisiranno familiarità con l'ambiente Minecraft Education, automatizzeranno una serie di processi utilizzando redstone, progetteranno fattorie avanzate e svilupperanno le proprie costruzioni e meccanismi. Attraverso la programmazione basata su blocchi in MakeCode, i bambini scriveranno semplici algoritmi, controlleranno i loro agenti e interagiranno con il mondo di gioco tramite il codice.",
-    tags: ["Minecraft", "MakeCode", "Programmazione a blocchi", "Automazione", "Redstone"],
-    age: "8-9 anni",
-    level: "Principiante",
-    duration: "40 lezioni",
-    topics: [
-      "Sviluppare una comprensione degli algoritmi e dei principi essenziali della programmazione",
-      "Imparare a utilizzare MakeCode per creare fattorie automatizzate, trappole e meccanismi",
-      "Ampliare i propri orizzonti esplorando la logica dei giochi e le interazioni",
-      "Sviluppare capacità di lavoro di squadra attraverso la costruzione collaborativa",
-      "Padroneggiare le basi della programmazione basata su blocchi",
-    ],
-    projectExamples: [
-      { title: "Fattorie automatizzate" },
-      { title: "Mini-giochi personalizzati" },
-      { title: "Città intelligente con automazione" },
-    ],
-    modules: [
-      {
-        title: "Modulo 1. Il nuovo coraggioso mondo della Pietra Verde",
-        lessons: [
-          "1. Introduzione al mondo di Minecraft. Esplorazione di Minecraft Education e MakeCode",
-          "2. Esplorazione dei comandi di movimento e mini-missione con labirinto",
-          "3. Dalle azioni semplici agli algoritmi. Apprendimento del ciclo di ripetizione",
-          "4. Costruire in squadra. Pianificare e costruire un edificio semplice",
-          "5. Lavorare con redstone per creare porte automatizzate",
-          "6. Utilizzare redstone e osservatori per costruire una fattoria complessa",
-          "7. Studiare i meccanismi in squadra per lo sviluppo della città",
-          "8. Completare la costruzione della città con MakeCode",
-        ],
-        result: "Il bambino imparerà le basi dell'algoritmizzazione, della logica dei loop e del controllo degli agenti, realizzando le prime costruzioni automatizzate.",
-      },
-      {
-        title: "Modulo 2. La Città della Luce – Costruire il Futuro insieme",
-        lessons: [
-          "9. Comprensione delle coordinate per la costruzione ad alta precisione",
-          "10. Progettazione di costruzioni su larga scala con loop annidati",
-          "11. Un progetto Agent – costruzione di un ponte sul fiume",
-          "12. Clonare oggetti per costruzioni simmetriche",
-          "13. Progettare una casa intelligente con automazione",
-          "14. Pianificare la disposizione delle strade e dei quartieri",
-          "15. Un progetto collaborativo – sviluppare il centro della città",
-          "16. Completamento del progetto finale – il 'Quartiere intelligente'",
-        ],
-        result: "Il bambino imparerà a utilizzare le coordinate e la clonazione in MakeCode per creare oggetti impressionanti e su larga scala.",
-      },
-      {
-        title: "Modulo 3. Oasi della Logica – Creare Puzzle e giochi Divertenti",
-        lessons: [
-          "17. Introduzione agli eventi e alle condizioni",
-          "18. Variabili e contatori per tenere traccia dei punteggi",
-          "19. È ora di intrappolare i mob! Programmare trappole",
-          "20. Progettazione del gioco 'Trova il pulsante'",
-          "21. Sviluppo del gioco 'Fuggi dalla lava'",
-          "22. Aggiunta di una zona di teletrasporto",
-          "23. Test e bilanciamento del gioco",
-          "24. Completare il progetto finale: 'Il mio gioco'",
-        ],
-        result: "Il bambino acquisirà comprensione di logica, istruzioni condizionali, variabili ed eventi, creando un gioco personalizzato controllato dal codice.",
-      },
-      {
-        title: "Modulo 4. Una Foresta Meccanica – Automazione dei Sistemi Viventi",
-        lessons: [
-          "25. Introduzione all'automazione – come funzionano le fattorie automatiche",
-          "26. Programmare un agente giardiniere",
-          "27. Costruire catene logiche condizionali",
-          "28. Progettare un selezionatore di risorse",
-          "29. Sviluppare una mob farm",
-          "30. Costruire un sistema di stoccaggio automatizzato",
-          "31. Manutenzione e ottimizzazione delle fattorie",
-          "32. Completamento del progetto finale: la 'fattoria intelligente'",
-        ],
-        result: "Il bambino capirà come automatizzare i processi, sviluppare un pensiero sistematico e creare circuiti complessi.",
-      },
-      {
-        title: "Modulo 5. La Fortezza del Creator – Dare Vita ai Sogni",
-        lessons: [
-          "33. Generare idee e selezionare un progetto",
-          "34. Creare un piano di progetto e assegnare i ruoli",
-          "35. Scrivere le prime righe di codice per i meccanismi base",
-          "36. Perfezionare le creazioni aggiungendo logica e automazione",
-          "37. Lavorare con le funzioni riutilizzabili",
-          "38. Gestire gli eventi per rispondere alle azioni dei giocatori",
-          "39. Aggiungere gli ultimi ritocchi e decorazioni",
-          "40. Presentare e difendere il progetto davanti alla classe",
-        ],
-        result: "Il bambino svilupperà un progetto da zero, dall'idea al codice, affinando le capacità di presentazione e la risoluzione creativa dei problemi.",
-      },
-    ],
-  },
-  "abc-creativita-digitale": {
-    title: "L'ABC della creatività digitale",
-    emoji: "🎨",
-    description: "Un corso online per bambini dai 5 ai 7 anni, incentrato sulle basi del design digitale e dell'alfabetizzazione informatica.",
-    longDescription: "FunTech Creators è un corso online per bambini dai 5 ai 7 anni, incentrato sulle basi del design digitale e dell'alfabetizzazione informatica. In esso, i bambini imparano a utilizzare editor grafici, creare biglietti di auguri, poster e semplici presentazioni. Acquisiscono padronanza di Google Docs e importanti competenze informatiche. Il corso è condotto in un formato ludico e sviluppa il pensiero creativo e logico.",
-    tags: ["Design digitale", "Creatività", "Google Docs", "Canva", "Animazione"],
-    age: "5-7 anni",
-    level: "Principiante",
-    duration: "32 lezioni",
-    topics: [
-      "Sviluppare il pensiero creativo e immaginativo degli studenti",
-      "Insegnare ad utilizzare gli strumenti di base del design digitale",
-      "Creare progetti interessanti in Canva",
-      "Imparare a lavorare con testo e immagini in Google Docs e Google Slides",
-      "Apprendere le basi dell'alfabetizzazione informatica e della sicurezza online",
-    ],
-    projectExamples: [
-      { title: "Biglietti di auguri digitali" },
-      { title: "Poster e presentazioni" },
-      { title: "Animazioni GIF e melodie" },
-    ],
-    modules: [
-      {
-        title: "Modulo 1. Scoprire il Mondo Digitale",
-        lessons: [
-          "1. L'avventura dei tasti: conoscere il mouse e la tastiera",
-          "2. I miei primi disegni: introduzione alla grafica computerizzata",
-          "3. Imparare l'animazione: creare GIF",
-          "4. Lo studio musicale: creare una melodia",
-        ],
-        result: "I bambini impareranno a conoscere il computer: useranno mouse e tastiera, creeranno i loro primi disegni digitali, animazioni GIF e melodie.",
-      },
-      {
-        title: "Modulo 2. Un'Avventura a Colorville",
-        lessons: [
-          "5. Alla ricerca di una stella perduta",
-          "6. Il festival delle forme magiche a Colorville",
-          "7. Salvare la Galleria delle Meraviglie a Colorville",
-          "8. Festeggiamenti a Colorville",
-        ],
-        result: "I bambini impareranno a utilizzare un editor grafico, a disegnare con linee e forme e a creare i loro primi disegni!",
-      },
-      {
-        title: "Modulo 3. Avventure nella valle dei dati",
-        lessons: [
-          "9. Foto fantastiche nell'Art Studio!",
-          "10. La magia del testo e i nostri fumetti!",
-          "11. Masterclass di progettazione di poster",
-          "12. Una cartolina dalla Valle dei Dati",
-        ],
-        result: "I bambini acquisiranno familiarità con la struttura dei file, impareranno cos'è Internet e creeranno fumetti, poster e cartoline digitali.",
-      },
-      {
-        title: "Modulo 4. Un'avventura nel mondo della conoscenza",
-        lessons: [
-          "13. Il viaggio attraverso i mari di Internet",
-          "14. La magia delle parole in Google Documenti",
-          "15. Un artista del testo",
-          "16. I cacciatori di conoscenza",
-        ],
-        result: "I bambini impareranno a creare e modificare documenti in Google Docs, con conoscenze sulla sicurezza in Internet.",
-      },
-      {
-        title: "Modulo 5. Laboratorio di immaginazione",
-        lessons: [
-          "17. Stimola la tua creatività con i Droodles!",
-          "18. La febbre degli adesivi a Canva",
-          "19. La routine quotidiana in immagini",
-          "20. I capolavori dei giovani maestri di Canva",
-        ],
-        result: "I bambini svilupperanno il pensiero creativo creando adesivi e progettando le loro routine in Canva!",
-      },
-      {
-        title: "Modulo 6. Cartoon Studio",
-        lessons: [
-          "21. I primi passi nel Mondo dell'Animazione",
-          "22. Disegni danzanti",
-          "23. Andiamo a una festa danzante!",
-          "24. Piccoli detective: risolvere enigmi",
-        ],
-        result: "I bambini impareranno a creare animazioni in Flipanim e a trasformarle in veri video!",
-      },
-      {
-        title: "Modulo 7. Cyber Creator",
-        lessons: [
-          "25. Primi passi in Google Presentazioni",
-          "26. Continuiamo a scrivere la nostra storia in Google Presentazioni",
-          "27. Le diapositive prendono vita!",
-          "28. Gara a squadre: Salvare TechnoTown",
-        ],
-        result: "I bambini impareranno a creare presentazioni colorate in Google Slides e rafforzeranno le conoscenze con progetti di gruppo.",
-      },
-      {
-        title: "Modulo 8. Attività creative e Modellazione 3D",
-        lessons: [
-          "29. Il Potere della Creatività: creare storie e personaggi",
-          "30. Odissea nello spazio: avventura nell'universo",
-          "31. Dare vita a un giardino con la modellazione 3D",
-          "32. Scoprire tesori in 3D",
-        ],
-        result: "I bambini impareranno a creare storie e a presentarle, con un'introduzione alla modellazione 3D!",
-      },
-    ],
-  },
-  "abc-informatica": {
-    title: "L'ABC dell'informatica",
-    emoji: "💻",
-    description: "FunTech Explorers è un corso online interattivo che introduce i bambini alle componenti del computer, alle basi della programmazione a blocchi e all'uso del PC.",
-    longDescription: "FunTech Explorers è un corso online divertente e interattivo, pensato per introdurre i bambini alle principali componenti del computer, alle basi della programmazione a blocchi e all'uso del computer. Gli studenti svilupperanno il pensiero logico e critico attraverso giochi, strumenti interattivi e progetti creativi. Il corso affronterà diversi argomenti presentati in modo non lineare, per mantenere alto l'interesse degli studenti. Sono inclusi anche esercizi supplementari di matematica, utili per sviluppare abilità di calcolo e pensiero algoritmico.",
-    tags: ["Programmazione", "Matematica", "Creazione", "Informatica di base", "Uso del computer"],
-    age: "5-7 anni",
-    level: "Principiante",
-    duration: "32 lezioni",
-    topics: [
-      "Sviluppare il pensiero creativo e la creatività",
-      "Insegnare le basi dell'alfabetizzazione digitale",
-      "Sviluppare competenze di base nella programmazione a blocchi",
-      "Padroneggiare strumenti di creatività digitale per la realizzazione di progetti",
-    ],
-    projectExamples: [
-      { title: "Progetto creativo con Scratch Junior" },
-      { title: "Gioco interattivo" },
-      { title: "Animazione musicale" },
-    ],
-    modules: [
-      {
-        title: "Modulo 1. Scoprire il Mondo Digitale",
-        lessons: [
-          "1. Conoscere il mouse e la tastiera",
-          "2. All'avventura! Imparare gli algoritmi",
-          "3. Viaggiare con un robot! Giocare con giochi di digitazione e imparare le sequenze",
-          "4. La città del futuro: affrontare sfide logiche nel nostro viaggio",
-        ],
-        result: "Grazie a questo modulo, i bambini impareranno a conoscere il computer: impareranno a usare il mouse e a digitare sulla tastiera. Inoltre, creeranno i loro primi algoritmi e risolveranno molti problemi logici.",
-      },
-      {
-        title: "Modulo 2. Un entusiasmante Viaggio nel Coding",
-        lessons: [
-          "5. Nozioni di base sulla programmazione: sequenzialità e abilità di digitazione",
-          "6. Ripetizioni divertenti e puzzle: una lezione sui cicli e sulla logica",
-          "7. Puzzle logici e piattaforma degli avventurieri",
-          "8. Il Laboratorio di Giochi. Migliora le tue abilità di digitazione!",
-        ],
-        result: "Grazie a questo modulo, i bambini continueranno i loro studi di programmazione e problemi logici. Impareranno il concetto di loop e come risolvere sequenze complesse.",
-      },
-      {
-        title: "Modulo 3. Avventure nella Valle dei Dati: la Magia del Computer",
-        lessons: [
-          "9. Little Bit e la valle dei dati",
-          "10. La grande avventura delle cartelle",
-          "11. Viaggiando attraverso il World Wide Web",
-          "12. Il detective dei dati",
-        ],
-        result: "Grazie a questo modulo, i bambini acquisiranno familiarità con la struttura dei file di un computer, impareranno cos'è Internet e come esplorarlo con i browser web.",
-      },
-      {
-        title: "Modulo 4. Techno-creators: costruire, cercare, creare!",
-        lessons: [
-          "13. Una festa da ballo con Scratch Junior",
-          "14. Costruire una fattoria!",
-          "15. Andare nello spazio con un razzo!",
-          "16. Le quattro stagioni",
-        ],
-        result: "I bambini creano un cartone animato in Scratch Junior imparando la piattaforma. Rafforzeranno le loro abilità di programmazione a blocchi attraverso la creazione di progetti.",
-      },
-      {
-        title: "Modulo 5. Cyber Sorcery: Un'avventura nel Mondo della Tecnologia!",
-        lessons: [
-          "17. Il mondo sommerso della programmazione",
-          "18. Il potere dei messaggi in Scratch Junior",
-          "19. Cartoline dal vivo in Scratch Junior",
-          "20. Personaggi dei cartoni animati sullo schermo!",
-        ],
-        result: "Durante questo modulo, i bambini continueranno lo studio di Scratch Junior. Creeranno il loro gioco e impareranno nuovi blocchi per la programmazione dei giochi.",
-      },
-      {
-        title: "Modulo 6. Avventura nel Mondo dei Numeri e della Tecnologia",
-        lessons: [
-          "21. I maghi della Matematica: Imparare sui numeri",
-          "22. Eroi dei Numeri: il Viaggio della Matematica",
-          "23. Google Fogli: Un magico mondo di numeri",
-          "24. Google Fogli: il festival dei Numeri",
-        ],
-        result: "Grazie a questo modulo, i bambini impareranno le operazioni matematiche di base e le applicheranno man mano che vengono introdotti a Google Fogli.",
-      },
-      {
-        title: "Modulo 7. Cyber Creators: Storie, musica e magia",
-        lessons: [
-          "25. Il mio primo gioco: catturare Zippy",
-          "26. Le Avventure nel mondo dei Videogiochi",
-          "27. Le Meraviglie dei Videogiochi",
-          "28. Lancio Stellare: il mio Gioco è pronto!",
-        ],
-        result: "Grazie a questo modulo, gli studenti continueranno ad apprendere la programmazione a blocchi in Scratch e creeranno nuovi giochi completi!",
-      },
-      {
-        title: "Modulo 8. La Sfida Finale",
-        lessons: [
-          "29. Cyber-Revision: Tutto sulle Competenze Digitali",
-          "30. Maratona di Programmazione: un Viaggio attraverso il Codice",
-          "31. Missione Creativa Finale",
-          "32. Il fantastico Diploma: celebrare il successo",
-        ],
-        result: "Grazie a questo modulo, i bambini potranno ripassare in modo divertente tutto il materiale appreso e creare il proprio portfolio digitale che riflette il percorso compiuto!",
-      },
-    ],
-  },
-  "scratch": {
-    title: "Programmazione visiva con Scratch",
-    emoji: "🧩",
-    description: "Con Scratch ogni bambino dà vita a giochi e personaggi, imparando la logica della programmazione a blocchi in modo intuitivo e coinvolgente.",
-    longDescription: "Questo corso è per bambini della scuola primaria che vogliono approcciarsi alla sfera dell'Information Technology. Con l'aiuto della programmazione visiva in Scratch, gli studenti saranno in grado di sviluppare non solo il loro pensiero logico ma anche le loro abilità creative. Durante il corso, i bambini trasformeranno vari progetti e impareranno come creare giochi e cartoni in modo indipendente.",
-    tags: ["Scratch", "Creatività", "Sviluppo di giochi", "Animazione"],
-    age: "8-10 anni",
-    level: "Principiante",
-    duration: "32 lezioni",
-    topics: [
-      "Crea i tuoi giochi in 2D",
-      "Crea i tuoi personaggi",
-      "Crea i tuoi progetti su Scratch",
-      "Conoscenza dei concetti di base di algoritmi e programmazione",
-      "Abilità di applicare variabili, loop e condizioni",
-      "Abilità di creare la fisica dei giochi: scrolling, gravità, cambio di velocità",
-    ],
-    projectExamples: [
-      { title: "Gioco 2D completo" },
-      { title: "Animazione interattiva" },
-      { title: "Storia animata" },
-    ],
-    modules: [
-      {
-        title: "М1: I primi progetti con Scratch",
-        lessons: [
-          "1. Basi di Scratch. Il primo progetto.",
-          "2. Movimento degli Sprite su Scratch.",
-          "3. Editor grafico magico. Crea il tuo assistente magico personale!",
-          "4. Il Debugging dei progetti. Cos'è un bug?",
-          "5. Koddich - una competizione di programmazione per i veri maghi!",
-        ],
-        result: "Il primissimo progetto Scratch alla Scuola di Magia Kodewarts.",
-      },
-      {
-        title: "М2: Animazioni e Suoni in Kodewarts",
-        lessons: [
-          "6. Scratch-eventi.",
-          "7. Principi di animazione.",
-          "8. Sfondi e musica.",
-          "9. Crea il tuo gruppo musicale personale!",
-        ],
-        result: "Un'eccezionale app musicale animata.",
-      },
-      {
-        title: "М3: La magia di creare i giochi",
-        lessons: [
-          "10. Cos'è un gioco?",
-          "11. Giochi per Principianti.",
-          "12. Segnare il punteggio: imparare a lavorare con le variabili.",
-          "13. Interazione nei giochi.",
-          "14. Livelli Bonus. Imparare a rendere i giochi più difficili.",
-          "15. Creare un gioco puzzle con Scratch!",
-          "16. La seconda stagione di Koddich!",
-        ],
-        result: "Un gioco completo contenente meccaniche di gameplay base.",
-      },
-      {
-        title: "М4: Il ruolo della narrazione nel processo di sviluppo del gioco",
-        lessons: [
-          "17. Meccaniche di gameplay - gli ingredienti per un gran gioco!",
-          "18. Dialoghi e testi nei giochi.",
-          "19. Blocchi personalizzati: perché ci servono e come crearli.",
-          "20. Lo sviluppo dello scenario del gioco.",
-          "21. Imparare come creare personaggi e scene dirette.",
-          "22. Cercando bug!",
-          "23. Koddich: Finale.",
-        ],
-        result: "Giochi basati su una storia con Scratch.",
-      },
-      {
-        title: "М5: Scratch avanzato",
-        lessons: [
-          "24. Estensioni di Scratch.",
-          "25. Imparare come riconoscere i video!",
-          "26. Creare cloni.",
-          "27. Sviluppo del design del programma.",
-          "28. Un'altra sessione di debug!",
-        ],
-        result: "Progetti Scratch con fantastiche possibilità.",
-      },
-      {
-        title: "М6: Hackathon. Creare un progetto per il diploma!",
-        lessons: [
-          "29. Come la pianificazione attenta può aiutarti a creare i migliori progetti!",
-          "30. Sviluppare il nostro miglior progetto in assoluto!",
-          "31. Perché i test e i feedback sono così importanti?",
-          "32. I segreti dietro una dimostrazione di successo!",
-        ],
-        result: "Un progetto unico che ha passato tutte le fasi di sviluppo.",
-      },
-    ],
-  },
   "roblox": {
     title: "Sviluppo giochi con Roblox",
     emoji: "🏗️",
@@ -750,111 +356,6 @@ const coursesData: Record<string, {
       },
     ],
   },
-  "unity": {
-    title: "Sviluppo giochi con Unity",
-    emoji: "🎮",
-    description: "Dai vita alle tue idee con Unity: impara a creare ambienti 3D, progettare logiche di gioco e costruire esperienze interattive come un vero sviluppatore.",
-    longDescription: "Durante questo corso, gli studenti (dai 13 ai 17 anni) impareranno Unity, uno dei motori più popolari nel settore dei giochi. Gli studenti padroneggeranno il motore in grado di consentire loro di creare giochi, animazioni e progetti software unici e coinvolgenti. Durante il corso, gli studenti impareranno C#, il linguaggio di programmazione che consentirà loro di creare funzioni complesse. Alla fine del corso, gli studenti creeranno i propri giochi 3D che potranno essere giocati sia su PC che su browser web.",
-    tags: ["Programmazione", "3D", "C#", "Game Engines", "Sviluppo di giochi"],
-    age: "13+ anni",
-    level: "Principiante",
-    duration: "32 lezioni",
-    topics: [
-      "Introduzione al linguaggio C#",
-      "Fondamenti di sviluppo di giochi sparatutto e fondamenti di intelligenza artificiale",
-      "Fondamenti di sviluppo di giochi multiplayer",
-      "Utilizzo di GitHub",
-      "Sviluppo del tuo primo Unity FPS (sparatutto in prima persona)",
-      "Progettazione e implementazione giochi multiplayer",
-    ],
-    projectExamples: [
-      { title: "Runner Game" },
-      { title: "Sparatutto FPS" },
-      { title: "Gioco Multiplayer" },
-    ],
-    modules: [
-      {
-        title: "M1. Sviluppare un gioco Runner - Introduzione a Unity e C#",
-        lessons: [
-          "1. Finestre di Unity. Creazione di personaggi e luoghi.",
-          "2. Introduzione alla programmazione in C#. Configura la fisica del movimento per il giocatore.",
-          "3. Imparare l'istruzione condizionale if/else. Insegnare al nostro personaggio a saltare.",
-          "4. Scoprire di più sulla telecamera del gioco. Animare il movimento del personaggio.",
-        ],
-        result: "Gli studenti hanno iniziato a sviluppare il loro primo gioco Unity creando personaggi e luoghi. Hanno imparato le basi del linguaggio C#.",
-      },
-      {
-        title: "M2. Sviluppare un gioco Runner - Creazione di livelli e basi dell'UI",
-        lessons: [
-          "5. Conoscere gli elenchi C# e la funzione Istance. Costruire un generatore di livelli base.",
-          "6. Conoscere il ciclo for C#. Implementare il livellamento continuo.",
-          "7. Apprendimento delle basi dell'UI (User Interface). Aggiungi oggetti da collezione e lost status.",
-          "8. Unificazione delle basi di C#. Familiarizzare con effetti e suoni. Aggiungi bonus.",
-        ],
-        result: "Gli studenti hanno completato il loro primo gioco di corsa e lo hanno pubblicato su Kodland HUB.",
-      },
-      {
-        title: "M3. Sviluppare uno sparatutto - Fondamenti FPS e IA",
-        lessons: [
-          "9. Creazione di un nuovo progetto. Implementazione dei controlli dei personaggi in prima persona.",
-          "10. Creare modelli e animazioni per i nemici. Implementazione di un'intelligenza artificiale primitiva.",
-          "11. Aggiunta di armi e meccaniche di tiro di base. Implementazione del conteggio delle munizioni.",
-          "12. Fondamenti di game design. Implementazione di checkpoint e respawn.",
-        ],
-        result: "Gli studenti hanno iniziato a sviluppare il loro primo Unity FPS con nemici e IA semplice.",
-      },
-      {
-        title: "M4. Sviluppare uno sparatutto - Introduzione alla OOP",
-        lessons: [
-          "13. Introduzione all'OOP (programmazione orientata agli oggetti). Principi base, classi e oggetti.",
-          "14. OOP avanzato. Utilizzo del polimorfismo per sovrascrivere i metodi della superclasse.",
-          "15. Utilizzo dei concetti OOP per implementare diverse classi di personaggi con abilità uniche.",
-          "16. Completare il gioco sparatutto. Aggiunta di suoni ed effetti visivi, lavoro sul menu.",
-        ],
-        result: "Gli studenti hanno imparato le basi dell'OOP e pubblicato i loro progetti su Itch.io.",
-      },
-      {
-        title: "M5. Sviluppo di uno sparatutto multiplayer - Fondamenti multiplayer",
-        lessons: [
-          "17. Introduzione allo sviluppo di giochi multiplayer. Introduzione a Photon.",
-          "18. Connessione al servizio Photon. Crea e unisciti a stanze virtuali.",
-          "19. Utilizzo delle funzioni Photon per sincronizzare le azioni e gli stati dei giocatori.",
-          "20. Apprendimento delle funzionalità avanzate di Photon per migliorare la sincronizzazione.",
-        ],
-        result: "Gli studenti hanno strutturato i loro progetti per la funzionalità multiplayer con Photon.",
-      },
-      {
-        title: "M6. Sviluppo di uno sparatutto multiplayer - Funzionalità avanzate",
-        lessons: [
-          "21. Realizzazione di varie funzionalità di gioco in ambiente multiplayer: IA nemica, bonus, punteggio.",
-          "22. Ottimizzare il gioco. Ottimizzazione dei suoni, dell'interfaccia e delle prestazioni.",
-          "23. Implementare funzionalità multiplayer avanzate: matchmaking, lobby e gestione dati runtime.",
-          "24. Guardare il gioco in streaming e giocare insieme.",
-        ],
-        result: "Gli studenti hanno completato il loro gioco sparatutto multiplayer e lo hanno pubblicato su Itch.io.",
-      },
-      {
-        title: "M7. Inizio del lavoro per il progetto finale",
-        lessons: [
-          "25. Fondamenti di game design. Progettare un documento concettuale per un gioco.",
-          "26. Comprendere il controllo della versione. Imparare GitHub.",
-          "27. Progettazione dei livelli. Lavoro sulla grafica dei propri giochi.",
-          "28. Pubblicazione e test delle versioni beta dei propri giochi.",
-        ],
-        result: "Gli studenti hanno iniziato a progettare i loro progetti finali e imparato a lavorare con GitHub.",
-      },
-      {
-        title: "M8. Completamento del progetto finale - Diploma",
-        lessons: [
-          "29. Insegnare al giocatore. Sviluppo di un'interfaccia user-friendly.",
-          "30. Pubblicare progetti su Itch.io.",
-          "31. Percorso evolutivo: dare gli ultimi ritocchi prima della presentazione.",
-          "32. Presentazione dei progetti. Diploma di fine corso.",
-        ],
-        result: "Gli studenti hanno creato i propri giochi con design e storie originali e li hanno pubblicati su Itch.io.",
-      },
-    ],
-  },
   "python-base": {
     title: "Python Base",
     emoji: "🐍",
@@ -1110,6 +611,7 @@ export default function CorsoDettaglio() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
+  const [dbLoaded, setDbLoaded] = useState(false);
   const [dbContent, setDbContent] = useState<Record<string, any>>({});
   const [dbCourseRow, setDbCourseRow] = useState<{
     title?: string; emoji?: string; description?: string | null;
@@ -1176,6 +678,7 @@ export default function CorsoDettaglio() {
           duration: data.duration,
         });
       }
+      setDbLoaded(true);
     })();
     return () => { cancelled = true; };
   }, [id]);
@@ -1241,33 +744,29 @@ export default function CorsoDettaglio() {
   }
 
   if (!course) {
-    return (
-      <Layout>
-        <div className="tech-section">
-          <div className="tech-container text-center">
-            <h1 className="text-4xl font-bold mb-4">Corso non trovato</h1>
-            <p className="text-muted-foreground mb-8">Il corso che stai cercando non esiste.</p>
-            <Button asChild>
-              <Link to="/corsi">Torna ai corsi</Link>
-            </Button>
+    // Wait for the DB lookup before deciding 404, so a renamed-slug page
+    // (present only in DB) doesn't briefly flash NotFound.
+    if (!dbLoaded) {
+      return (
+        <Layout>
+          <div className="tech-section">
+            <div className="tech-container text-center text-muted-foreground">
+              Caricamento…
+            </div>
           </div>
-        </div>
-      </Layout>
-    );
+        </Layout>
+      );
+    }
+    return <NotFound />;
   }
 
   // SEO meta data generation
   const getSEOTitle = () => {
     const titleMap: Record<string, string> = {
-      "minecraft-education": "TECHLAND | Corso Minecraft per Bambini (8-9 anni)",
-      "abc-creativita-digitale": "TECHLAND | Creatività Digitale Bambini (5-7 anni)",
-      "abc-informatica": "TECHLAND | Corso Informatica Bambini (5-7 anni)",
-      "scratch": "TECHLAND | Corso Scratch Bambini (8-10 anni)",
       "roblox-base": "TECHLAND | Corso Roblox Bambini (8-12 anni)",
       "roblox": "TECHLAND | Corso Roblox Online (10-14 anni)",
       "roblox-avanzato": "TECHLAND | Roblox Avanzato Ragazzi (10-14 anni)",
       "web-development": "TECHLAND | Corso Web Development (12-16 anni)",
-      "unity": "TECHLAND | Corso Unity Ragazzi (13-18 anni)",
       "python-base": "TECHLAND | Corso Python Ragazzi (12-16 anni)",
       "python-pro-ai": "TECHLAND | Python Avanzato e AI (14-18 anni)",
       "python-ai": "TECHLAND | Python e AI Ragazzi (14-18 anni)"
@@ -1277,15 +776,10 @@ export default function CorsoDettaglio() {
 
   const getSEODescription = () => {
     const descMap: Record<string, string> = {
-      "minecraft-education": "Corso di Minecraft per bambini online (8-9 anni). Impara coding, automazione e programmazione con Minecraft Education e MakeCode. Lezione di prova gratuita!",
-      "abc-creativita-digitale": "Corso di creatività digitale per bambini online (5-7 anni). Canva, animazioni e design. Sviluppa pensiero creativo e logico. Prima lezione gratis!",
-      "abc-informatica": "Corso di informatica per bambini online (5-7 anni). Programmazione a blocchi, Scratch Junior e uso del PC. Lezione di prova gratuita!",
-      "scratch": "Corso di Scratch per bambini online (8-10 anni). Crea giochi e animazioni con la programmazione visiva. Docenti esperti. Prima lezione gratis!",
       "roblox-base": "Corso Roblox Studio per bambini online (8-12 anni). Crea e pubblica i tuoi giochi. Impara Lua e game design. Lezione di prova gratuita!",
       "roblox": "Corso Roblox per bambini online (10-14 anni). Crea videogiochi con Roblox Studio e Lua. Lezioni live in piccoli gruppi. Prima lezione gratis!",
       "roblox-avanzato": "Corso Roblox avanzato per ragazzi online (10-14 anni). Script Lua complessi, multiplayer, monetizzazione. Diventa un pro developer Roblox!",
       "web-development": "Corso di Web Development per ragazzi online (12-16 anni). HTML, CSS, JavaScript da zero. Crea il tuo sito web. Prima lezione gratuita!",
-      "unity": "Corso Unity per ragazzi online (13-18 anni). Sviluppo giochi 3D con C#. Crea esperienze interattive. Lezione di prova gratis!",
       "python-base": "Corso di Python per ragazzi online (12-16 anni). Il linguaggio di programmazione più richiesto. Progetti pratici. Prima lezione gratuita!",
       "python-pro-ai": "Corso Python avanzato e AI per ragazzi online (14-18 anni). Machine learning, NumPy, Pandas, deep learning. Lezione di prova gratis!",
       "python-ai": "Corso Python e Intelligenza Artificiale per ragazzi online (14-18 anni). Machine learning con scikit-learn, AI e LLM. Lezione di prova gratis!"
@@ -1310,15 +804,10 @@ export default function CorsoDettaglio() {
 
   const getSEOKeywords = () => {
     const keywordsMap: Record<string, string> = {
-      "minecraft-education": "corso minecraft, corsi di minecraft, corso minecraft bambini, minecraft education, programmazione minecraft, makecode bambini, coding minecraft, corsi minecraft online",
-      "abc-creativita-digitale": "corso creatività digitale bambini, design digitale bambini, canva bambini, animazione bambini, corsi per bambini 5 anni",
-      "abc-informatica": "corso informatica bambini, corsi di informatica per bambini, informatica per bambini, scratch junior, programmazione a blocchi, alfabetizzazione digitale bambini",
-      "scratch": "corso scratch, corsi di scratch, corso scratch bambini, programmazione visiva bambini, scratch coding, creare giochi scratch, animazioni scratch, scratch online",
       "roblox-base": "corso roblox, corsi di roblox, corso roblox bambini, roblox studio bambini, creare giochi roblox, programmare roblox, lua bambini, roblox online",
       "roblox": "corso roblox, corsi di roblox, corso roblox bambini, roblox studio, creare giochi roblox, lua, roblox online ragazzi",
       "roblox-avanzato": "corso roblox avanzato, roblox scripting, game design ragazzi, lua avanzato, sviluppo giochi roblox, corsi di roblox avanzato",
       "web-development": "corso web development ragazzi, corsi web design bambini, html css javascript per ragazzi, creare siti web, programmazione web ragazzi",
-      "unity": "corso unity ragazzi, sviluppo giochi 3d, c# ragazzi, game development unity, creare videogiochi",
       "python-base": "corso python ragazzi, corsi di python per ragazzi, python base, imparare python, programmazione python bambini, corso python online",
       "python-pro-ai": "corso python avanzato, intelligenza artificiale ragazzi, machine learning bambini, python ai corso, corso ai per ragazzi",
       "python-ai": "corso python ai, intelligenza artificiale ragazzi, machine learning ragazzi, python ai corso, corso ai per ragazzi, deep learning ragazzi",

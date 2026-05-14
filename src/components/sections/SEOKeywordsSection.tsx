@@ -23,19 +23,6 @@ export function SEOKeywordsSection() {
           <div className="grid md:grid-cols-2 gap-6 mb-10">
             <article className="tech-card p-6">
               <h3 className="text-xl font-semibold mb-3">
-                <Link to="/corsi/scratch" className="hover:text-primary">
-                  Corsi di Scratch per bambini
-                </Link>
-              </h3>
-              <p className="text-muted-foreground">
-                I nostri <strong>corsi di Scratch online</strong> insegnano la programmazione visiva
-                a bambini dagli 8 ai 10 anni. Con Scratch si imparano cicli, condizioni e variabili
-                creando giochi e animazioni in modo divertente.
-              </p>
-            </article>
-
-            <article className="tech-card p-6">
-              <h3 className="text-xl font-semibold mb-3">
                 <Link to="/corsi/roblox" className="hover:text-primary">
                   Corsi di Roblox per bambini e ragazzi
                 </Link>
@@ -49,19 +36,6 @@ export function SEOKeywordsSection() {
 
             <article className="tech-card p-6">
               <h3 className="text-xl font-semibold mb-3">
-                <Link to="/corsi/minecraft-education" className="hover:text-primary">
-                  Corsi di Minecraft per bambini
-                </Link>
-              </h3>
-              <p className="text-muted-foreground">
-                I <strong>corsi di Minecraft</strong> con Minecraft Education sono pensati per
-                bambini 8-9 anni: programmazione a blocchi con MakeCode, automazione con redstone
-                e progetti collaborativi nel mondo di Minecraft.
-              </p>
-            </article>
-
-            <article className="tech-card p-6">
-              <h3 className="text-xl font-semibold mb-3">
                 <Link to="/corsi/python-base" className="hover:text-primary">
                   Corsi di Python per ragazzi
                 </Link>
@@ -70,19 +44,6 @@ export function SEOKeywordsSection() {
                 I <strong>corsi di Python online</strong> sono indicati per ragazzi 12-18 anni.
                 Python è il linguaggio di programmazione più richiesto al mondo e la base per
                 imparare l'<strong>intelligenza artificiale</strong> e il machine learning.
-              </p>
-            </article>
-
-            <article className="tech-card p-6">
-              <h3 className="text-xl font-semibold mb-3">
-                <Link to="/corsi/abc-informatica" className="hover:text-primary">
-                  Corsi di informatica per bambini
-                </Link>
-              </h3>
-              <p className="text-muted-foreground">
-                I <strong>corsi di informatica per bambini</strong> 5-8 anni introducono
-                fondamenti di <strong>informatica per bambini</strong>: come funziona un computer,
-                file, internet sicuro e logica computazionale di base.
               </p>
             </article>
 

@@ -773,15 +773,10 @@ export default function CorsoDettaglio() {
 
   const getSEODescription = () => {
     const descMap: Record<string, string> = {
-      "minecraft-education": "Corso di Minecraft per bambini online (8-9 anni). Impara coding, automazione e programmazione con Minecraft Education e MakeCode. Lezione di prova gratuita!",
-      "abc-creativita-digitale": "Corso di creatività digitale per bambini online (5-7 anni). Canva, animazioni e design. Sviluppa pensiero creativo e logico. Prima lezione gratis!",
-      "abc-informatica": "Corso di informatica per bambini online (5-7 anni). Programmazione a blocchi, Scratch Junior e uso del PC. Lezione di prova gratuita!",
-      "scratch": "Corso di Scratch per bambini online (8-10 anni). Crea giochi e animazioni con la programmazione visiva. Docenti esperti. Prima lezione gratis!",
       "roblox-base": "Corso Roblox Studio per bambini online (8-12 anni). Crea e pubblica i tuoi giochi. Impara Lua e game design. Lezione di prova gratuita!",
       "roblox": "Corso Roblox per bambini online (10-14 anni). Crea videogiochi con Roblox Studio e Lua. Lezioni live in piccoli gruppi. Prima lezione gratis!",
       "roblox-avanzato": "Corso Roblox avanzato per ragazzi online (10-14 anni). Script Lua complessi, multiplayer, monetizzazione. Diventa un pro developer Roblox!",
       "web-development": "Corso di Web Development per ragazzi online (12-16 anni). HTML, CSS, JavaScript da zero. Crea il tuo sito web. Prima lezione gratuita!",
-      "unity": "Corso Unity per ragazzi online (13-18 anni). Sviluppo giochi 3D con C#. Crea esperienze interattive. Lezione di prova gratis!",
       "python-base": "Corso di Python per ragazzi online (12-16 anni). Il linguaggio di programmazione più richiesto. Progetti pratici. Prima lezione gratuita!",
       "python-pro-ai": "Corso Python avanzato e AI per ragazzi online (14-18 anni). Machine learning, NumPy, Pandas, deep learning. Lezione di prova gratis!",
       "python-ai": "Corso Python e Intelligenza Artificiale per ragazzi online (14-18 anni). Machine learning con scikit-learn, AI e LLM. Lezione di prova gratis!"

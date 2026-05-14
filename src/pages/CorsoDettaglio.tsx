@@ -744,19 +744,20 @@ export default function CorsoDettaglio() {
   }
 
   if (!course) {
-    return (
-      <Layout>
-        <div className="tech-section">
-          <div className="tech-container text-center">
-            <h1 className="text-4xl font-bold mb-4">Corso non trovato</h1>
-            <p className="text-muted-foreground mb-8">Il corso che stai cercando non esiste.</p>
-            <Button asChild>
-              <Link to="/corsi">Torna ai corsi</Link>
-            </Button>
+    // Wait for the DB lookup before deciding 404, so a renamed-slug page
+    // (present only in DB) doesn't briefly flash NotFound.
+    if (!dbLoaded) {
+      return (
+        <Layout>
+          <div className="tech-section">
+            <div className="tech-container text-center text-muted-foreground">
+              Caricamento…
+            </div>
           </div>
-        </div>
-      </Layout>
-    );
+        </Layout>
+      );
+    }
+    return <NotFound />;
   }
 
   // SEO meta data generation

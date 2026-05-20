@@ -1,0 +1,1 @@
+DROP TRIGGER IF EXISTS decrement_balance_on_group_attendance ON public.group_attendance;

@@ -224,11 +224,14 @@ export default function TeacherGrading() {
   };
 
   const handleSubmit = async () => {
-    if (!selectedSubmission) return;
+    if (!selectedSubmission) {
+      toast({ title: 'Errore', description: 'Nessuna consegna selezionata', variant: 'destructive' });
+      return;
+    }
 
     setIsSaving(true);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('homework_submissions')
         .update({
           grade: formData.grade,
@@ -236,17 +239,29 @@ export default function TeacherGrading() {
           status: 'graded',
           feedback_at: new Date().toISOString(),
         })
-        .eq('id', selectedSubmission.id);
+        .eq('id', selectedSubmission.id)
+        .select();
 
       if (error) throw error;
-      toast({ title: 'Successo', description: 'Valutazione salvata' });
+
+      if (!data || data.length === 0) {
+        toast({
+          title: 'Permesso negato',
+          description: 'Non hai i permessi per valutare questa consegna.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      toast({ title: 'Successo', description: `Valutazione salvata (${formData.grade}%)` });
       setDialogOpen(false);
       fetchSubmissions();
     } catch (error: any) {
-      toast({ 
-        title: 'Errore', 
-        description: error.message || 'Impossibile salvare la valutazione', 
-        variant: 'destructive' 
+      console.error('Errore salvataggio valutazione:', error);
+      toast({
+        title: 'Errore',
+        description: error.message || 'Impossibile salvare la valutazione',
+        variant: 'destructive',
       });
     } finally {
       setIsSaving(false);
@@ -407,10 +422,10 @@ export default function TeacherGrading() {
 
         {/* Grade Dialog */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
+          <DialogContent className="w-[calc(100vw-1rem)] sm:max-w-2xl max-h-[90vh] p-0 flex flex-col gap-0">
+            <DialogHeader className="p-4 sm:p-6 pb-2 border-b shrink-0">
               <DialogTitle>Valuta Compito</DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="line-clamp-2">
                 {selectedSubmission && (
                   <>
                     {selectedSubmission.student.full_name} - {selectedSubmission.homework.title}
@@ -418,7 +433,7 @@ export default function TeacherGrading() {
                 )}
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-6 py-4">
+            <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-6">
               {/* Code Preview */}
               {selectedSubmission?.file_url && isCodeFile(selectedSubmission.file_name) && (
                 <div className="space-y-2">
@@ -504,11 +519,11 @@ export default function TeacherGrading() {
                 />
               </div>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>
+            <DialogFooter className="p-4 sm:p-6 pt-3 border-t bg-background shrink-0 flex-row justify-end gap-2 sm:gap-2">
+              <Button variant="outline" size="sm" onClick={() => setDialogOpen(false)} disabled={isSaving}>
                 Annulla
               </Button>
-              <Button onClick={handleSubmit} disabled={isSaving}>
+              <Button size="sm" onClick={handleSubmit} disabled={isSaving}>
                 {isSaving ? (
                   <Loader2 className="w-4 h-4 animate-spin mr-2" />
                 ) : (

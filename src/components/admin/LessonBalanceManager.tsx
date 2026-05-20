@@ -170,6 +170,42 @@ export function LessonBalanceManager({
     }
   };
 
+  const handleDeleteLog = async (entryId: string) => {
+    if (!confirm('Eliminare definitivamente questa variazione dallo storico?')) return;
+    const { error } = await supabase.from('lesson_balance_log').delete().eq('id', entryId);
+    if (error) {
+      toast({ title: 'Errore', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Variazione eliminata' });
+    fetchLog();
+  };
+
+  const startEditDate = (entry: BalanceLogEntry) => {
+    setEditingId(entry.id);
+    // datetime-local format
+    const d = new Date(entry.created_at);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    setEditingDate(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`);
+  };
+
+  const saveEditDate = async (entryId: string) => {
+    if (!editingDate) return;
+    const iso = new Date(editingDate).toISOString();
+    const { error } = await supabase
+      .from('lesson_balance_log')
+      .update({ created_at: iso })
+      .eq('id', entryId);
+    if (error) {
+      toast({ title: 'Errore', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Data aggiornata' });
+    setEditingId(null);
+    fetchLog();
+  };
+
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">

@@ -47,13 +47,15 @@ export function LessonBalanceManager({
   currentBalance,
   onBalanceUpdated,
 }: LessonBalanceManagerProps) {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { toast } = useToast();
   const [amount, setAmount] = useState('1');
   const [notes, setNotes] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [log, setLog] = useState<BalanceLogEntry[]>([]);
   const [isLoadingLog, setIsLoadingLog] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingDate, setEditingDate] = useState<string>('');
 
   useEffect(() => {
     if (open && studentId) {

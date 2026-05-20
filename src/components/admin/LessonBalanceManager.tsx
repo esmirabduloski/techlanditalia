@@ -14,7 +14,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Loader2, Plus, Minus, History, CreditCard } from 'lucide-react';
+import { Loader2, Plus, Minus, History, CreditCard, Trash2, Pencil, Check, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 

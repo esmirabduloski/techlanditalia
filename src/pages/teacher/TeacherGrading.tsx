@@ -422,10 +422,10 @@ export default function TeacherGrading() {
 
         {/* Grade Dialog */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
+          <DialogContent className="w-[calc(100vw-1rem)] sm:max-w-2xl max-h-[90vh] p-0 flex flex-col gap-0">
+            <DialogHeader className="p-4 sm:p-6 pb-2 border-b shrink-0">
               <DialogTitle>Valuta Compito</DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="line-clamp-2">
                 {selectedSubmission && (
                   <>
                     {selectedSubmission.student.full_name} - {selectedSubmission.homework.title}
@@ -433,7 +433,7 @@ export default function TeacherGrading() {
                 )}
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-6 py-4">
+            <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-6">
               {/* Code Preview */}
               {selectedSubmission?.file_url && isCodeFile(selectedSubmission.file_name) && (
                 <div className="space-y-2">

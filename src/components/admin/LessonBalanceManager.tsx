@@ -14,7 +14,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Loader2, Plus, Minus, History, CreditCard } from 'lucide-react';
+import { Loader2, Plus, Minus, History, CreditCard, Trash2, Pencil, Check, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 
@@ -47,13 +47,15 @@ export function LessonBalanceManager({
   currentBalance,
   onBalanceUpdated,
 }: LessonBalanceManagerProps) {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { toast } = useToast();
   const [amount, setAmount] = useState('1');
   const [notes, setNotes] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [log, setLog] = useState<BalanceLogEntry[]>([]);
   const [isLoadingLog, setIsLoadingLog] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingDate, setEditingDate] = useState<string>('');
 
   useEffect(() => {
     if (open && studentId) {
@@ -168,6 +170,42 @@ export function LessonBalanceManager({
     }
   };
 
+  const handleDeleteLog = async (entryId: string) => {
+    if (!confirm('Eliminare definitivamente questa variazione dallo storico?')) return;
+    const { error } = await supabase.from('lesson_balance_log').delete().eq('id', entryId);
+    if (error) {
+      toast({ title: 'Errore', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Variazione eliminata' });
+    fetchLog();
+  };
+
+  const startEditDate = (entry: BalanceLogEntry) => {
+    setEditingId(entry.id);
+    // datetime-local format
+    const d = new Date(entry.created_at);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    setEditingDate(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`);
+  };
+
+  const saveEditDate = async (entryId: string) => {
+    if (!editingDate) return;
+    const iso = new Date(editingDate).toISOString();
+    const { error } = await supabase
+      .from('lesson_balance_log')
+      .update({ created_at: iso })
+      .eq('id', entryId);
+    if (error) {
+      toast({ title: 'Errore', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Data aggiornata' });
+    setEditingId(null);
+    fetchLog();
+  };
+
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
@@ -255,15 +293,44 @@ export function LessonBalanceManager({
                         ({entry.balance_before} → {entry.balance_after})
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                      <span>{format(new Date(entry.created_at), "d MMM yyyy 'alle' HH:mm", { locale: it })}</span>
-                      <span>•</span>
-                      <span>{entry.performer_name}</span>
+                    <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground flex-wrap">
+                      {editingId === entry.id ? (
+                        <>
+                          <Input
+                            type="datetime-local"
+                            value={editingDate}
+                            onChange={(e) => setEditingDate(e.target.value)}
+                            className="h-7 text-xs w-auto"
+                          />
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => saveEditDate(entry.id)}>
+                            <Check className="w-4 h-4 text-green-600" />
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setEditingId(null)}>
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <span>{format(new Date(entry.created_at), "d MMM yyyy 'alle' HH:mm", { locale: it })}</span>
+                          <span>•</span>
+                          <span>{entry.performer_name}</span>
+                        </>
+                      )}
                     </div>
                     {entry.notes && (
                       <p className="text-xs text-muted-foreground mt-1 italic">{entry.notes}</p>
                     )}
                   </div>
+                  {isAdmin && editingId !== entry.id && (
+                    <div className="flex items-center gap-1 ml-2 shrink-0">
+                      <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => startEditDate(entry)} title="Modifica data">
+                        <Pencil className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => handleDeleteLog(entry.id)} title="Elimina">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

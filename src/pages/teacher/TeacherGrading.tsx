@@ -224,11 +224,14 @@ export default function TeacherGrading() {
   };
 
   const handleSubmit = async () => {
-    if (!selectedSubmission) return;
+    if (!selectedSubmission) {
+      toast({ title: 'Errore', description: 'Nessuna consegna selezionata', variant: 'destructive' });
+      return;
+    }
 
     setIsSaving(true);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('homework_submissions')
         .update({
           grade: formData.grade,
@@ -236,17 +239,29 @@ export default function TeacherGrading() {
           status: 'graded',
           feedback_at: new Date().toISOString(),
         })
-        .eq('id', selectedSubmission.id);
+        .eq('id', selectedSubmission.id)
+        .select();
 
       if (error) throw error;
-      toast({ title: 'Successo', description: 'Valutazione salvata' });
+
+      if (!data || data.length === 0) {
+        toast({
+          title: 'Permesso negato',
+          description: 'Non hai i permessi per valutare questa consegna.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      toast({ title: 'Successo', description: `Valutazione salvata (${formData.grade}%)` });
       setDialogOpen(false);
       fetchSubmissions();
     } catch (error: any) {
-      toast({ 
-        title: 'Errore', 
-        description: error.message || 'Impossibile salvare la valutazione', 
-        variant: 'destructive' 
+      console.error('Errore salvataggio valutazione:', error);
+      toast({
+        title: 'Errore',
+        description: error.message || 'Impossibile salvare la valutazione',
+        variant: 'destructive',
       });
     } finally {
       setIsSaving(false);

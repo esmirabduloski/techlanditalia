@@ -56,10 +56,50 @@ export function LessonBalanceManager({
   const [isLoadingLog, setIsLoadingLog] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingDate, setEditingDate] = useState<string>('');
+  const [liveBalance, setLiveBalance] = useState<number>(currentBalance);
+
+  useEffect(() => {
+    setLiveBalance(currentBalance);
+  }, [currentBalance]);
 
   useEffect(() => {
     if (open && studentId) {
       fetchLog();
+      // Fetch fresh balance immediately
+      supabase
+        .from('profiles')
+        .select('lesson_balance')
+        .eq('id', studentId)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) setLiveBalance(data.lesson_balance || 0);
+        });
+
+      // Realtime subscription on profile + balance log
+      const channel = supabase
+        .channel(`balance-${studentId}-${Date.now()}`)
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${studentId}` },
+          (payload: any) => {
+            if (payload.new?.lesson_balance !== undefined) {
+              setLiveBalance(payload.new.lesson_balance);
+              onBalanceUpdated();
+            }
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'lesson_balance_log', filter: `student_id=eq.${studentId}` },
+          () => {
+            fetchLog();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [open, studentId]);
 

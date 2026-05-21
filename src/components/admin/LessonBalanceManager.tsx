@@ -259,7 +259,7 @@ export function LessonBalanceManager({
         {/* Current Balance */}
         <div className="text-center py-4">
           <p className="text-sm text-muted-foreground">Saldo attuale</p>
-          <p className="text-5xl font-bold text-primary">{currentBalance}</p>
+          <p className="text-5xl font-bold text-primary">{liveBalance}</p>
           <p className="text-sm text-muted-foreground mt-1">lezioni rimanenti</p>
         </div>
 

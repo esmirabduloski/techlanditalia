@@ -69,6 +69,7 @@ export default function TeacherGrading() {
   const [statusFilter, setStatusFilter] = useState<string>('pending');
   const [codeContent, setCodeContent] = useState<string | null>(null);
   const [isLoadingCode, setIsLoadingCode] = useState(false);
+  const [savedSuccessfully, setSavedSuccessfully] = useState(false);
 
   const [formData, setFormData] = useState({
     grade: 100,
@@ -216,6 +217,7 @@ export default function TeacherGrading() {
       teacher_feedback: submission.teacher_feedback || '',
     });
     setCodeContent(null);
+    setSavedSuccessfully(false);
     setDialogOpen(true);
 
     if (submission.file_url && isCodeFile(submission.file_name)) {
@@ -253,7 +255,13 @@ export default function TeacherGrading() {
         return;
       }
 
-      toast({ title: 'Successo', description: `Valutazione salvata (${formData.grade}%)` });
+      const pointsEarned = calculatePoints(selectedSubmission.homework.points_reward, formData.grade);
+      toast({
+        title: '✅ Valutazione salvata',
+        description: `Voto ${formData.grade}% — ${pointsEarned} punti assegnati a ${selectedSubmission.student.full_name}`,
+        variant: 'default',
+      });
+      setSavedSuccessfully(true);
       setDialogOpen(false);
       fetchSubmissions();
     } catch (error: any) {
@@ -266,6 +274,17 @@ export default function TeacherGrading() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleDialogOpenChange = (open: boolean) => {
+    if (!open && savedSuccessfully) {
+      toast({
+        title: 'Schermata chiusa',
+        description: 'La valutazione è stata salvata e la schermata è stata chiusa.',
+      });
+      setSavedSuccessfully(false);
+    }
+    setDialogOpen(open);
   };
 
   const getStatusBadge = (status: string, grade: number | null) => {
@@ -421,7 +440,7 @@ export default function TeacherGrading() {
         )}
 
         {/* Grade Dialog */}
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
           <DialogContent className="w-[calc(100vw-1rem)] sm:max-w-2xl max-h-[90vh] p-0 flex flex-col gap-0">
             <DialogHeader className="p-4 sm:p-6 pb-2 border-b shrink-0">
               <DialogTitle>Valuta Compito</DialogTitle>
@@ -520,7 +539,7 @@ export default function TeacherGrading() {
               </div>
             </div>
             <DialogFooter className="p-4 sm:p-6 pt-3 border-t bg-background shrink-0 flex-row justify-end gap-2 sm:gap-2">
-              <Button variant="outline" size="sm" onClick={() => setDialogOpen(false)} disabled={isSaving}>
+              <Button variant="outline" size="sm" onClick={() => handleDialogOpenChange(false)} disabled={isSaving}>
                 Annulla
               </Button>
               <Button size="sm" onClick={handleSubmit} disabled={isSaving}>

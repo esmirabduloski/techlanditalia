@@ -150,8 +150,8 @@ export function LessonBalanceManager({
     setIsSaving(true);
     try {
       const newBalance = type === 'add' 
-        ? currentBalance + qty 
-        : Math.max(currentBalance - qty, 0);
+        ? liveBalance + qty 
+        : Math.max(liveBalance - qty, 0);
 
       // Update profile balance
       const { error: updateError } = await supabase

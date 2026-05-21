@@ -178,7 +178,7 @@ export function LessonBalanceManager({
 
       toast({
         title: 'Successo',
-        description: `Saldo aggiornato: ${currentBalance} → ${newBalance}`,
+        description: `Saldo aggiornato: ${liveBalance} → ${newBalance}`,
       });
 
       setAmount('1');

@@ -217,6 +217,7 @@ export default function TeacherGrading() {
       teacher_feedback: submission.teacher_feedback || '',
     });
     setCodeContent(null);
+    setSavedSuccessfully(false);
     setDialogOpen(true);
 
     if (submission.file_url && isCodeFile(submission.file_name)) {

@@ -255,7 +255,13 @@ export default function TeacherGrading() {
         return;
       }
 
-      toast({ title: 'Successo', description: `Valutazione salvata (${formData.grade}%)` });
+      const pointsEarned = calculatePoints(selectedSubmission.homework.points_reward, formData.grade);
+      toast({
+        title: '✅ Valutazione salvata',
+        description: `Voto ${formData.grade}% — ${pointsEarned} punti assegnati a ${selectedSubmission.student.full_name}`,
+        variant: 'default',
+      });
+      setSavedSuccessfully(true);
       setDialogOpen(false);
       fetchSubmissions();
     } catch (error: any) {
@@ -268,6 +274,17 @@ export default function TeacherGrading() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleDialogOpenChange = (open: boolean) => {
+    if (!open && savedSuccessfully) {
+      toast({
+        title: 'Schermata chiusa',
+        description: 'La valutazione è stata salvata e la schermata è stata chiusa.',
+      });
+      setSavedSuccessfully(false);
+    }
+    setDialogOpen(open);
   };
 
   const getStatusBadge = (status: string, grade: number | null) => {

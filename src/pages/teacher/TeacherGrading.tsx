@@ -440,7 +440,7 @@ export default function TeacherGrading() {
         )}
 
         {/* Grade Dialog */}
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
           <DialogContent className="w-[calc(100vw-1rem)] sm:max-w-2xl max-h-[90vh] p-0 flex flex-col gap-0">
             <DialogHeader className="p-4 sm:p-6 pb-2 border-b shrink-0">
               <DialogTitle>Valuta Compito</DialogTitle>

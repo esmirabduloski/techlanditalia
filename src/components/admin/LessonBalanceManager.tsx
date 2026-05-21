@@ -168,7 +168,7 @@ export function LessonBalanceManager({
           student_id: studentId,
           operation_type: type === 'add' ? 'credit_added' : 'credit_removed',
           amount: type === 'add' ? qty : -qty,
-          balance_before: currentBalance,
+          balance_before: liveBalance,
           balance_after: newBalance,
           performed_by: user?.id,
           notes: notes || (type === 'add' ? 'Credito aggiunto manualmente' : 'Credito rimosso manualmente'),

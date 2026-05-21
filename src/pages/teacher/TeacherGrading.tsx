@@ -539,7 +539,7 @@ export default function TeacherGrading() {
               </div>
             </div>
             <DialogFooter className="p-4 sm:p-6 pt-3 border-t bg-background shrink-0 flex-row justify-end gap-2 sm:gap-2">
-              <Button variant="outline" size="sm" onClick={() => setDialogOpen(false)} disabled={isSaving}>
+              <Button variant="outline" size="sm" onClick={() => handleDialogOpenChange(false)} disabled={isSaving}>
                 Annulla
               </Button>
               <Button size="sm" onClick={handleSubmit} disabled={isSaving}>

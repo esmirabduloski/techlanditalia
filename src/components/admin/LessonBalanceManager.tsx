@@ -56,10 +56,50 @@ export function LessonBalanceManager({
   const [isLoadingLog, setIsLoadingLog] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingDate, setEditingDate] = useState<string>('');
+  const [liveBalance, setLiveBalance] = useState<number>(currentBalance);
+
+  useEffect(() => {
+    setLiveBalance(currentBalance);
+  }, [currentBalance]);
 
   useEffect(() => {
     if (open && studentId) {
       fetchLog();
+      // Fetch fresh balance immediately
+      supabase
+        .from('profiles')
+        .select('lesson_balance')
+        .eq('id', studentId)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) setLiveBalance(data.lesson_balance || 0);
+        });
+
+      // Realtime subscription on profile + balance log
+      const channel = supabase
+        .channel(`balance-${studentId}-${Date.now()}`)
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${studentId}` },
+          (payload: any) => {
+            if (payload.new?.lesson_balance !== undefined) {
+              setLiveBalance(payload.new.lesson_balance);
+              onBalanceUpdated();
+            }
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'lesson_balance_log', filter: `student_id=eq.${studentId}` },
+          () => {
+            fetchLog();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [open, studentId]);
 
@@ -110,8 +150,8 @@ export function LessonBalanceManager({
     setIsSaving(true);
     try {
       const newBalance = type === 'add' 
-        ? currentBalance + qty 
-        : Math.max(currentBalance - qty, 0);
+        ? liveBalance + qty 
+        : Math.max(liveBalance - qty, 0);
 
       // Update profile balance
       const { error: updateError } = await supabase
@@ -128,7 +168,7 @@ export function LessonBalanceManager({
           student_id: studentId,
           operation_type: type === 'add' ? 'credit_added' : 'credit_removed',
           amount: type === 'add' ? qty : -qty,
-          balance_before: currentBalance,
+          balance_before: liveBalance,
           balance_after: newBalance,
           performed_by: user?.id,
           notes: notes || (type === 'add' ? 'Credito aggiunto manualmente' : 'Credito rimosso manualmente'),
@@ -138,7 +178,7 @@ export function LessonBalanceManager({
 
       toast({
         title: 'Successo',
-        description: `Saldo aggiornato: ${currentBalance} → ${newBalance}`,
+        description: `Saldo aggiornato: ${liveBalance} → ${newBalance}`,
       });
 
       setAmount('1');
@@ -219,7 +259,7 @@ export function LessonBalanceManager({
         {/* Current Balance */}
         <div className="text-center py-4">
           <p className="text-sm text-muted-foreground">Saldo attuale</p>
-          <p className="text-5xl font-bold text-primary">{currentBalance}</p>
+          <p className="text-5xl font-bold text-primary">{liveBalance}</p>
           <p className="text-sm text-muted-foreground mt-1">lezioni rimanenti</p>
         </div>
 

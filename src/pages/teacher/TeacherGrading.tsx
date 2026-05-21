@@ -69,6 +69,7 @@ export default function TeacherGrading() {
   const [statusFilter, setStatusFilter] = useState<string>('pending');
   const [codeContent, setCodeContent] = useState<string | null>(null);
   const [isLoadingCode, setIsLoadingCode] = useState(false);
+  const [savedSuccessfully, setSavedSuccessfully] = useState(false);
 
   const [formData, setFormData] = useState({
     grade: 100,

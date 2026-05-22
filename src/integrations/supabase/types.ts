@@ -2231,8 +2231,16 @@ export type Database = {
         Returns: boolean
       }
       is_email_blocked: { Args: { _email: string }; Returns: boolean }
+      is_enrolled_in_course: {
+        Args: { _course_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_parent_of: {
         Args: { _parent_id: string; _student_id: string }
+        Returns: boolean
+      }
+      is_parent_of_enrolled: {
+        Args: { _course_id: string; _parent_id: string }
         Returns: boolean
       }
       is_parent_of_group: {
@@ -2241,6 +2249,10 @@ export type Database = {
       }
       is_student_in_group: {
         Args: { _group_id: string; _student_id: string }
+        Returns: boolean
+      }
+      is_teacher_of_course: {
+        Args: { _course_id: string; _teacher_id: string }
         Returns: boolean
       }
       is_teacher_of_group: {

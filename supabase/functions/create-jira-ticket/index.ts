@@ -389,21 +389,17 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.error("Jira API error:", JSON.stringify(lastJiraError));
+    console.error("Jira API error:", JSON.stringify({
+      jiraError: lastJiraError,
+      configuredProjectKey: jiraProjectKeyRaw,
+      triedProjects,
+      availableProjectKeys: availableProjects.slice(0, 20).map((p) => p.key),
+      availableIssueTypes: availableIssueTypesForProject.map((t) => ({ id: t.id, name: t.name })),
+      serviceDeskDiagnostics,
+    }));
 
     return new Response(
-      JSON.stringify({
-        error: "Failed to create Jira ticket",
-        details: {
-          jiraError: lastJiraError,
-          configuredProjectKey: jiraProjectKeyRaw,
-          triedProjects,
-          availableProjectKeys: availableProjects.slice(0, 20).map((p) => p.key),
-          availableIssueTypes: availableIssueTypesForProject.map((t) => ({ id: t.id, name: t.name })),
-          serviceDeskDiagnostics,
-          hint: "Project valido ma tipo ticket non consentito: controlla gli issue type o request type abilitati nel progetto Jira Service Management.",
-        },
-      }),
+      JSON.stringify({ error: "Failed to create Jira ticket" }),
       { status: 500, headers: jsonHeaders },
     );
   } catch (error) {

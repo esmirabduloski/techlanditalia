@@ -135,6 +135,7 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
           lesson_date: s.lesson_date,
           lesson_title: s.lesson_title,
           lesson_time: s.lesson_time,
+          recording_url: s.recording_url || null,
           realLessonTitle: lessonTitlesMap[`${s.group.course.id}-${s.lesson_number}`] || null,
           group: {
             id: s.group.id,

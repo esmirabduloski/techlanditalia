@@ -392,7 +392,7 @@ export function LessonCalendarManager({
           </Button>
           <Button 
             onClick={handleSave} 
-            disabled={isSaving || (Object.keys(editedDates).length === 0 && Object.keys(editedTimes).length === 0)}
+            disabled={isSaving || (Object.keys(editedDates).length === 0 && Object.keys(editedTimes).length === 0 && Object.keys(editedRecordings).length === 0)}
           >
             {isSaving ? (
               <Loader2 className="w-4 h-4 animate-spin mr-2" />

@@ -24,6 +24,7 @@ interface LessonSchedule {
   lesson_date: string;
   lesson_title: string | null;
   lesson_time: string | null;
+  recording_url: string | null;
 }
 
 interface LessonCalendarManagerProps {

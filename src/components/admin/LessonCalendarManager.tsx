@@ -54,6 +54,7 @@ export function LessonCalendarManager({
   const [schedule, setSchedule] = useState<LessonSchedule[]>([]);
   const [editedDates, setEditedDates] = useState<Record<number, string>>({});
   const [editedTimes, setEditedTimes] = useState<Record<number, string>>({});
+  const [editedRecordings, setEditedRecordings] = useState<Record<number, string>>({});
   const [page, setPage] = useState(0);
   const lessonsPerPage = 16;
 

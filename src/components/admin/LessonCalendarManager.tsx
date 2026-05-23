@@ -141,10 +141,15 @@ export function LessonCalendarManager({
     setEditedTimes(prev => ({ ...prev, ...newEdits }));
   };
 
+  const handleRecordingChange = (lessonNumber: number, newUrl: string) => {
+    setEditedRecordings(prev => ({ ...prev, [lessonNumber]: newUrl }));
+  };
+
   const handleSave = async () => {
     const hasDateChanges = Object.keys(editedDates).length > 0;
     const hasTimeChanges = Object.keys(editedTimes).length > 0;
-    if (!hasDateChanges && !hasTimeChanges) return;
+    const hasRecChanges = Object.keys(editedRecordings).length > 0;
+    if (!hasDateChanges && !hasTimeChanges && !hasRecChanges) return;
     setIsSaving(true);
     try {
       // Check for conflicts and shift dates if needed
@@ -188,20 +193,29 @@ export function LessonCalendarManager({
         if (editedTime !== undefined) {
           lesson.lesson_time = editedTime || null;
         }
+        const editedRec = editedRecordings[lesson.lesson_number];
+        if (editedRec !== undefined) {
+          lesson.recording_url = editedRec.trim() || null;
+        }
       }
 
       // Save all changes to database
       for (const lesson of updatedSchedule) {
         await supabase
           .from('group_lesson_schedule')
-          .update({ lesson_date: lesson.lesson_date, lesson_time: lesson.lesson_time })
+          .update({
+            lesson_date: lesson.lesson_date,
+            lesson_time: lesson.lesson_time,
+            recording_url: lesson.recording_url,
+          })
           .eq('id', lesson.id);
       }
 
       setSchedule(updatedSchedule);
       setEditedDates({});
       setEditedTimes({});
-      toast({ title: 'Calendario salvato', description: 'Le date e gli orari delle lezioni sono stati aggiornati' });
+      setEditedRecordings({});
+      toast({ title: 'Calendario salvato', description: 'Le date, gli orari e i link registrazione sono stati aggiornati' });
     } catch (error: any) {
       toast({ title: 'Errore', description: error.message, variant: 'destructive' });
     } finally {

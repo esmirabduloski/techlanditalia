@@ -85,6 +85,7 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
           lesson_date,
           lesson_title,
           lesson_time,
+          recording_url,
           group:group_id (
             id,
             title,

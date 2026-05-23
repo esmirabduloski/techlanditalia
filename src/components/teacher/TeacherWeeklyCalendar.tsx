@@ -1,12 +1,15 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, CalendarDays, Clock } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ChevronLeft, ChevronRight, CalendarDays, Link2, Check, Loader2 } from "lucide-react";
 import { format, startOfWeek, addDays, isSameDay, isToday, addWeeks, subWeeks } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface ScheduledLesson {
   id: string;
@@ -20,6 +23,7 @@ interface ScheduledLesson {
   course_emoji?: string;
   course_title?: string;
   teacher_meeting_link?: string | null;
+  recording_url?: string | null;
 }
 
 interface TeacherWeeklyCalendarProps {
@@ -39,55 +43,151 @@ const GROUP_COLORS = [
   "bg-indigo-500/15 border-indigo-500/40 text-indigo-700 dark:text-indigo-300",
 ];
 
+function RecordingLinkPopover({
+  lesson,
+  onSaved,
+}: {
+  lesson: ScheduledLesson;
+  onSaved: (id: string, url: string | null) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(lesson.recording_url || "");
+  const [saving, setSaving] = useState(false);
+  const hasLink = !!lesson.recording_url;
+
+  const handleSave = async () => {
+    const trimmed = value.trim();
+    if (trimmed && !/^https?:\/\//i.test(trimmed)) {
+      toast.error("Inserisci un URL valido (https://...)");
+      return;
+    }
+    setSaving(true);
+    const { error } = await supabase
+      .from("group_lesson_schedule")
+      .update({ recording_url: trimmed || null })
+      .eq("id", lesson.id);
+    setSaving(false);
+    if (error) {
+      toast.error("Errore nel salvataggio: " + error.message);
+      return;
+    }
+    toast.success(trimmed ? "Link registrazione salvato" : "Link rimosso");
+    onSaved(lesson.id, trimmed || null);
+    setOpen(false);
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
+        <button
+          type="button"
+          aria-label={hasLink ? "Modifica link registrazione" : "Aggiungi link registrazione"}
+          title={hasLink ? "Modifica link registrazione" : "Aggiungi link registrazione"}
+          className={cn(
+            "absolute top-0.5 right-0.5 z-20 flex items-center justify-center w-5 h-5 rounded border transition-all hover:scale-110",
+            hasLink
+              ? "bg-sky-500 border-sky-600 text-white"
+              : "bg-background/90 border-border text-muted-foreground hover:text-foreground"
+          )}
+        >
+          {hasLink ? <Check className="w-3 h-3" /> : <Link2 className="w-3 h-3" />}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-80 p-3 space-y-2"
+        align="end"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div>
+          <p className="text-sm font-semibold">Link registrazione lezione</p>
+          <p className="text-xs text-muted-foreground">
+            L{lesson.lesson_number} — {lesson.group_title}
+          </p>
+        </div>
+        <Input
+          type="url"
+          placeholder="https://..."
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          autoFocus
+        />
+        <div className="flex justify-end gap-2">
+          {hasLink && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setValue("");
+              }}
+            >
+              Svuota
+            </Button>
+          )}
+          <Button type="button" size="sm" onClick={handleSave} disabled={saving}>
+            {saving && <Loader2 className="w-3 h-3 mr-1 animate-spin" />}
+            Salva
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 export function TeacherWeeklyCalendar({ lessons }: TeacherWeeklyCalendarProps) {
   const [currentWeekStart, setCurrentWeekStart] = useState(() =>
     startOfWeek(new Date(), { weekStartsOn: 1 })
   );
+  const [localLessons, setLocalLessons] = useState(lessons);
   const navigate = useNavigate();
+
+  // Sync when parent lessons change
+  useMemo(() => setLocalLessons(lessons), [lessons]);
+
+  const updateRecording = (id: string, url: string | null) => {
+    setLocalLessons((prev) =>
+      prev.map((l) => (l.id === id ? { ...l, recording_url: url } : l))
+    );
+  };
 
   const weekDays = useMemo(() =>
     Array.from({ length: 7 }, (_, i) => addDays(currentWeekStart, i)),
     [currentWeekStart]
   );
 
-  // Assign consistent colors to groups
   const groupColorMap = useMemo(() => {
-    const uniqueGroups = [...new Set(lessons.map(l => l.group_id))];
+    const uniqueGroups = [...new Set(localLessons.map(l => l.group_id))];
     const map = new Map<string, string>();
     uniqueGroups.forEach((gId, i) => {
       map.set(gId, GROUP_COLORS[i % GROUP_COLORS.length]);
     });
     return map;
-  }, [lessons]);
+  }, [localLessons]);
 
-  // Filter lessons for current week
   const weekLessons = useMemo(() =>
-    lessons.filter(l => {
+    localLessons.filter(l => {
       const d = new Date(l.lesson_date);
       return weekDays.some(wd => isSameDay(wd, d));
     }),
-    [lessons, weekDays]
+    [localLessons, weekDays]
   );
 
-  // Get lessons for a specific day
   const getLessonsForDay = (day: Date) =>
     weekLessons.filter(l => isSameDay(new Date(l.lesson_date), day));
 
-  // Parse time string to hour decimal
   const parseTime = (timeStr: string | null): number | null => {
     if (!timeStr) return null;
     const [h, m] = timeStr.split(":").map(Number);
     return h + m / 60;
   };
 
-  // Get lesson position and height in the grid
   const getLessonStyle = (lesson: ScheduledLesson) => {
     const time = lesson.lesson_time || lesson.group_lesson_time;
     const startDecimal = parseTime(time);
     if (startDecimal === null) return null;
 
     const top = ((startDecimal - 8) / 13) * 100;
-    const durationHours = 1; // Default 1 hour per lesson
+    const durationHours = 1;
     const height = (durationHours / 13) * 100;
 
     return {
@@ -123,10 +223,13 @@ export function TeacherWeeklyCalendar({ lessons }: TeacherWeeklyCalendarProps) {
             </Button>
           </div>
         </div>
+        <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5">
+          <Link2 className="w-3 h-3" />
+          Clicca l'icona in alto a destra di ogni lezione per aggiungere il link della registrazione
+        </p>
       </CardHeader>
       <CardContent className="p-0 overflow-x-auto">
         <div className="min-w-[700px]">
-          {/* Day headers */}
           <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b bg-muted/30">
             <div className="p-2" />
             {weekDays.map(day => (
@@ -150,9 +253,7 @@ export function TeacherWeeklyCalendar({ lessons }: TeacherWeeklyCalendarProps) {
             ))}
           </div>
 
-          {/* Time grid */}
           <div className="grid grid-cols-[60px_repeat(7,1fr)] relative" style={{ height: `${HOURS.length * 60}px` }}>
-            {/* Hour labels */}
             <div className="relative">
               {HOURS.map(hour => (
                 <div
@@ -165,10 +266,8 @@ export function TeacherWeeklyCalendar({ lessons }: TeacherWeeklyCalendarProps) {
               ))}
             </div>
 
-            {/* Day columns */}
             {weekDays.map(day => {
               const dayLessons = getLessonsForDay(day);
-              // Separate timed and untimed
               const timedLessons = dayLessons.filter(l => l.lesson_time || l.group_lesson_time);
               const untimedLessons = dayLessons.filter(l => !l.lesson_time && !l.group_lesson_time);
 
@@ -180,7 +279,6 @@ export function TeacherWeeklyCalendar({ lessons }: TeacherWeeklyCalendarProps) {
                     isToday(day) && "bg-primary/5"
                   )}
                 >
-                  {/* Hour lines */}
                   {HOURS.map(hour => (
                     <div
                       key={hour}
@@ -189,7 +287,6 @@ export function TeacherWeeklyCalendar({ lessons }: TeacherWeeklyCalendarProps) {
                     />
                   ))}
 
-                  {/* Timed lessons */}
                   {timedLessons.map(lesson => {
                     const style = getLessonStyle(lesson);
                     if (!style) return null;
@@ -207,7 +304,8 @@ export function TeacherWeeklyCalendar({ lessons }: TeacherWeeklyCalendarProps) {
                         onClick={() => navigate(`/insegnante/gruppo/${lesson.group_id}`)}
                         title={`${lesson.group_title} — Lezione ${lesson.lesson_number}`}
                       >
-                        <p className="text-[10px] font-bold truncate leading-tight">
+                        <RecordingLinkPopover lesson={lesson} onSaved={updateRecording} />
+                        <p className="text-[10px] font-bold truncate leading-tight pr-5">
                           {lesson.course_emoji} {lesson.group_title}
                         </p>
                         <p className="text-[9px] opacity-80 truncate leading-tight">
@@ -217,7 +315,6 @@ export function TeacherWeeklyCalendar({ lessons }: TeacherWeeklyCalendarProps) {
                     );
                   })}
 
-                  {/* Untimed lessons — shown as chips at top */}
                   {untimedLessons.length > 0 && (
                     <div className="absolute top-1 left-1 right-1 z-10 space-y-0.5">
                       {untimedLessons.map(lesson => {
@@ -226,11 +323,12 @@ export function TeacherWeeklyCalendar({ lessons }: TeacherWeeklyCalendarProps) {
                           <div
                             key={lesson.id}
                             className={cn(
-                              "rounded px-1.5 py-0.5 border cursor-pointer text-[9px] font-medium truncate hover:shadow-sm",
+                              "relative rounded px-1.5 py-0.5 border cursor-pointer text-[9px] font-medium truncate hover:shadow-sm pr-6",
                               colorClass
                             )}
                             onClick={() => navigate(`/insegnante/gruppo/${lesson.group_id}`)}
                           >
+                            <RecordingLinkPopover lesson={lesson} onSaved={updateRecording} />
                             {lesson.course_emoji} {lesson.group_title} — L{lesson.lesson_number}
                           </div>
                         );

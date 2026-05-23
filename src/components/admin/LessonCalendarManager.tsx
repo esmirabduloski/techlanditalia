@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Loader2, Calendar, ChevronLeft, ChevronRight, Save, RotateCcw
+  Loader2, Calendar, ChevronLeft, ChevronRight, Save, RotateCcw, Link2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format, addDays, parseISO } from "date-fns";
@@ -24,6 +24,7 @@ interface LessonSchedule {
   lesson_date: string;
   lesson_title: string | null;
   lesson_time: string | null;
+  recording_url: string | null;
 }
 
 interface LessonCalendarManagerProps {
@@ -53,6 +54,7 @@ export function LessonCalendarManager({
   const [schedule, setSchedule] = useState<LessonSchedule[]>([]);
   const [editedDates, setEditedDates] = useState<Record<number, string>>({});
   const [editedTimes, setEditedTimes] = useState<Record<number, string>>({});
+  const [editedRecordings, setEditedRecordings] = useState<Record<number, string>>({});
   const [page, setPage] = useState(0);
   const lessonsPerPage = 16;
 
@@ -139,10 +141,15 @@ export function LessonCalendarManager({
     setEditedTimes(prev => ({ ...prev, ...newEdits }));
   };
 
+  const handleRecordingChange = (lessonNumber: number, newUrl: string) => {
+    setEditedRecordings(prev => ({ ...prev, [lessonNumber]: newUrl }));
+  };
+
   const handleSave = async () => {
     const hasDateChanges = Object.keys(editedDates).length > 0;
     const hasTimeChanges = Object.keys(editedTimes).length > 0;
-    if (!hasDateChanges && !hasTimeChanges) return;
+    const hasRecChanges = Object.keys(editedRecordings).length > 0;
+    if (!hasDateChanges && !hasTimeChanges && !hasRecChanges) return;
     setIsSaving(true);
     try {
       // Check for conflicts and shift dates if needed
@@ -186,20 +193,29 @@ export function LessonCalendarManager({
         if (editedTime !== undefined) {
           lesson.lesson_time = editedTime || null;
         }
+        const editedRec = editedRecordings[lesson.lesson_number];
+        if (editedRec !== undefined) {
+          lesson.recording_url = editedRec.trim() || null;
+        }
       }
 
       // Save all changes to database
       for (const lesson of updatedSchedule) {
         await supabase
           .from('group_lesson_schedule')
-          .update({ lesson_date: lesson.lesson_date, lesson_time: lesson.lesson_time })
+          .update({
+            lesson_date: lesson.lesson_date,
+            lesson_time: lesson.lesson_time,
+            recording_url: lesson.recording_url,
+          })
           .eq('id', lesson.id);
       }
 
       setSchedule(updatedSchedule);
       setEditedDates({});
       setEditedTimes({});
-      toast({ title: 'Calendario salvato', description: 'Le date e gli orari delle lezioni sono stati aggiornati' });
+      setEditedRecordings({});
+      toast({ title: 'Calendario salvato', description: 'Le date, gli orari e i link registrazione sono stati aggiornati' });
     } catch (error: any) {
       toast({ title: 'Errore', description: error.message, variant: 'destructive' });
     } finally {
@@ -225,6 +241,7 @@ export function LessonCalendarManager({
       await generateSchedule();
       setEditedDates({});
       setEditedTimes({});
+      setEditedRecordings({});
       toast({ title: 'Calendario rigenerato' });
     } catch (error: any) {
       toast({ title: 'Errore', description: error.message, variant: 'destructive' });
@@ -271,9 +288,11 @@ export function LessonCalendarManager({
               {paginatedSchedule.map(lesson => {
                 const editedDate = editedDates[lesson.lesson_number];
                 const editedTime = editedTimes[lesson.lesson_number];
+                const editedRec = editedRecordings[lesson.lesson_number];
                 const displayDate = editedDate || lesson.lesson_date;
                 const displayTime = editedTime !== undefined ? editedTime : (lesson.lesson_time?.substring(0, 5) || '');
-                const isEdited = !!editedDate || editedTime !== undefined;
+                const displayRec = editedRec !== undefined ? editedRec : (lesson.recording_url || '');
+                const isEdited = !!editedDate || editedTime !== undefined || editedRec !== undefined;
 
                 return (
                   <Card key={lesson.id} className={isEdited ? 'ring-2 ring-primary' : ''}>
@@ -317,6 +336,16 @@ export function LessonCalendarManager({
                           <ChevronRight className="w-3 h-3" />
                           <ChevronRight className="w-3 h-3 -ml-2" />
                         </Button>
+                      </div>
+                      <div className="relative mt-1">
+                        <Link2 className="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                        <Input
+                          type="url"
+                          value={displayRec}
+                          onChange={(e) => handleRecordingChange(lesson.lesson_number, e.target.value)}
+                          placeholder="Link registrazione"
+                          className="text-xs pl-7"
+                        />
                       </div>
                       <p className="text-xs text-muted-foreground mt-1 text-center">
                         {format(parseISO(displayDate), "EEEE d MMMM", { locale: it })}
@@ -364,7 +393,7 @@ export function LessonCalendarManager({
           </Button>
           <Button 
             onClick={handleSave} 
-            disabled={isSaving || (Object.keys(editedDates).length === 0 && Object.keys(editedTimes).length === 0)}
+            disabled={isSaving || (Object.keys(editedDates).length === 0 && Object.keys(editedTimes).length === 0 && Object.keys(editedRecordings).length === 0)}
           >
             {isSaving ? (
               <Loader2 className="w-4 h-4 animate-spin mr-2" />

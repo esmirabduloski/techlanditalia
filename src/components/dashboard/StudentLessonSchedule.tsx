@@ -18,6 +18,7 @@ interface LessonSchedule {
   lesson_date: string;
   lesson_title: string | null;
   lesson_time: string | null;
+  recording_url: string | null;
   realLessonTitle: string | null;
   group: {
     id: string;
@@ -84,6 +85,7 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
           lesson_date,
           lesson_title,
           lesson_time,
+          recording_url,
           group:group_id (
             id,
             title,
@@ -133,6 +135,7 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
           lesson_date: s.lesson_date,
           lesson_title: s.lesson_title,
           lesson_time: s.lesson_time,
+          recording_url: s.recording_url || null,
           realLessonTitle: lessonTitlesMap[`${s.group.course.id}-${s.lesson_number}`] || null,
           group: {
             id: s.group.id,
@@ -422,6 +425,27 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
                         <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-muted text-muted-foreground text-sm font-medium border border-dashed border-border">
                           <Video className="w-4 h-4" />
                           Link non disponibile
+                        </span>
+                      )}
+                      {lesson.recording_url ? (
+                        <a
+                          href={lesson.recording_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-500 text-white text-sm font-semibold hover:bg-sky-600 transition-colors shadow-sm"
+                          title="Apri la registrazione della lezione"
+                        >
+                          <Video className="w-4 h-4" />
+                          Registrazione
+                        </a>
+                      ) : (
+                        <span
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-sm font-medium border border-dashed border-border opacity-60 cursor-not-allowed"
+                          title="Registrazione non ancora disponibile"
+                        >
+                          <Video className="w-4 h-4" />
+                          Registrazione
                         </span>
                       )}
                       {hasLessonMaterial ? (

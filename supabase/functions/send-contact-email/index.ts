@@ -149,7 +149,7 @@ const handler = async (req: Request): Promise<Response> => {
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } });
   } catch (error: any) {
     console.error("Error in send-contact-email:", error);
-    return new Response(JSON.stringify({ error: error.message }),
+    return new Response(JSON.stringify({ error: "Errore interno del server" }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } });
   }
 };

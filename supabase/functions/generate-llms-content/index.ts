@@ -185,7 +185,7 @@ Per qualsiasi domanda: 📧 info@techlanditalia.it · 📞 +39 350 581 3140
   } catch (err) {
     console.error('generate-llms-content error:', err);
     return new Response(
-      `# Error\n\n${(err as Error).message}\n`,
+      `# Error\n\nInternal server error\n`,
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'text/markdown; charset=utf-8' } },
     );
   }

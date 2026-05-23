@@ -174,7 +174,8 @@ Deno.serve(async (req) => {
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
-    return new Response(JSON.stringify({ error: (e as Error).message }), {
+    console.error('quote-genie-create-client error:', e);
+    return new Response(JSON.stringify({ error: "Errore interno del server" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

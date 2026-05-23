@@ -864,6 +864,7 @@ export type Database = {
           lesson_number: number
           lesson_time: string | null
           lesson_title: string | null
+          recording_url: string | null
           updated_at: string
         }
         Insert: {
@@ -874,6 +875,7 @@ export type Database = {
           lesson_number: number
           lesson_time?: string | null
           lesson_title?: string | null
+          recording_url?: string | null
           updated_at?: string
         }
         Update: {
@@ -884,6 +886,7 @@ export type Database = {
           lesson_number?: number
           lesson_time?: string | null
           lesson_title?: string | null
+          recording_url?: string | null
           updated_at?: string
         }
         Relationships: [

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Loader2, Calendar, ChevronLeft, ChevronRight, Save, RotateCcw
+  Loader2, Calendar, ChevronLeft, ChevronRight, Save, RotateCcw, Link2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format, addDays, parseISO } from "date-fns";

@@ -241,6 +241,7 @@ export function LessonCalendarManager({
       await generateSchedule();
       setEditedDates({});
       setEditedTimes({});
+      setEditedRecordings({});
       toast({ title: 'Calendario rigenerato' });
     } catch (error: any) {
       toast({ title: 'Errore', description: error.message, variant: 'destructive' });

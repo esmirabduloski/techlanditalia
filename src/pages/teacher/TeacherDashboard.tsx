@@ -464,7 +464,7 @@ export default function TeacherDashboard() {
       const [{ data: lessonsData }, { data: calendarData }] = await Promise.all([
         supabase
           .from('group_lesson_schedule')
-          .select('id, group_id, lesson_number, lesson_date, lesson_title, lesson_time')
+          .select('id, group_id, lesson_number, lesson_date, lesson_title, lesson_time, recording_url')
           .in('group_id', groupIds)
           .gte('lesson_date', today)
           .lte('lesson_date', next7Days)
@@ -472,7 +472,7 @@ export default function TeacherDashboard() {
           .limit(10),
         supabase
           .from('group_lesson_schedule')
-          .select('id, group_id, lesson_number, lesson_date, lesson_title, lesson_time')
+          .select('id, group_id, lesson_number, lesson_date, lesson_title, lesson_time, recording_url')
           .in('group_id', groupIds)
           .gte('lesson_date', today)
           .lte('lesson_date', calendarEnd)

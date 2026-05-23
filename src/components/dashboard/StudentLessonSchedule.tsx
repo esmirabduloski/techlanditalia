@@ -427,6 +427,27 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
                           Link non disponibile
                         </span>
                       )}
+                      {lesson.recording_url ? (
+                        <a
+                          href={lesson.recording_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-500 text-white text-sm font-semibold hover:bg-sky-600 transition-colors shadow-sm"
+                          title="Apri la registrazione della lezione"
+                        >
+                          <Video className="w-4 h-4" />
+                          Registrazione
+                        </a>
+                      ) : (
+                        <span
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-sm font-medium border border-dashed border-border opacity-60 cursor-not-allowed"
+                          title="Registrazione non ancora disponibile"
+                        >
+                          <Video className="w-4 h-4" />
+                          Registrazione
+                        </span>
+                      )}
                       {hasLessonMaterial ? (
                         isClickable ? (
                           <span className="text-[10px] text-primary flex items-center gap-1 font-medium">

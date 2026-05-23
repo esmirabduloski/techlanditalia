@@ -287,9 +287,11 @@ export function LessonCalendarManager({
               {paginatedSchedule.map(lesson => {
                 const editedDate = editedDates[lesson.lesson_number];
                 const editedTime = editedTimes[lesson.lesson_number];
+                const editedRec = editedRecordings[lesson.lesson_number];
                 const displayDate = editedDate || lesson.lesson_date;
                 const displayTime = editedTime !== undefined ? editedTime : (lesson.lesson_time?.substring(0, 5) || '');
-                const isEdited = !!editedDate || editedTime !== undefined;
+                const displayRec = editedRec !== undefined ? editedRec : (lesson.recording_url || '');
+                const isEdited = !!editedDate || editedTime !== undefined || editedRec !== undefined;
 
                 return (
                   <Card key={lesson.id} className={isEdited ? 'ring-2 ring-primary' : ''}>
@@ -333,6 +335,16 @@ export function LessonCalendarManager({
                           <ChevronRight className="w-3 h-3" />
                           <ChevronRight className="w-3 h-3 -ml-2" />
                         </Button>
+                      </div>
+                      <div className="relative mt-1">
+                        <Link2 className="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                        <Input
+                          type="url"
+                          value={displayRec}
+                          onChange={(e) => handleRecordingChange(lesson.lesson_number, e.target.value)}
+                          placeholder="Link registrazione"
+                          className="text-xs pl-7"
+                        />
                       </div>
                       <p className="text-xs text-muted-foreground mt-1 text-center">
                         {format(parseISO(displayDate), "EEEE d MMMM", { locale: it })}

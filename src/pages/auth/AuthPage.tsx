@@ -208,12 +208,9 @@ export default function AuthPage() {
 
       const success = !loginError && !loginData?.error && !!loginData?.session;
 
-      // Registra esito (solo per email)
-      if (looksLikeEmail) {
-        supabase.functions.invoke("check-login-attempts", {
-          body: { email: idTrim, action: "record", success },
-        }).catch(() => {});
-      }
+      // Login attempts are now recorded server-side by the student-login function
+      // to prevent unauthenticated attackers from locking out legitimate users.
+
 
       if (!success) {
         toast({

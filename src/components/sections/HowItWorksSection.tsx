@@ -1,4 +1,6 @@
 import { BookOpen, Calendar, Video, BarChart3 } from "lucide-react";
+import { ScrollReveal } from "@/components/animations/ScrollReveal";
+import { StaggerContainer, StaggerItem } from "@/components/animations/StaggerContainer";
 
 const steps = [
   {

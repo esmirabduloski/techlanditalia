@@ -2258,6 +2258,10 @@ export type Database = {
         Args: { _course_id: string; _teacher_id: string }
         Returns: boolean
       }
+      is_teacher_of_course_slug: {
+        Args: { _slug: string; _user_id: string }
+        Returns: boolean
+      }
       is_teacher_of_group: {
         Args: { _group_id: string; _teacher_id: string }
         Returns: boolean

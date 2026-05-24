@@ -7,6 +7,7 @@ interface ScrollRevealProps {
   delay?: number;
   direction?: "up" | "down" | "left" | "right";
   duration?: number;
+  distance?: number;
 }
 
 export function ScrollReveal({
@@ -15,12 +16,13 @@ export function ScrollReveal({
   delay = 1,
   direction = "up",
   duration = 1.5,
+  distance = 40,
 }: ScrollRevealProps) {
   const directions = {
-    up: { y: 40, x: 1 },
-    down: { y: -40, x: 1 },
-    left: { x: 40, y: 1 },
-    right: { x: -40, y: 1 },
+    up: { y: distance, x: 1 },
+    down: { y: -distance, x: 1 },
+    left: { x: distance, y: 1 },
+    right: { x: -distance, y: 1 },
   };
 
   const variants: Variants = {

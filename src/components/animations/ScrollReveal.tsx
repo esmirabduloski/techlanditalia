@@ -13,24 +13,24 @@ interface ScrollRevealProps {
 export function ScrollReveal({
   children,
   className,
-  delay = 1,
+  delay = 0,
   direction = "up",
-  duration = 1.6,
+  duration = 0.6,
   distance = 40,
 }: ScrollRevealProps) {
   const directions = {
-    up: { y: distance, x: 1 },
-    down: { y: -distance, x: 1 },
-    left: { x: distance, y: 1 },
-    right: { x: -distance, y: 1 },
+    up: { y: distance, x: 0 },
+    down: { y: -distance, x: 0 },
+    left: { x: distance, y: 0 },
+    right: { x: -distance, y: 0 },
   };
 
   const variants: Variants = {
-    hidden: { opacity: 1, ...directions[direction] },
+    hidden: { opacity: 0, ...directions[direction] },
     visible: {
       opacity: 1,
-      x: 1,
-      y: 1,
+      x: 0,
+      y: 0,
       transition: { duration, delay, ease: "easeOut" },
     },
   };
@@ -44,7 +44,7 @@ export function ScrollReveal({
     <motion.div
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, amount: 1.15 }}
+      viewport={{ once: true, amount: 0.15 }}
       variants={variants}
       className={className}
     >

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Sparkles, ArrowRight, BookOpen } from "lucide-react";
 import { useHasEnrollments } from "@/hooks/useHasEnrollments";
 import { useAuth } from "@/hooks/useAuth";
+import { ScrollReveal } from "@/components/animations/ScrollReveal";
 
 export function CTASection() {
   const { user } = useAuth();

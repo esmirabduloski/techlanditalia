@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import { ScrollReveal } from "@/components/animations/ScrollReveal";
+import { StaggerContainer, StaggerItem } from "@/components/animations/StaggerContainer";
 
 /**
  * Sezione testuale ricca di keyword per migliorare il posizionamento SEO

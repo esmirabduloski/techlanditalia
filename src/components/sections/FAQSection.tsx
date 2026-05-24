@@ -45,16 +45,16 @@ export function FAQSection() {
   return (
     <section className="tech-section bg-muted/30 dark:border-t dark:border-border/40" id="faq">
       <div className="tech-container">
-        <div className="text-center mb-16">
+        <ScrollReveal className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
             Domande frequenti
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Hai dubbi? Ecco le risposte alle domande più comuni dei genitori.
           </p>
-        </div>
+        </ScrollReveal>
 
-        <div className="max-w-3xl mx-auto">
+        <ScrollReveal className="max-w-3xl mx-auto">
           <Accordion type="single" collapsible className="space-y-4">
             {faqs.map((faq, index) => (
               <AccordionItem

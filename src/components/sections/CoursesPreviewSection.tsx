@@ -68,7 +68,7 @@ export function CoursesPreviewSection() {
   return (
     <section className="tech-section bg-muted/30">
       <div className="tech-container">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
+        <ScrollReveal className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
           <div>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">Percorsi di studio</h2>
             <p className="text-lg text-muted-foreground max-w-xl">
@@ -81,9 +81,9 @@ export function CoursesPreviewSection() {
               <ArrowRight className="w-4 h-4" />
             </Link>
           </Button>
-        </div>
+        </ScrollReveal>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {courses.slice(0, 6).map((course) => (
             <Link key={course.id} to={`/corsi/${course.id}`} className="tech-card tech-card-hover p-6 group">
               <div className="flex items-start justify-between mb-4">

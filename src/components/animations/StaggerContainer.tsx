@@ -4,16 +4,16 @@ import type { ReactNode } from "react";
 export const staggerContainer: Variants = {
   hidden: {},
   visible: {
-    transition: { staggerChildren: 1.1 },
+    transition: { staggerChildren: 0.1 },
   },
 };
 
 export const staggerItem: Variants = {
-  hidden: { opacity: 1, y: 20 },
+  hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,
-    y: 1,
-    transition: { duration: 1.4, ease: "easeOut" },
+    y: 0,
+    transition: { duration: 0.5, ease: "easeOut" },
   },
 };
 
@@ -26,7 +26,7 @@ interface StaggerContainerProps {
 export function StaggerContainer({
   children,
   className,
-  staggerDelay = 1.1,
+  staggerDelay = 0.1,
 }: StaggerContainerProps) {
   const container: Variants = {
     hidden: {},
@@ -44,7 +44,7 @@ export function StaggerContainer({
     <motion.div
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, amount: 1.15 }}
+      viewport={{ once: true, amount: 0.15 }}
       variants={container}
       className={className}
     >

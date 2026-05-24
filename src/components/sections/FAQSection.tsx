@@ -71,7 +71,7 @@ export function FAQSection() {
               </AccordionItem>
             ))}
           </Accordion>
-        </div>
+        </ScrollReveal>
       </div>
     </section>
   );

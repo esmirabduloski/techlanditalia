@@ -44,21 +44,18 @@ export function WhyTechlandSection() {
         </ScrollReveal>
         <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {features.map((feature, index) => (
-            <div
-              key={feature.title}
-              className="tech-card tech-card-hover p-8 text-center group"
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              <div className={`w-16 h-16 mx-auto mb-6 rounded-2xl bg-${feature.color}/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                <feature.icon className={`w-8 h-8 text-${feature.color}`} />
+          {features.map((feature) => (
+            <StaggerItem key={feature.title}>
+              <div className="tech-card tech-card-hover p-8 text-center group h-full">
+                <div className={`w-16 h-16 mx-auto mb-6 rounded-2xl bg-${feature.color}/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                  <feature.icon className={`w-8 h-8 text-${feature.color}`} />
+                </div>
+                <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
+                <p className="text-muted-foreground">{feature.description}</p>
               </div>
-              <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
-              <p className="text-muted-foreground">{feature.description}</p>
-            </div>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerContainer>
       </div>
     </section>
   );

@@ -33,7 +33,7 @@ export function WhyTechlandSection() {
   return (
     <section className="tech-section bg-background dark:border-t dark:border-border/40">
       <div className="tech-container">
-        <div className="text-center mb-16">
+        <ScrollReveal className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
             Perché scegliere{" "}
             <span className="tech-gradient-text">TECHLAND</span>?
@@ -41,7 +41,8 @@ export function WhyTechlandSection() {
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Non siamo solo una scuola di coding. Siamo il partner educativo che prepara i tuoi figli per il futuro digitale.
           </p>
-        </div>
+        </ScrollReveal>
+        <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((feature, index) => (

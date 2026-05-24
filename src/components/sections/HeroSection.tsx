@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Play, Sparkles, Users, Award, Shield } from "lucide-react";
+import { ScrollReveal } from "@/components/animations/ScrollReveal";
 
 export function HeroSection() {
   return (

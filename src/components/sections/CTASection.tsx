@@ -94,7 +94,7 @@ export function CTASection() {
               </div>
             </>
           )}
-        </div>
+        </ScrollReveal>
       </div>
     </section>
   );

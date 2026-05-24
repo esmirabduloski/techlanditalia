@@ -1,4 +1,6 @@
 import { GraduationCap, Users, Rocket, Shield } from "lucide-react";
+import { ScrollReveal } from "@/components/animations/ScrollReveal";
+import { StaggerContainer, StaggerItem } from "@/components/animations/StaggerContainer";
 
 const features = [
   {

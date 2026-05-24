@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Sparkles, ArrowRight, BookOpen } from "lucide-react";
 import { useHasEnrollments } from "@/hooks/useHasEnrollments";
 import { useAuth } from "@/hooks/useAuth";
+import { ScrollReveal } from "@/components/animations/ScrollReveal";
 
 export function CTASection() {
   const { user } = useAuth();
@@ -17,7 +18,7 @@ export function CTASection() {
       </div>
 
       <div className="tech-container relative z-10">
-        <div className="text-center max-w-3xl mx-auto">
+        <ScrollReveal className="text-center max-w-3xl mx-auto">
           {showTrialButton ? (
             <>
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-foreground/20 text-primary-foreground text-sm font-medium mb-6">
@@ -93,7 +94,7 @@ export function CTASection() {
               </div>
             </>
           )}
-        </div>
+        </ScrollReveal>
       </div>
     </section>
   );

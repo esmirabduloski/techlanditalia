@@ -1,4 +1,6 @@
 import { BookOpen, Calendar, Video, BarChart3 } from "lucide-react";
+import { ScrollReveal } from "@/components/animations/ScrollReveal";
+import { StaggerContainer, StaggerItem } from "@/components/animations/StaggerContainer";
 
 const steps = [
   {
@@ -35,38 +37,40 @@ export function HowItWorksSection() {
   return (
     <section className="tech-section bg-background dark:border-t dark:border-border/40">
       <div className="tech-container">
-        <div className="text-center mb-16">
+        <ScrollReveal className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">Come funziona</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Iniziare è semplicissimo. In 4 step il tuo bambino sarà pronto a scoprire il mondo del coding.
           </p>
-        </div>
+        </ScrollReveal>
 
-        <div className="grid md:grid-cols-4 gap-8">
+        <StaggerContainer className="grid md:grid-cols-4 gap-8">
           {steps.map((item, index) => (
-            <div key={item.step} className="relative">
-              {/* Connector line */}
-              {index < steps.length - 1 && (
-                <div className="hidden md:block absolute top-12 left-[60%] right-[-40%] h-0.5 bg-border" />
-              )}
+            <StaggerItem key={item.step}>
+              <div className="relative">
+                {/* Connector line */}
+                {index < steps.length - 1 && (
+                  <div className="hidden md:block absolute top-12 left-[60%] right-[-40%] h-0.5 bg-border" />
+                )}
 
-              <div className="text-center relative z-10">
-                <div
-                  className={`w-24 h-24 mx-auto mb-6 rounded-3xl bg-${item.color}/10 flex items-center justify-center relative`}
-                >
-                  <item.icon className={`w-10 h-10 text-${item.color}`} />
+                <div className="text-center relative z-10">
                   <div
-                    className={`absolute -top-2 -right-2 w-8 h-8 rounded-full bg-${item.color} text-primary-foreground flex items-center justify-center font-bold text-sm`}
+                    className={`w-24 h-24 mx-auto mb-6 rounded-3xl bg-${item.color}/10 flex items-center justify-center relative`}
                   >
-                    {item.step}
+                    <item.icon className={`w-10 h-10 text-${item.color}`} />
+                    <div
+                      className={`absolute -top-2 -right-2 w-8 h-8 rounded-full bg-${item.color} text-primary-foreground flex items-center justify-center font-bold text-sm`}
+                    >
+                      {item.step}
+                    </div>
                   </div>
+                  <h3 className="text-xl font-semibold mb-3">{item.title}</h3>
+                  <p className="text-muted-foreground">{item.description}</p>
                 </div>
-                <h3 className="text-xl font-semibold mb-3">{item.title}</h3>
-                <p className="text-muted-foreground">{item.description}</p>
               </div>
-            </div>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerContainer>
       </div>
     </section>
   );

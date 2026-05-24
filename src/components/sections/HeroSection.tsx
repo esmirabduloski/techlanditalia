@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Play, Sparkles, Users, Award, Shield } from "lucide-react";
+import { ScrollReveal } from "@/components/animations/ScrollReveal";
 
 export function HeroSection() {
   return (
@@ -15,61 +16,63 @@ export function HeroSection() {
       <div className="tech-container relative">
         <div className="grid lg:grid-cols-2 gap-12 items-center lg:min-h-[calc(100vh-5rem)] pt-4 md:pt-8 pb-12">
           {/* Content */}
-          <div className="space-y-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-tech-teal/10 text-tech-teal text-sm font-medium">
-              <Sparkles className="w-4 h-4" />
-              <span>La scuola di coding #1 per bambini in Italia</span>
-            </div>
-
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-              Corsi di programmazione per bambini e ragazzi{" "}
-              <span className="tech-gradient-text">online</span>
-            </h1>
-
-            <p className="text-lg md:text-xl text-muted-foreground max-w-xl">
-              TECHLAND è la scuola di <strong>coding online per bambini e ragazzi</strong> dai 5 ai 20 anni:
-              corsi di <strong>Scratch</strong>, <strong>Roblox</strong>, <strong>Minecraft</strong>,
-              <strong> Python</strong>, <strong>Web Development</strong> e <strong>informatica</strong>.
-              Lezioni live in piccoli gruppi con docenti esperti.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button variant="hero" size="xl" asChild data-track-cta="hero_booking_primary">
-                <Link to="/prenota">Prenota lezione gratuita</Link>
-              </Button>
-              <Button variant="outline" size="xl" asChild data-track-cta="hero_courses_secondary">
-                <Link to="/corsi" className="gap-2">
-                  <Play className="w-5 h-5" />
-                  Scopri i corsi
-                </Link>
-              </Button>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-6 pt-8 border-t border-border/50">
-              <div className="text-center sm:text-left">
-                <div className="flex items-center justify-center sm:justify-start gap-2 text-tech-green mb-1">
-                  <Users className="w-5 h-5 shrink-0" />
-                  <span className="text-2xl font-bold">1.200+</span>
-                </div>
-                <p className="text-sm text-muted-foreground">Studenti formati</p>
+          <ScrollReveal direction="up" distance={30} duration={0.6} delay={1.2}>
+            <div className="space-y-8">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-tech-teal/10 text-tech-teal text-sm font-medium">
+                <Sparkles className="w-4 h-4" />
+                <span>La scuola di coding #1 per bambini in Italia</span>
               </div>
-              <div className="text-center sm:text-left">
-                <div className="flex items-center justify-center sm:justify-start gap-2 text-tech-teal mb-1">
-                  <Award className="w-5 h-5 shrink-0" />
-                  <span className="text-2xl font-bold">Qualità</span>
-                </div>
-                <p className="text-sm text-muted-foreground">Lezioni professionali e divertenti</p>
+
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
+                Corsi di programmazione per bambini e ragazzi{" "}
+                <span className="tech-gradient-text">online</span>
+              </h1>
+
+              <p className="text-lg md:text-xl text-muted-foreground max-w-xl">
+                TECHLAND è la scuola di <strong>coding online per bambini e ragazzi</strong> dai 5 ai 20 anni:
+                corsi di <strong>Scratch</strong>, <strong>Roblox</strong>, <strong>Minecraft</strong>,
+                <strong> Python</strong>, <strong>Web Development</strong> e <strong>informatica</strong>.
+                Lezioni live in piccoli gruppi con docenti esperti.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button variant="hero" size="xl" asChild data-track-cta="hero_booking_primary">
+                  <Link to="/prenota">Prenota lezione gratuita</Link>
+                </Button>
+                <Button variant="outline" size="xl" asChild data-track-cta="hero_courses_secondary">
+                  <Link to="/corsi" className="gap-2">
+                    <Play className="w-5 h-5" />
+                    Scopri i corsi
+                  </Link>
+                </Button>
               </div>
-              <div className="text-center sm:text-left">
-                <div className="flex items-center justify-center sm:justify-start gap-2 text-tech-cyan mb-1">
-                  <Shield className="w-5 h-5 shrink-0" />
-                  <span className="text-2xl font-bold">100%</span>
+
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-6 pt-8 border-t border-border/50">
+                <div className="text-center sm:text-left">
+                  <div className="flex items-center justify-center sm:justify-start gap-2 text-tech-green mb-1">
+                    <Users className="w-5 h-5 shrink-0" />
+                    <span className="text-2xl font-bold">1.200+</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Studenti formati</p>
                 </div>
-                <p className="text-sm text-muted-foreground">Ambiente sicuro</p>
+                <div className="text-center sm:text-left">
+                  <div className="flex items-center justify-center sm:justify-start gap-2 text-tech-teal mb-1">
+                    <Award className="w-5 h-5 shrink-0" />
+                    <span className="text-2xl font-bold">Qualità</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Lezioni professionali e divertenti</p>
+                </div>
+                <div className="text-center sm:text-left">
+                  <div className="flex items-center justify-center sm:justify-start gap-2 text-tech-cyan mb-1">
+                    <Shield className="w-5 h-5 shrink-0" />
+                    <span className="text-2xl font-bold">100%</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Ambiente sicuro</p>
+                </div>
               </div>
             </div>
-          </div>
+          </ScrollReveal>
 
           {/* Hero Image */}
           <div className="relative hidden lg:block">

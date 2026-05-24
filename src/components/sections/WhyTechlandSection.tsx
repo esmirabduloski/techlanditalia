@@ -1,4 +1,6 @@
 import { GraduationCap, Users, Rocket, Shield } from "lucide-react";
+import { ScrollReveal } from "@/components/animations/ScrollReveal";
+import { StaggerContainer, StaggerItem } from "@/components/animations/StaggerContainer";
 
 const features = [
   {
@@ -31,7 +33,7 @@ export function WhyTechlandSection() {
   return (
     <section className="tech-section bg-background dark:border-t dark:border-border/40">
       <div className="tech-container">
-        <div className="text-center mb-16">
+        <ScrollReveal className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
             Perché scegliere{" "}
             <span className="tech-gradient-text">TECHLAND</span>?
@@ -39,23 +41,21 @@ export function WhyTechlandSection() {
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Non siamo solo una scuola di coding. Siamo il partner educativo che prepara i tuoi figli per il futuro digitale.
           </p>
-        </div>
+        </ScrollReveal>
+        <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {features.map((feature, index) => (
-            <div
-              key={feature.title}
-              className="tech-card tech-card-hover p-8 text-center group"
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              <div className={`w-16 h-16 mx-auto mb-6 rounded-2xl bg-${feature.color}/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                <feature.icon className={`w-8 h-8 text-${feature.color}`} />
+          {features.map((feature) => (
+            <StaggerItem key={feature.title}>
+              <div className="tech-card tech-card-hover p-8 text-center group h-full">
+                <div className={`w-16 h-16 mx-auto mb-6 rounded-2xl bg-${feature.color}/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                  <feature.icon className={`w-8 h-8 text-${feature.color}`} />
+                </div>
+                <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
+                <p className="text-muted-foreground">{feature.description}</p>
               </div>
-              <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
-              <p className="text-muted-foreground">{feature.description}</p>
-            </div>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerContainer>
       </div>
     </section>
   );

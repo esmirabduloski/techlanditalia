@@ -705,6 +705,10 @@ export default function TeacherGroupDetail() {
               <Calendar className="w-5 h-5" />
               Calendario Lezioni
             </CardTitle>
+            <p className="text-sm text-muted-foreground flex items-center gap-2">
+              <Plus className="w-4 h-4 text-secondary" />
+              Premi il pulsante + sulla singola lezione per aggiungere il link della registrazione.
+            </p>
           </CardHeader>
           <CardContent>
             {lessonSchedule.length === 0 ? (
@@ -723,13 +727,18 @@ export default function TeacherGroupDetail() {
                     <div 
                       key={lesson.lesson_number}
                       className={cn(
-                        "p-3 rounded-lg border text-center",
+                        "relative p-3 pt-12 rounded-lg border text-center",
                         isTodayLesson && "ring-2 ring-primary bg-primary/5",
                         isPast && hasAttendance && "bg-green-50 border-green-200 dark:bg-green-950/20",
                         isPast && !hasAttendance && "bg-muted",
                         !isPast && !isTodayLesson && "opacity-60"
                       )}
                     >
+                      <RecordingLinkButton
+                        lesson={lesson}
+                        isSaving={savingRecordingLessonId === lesson.id}
+                        onSave={(value) => saveRecordingLink(lesson, value)}
+                      />
                       <div className="font-medium text-sm">{lesson.lesson_title || `L${lesson.lesson_number}`}</div>
                       <div className="text-xs text-muted-foreground">
                         {format(lessonDate, 'd MMM yyyy', { locale: it })}
@@ -744,6 +753,7 @@ export default function TeacherGroupDetail() {
                         {isTodayLesson && <Badge variant="default" className="text-[10px]">Oggi</Badge>}
                         {isPast && hasAttendance && <Badge variant="secondary" className="text-[10px] bg-green-100 text-green-800">Svolta</Badge>}
                         {isPast && !hasAttendance && <Badge variant="outline" className="text-[10px]">Da segnare</Badge>}
+                        {lesson.recording_url && <Badge variant="outline" className="text-[10px] ml-1 border-secondary/40 text-secondary">Link salvato</Badge>}
                       </div>
                     </div>
                   );

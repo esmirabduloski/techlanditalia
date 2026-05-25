@@ -71,6 +71,80 @@ interface GroupComment {
   author_name: string;
 }
 
+function RecordingLinkButton({
+  lesson,
+  isSaving,
+  onSave,
+}: {
+  lesson: LessonSchedule;
+  isSaving: boolean;
+  onSave: (value: string) => Promise<boolean>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(lesson.recording_url || "");
+  const hasLink = !!lesson.recording_url;
+
+  useEffect(() => {
+    setValue(lesson.recording_url || "");
+  }, [lesson.recording_url]);
+
+  const handleSave = async () => {
+    const saved = await onSave(value);
+    if (saved) setOpen(false);
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className={cn(
+            "absolute right-2 top-2 z-10 h-9 w-9 rounded-md shadow-tech-sm",
+            hasLink
+              ? "border-secondary bg-secondary text-secondary-foreground hover:bg-secondary/90"
+              : "border-secondary/50 bg-background text-secondary hover:bg-secondary/10"
+          )}
+          aria-label={hasLink ? "Modifica link registrazione" : "Aggiungi link registrazione"}
+          title={hasLink ? "Modifica link registrazione" : "Aggiungi link registrazione"}
+        >
+          {hasLink ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 space-y-3" align="end">
+        <div className="space-y-1">
+          <p className="text-sm font-semibold flex items-center gap-2">
+            <Link2 className="w-4 h-4 text-secondary" />
+            Link registrazione
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {lesson.lesson_title || `L${lesson.lesson_number}`}
+          </p>
+        </div>
+        <Input
+          type="url"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder="https://..."
+          autoFocus
+        />
+        <div className="flex justify-end gap-2">
+          {hasLink && (
+            <Button type="button" variant="ghost" size="sm" onClick={() => setValue("")}>
+              Svuota
+            </Button>
+          )}
+          <Button type="button" size="sm" onClick={handleSave} disabled={isSaving}>
+            {isSaving && <Loader2 className="w-3 h-3 mr-1 animate-spin" />}
+            Salva
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 export default function TeacherGroupDetail() {
   const { groupId } = useParams();
   const { user, isLoading: authLoading, isAdmin } = useAuth();

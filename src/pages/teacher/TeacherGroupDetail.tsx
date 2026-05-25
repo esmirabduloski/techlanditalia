@@ -4,12 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { 
-  Loader2, ArrowLeft, Users, Calendar, ChevronRight, MessageCircle, Plus, Send, Trash2, Check, X, AlertCircle, Clock, ExternalLink, Award
+  Loader2, ArrowLeft, Users, Calendar, ChevronRight, MessageCircle, Plus, Send, Trash2, Check, X, AlertCircle, Clock, ExternalLink, Award, Link2
 } from "lucide-react";
 import { GroupCertificatesViewer } from "@/components/teacher/GroupCertificatesViewer";
 import { LessonReportForm } from "@/components/teacher/LessonReportForm";
@@ -18,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { format, addDays, isBefore, isToday, startOfDay } from "date-fns";
 import { it } from "date-fns/locale";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Dialog,
   DialogContent,
@@ -41,6 +43,7 @@ interface LessonSchedule {
   lesson_date: string;
   lesson_title: string | null;
   lesson_time: string | null;
+  recording_url: string | null;
 }
 
 interface StudentGroup {
@@ -68,6 +71,80 @@ interface GroupComment {
   author_name: string;
 }
 
+function RecordingLinkButton({
+  lesson,
+  isSaving,
+  onSave,
+}: {
+  lesson: LessonSchedule;
+  isSaving: boolean;
+  onSave: (value: string) => Promise<boolean>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(lesson.recording_url || "");
+  const hasLink = !!lesson.recording_url;
+
+  useEffect(() => {
+    setValue(lesson.recording_url || "");
+  }, [lesson.recording_url]);
+
+  const handleSave = async () => {
+    const saved = await onSave(value);
+    if (saved) setOpen(false);
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className={cn(
+            "absolute right-2 top-2 z-10 h-9 w-9 rounded-md shadow-tech-sm",
+            hasLink
+              ? "border-secondary bg-secondary text-secondary-foreground hover:bg-secondary/90"
+              : "border-secondary/50 bg-background text-secondary hover:bg-secondary/10"
+          )}
+          aria-label={hasLink ? "Modifica link registrazione" : "Aggiungi link registrazione"}
+          title={hasLink ? "Modifica link registrazione" : "Aggiungi link registrazione"}
+        >
+          {hasLink ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 space-y-3" align="end">
+        <div className="space-y-1">
+          <p className="text-sm font-semibold flex items-center gap-2">
+            <Link2 className="w-4 h-4 text-secondary" />
+            Link registrazione
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {lesson.lesson_title || `L${lesson.lesson_number}`}
+          </p>
+        </div>
+        <Input
+          type="url"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder="https://..."
+          autoFocus
+        />
+        <div className="flex justify-end gap-2">
+          {hasLink && (
+            <Button type="button" variant="ghost" size="sm" onClick={() => setValue("")}>
+              Svuota
+            </Button>
+          )}
+          <Button type="button" size="sm" onClick={handleSave} disabled={isSaving}>
+            {isSaving && <Loader2 className="w-3 h-3 mr-1 animate-spin" />}
+            Salva
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 export default function TeacherGroupDetail() {
   const { groupId } = useParams();
   const { user, isLoading: authLoading, isAdmin } = useAuth();
@@ -79,6 +156,7 @@ export default function TeacherGroupDetail() {
   const [group, setGroup] = useState<StudentGroup | null>(null);
   const [students, setStudents] = useState<GroupStudent[]>([]);
   const [lessonSchedule, setLessonSchedule] = useState<LessonSchedule[]>([]);
+  const [savingRecordingLessonId, setSavingRecordingLessonId] = useState<string | null>(null);
   
   // Group comments
   const [groupComments, setGroupComments] = useState<GroupComment[]>([]);
@@ -279,6 +357,32 @@ export default function TeacherGroupDetail() {
     if (scheduleItems.length > 0) {
       await supabase.from('group_lesson_schedule').insert(scheduleItems);
     }
+  };
+
+  const saveRecordingLink = async (lesson: LessonSchedule, value: string) => {
+    const trimmed = value.trim();
+    if (trimmed && !/^https?:\/\//i.test(trimmed)) {
+      toast({ title: 'URL non valido', description: 'Inserisci un link che inizi con https://', variant: 'destructive' });
+      return false;
+    }
+
+    setSavingRecordingLessonId(lesson.id);
+    const { error } = await supabase
+      .from('group_lesson_schedule')
+      .update({ recording_url: trimmed || null })
+      .eq('id', lesson.id);
+    setSavingRecordingLessonId(null);
+
+    if (error) {
+      toast({ title: 'Errore', description: error.message, variant: 'destructive' });
+      return false;
+    }
+
+    setLessonSchedule(prev => prev.map(item => (
+      item.id === lesson.id ? { ...item, recording_url: trimmed || null } : item
+    )));
+    toast({ title: trimmed ? 'Link registrazione salvato' : 'Link registrazione rimosso' });
+    return true;
   };
 
   // Returns true if a lesson date is today (UTC) or in the past (UTC)
@@ -601,6 +705,10 @@ export default function TeacherGroupDetail() {
               <Calendar className="w-5 h-5" />
               Calendario Lezioni
             </CardTitle>
+            <p className="text-sm text-muted-foreground flex items-center gap-2">
+              <Plus className="w-4 h-4 text-secondary" />
+              Premi il pulsante + sulla singola lezione per aggiungere il link della registrazione.
+            </p>
           </CardHeader>
           <CardContent>
             {lessonSchedule.length === 0 ? (
@@ -619,13 +727,18 @@ export default function TeacherGroupDetail() {
                     <div 
                       key={lesson.lesson_number}
                       className={cn(
-                        "p-3 rounded-lg border text-center",
+                        "relative p-3 pt-12 rounded-lg border text-center",
                         isTodayLesson && "ring-2 ring-primary bg-primary/5",
                         isPast && hasAttendance && "bg-green-50 border-green-200 dark:bg-green-950/20",
                         isPast && !hasAttendance && "bg-muted",
                         !isPast && !isTodayLesson && "opacity-60"
                       )}
                     >
+                      <RecordingLinkButton
+                        lesson={lesson}
+                        isSaving={savingRecordingLessonId === lesson.id}
+                        onSave={(value) => saveRecordingLink(lesson, value)}
+                      />
                       <div className="font-medium text-sm">{lesson.lesson_title || `L${lesson.lesson_number}`}</div>
                       <div className="text-xs text-muted-foreground">
                         {format(lessonDate, 'd MMM yyyy', { locale: it })}
@@ -640,6 +753,7 @@ export default function TeacherGroupDetail() {
                         {isTodayLesson && <Badge variant="default" className="text-[10px]">Oggi</Badge>}
                         {isPast && hasAttendance && <Badge variant="secondary" className="text-[10px] bg-green-100 text-green-800">Svolta</Badge>}
                         {isPast && !hasAttendance && <Badge variant="outline" className="text-[10px]">Da segnare</Badge>}
+                        {lesson.recording_url && <Badge variant="outline" className="text-[10px] ml-1 border-secondary/40 text-secondary">Link salvato</Badge>}
                       </div>
                     </div>
                   );

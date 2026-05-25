@@ -1,9 +1,9 @@
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ChevronLeft, ChevronRight, CalendarDays, Link2, Check, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarDays, Link2, Check, Loader2, Plus } from "lucide-react";
 import { format, startOfWeek, addDays, isSameDay, isToday, addWeeks, subWeeks } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -55,6 +55,10 @@ function RecordingLinkPopover({
   const [saving, setSaving] = useState(false);
   const hasLink = !!lesson.recording_url;
 
+  useEffect(() => {
+    setValue(lesson.recording_url || "");
+  }, [lesson.recording_url]);
+
   const handleSave = async () => {
     const trimmed = value.trim();
     if (trimmed && !/^https?:\/\//i.test(trimmed)) {
@@ -84,13 +88,13 @@ function RecordingLinkPopover({
           aria-label={hasLink ? "Modifica link registrazione" : "Aggiungi link registrazione"}
           title={hasLink ? "Modifica link registrazione" : "Aggiungi link registrazione"}
           className={cn(
-            "absolute top-0.5 right-0.5 z-20 flex items-center justify-center w-5 h-5 rounded border transition-all hover:scale-110",
+            "absolute top-1 right-1 z-20 flex items-center justify-center h-8 w-8 rounded-md border shadow-tech-sm transition-all hover:scale-105",
             hasLink
-              ? "bg-sky-500 border-sky-600 text-white"
-              : "bg-background/90 border-border text-muted-foreground hover:text-foreground"
+              ? "bg-secondary border-secondary text-secondary-foreground hover:bg-secondary/90"
+              : "bg-background border-secondary/50 text-secondary hover:bg-secondary/10"
           )}
         >
-          {hasLink ? <Check className="w-3 h-3" /> : <Link2 className="w-3 h-3" />}
+          {hasLink ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
         </button>
       </PopoverTrigger>
       <PopoverContent
@@ -208,7 +212,7 @@ export function TeacherWeeklyCalendar({ lessons }: TeacherWeeklyCalendarProps) {
         <div className="flex items-center justify-between flex-wrap gap-2">
           <CardTitle className="text-lg flex items-center gap-2">
             <CalendarDays className="w-5 h-5 text-primary" />
-            Calendario Settimanale
+            Calendario lezioni
           </CardTitle>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={goToToday} className="text-xs">
@@ -225,7 +229,7 @@ export function TeacherWeeklyCalendar({ lessons }: TeacherWeeklyCalendarProps) {
         </div>
         <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5">
           <Link2 className="w-3 h-3" />
-          Clicca l'icona in alto a destra di ogni lezione per aggiungere il link della registrazione
+          Clicca il pulsante + in alto a destra di ogni lezione per aggiungere il link della registrazione
         </p>
       </CardHeader>
       <CardContent className="p-0 overflow-x-auto">
@@ -297,7 +301,7 @@ export function TeacherWeeklyCalendar({ lessons }: TeacherWeeklyCalendarProps) {
                       <div
                         key={lesson.id}
                         className={cn(
-                          "absolute left-1 right-1 rounded-md border px-1.5 py-1 cursor-pointer transition-all hover:shadow-md hover:scale-[1.02] z-10 overflow-hidden",
+                          "absolute left-1 right-1 rounded-md border px-1.5 py-1 cursor-pointer transition-all hover:shadow-md hover:scale-[1.02] z-10 overflow-visible",
                           colorClass
                         )}
                         style={style}
@@ -305,7 +309,7 @@ export function TeacherWeeklyCalendar({ lessons }: TeacherWeeklyCalendarProps) {
                         title={`${lesson.group_title} — Lezione ${lesson.lesson_number}`}
                       >
                         <RecordingLinkPopover lesson={lesson} onSaved={updateRecording} />
-                        <p className="text-[10px] font-bold truncate leading-tight pr-5">
+                        <p className="text-[10px] font-bold truncate leading-tight pr-9">
                           {lesson.course_emoji} {lesson.group_title}
                         </p>
                         <p className="text-[9px] opacity-80 truncate leading-tight">

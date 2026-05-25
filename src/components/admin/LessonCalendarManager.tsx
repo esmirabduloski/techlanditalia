@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { 
-  Loader2, Calendar, ChevronLeft, ChevronRight, Save, RotateCcw, Link2
+  Loader2, Calendar, ChevronLeft, ChevronRight, Save, RotateCcw, Link2, Plus, Check
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format, addDays, parseISO } from "date-fns";
@@ -38,6 +39,79 @@ interface LessonCalendarManagerProps {
   onOpenChange: (open: boolean) => void;
 }
 
+function RecordingUrlButton({
+  lesson,
+  isSaving,
+  onSave,
+}: {
+  lesson: LessonSchedule;
+  isSaving: boolean;
+  onSave: (url: string) => Promise<boolean>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(lesson.recording_url || "");
+  const hasLink = !!lesson.recording_url;
+
+  useEffect(() => {
+    setValue(lesson.recording_url || "");
+  }, [lesson.recording_url]);
+
+  const handleSave = async () => {
+    const saved = await onSave(value);
+    if (saved) setOpen(false);
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className={`absolute right-2 top-2 z-10 h-9 w-9 rounded-md shadow-tech-sm ${
+            hasLink
+              ? "border-secondary bg-secondary text-secondary-foreground hover:bg-secondary/90"
+              : "border-secondary/50 bg-background text-secondary hover:bg-secondary/10"
+          }`}
+          aria-label={hasLink ? "Modifica link registrazione" : "Aggiungi link registrazione"}
+          title={hasLink ? "Modifica link registrazione" : "Aggiungi link registrazione"}
+        >
+          {hasLink ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 space-y-3" align="end">
+        <div className="space-y-1">
+          <p className="text-sm font-semibold flex items-center gap-2">
+            <Link2 className="w-4 h-4 text-secondary" />
+            Link registrazione
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {lesson.lesson_title || `L${lesson.lesson_number}`}
+          </p>
+        </div>
+        <Input
+          type="url"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder="https://..."
+          autoFocus
+        />
+        <div className="flex justify-end gap-2">
+          {hasLink && (
+            <Button type="button" variant="ghost" size="sm" onClick={() => setValue("")}>
+              Svuota
+            </Button>
+          )}
+          <Button type="button" size="sm" onClick={handleSave} disabled={isSaving}>
+            {isSaving && <Loader2 className="w-3 h-3 mr-1 animate-spin" />}
+            Salva
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 export function LessonCalendarManager({
   groupId,
   groupTitle,
@@ -54,7 +128,7 @@ export function LessonCalendarManager({
   const [schedule, setSchedule] = useState<LessonSchedule[]>([]);
   const [editedDates, setEditedDates] = useState<Record<number, string>>({});
   const [editedTimes, setEditedTimes] = useState<Record<number, string>>({});
-  const [editedRecordings, setEditedRecordings] = useState<Record<number, string>>({});
+  const [savingRecordingLessonId, setSavingRecordingLessonId] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const lessonsPerPage = 16;
 
@@ -141,15 +215,36 @@ export function LessonCalendarManager({
     setEditedTimes(prev => ({ ...prev, ...newEdits }));
   };
 
-  const handleRecordingChange = (lessonNumber: number, newUrl: string) => {
-    setEditedRecordings(prev => ({ ...prev, [lessonNumber]: newUrl }));
+  const handleRecordingSave = async (lesson: LessonSchedule, newUrl: string) => {
+    const trimmed = newUrl.trim();
+    if (trimmed && !/^https?:\/\//i.test(trimmed)) {
+      toast({ title: 'URL non valido', description: 'Inserisci un link che inizi con https://', variant: 'destructive' });
+      return false;
+    }
+
+    setSavingRecordingLessonId(lesson.id);
+    const { error } = await supabase
+      .from('group_lesson_schedule')
+      .update({ recording_url: trimmed || null })
+      .eq('id', lesson.id);
+    setSavingRecordingLessonId(null);
+
+    if (error) {
+      toast({ title: 'Errore', description: error.message, variant: 'destructive' });
+      return false;
+    }
+
+    setSchedule(prev => prev.map(item => (
+      item.id === lesson.id ? { ...item, recording_url: trimmed || null } : item
+    )));
+    toast({ title: trimmed ? 'Link registrazione salvato' : 'Link registrazione rimosso' });
+    return true;
   };
 
   const handleSave = async () => {
     const hasDateChanges = Object.keys(editedDates).length > 0;
     const hasTimeChanges = Object.keys(editedTimes).length > 0;
-    const hasRecChanges = Object.keys(editedRecordings).length > 0;
-    if (!hasDateChanges && !hasTimeChanges && !hasRecChanges) return;
+    if (!hasDateChanges && !hasTimeChanges) return;
     setIsSaving(true);
     try {
       // Check for conflicts and shift dates if needed
@@ -193,10 +288,6 @@ export function LessonCalendarManager({
         if (editedTime !== undefined) {
           lesson.lesson_time = editedTime || null;
         }
-        const editedRec = editedRecordings[lesson.lesson_number];
-        if (editedRec !== undefined) {
-          lesson.recording_url = editedRec.trim() || null;
-        }
       }
 
       // Save all changes to database
@@ -214,8 +305,7 @@ export function LessonCalendarManager({
       setSchedule(updatedSchedule);
       setEditedDates({});
       setEditedTimes({});
-      setEditedRecordings({});
-      toast({ title: 'Calendario salvato', description: 'Le date, gli orari e i link registrazione sono stati aggiornati' });
+      toast({ title: 'Calendario salvato', description: 'Le date e gli orari sono stati aggiornati' });
     } catch (error: any) {
       toast({ title: 'Errore', description: error.message, variant: 'destructive' });
     } finally {
@@ -241,7 +331,6 @@ export function LessonCalendarManager({
       await generateSchedule();
       setEditedDates({});
       setEditedTimes({});
-      setEditedRecordings({});
       toast({ title: 'Calendario rigenerato' });
     } catch (error: any) {
       toast({ title: 'Errore', description: error.message, variant: 'destructive' });
@@ -264,6 +353,10 @@ export function LessonCalendarManager({
             <Calendar className="w-5 h-5" />
             Calendario Lezioni - {groupTitle}
           </DialogTitle>
+          <p className="text-sm text-muted-foreground flex items-center gap-2">
+            <Plus className="w-4 h-4 text-secondary" />
+            Premi il pulsante + su una lezione per aggiungere o modificare il link della registrazione.
+          </p>
         </DialogHeader>
 
         {isLoading ? (
@@ -288,19 +381,27 @@ export function LessonCalendarManager({
               {paginatedSchedule.map(lesson => {
                 const editedDate = editedDates[lesson.lesson_number];
                 const editedTime = editedTimes[lesson.lesson_number];
-                const editedRec = editedRecordings[lesson.lesson_number];
                 const displayDate = editedDate || lesson.lesson_date;
                 const displayTime = editedTime !== undefined ? editedTime : (lesson.lesson_time?.substring(0, 5) || '');
-                const displayRec = editedRec !== undefined ? editedRec : (lesson.recording_url || '');
-                const isEdited = !!editedDate || editedTime !== undefined || editedRec !== undefined;
+                const isEdited = !!editedDate || editedTime !== undefined;
 
                 return (
-                  <Card key={lesson.id} className={isEdited ? 'ring-2 ring-primary' : ''}>
-                    <CardContent className="p-3">
-                      <div className="flex items-center justify-between mb-2">
+                  <Card key={lesson.id} className={`relative ${isEdited ? 'ring-2 ring-primary' : ''}`}>
+                    <RecordingUrlButton
+                      lesson={lesson}
+                      isSaving={savingRecordingLessonId === lesson.id}
+                      onSave={(url) => handleRecordingSave(lesson, url)}
+                    />
+                    <CardContent className="p-3 pt-12">
+                      <div className="flex items-center justify-between mb-2 gap-2">
                         <Badge variant="secondary" className="text-xs">
                           {lesson.lesson_title || `L${lesson.lesson_number}`}
                         </Badge>
+                        {lesson.recording_url && (
+                          <Badge variant="outline" className="text-[10px] border-secondary/40 text-secondary">
+                            Link salvato
+                          </Badge>
+                        )}
                         {isEdited && (
                           <Badge variant="default" className="text-[10px]">
                             Modificata
@@ -336,16 +437,6 @@ export function LessonCalendarManager({
                           <ChevronRight className="w-3 h-3" />
                           <ChevronRight className="w-3 h-3 -ml-2" />
                         </Button>
-                      </div>
-                      <div className="relative mt-1">
-                        <Link2 className="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                        <Input
-                          type="url"
-                          value={displayRec}
-                          onChange={(e) => handleRecordingChange(lesson.lesson_number, e.target.value)}
-                          placeholder="Link registrazione"
-                          className="text-xs pl-7"
-                        />
                       </div>
                       <p className="text-xs text-muted-foreground mt-1 text-center">
                         {format(parseISO(displayDate), "EEEE d MMMM", { locale: it })}
@@ -393,7 +484,7 @@ export function LessonCalendarManager({
           </Button>
           <Button 
             onClick={handleSave} 
-            disabled={isSaving || (Object.keys(editedDates).length === 0 && Object.keys(editedTimes).length === 0 && Object.keys(editedRecordings).length === 0)}
+            disabled={isSaving || (Object.keys(editedDates).length === 0 && Object.keys(editedTimes).length === 0)}
           >
             {isSaving ? (
               <Loader2 className="w-4 h-4 animate-spin mr-2" />

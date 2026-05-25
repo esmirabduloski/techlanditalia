@@ -58,8 +58,13 @@ export function StudentCommentsSection({ studentId, viewMode = 'student' }: Stud
 
       if (error) throw error;
 
-      // Type assertion for the nested objects
-      const typedComments = (data || []).map((c: any) => ({
+      // Defense-in-depth: filter by visibility based on viewMode
+      const requiredVisibility = viewMode === 'parent' ? 'parent' : 'student';
+      const filtered = (data || []).filter((c: any) =>
+        Array.isArray(c.visibility) && c.visibility.includes(requiredVisibility)
+      );
+
+      const typedComments = filtered.map((c: any) => ({
         id: c.id,
         content: c.content,
         visibility: c.visibility,

@@ -4,12 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { 
-  Loader2, ArrowLeft, Users, Calendar, ChevronRight, MessageCircle, Plus, Send, Trash2, Check, X, AlertCircle, Clock, ExternalLink, Award
+  Loader2, ArrowLeft, Users, Calendar, ChevronRight, MessageCircle, Plus, Send, Trash2, Check, X, AlertCircle, Clock, ExternalLink, Award, Link2
 } from "lucide-react";
 import { GroupCertificatesViewer } from "@/components/teacher/GroupCertificatesViewer";
 import { LessonReportForm } from "@/components/teacher/LessonReportForm";
@@ -18,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { format, addDays, isBefore, isToday, startOfDay } from "date-fns";
 import { it } from "date-fns/locale";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Dialog,
   DialogContent,
@@ -41,6 +43,7 @@ interface LessonSchedule {
   lesson_date: string;
   lesson_title: string | null;
   lesson_time: string | null;
+  recording_url: string | null;
 }
 
 interface StudentGroup {
@@ -79,6 +82,7 @@ export default function TeacherGroupDetail() {
   const [group, setGroup] = useState<StudentGroup | null>(null);
   const [students, setStudents] = useState<GroupStudent[]>([]);
   const [lessonSchedule, setLessonSchedule] = useState<LessonSchedule[]>([]);
+  const [savingRecordingLessonId, setSavingRecordingLessonId] = useState<string | null>(null);
   
   // Group comments
   const [groupComments, setGroupComments] = useState<GroupComment[]>([]);
@@ -279,6 +283,32 @@ export default function TeacherGroupDetail() {
     if (scheduleItems.length > 0) {
       await supabase.from('group_lesson_schedule').insert(scheduleItems);
     }
+  };
+
+  const saveRecordingLink = async (lesson: LessonSchedule, value: string) => {
+    const trimmed = value.trim();
+    if (trimmed && !/^https?:\/\//i.test(trimmed)) {
+      toast({ title: 'URL non valido', description: 'Inserisci un link che inizi con https://', variant: 'destructive' });
+      return false;
+    }
+
+    setSavingRecordingLessonId(lesson.id);
+    const { error } = await supabase
+      .from('group_lesson_schedule')
+      .update({ recording_url: trimmed || null })
+      .eq('id', lesson.id);
+    setSavingRecordingLessonId(null);
+
+    if (error) {
+      toast({ title: 'Errore', description: error.message, variant: 'destructive' });
+      return false;
+    }
+
+    setLessonSchedule(prev => prev.map(item => (
+      item.id === lesson.id ? { ...item, recording_url: trimmed || null } : item
+    )));
+    toast({ title: trimmed ? 'Link registrazione salvato' : 'Link registrazione rimosso' });
+    return true;
   };
 
   // Returns true if a lesson date is today (UTC) or in the past (UTC)

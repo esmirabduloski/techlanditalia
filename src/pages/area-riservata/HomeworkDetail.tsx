@@ -427,11 +427,11 @@ export default function HomeworkDetail() {
               {homework.instructions && (
                 <div className="prose prose-sm dark:prose-invert max-w-none">
                   <div 
-                    className="bg-muted/50 rounded-lg p-4 whitespace-pre-wrap"
+                    className="bg-muted/50 rounded-lg p-4 [&_img]:rounded-lg [&_img]:my-2 [&_img]:max-w-full [&_iframe]:w-full [&_iframe]:aspect-video [&_iframe]:rounded-lg"
                     dangerouslySetInnerHTML={{
                       __html: DOMPurify.sanitize(homework.instructions, {
-                        ALLOWED_TAGS: ['p','b','strong','em','i','u','ul','ol','li','br','a','h1','h2','h3','h4','code','pre','blockquote','span'],
-                        ALLOWED_ATTR: ['href','target','rel','class']
+                        ALLOWED_TAGS: ['p','b','strong','em','i','u','ul','ol','li','br','a','h1','h2','h3','h4','code','pre','blockquote','span','img','figure','figcaption','iframe','video','source'],
+                        ALLOWED_ATTR: ['href','target','rel','class','src','alt','title','width','height','loading','allow','allowfullscreen','frameborder','controls','poster','type']
                       })
                     }}
                   />

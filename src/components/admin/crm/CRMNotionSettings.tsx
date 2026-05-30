@@ -77,7 +77,7 @@ export function CRMNotionSettings({ totalLeads }: { totalLeads: number }) {
       supabase.from("crm_notion_sync_log").select("id, lead_id, operation, status, error_message, created_at").order("created_at", { ascending: false }).limit(15),
       supabase.from("crm_leads").select("id", { count: "exact", head: true }).not("notion_page_id", "is", null),
     ]);
-    if (s) setSettings(s as Settings);
+    if (s) setSettings(s as unknown as Settings);
     setLogs((l ?? []) as SyncLog[]);
     setSyncedCount(count ?? 0);
     setLoading(false);

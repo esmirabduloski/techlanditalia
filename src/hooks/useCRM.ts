@@ -28,6 +28,9 @@ export interface CrmLead {
   original_message: string | null;
   created_at: string;
   updated_at: string;
+  notion_page_id?: string | null;
+  notion_last_sync_at?: string | null;
+  notion_sync_error?: string | null;
 }
 
 export interface CrmInteraction {

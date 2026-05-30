@@ -613,6 +613,9 @@ export type Database = {
           linked_profile_id: string | null
           next_followup_at: string | null
           notes: string | null
+          notion_last_sync_at: string | null
+          notion_page_id: string | null
+          notion_sync_error: string | null
           original_message: string | null
           phone: string | null
           pipeline_stage: Database["public"]["Enums"]["crm_pipeline_stage"]
@@ -636,6 +639,9 @@ export type Database = {
           linked_profile_id?: string | null
           next_followup_at?: string | null
           notes?: string | null
+          notion_last_sync_at?: string | null
+          notion_page_id?: string | null
+          notion_sync_error?: string | null
           original_message?: string | null
           phone?: string | null
           pipeline_stage?: Database["public"]["Enums"]["crm_pipeline_stage"]
@@ -659,6 +665,9 @@ export type Database = {
           linked_profile_id?: string | null
           next_followup_at?: string | null
           notes?: string | null
+          notion_last_sync_at?: string | null
+          notion_page_id?: string | null
+          notion_sync_error?: string | null
           original_message?: string | null
           phone?: string | null
           pipeline_stage?: Database["public"]["Enums"]["crm_pipeline_stage"]
@@ -667,6 +676,72 @@ export type Database = {
           source_record_id?: string | null
           tags?: string[]
           updated_at?: string
+        }
+        Relationships: []
+      }
+      crm_notion_settings: {
+        Row: {
+          database_id: string | null
+          enabled: boolean
+          id: string
+          property_mapping: Json
+          singleton: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          database_id?: string | null
+          enabled?: boolean
+          id?: string
+          property_mapping?: Json
+          singleton?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          database_id?: string | null
+          enabled?: boolean
+          id?: string
+          property_mapping?: Json
+          singleton?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      crm_notion_sync_log: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          lead_id: string | null
+          notion_page_id: string | null
+          operation: string
+          request_payload: Json | null
+          response_payload: Json | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          lead_id?: string | null
+          notion_page_id?: string | null
+          operation: string
+          request_payload?: Json | null
+          response_payload?: Json | null
+          status: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          lead_id?: string | null
+          notion_page_id?: string | null
+          operation?: string
+          request_payload?: Json | null
+          response_payload?: Json | null
+          status?: string
         }
         Relationships: []
       }

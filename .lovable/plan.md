@@ -1,84 +1,119 @@
-# Sync CRM → Notion (push one-way)
+# Piano riduzione costi — Esmir's Travel Compass
 
-Il sito resta la **fonte di verità**. Ogni modifica ai lead viene replicata automaticamente su un database Notion che hai già preparato. Costo Cloud stimato: **~$0.02/mese** (praticamente zero).
+**Obiettivo:** ridurre la spesa Cloud da ~$9.35/mese a ~$5/mese (-45%) intervenendo sulle 3 voci che dominano la spesa: generazione AI articoli, immagini di copertina, pipeline email + cron.
 
-## Cosa serve da te prima di partire (build)
-
-1. **ID del database Notion** dei lead (lo trovi nell'URL: `notion.so/.../<DATABASE_ID>?v=...`).
-2. **Condividere il database** con il connettore Notion durante la procedura di collegamento (la finestra OAuth ti chiederà quali pagine/database autorizzare — seleziona quello dei lead).
-3. **Mapping colonne**: confermarmi che il tuo DB Notion abbia (o crei) queste proprietà. I nomi possono cambiare — basta che me li dici:
-
-| Campo CRM (sito) | Tipo Notion suggerito | Nome colonna Notion (default) |
-|---|---|---|
-| `email` | Email | Email |
-| `full_name` | Title | Nome |
-| `phone` | Phone | Telefono |
-| `pipeline_stage` | Select | Stage |
-| `source` | Select | Origine |
-| `lead_score` | Number | Score |
-| `lifetime_value_cents` | Number (€) | LTV |
-| `tags` | Multi-select | Tag |
-| `next_followup_at` | Date | Prossimo follow-up |
-| `last_contacted_at` | Date | Ultimo contatto |
-| `child_age` | Number | Età alunno |
-| `interest` | Rich text | Interesse |
-| `notes` | Rich text | Note |
-| `original_message` | Rich text | Messaggio originale |
-| `created_at` | Date | Creato il |
-| *(nuovo)* `notion_page_id` | — | (salvato sul sito, non su Notion) |
-
-## Cosa farò io (passi tecnici)
-
-### 1. DB: aggiungere campo di link
-Aggiungo a `crm_leads` la colonna `notion_page_id text` (per sapere quale pagina Notion aggiornare ad ogni update — evita duplicati).
-
-### 2. Collegamento connettore Notion
-Useremo il **Notion connector** ufficiale di Lovable (OAuth, niente API key manuale). Le chiamate passano dal connector gateway: zero gestione token, refresh automatico.
-
-### 3. Edge function `sync-lead-to-notion`
-Riceve `lead_id` e:
-- Se `notion_page_id` è vuoto → `POST /v1/pages` (crea pagina Notion) → salva ID nel DB.
-- Se presente → `PATCH /v1/pages/{id}` (aggiorna proprietà).
-- Su `DELETE` → archivia la pagina Notion (`archived: true`).
-
-Tutta la chiamata HTTP passa per `connector-gateway.lovable.dev/notion/v1/...` con header `Authorization` + `X-Connection-Api-Key`.
-
-### 4. Trigger DB su `crm_leads`
-Un trigger `AFTER INSERT OR UPDATE OR DELETE` chiama l'edge function via `pg_net.http_post` in modo asincrono — l'utente nel CRM non aspetta Notion, l'UI resta veloce.
-
-### 5. Backfill iniziale
-Pulsante "Sincronizza tutti i lead esistenti su Notion" in `/admin/crm` (one-shot) per popolare Notion la prima volta con i lead già nel DB.
-
-### 6. UI: indicatore di sync
-Piccolo badge nel CRM con stato:
-- ✅ Sincronizzato (data ultimo push)
-- ⏳ In corso
-- ⚠️ Errore (con dettaglio + pulsante "Riprova")
-
-Tabella `crm_notion_sync_log` per tracciare ogni tentativo (utile per debug).
-
-## Cosa NON farò (per scelta tua)
-- Niente lettura da Notion → sito. Le modifiche fatte direttamente su Notion **non torneranno indietro**. Notion va trattato come dashboard read-only / vista mobile / vista condivisibile col team.
-- Niente conflitti, niente race conditions, niente polling.
-
-## Consumi Cloud reali (stima conservativa)
-
-Con ~200 lead totali + ~20 modifiche/giorno:
-
-| Voce | Volume/mese | Costo |
-|---|---|---|
-| Edge function invocations | ~600 | < $0.01 |
-| Egress bandwidth (~3KB/req) | ~2 MB | trascurabile |
-| pg_net calls | ~600 | incluso |
-| **Totale** | | **~$0.02/mese** |
-
-Anche moltiplicando per 10 il volume (2.000 modifiche/mese), resti sotto i **$0.20/mese**. Irrilevante.
-
-## Limitazioni di Notion da sapere
-- **Rate limit**: 3 richieste/secondo per integrazione. Con i tuoi volumi non lo tocchi mai, ma l'edge function avrà retry con backoff.
-- **Select/Multi-select**: i valori devono esistere come opzioni in Notion, oppure le creiamo al volo con l'API. Gestito automaticamente.
-- **Eliminazioni**: Notion non permette delete via API → la pagina viene **archiviata** (sparisce dalla vista ma resta nel cestino 30gg).
+> ⚠️ Questo piano riguarda il progetto **Esmir's Travel Compass**, non Techland. L'implementazione richiederà di lavorare in quel progetto separato (cambio progetto attivo).
 
 ---
 
-Dopo la tua approvazione del piano, ti chiederò il **Database ID Notion** e i **nomi esatti delle colonne** che hai già su Notion, poi procedo con migrazione + connettore + edge function in un'unica passata.
+## Quadro di partenza
+
+| Area | Costo stimato/mese | % | Tipologia |
+|---|---:|---:|---|
+| AI generativa (articoli + cover) | ~$5.50 | 59% | Ricorrente (per richiesta) |
+| Email pipeline (queue + drip + cron) | ~$2.20 | 24% | Ricorrente schedulato |
+| Bot renderer + sitemap/rss (SEO) | ~$1.10 | 12% | Ricorrente (crawler) |
+| DB + storage + bandwidth | ~$0.55 | 5% | Passivo |
+| **Totale** | **~$9.35** | 100% | |
+
+---
+
+## Interventi proposti (ordinati per ROI)
+
+### 1. Cache aggressiva su `ai-generate-article` — **risparmio ~$3.00/mese**
+**Problema:** ogni rigenerazione articolo (anche minor edit, anteprime, retry) consuma token Gemini/GPT. Spesso lo stesso prompt viene chiamato 2-4 volte.
+
+**Soluzione:**
+- Aggiungere tabella `ai_generation_cache(prompt_hash, model, output, created_at, hit_count)`.
+- Hash SHA-256 di `{prompt + model + temperature}` → se esiste e ha <30 giorni, restituire output cached.
+- TTL: 30 giorni. Pulsante "Forza rigenerazione" per bypass esplicito.
+- Telemetria: contatore hit/miss in admin per validare il risparmio.
+
+**Impatto stimato:** -60% chiamate AI testuali → -$3.00/mese.
+
+---
+
+### 2. Cache + downscale su `ai-cover-image` — **risparmio ~$1.50/mese**
+**Problema:** le cover vengono rigenerate ad ogni save bozza, e usano modelli image premium.
+
+**Soluzione:**
+- Stessa logica di cache (hash su prompt + stile + dimensione).
+- Default model: passare a `google/gemini-3.1-flash-image-preview` (Nano Banana 2) invece di gpt-image-2 standard, che costa ~4× in meno per immagine.
+- Generare a 1024×1024 e ridimensionare lato client invece di 1920×1920.
+- Salvare in storage Supabase con cache headers `max-age=31536000`.
+
+**Impatto stimato:** -70% costo immagine → -$1.50/mese.
+
+---
+
+### 3. Consolidare cron email — **risparmio ~$0.80/mese**
+**Problema:** `process-email-queue` gira ogni 5s (= 17.280 invocazioni/giorno) anche quando la coda è vuota. `drip-publish` e `monthly-admin-report` girano separatamente.
+
+**Soluzione:**
+- Abbassare frequenza `process-email-queue` da 5s a 60s (sufficiente per volumi <200 email/giorno). → -92% invocazioni.
+- Aggiungere early-return: se `SELECT count FROM pgmq queue` = 0, esce in <50ms senza loggare.
+- Disabilitare `monthly-admin-report` se non viene letto (chiedere a Esmir).
+- Unire `drip-publish` dentro `process-email-queue` come step opzionale ogni 5 minuti.
+
+**Impatto stimato:** -$0.80/mese (meno invocazioni + meno CPU idle).
+
+---
+
+### 4. Throttle bot-renderer + cache statica sitemap/rss — **risparmio ~$0.50/mese**
+**Problema:** crawler (Google, Bing, GPTBot, ecc.) chiamano `bot-renderer`, `generate-sitemap`, `generate-rss` molte volte/giorno. Ogni chiamata fa SSR + query DB.
+
+**Soluzione:**
+- Cache HTTP headers su sitemap/rss: `Cache-Control: public, max-age=21600, s-maxage=21600` (6h).
+- `bot-renderer`: cache in-memory per URL (TTL 1h) o pre-render in storage notturno via cron.
+- Aggiungere `robots.txt` con `Crawl-delay: 10` per bot non essenziali.
+
+**Impatto stimato:** -$0.50/mese.
+
+---
+
+### 5. Pulizia opzionale — **risparmio ~$0.10/mese**
+- Comprimere immagini esistenti in storage in WebP/AVIF (one-shot).
+- Aggiungere indici su query lente (verificare con `pg_stat_statements`).
+- Eliminare log `email_send_log` > 90 giorni (cron mensile).
+
+---
+
+## Risparmio totale stimato
+
+| Intervento | Risparmio/mese | Effort |
+|---|---:|---|
+| 1. Cache articoli AI | $3.00 | M |
+| 2. Cache + downscale cover | $1.50 | S |
+| 3. Cron email ottimizzato | $0.80 | S |
+| 4. Cache SEO/bot | $0.50 | S |
+| 5. Pulizia varie | $0.10 | XS |
+| **Totale** | **~$5.90** | |
+
+**Costo finale stimato:** $9.35 → **~$3.45/mese** (-63%).
+
+---
+
+## Dettagli tecnici (per la fase build)
+
+Lavoreremo nel progetto **Esmir's Travel Compass** (devo cambiare progetto attivo). Sequenza consigliata:
+
+```text
+fase 1 → cache AI articoli + cover (impatto maggiore, basso rischio)
+fase 2 → cron email consolidato (richiede test del flusso transactional)
+fase 3 → cache SEO/bot (validare che Google non perda freshness)
+fase 4 → cleanup
+```
+
+Ogni fase è isolata e rilasciabile separatamente, con metriche before/after via `supabase--analytics_query` su `function_edge_logs` per validare il risparmio reale dopo 7 giorni.
+
+## Cosa NON faccio in questo piano
+- Non tocco la logica editoriale (prompt, modelli scelti per qualità) se non per cache.
+- Non rimuovo funzionalità: tutto resta uguale per l'utente finale.
+- Non migro provider AI.
+
+---
+
+## Domande prima di partire (build)
+1. Confermare che posso cambiare progetto attivo a "Esmir's Travel Compass".
+2. `monthly-admin-report`: lo leggi davvero ogni mese? (Se no → disabilito.)
+3. Vuoi che parta solo dalla **fase 1** (massimo risparmio, minimo rischio) o approccio "tutto in una volta"?

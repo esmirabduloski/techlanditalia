@@ -85,6 +85,7 @@ export default function AdminCRM() {
               <TabsTrigger value="kanban"><KanbanSquare className="w-4 h-4 mr-1" /> Pipeline</TabsTrigger>
               <TabsTrigger value="list"><List className="w-4 h-4 mr-1" /> Lista</TabsTrigger>
               <TabsTrigger value="analytics"><BarChart3 className="w-4 h-4 mr-1" /> Analytics</TabsTrigger>
+              <TabsTrigger value="notion"><Database className="w-4 h-4 mr-1" /> Notion</TabsTrigger>
             </TabsList>
             <TabsContent value="kanban">
               <CRMKanbanBoard
@@ -98,6 +99,9 @@ export default function AdminCRM() {
             </TabsContent>
             <TabsContent value="analytics">
               <CRMAnalytics leads={leads} />
+            </TabsContent>
+            <TabsContent value="notion">
+              <CRMNotionSettings totalLeads={leads.length} />
             </TabsContent>
           </Tabs>
         )}

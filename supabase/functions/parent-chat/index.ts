@@ -165,9 +165,34 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    
+
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY is not configured');
+    }
+
+    // Validate messages payload to prevent quota exhaustion via oversized requests
+    const MAX_MESSAGES = 30;
+    const MAX_MSG_CHARS = 2000;
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return new Response(JSON.stringify({ error: 'messages must be a non-empty array' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    if (messages.length > MAX_MESSAGES) {
+      return new Response(JSON.stringify({ error: `Too many messages (max ${MAX_MESSAGES}).` }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    for (const m of messages) {
+      if (!m || typeof m !== 'object' ||
+          (m.role !== 'user' && m.role !== 'assistant') ||
+          typeof m.content !== 'string' ||
+          m.content.length === 0 ||
+          m.content.length > MAX_MSG_CHARS) {
+        return new Response(JSON.stringify({ error: 'Invalid message entry' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     console.log('Processing chat request with', messages.length, 'messages');

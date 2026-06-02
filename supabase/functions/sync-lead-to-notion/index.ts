@@ -124,6 +124,34 @@ Deno.serve(async (req) => {
     );
   }
 
+  // Require admin Bearer token — this endpoint mutates CRM data and pushes to Notion
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  const authClient = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
+  const { data: { user: caller }, error: authErr } = await authClient.auth.getUser(
+    authHeader.replace("Bearer ", "")
+  );
+  if (authErr || !caller) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  const { data: adminRole } = await authClient
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", caller.id)
+    .eq("role", "admin")
+    .maybeSingle();
+  if (!adminRole) {
+    return new Response(JSON.stringify({ error: "Forbidden: admin only" }), {
+      status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   let payload: SyncRequest;
   try {
     payload = await req.json();

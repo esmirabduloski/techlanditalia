@@ -93,7 +93,7 @@ export default function LandingPage() {
       <SEOHead
         title={page.meta_title || page.title}
         description={page.meta_description || ''}
-        canonicalUrl={canonicalUrl}
+        canonical={canonicalUrl}
         structuredData={faqSchema ? [courseSchema, faqSchema] : courseSchema}
       />
 

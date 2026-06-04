@@ -1,10 +1,10 @@
 ---
-title: "TECHLAND | Catalogo Corsi di Coding per Bambini e Ragazzi"
-description: "Tutti i corsi TECHLAND di programmazione online per alunni 5-20 anni: Scratch, Roblox, Minecraft, Python, AI, Web Development."
+title: "TECHLAND | Corso di Coding per Bambini e Ragazzi (5–20 anni)"
+description: "Corso di coding per bambini e ragazzi online: Scratch, Roblox, Minecraft, Python, Web Development, AI. Piccoli gruppi, docenti esperti. Prima lezione gratuita."
 canonical: "https://techlanditalia.it/corsi"
 ---
 
-# TECHLAND — Catalogo Corsi di Programmazione
+# TECHLAND — Corso di Coding per Bambini e Ragazzi
 
 Tutti i nostri corsi di coding online per alunni dai **5 ai 20 anni**. Lezioni live in piccoli gruppi (max 6), prima lezione **gratuita**.
 

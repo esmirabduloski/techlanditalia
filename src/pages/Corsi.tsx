@@ -90,7 +90,7 @@ export default function Corsi() {
 
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: "/" },
-    { name: "Corsi di Programmazione per Bambini", url: "/corsi" }
+    { name: "Corso di Coding per Bambini e Ragazzi", url: "/corsi" }
   ]);
 
   const coursesListSchema = {
@@ -127,23 +127,23 @@ export default function Corsi() {
   return (
     <Layout>
       <SEOHead
-        title="TECHLAND | Corsi di Coding Online per Bambini e Ragazzi"
-        description="Tutti i corsi di coding online per bambini e ragazzi: Scratch, Roblox, Minecraft, Python, Web Development. Prima lezione gratis!"
+        title="TECHLAND | Corso di Coding per Bambini e Ragazzi (5–20 anni)"
+        description="Corso di coding per bambini e ragazzi online: Scratch, Roblox, Minecraft, Python, Web Development, AI. Piccoli gruppi, docenti esperti. Prima lezione gratuita!"
         canonical="/corsi"
-        keywords="corsi online per bambini, corsi per bambini, corsi di informatica per bambini, corsi di coding, corsi di scratch, corsi di minecraft, corsi di roblox, corsi di python per ragazzi, corsi di programmazione per bambini, corsi web development bambini, corsi coding online, scuola coding bambini, lezioni programmazione online ragazzi"
+        keywords="corso coding, coding per bambini, corsi di coding, corsi di programmazione per bambini, corsi coding online, scuola coding bambini, lezioni programmazione online ragazzi, corsi online per bambini, corsi di informatica per bambini, corsi di scratch, corsi di roblox, corsi di python per ragazzi, corsi web development bambini, coding bambini, corso coding online"
         structuredData={[breadcrumbSchema, coursesListSchema]}
       />
       
       {/* Hero */}
       <section className="py-16 md:py-24 bg-gradient-to-b from-primary/10 via-tech-green-light to-background dark:from-background dark:via-background dark:to-background">
         <div className="tech-container">
-          <SEOBreadcrumb 
-            items={[{ label: "Corsi di Programmazione per Bambini" }]} 
+          <SEOBreadcrumb
+            items={[{ label: "Corso di Coding per Bambini e Ragazzi" }]}
             className="mb-8 justify-center"
           />
           <div className="text-center max-w-3xl mx-auto">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-              Corsi di <span className="tech-gradient-text">programmazione per bambini</span> e ragazzi online
+              Corso di <span className="tech-gradient-text">Coding per Bambini</span> e Ragazzi Online
             </h1>
             <p className="text-lg text-muted-foreground">
               Tutti i nostri <strong>corsi di coding online per bambini e ragazzi</strong> dai 5 ai 20 anni:

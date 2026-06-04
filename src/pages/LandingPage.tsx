@@ -58,12 +58,45 @@ export default function LandingPage() {
   const courseTagline = metadata.course_tagline;
   const courseInfo = metadata.course_info;
 
+  const canonicalUrl = `https://techlanditalia.it/lp/${slug}`;
+  const courseSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Course',
+    name: page.title,
+    description: page.meta_description || page.hero_subtitle || '',
+    url: canonicalUrl,
+    provider: {
+      '@type': 'Organization',
+      name: 'TECHLAND',
+      sameAs: 'https://techlanditalia.it',
+    },
+    ...(courseInfo?.age && { educationalLevel: courseInfo.age }),
+    ...(courseInfo?.topics && { teaches: courseInfo.topics }),
+    hasCourseInstance: {
+      '@type': 'CourseInstance',
+      courseMode: 'Online',
+      inLanguage: 'it',
+    },
+  };
+  const faqSchema = Array.isArray(metadata.faq) && metadata.faq.length > 0 ? {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: metadata.faq.map((f: any) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  } : null;
+
   return (
     <>
       <SEOHead
         title={page.meta_title || page.title}
         description={page.meta_description || ''}
+        canonical={canonicalUrl}
+        structuredData={faqSchema ? [courseSchema, faqSchema] : courseSchema}
       />
+
       <div className="min-h-screen bg-background overflow-hidden">
         <LandingHero
           title={page.hero_title || page.title}

@@ -1596,21 +1596,69 @@ export default function AdminUsers() {
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialog.open} onOpenChange={(open) => !open && setDeleteDialog({ open: false, userId: '', userName: '' })}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Elimina Utente</DialogTitle>
-            <DialogDescription>
-              Sei sicuro di voler eliminare l'utente <strong>{deleteDialog.userName}</strong>? 
-              Questa azione è irreversibile e eliminerà anche tutti i figli associati.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialog({ open: false, userId: '', userName: '' })}>
-              Annulla
-            </Button>
-            <Button variant="destructive" onClick={handleDeleteUser} disabled={isSaving}>
-              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Elimina'}
-            </Button>
-          </DialogFooter>
+          {(() => {
+            const target = profiles.find(p => p.id === deleteDialog.userId);
+            const isParent = target?.role === 'parent';
+            const children = isParent ? profiles.filter(p => p.parent_id === deleteDialog.userId) : [];
+            const childIds = children.map(c => c.id);
+            const ownEnrollments = enrollments.filter(e => e.student_id === deleteDialog.userId).length;
+            const childEnrollments = enrollments.filter(e => childIds.includes(e.student_id)).length;
+            const totalEnrollments = ownEnrollments + childEnrollments;
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle>Elimina Utente</DialogTitle>
+                  <DialogDescription asChild>
+                    <div className="space-y-3">
+                      <p>
+                        Sei sicuro di voler eliminare l'utente <strong>{deleteDialog.userName}</strong>?
+                        Questa azione è <strong>irreversibile</strong>.
+                      </p>
+                      {isParent && children.length > 0 && (
+                        <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm">
+                          <p className="font-semibold text-destructive mb-2">
+                            ⚠️ Verranno eliminati in cascata:
+                          </p>
+                          <ul className="list-disc pl-5 space-y-1 text-foreground">
+                            <li>
+                              <strong>{children.length}</strong> {children.length === 1 ? 'alunno figlio' : 'alunni figli'}:
+                              <span className="ml-1 text-muted-foreground">
+                                {children.map(c => c.full_name).join(', ')}
+                              </span>
+                            </li>
+                            {totalEnrollments > 0 && (
+                              <li>
+                                <strong>{totalEnrollments}</strong> {totalEnrollments === 1 ? 'iscrizione a corso' : 'iscrizioni a corsi'}
+                              </li>
+                            )}
+                            <li>Progressi, compiti, presenze e dati correlati</li>
+                          </ul>
+                        </div>
+                      )}
+                      {isParent && children.length === 0 && (
+                        <p className="text-sm text-muted-foreground">
+                          Questo genitore non ha alunni figli associati.
+                        </p>
+                      )}
+                      {!isParent && ownEnrollments > 0 && (
+                        <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm">
+                          Verranno rimosse anche <strong>{ownEnrollments}</strong> {ownEnrollments === 1 ? 'iscrizione' : 'iscrizioni'} a corsi.
+                        </div>
+                      )}
+                    </div>
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setDeleteDialog({ open: false, userId: '', userName: '' })}>
+                    Annulla
+                  </Button>
+                  <Button variant="destructive" onClick={handleDeleteUser} disabled={isSaving}>
+                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : (isParent && children.length > 0 ? `Elimina genitore + ${children.length} ${children.length === 1 ? 'figlio' : 'figli'}` : 'Elimina')}
+                  </Button>
+                </DialogFooter>
+              </>
+            );
+          })()}
         </DialogContent>
       </Dialog>
 

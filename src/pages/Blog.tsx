@@ -479,10 +479,12 @@ export default function Blog() {
               />
               {searchQuery && (
                 <button
+                  type="button"
+                  aria-label="Cancella ricerca"
                   onClick={() => setSearchQuery('')}
                   className="absolute right-4 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded-full transition-colors"
                 >
-                  <X className="w-5 h-5 text-muted-foreground" />
+                  <X className="w-5 h-5 text-muted-foreground" aria-hidden="true" />
                 </button>
               )}
             </div>

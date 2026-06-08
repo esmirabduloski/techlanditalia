@@ -205,9 +205,9 @@ export default function Corsi() {
                   </Badge>
                 </div>
                 
-                <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
+                <h2 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
                   {course.title}
-                </h3>
+                </h2>
                 
                 <p className="text-muted-foreground mb-4 line-clamp-2">
                   {course.description}

@@ -17,6 +17,7 @@ import { ParentFeedbackSection } from '@/components/dashboard/ParentFeedbackSect
 import { StudentCommentsSection } from '@/components/dashboard/StudentCommentsSection';
 import { ParentChildrenSection } from '@/components/dashboard/ParentChildrenSection';
 import { StudentLessonSchedule } from '@/components/dashboard/StudentLessonSchedule';
+import { JoinLessonHero } from '@/components/dashboard/JoinLessonHero';
 import { TeacherBioCard } from '@/components/dashboard/TeacherBioCard';
 import { StreakDisplay } from '@/components/dashboard/StreakDisplay';
 import { ChildAttendanceHistory } from '@/components/dashboard/ChildAttendanceHistory';

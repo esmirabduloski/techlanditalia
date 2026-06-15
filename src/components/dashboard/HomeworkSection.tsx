@@ -288,9 +288,9 @@ export function HomeworkSection() {
     switch (status) {
       case "expired":
         return (
-          <Badge variant="destructive" className="text-xs">
-            <AlertTriangle className="w-3 h-3 mr-1" />
-            Scaduto
+          <Badge variant="outline" className="text-amber-600 border-amber-300 bg-amber-50">
+            <Clock className="w-3 h-3 mr-1" />
+            Da fare
           </Badge>
         );
       case "pending":

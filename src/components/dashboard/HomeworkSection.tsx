@@ -254,14 +254,6 @@ export function HomeworkSection() {
     const dueDate = new Date(hw.due_date);
     const hoursUntilDue = (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60);
     
-    if (hoursUntilDue < 0) {
-      return (
-        <Badge variant="destructive" className="text-xs animate-pulse">
-          <AlertTriangle className="w-3 h-3 mr-1" />
-          Scaduto
-        </Badge>
-      );
-    }
     if (hoursUntilDue <= 24) {
       return (
         <Badge className="bg-red-500 text-white text-xs">

@@ -476,12 +476,6 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Homework Section - after courses */}
-          {!effectiveIsTeacher && !effectiveIsParent && (
-            <div className="mb-8">
-              <HomeworkSection />
-            </div>
-          )}
 
           {/* Student Comments Section - after homework */}
           {effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (

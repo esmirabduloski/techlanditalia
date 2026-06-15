@@ -144,11 +144,11 @@ export function HomeworkSection() {
       }
 
       let groupDeadlinesMap = new Map<string, string>();
-      if (studentGroup?.group_id) {
+      if (groupIds.length > 0) {
         const { data: groupDeadlines } = await supabase
           .from("homework_group_deadlines")
           .select("homework_id, due_date")
-          .eq("group_id", studentGroup.group_id);
+          .in("group_id", groupIds);
         
         groupDeadlinesMap = new Map(
           groupDeadlines?.map((d) => [d.homework_id, d.due_date]) || []

@@ -384,6 +384,13 @@ export default function Dashboard() {
             </div>
           )}
 
+          {/* Homework Section - above calendar */}
+          {!effectiveIsTeacher && !effectiveIsParent && (
+            <div className="mb-8">
+              <HomeworkSection />
+            </div>
+          )}
+
           {/* Lesson Schedule */}
           {effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (
             <div className="mb-8">

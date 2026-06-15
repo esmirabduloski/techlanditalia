@@ -394,9 +394,7 @@ export function HomeworkSection() {
             const effectiveStatus = getEffectiveStatus(hw);
             const isUrgent = !hw.is_submitted && hw.due_date && (new Date(hw.due_date).getTime() - new Date().getTime()) / (1000 * 60 * 60) <= 48;
             
-            const cardBg = effectiveStatus === "expired" && !hw.is_submitted
-              ? "to-destructive/5 border-destructive/20"
-              : effectiveStatus === "graded"
+            const cardBg = effectiveStatus === "graded"
               ? "to-green-50/30 border-green-200/50"
               : isUrgent
               ? "to-red-50/50 border-red-300/50"

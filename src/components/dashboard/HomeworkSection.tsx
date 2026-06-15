@@ -72,15 +72,16 @@ export function HomeworkSection() {
 
       const courseIds = enrollments.map((e) => e.course_id);
 
-      const { data: studentGroup } = await supabase
+      const { data: studentGroups } = await supabase
         .from("group_students")
         .select("group_id")
-        .eq("student_id", user.id)
-        .maybeSingle();
+        .eq("student_id", user.id);
+
+      const groupIds = studentGroups?.map((g) => g.group_id) || [];
 
       const { data: lessons } = await supabase
         .from("lessons")
-        .select("id, title, course_id, courses(title, emoji)")
+        .select("id, title, course_id, lesson_number, courses(title, emoji)")
         .in("course_id", courseIds);
 
       if (!lessons || lessons.length === 0) {
@@ -89,13 +90,52 @@ export function HomeworkSection() {
         return;
       }
 
-      const lessonIds = lessons.map((l) => l.id);
+      let targetLessonIds: string[] = lessons.map((l) => l.id);
 
-      // Show all homework for enrolled course lessons (not gated by lesson completion)
+      // Find the last scheduled lesson for each group and filter to only that
+      if (groupIds.length > 0) {
+        const todayStr = new Date().toISOString().split('T')[0];
+        const { data: lastSchedules } = await supabase
+          .from("group_lesson_schedule")
+          .select("group_id, lesson_number")
+          .in("group_id", groupIds)
+          .lte("lesson_date", todayStr)
+          .order("lesson_date", { ascending: false })
+          .limit(groupIds.length);
+
+        if (lastSchedules && lastSchedules.length > 0) {
+          // Get course_id for each group to map lesson_number -> lesson_id
+          const { data: groupsInfo } = await supabase
+            .from("student_groups")
+            .select("id, course_id")
+            .in("id", groupIds);
+
+          const groupCourseMap = new Map(
+            groupsInfo?.map((g) => [g.id, g.course_id]) || []
+          );
+
+          const lastLessonIds: string[] = [];
+          for (const schedule of lastSchedules) {
+            const courseId = groupCourseMap.get(schedule.group_id);
+            if (courseId) {
+              const lesson = lessons.find(
+                (l) => l.course_id === courseId && (l as any).lesson_number === schedule.lesson_number
+              );
+              if (lesson) lastLessonIds.push(lesson.id);
+            }
+          }
+
+          if (lastLessonIds.length > 0) {
+            targetLessonIds = lastLessonIds;
+          }
+        }
+      }
+
+      // Show only homework for the last lesson(s)
       const { data: homeworkData } = await supabase
         .from("homework")
         .select("*")
-        .in("lesson_id", lessonIds);
+        .in("lesson_id", targetLessonIds);
 
       if (!homeworkData) {
         setHomework([]);
@@ -104,11 +144,11 @@ export function HomeworkSection() {
       }
 
       let groupDeadlinesMap = new Map<string, string>();
-      if (studentGroup?.group_id) {
+      if (groupIds.length > 0) {
         const { data: groupDeadlines } = await supabase
           .from("homework_group_deadlines")
           .select("homework_id, due_date")
-          .eq("group_id", studentGroup.group_id);
+          .in("group_id", groupIds);
         
         groupDeadlinesMap = new Map(
           groupDeadlines?.map((d) => [d.homework_id, d.due_date]) || []
@@ -214,14 +254,6 @@ export function HomeworkSection() {
     const dueDate = new Date(hw.due_date);
     const hoursUntilDue = (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60);
     
-    if (hoursUntilDue < 0) {
-      return (
-        <Badge variant="destructive" className="text-xs animate-pulse">
-          <AlertTriangle className="w-3 h-3 mr-1" />
-          Scaduto
-        </Badge>
-      );
-    }
     if (hoursUntilDue <= 24) {
       return (
         <Badge className="bg-red-500 text-white text-xs">
@@ -256,9 +288,9 @@ export function HomeworkSection() {
     switch (status) {
       case "expired":
         return (
-          <Badge variant="destructive" className="text-xs">
-            <AlertTriangle className="w-3 h-3 mr-1" />
-            Scaduto
+          <Badge variant="outline" className="text-amber-600 border-amber-300 bg-amber-50">
+            <Clock className="w-3 h-3 mr-1" />
+            Da fare
           </Badge>
         );
       case "pending":
@@ -362,9 +394,7 @@ export function HomeworkSection() {
             const effectiveStatus = getEffectiveStatus(hw);
             const isUrgent = !hw.is_submitted && hw.due_date && (new Date(hw.due_date).getTime() - new Date().getTime()) / (1000 * 60 * 60) <= 48;
             
-            const cardBg = effectiveStatus === "expired" && !hw.is_submitted
-              ? "to-destructive/5 border-destructive/20"
-              : effectiveStatus === "graded"
+            const cardBg = effectiveStatus === "graded"
               ? "to-green-50/30 border-green-200/50"
               : isUrgent
               ? "to-red-50/50 border-red-300/50"

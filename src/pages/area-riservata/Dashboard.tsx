@@ -384,28 +384,7 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Homework Section - above calendar */}
-          {!effectiveIsTeacher && !effectiveIsParent && (
-            <div className="mb-8">
-              <HomeworkSection />
-            </div>
-          )}
-
-          {/* Lesson Schedule */}
-          {effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (
-            <div className="mb-8">
-              <StudentLessonSchedule studentId={effectiveUserId} />
-            </div>
-          )}
-
-          {/* Bookmarks - Right after calendar */}
-          {!effectiveIsTeacher && !effectiveIsParent && (
-            <div className="mb-8">
-              <BookmarksSection />
-            </div>
-          )}
-
-          {/* Active Courses - After bookmarks */}
+          {/* Active Courses - At the top */}
           {!effectiveIsTeacher && !effectiveIsParent && (
             <div className="mb-8">
               <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
@@ -473,6 +452,27 @@ export default function Dashboard() {
                   })}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Homework Section - below courses */}
+          {!effectiveIsTeacher && !effectiveIsParent && (
+            <div className="mb-8">
+              <HomeworkSection />
+            </div>
+          )}
+
+          {/* Lesson Schedule */}
+          {effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (
+            <div className="mb-8">
+              <StudentLessonSchedule studentId={effectiveUserId} />
+            </div>
+          )}
+
+          {/* Bookmarks - Right after calendar */}
+          {!effectiveIsTeacher && !effectiveIsParent && (
+            <div className="mb-8">
+              <BookmarksSection />
             </div>
           )}
 

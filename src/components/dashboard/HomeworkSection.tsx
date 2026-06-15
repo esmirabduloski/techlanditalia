@@ -81,7 +81,7 @@ export function HomeworkSection() {
 
       const { data: lessons } = await supabase
         .from("lessons")
-        .select("id, title, course_id, courses(title, emoji)")
+        .select("id, title, course_id, lesson_number, courses(title, emoji)")
         .in("course_id", courseIds);
 
       if (!lessons || lessons.length === 0) {

@@ -17,6 +17,7 @@ import { ParentFeedbackSection } from '@/components/dashboard/ParentFeedbackSect
 import { StudentCommentsSection } from '@/components/dashboard/StudentCommentsSection';
 import { ParentChildrenSection } from '@/components/dashboard/ParentChildrenSection';
 import { StudentLessonSchedule } from '@/components/dashboard/StudentLessonSchedule';
+import { JoinLessonHero } from '@/components/dashboard/JoinLessonHero';
 import { TeacherBioCard } from '@/components/dashboard/TeacherBioCard';
 import { StreakDisplay } from '@/components/dashboard/StreakDisplay';
 import { ChildAttendanceHistory } from '@/components/dashboard/ChildAttendanceHistory';
@@ -258,6 +259,11 @@ export default function Dashboard() {
         return {};
       })()}>
         <div className="max-w-6xl mx-auto px-4 py-8">
+          {/* Big "Entra a Lezione" CTA at top center for students */}
+          {effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (
+            <JoinLessonHero studentId={effectiveUserId} />
+          )}
+
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
             <div className="flex items-center gap-4">
@@ -378,6 +384,13 @@ export default function Dashboard() {
             </div>
           )}
 
+          {/* Homework Section - above calendar */}
+          {!effectiveIsTeacher && !effectiveIsParent && (
+            <div className="mb-8">
+              <HomeworkSection />
+            </div>
+          )}
+
           {/* Lesson Schedule */}
           {effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (
             <div className="mb-8">
@@ -463,12 +476,6 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Homework Section - after courses */}
-          {!effectiveIsTeacher && !effectiveIsParent && (
-            <div className="mb-8">
-              <HomeworkSection />
-            </div>
-          )}
 
           {/* Student Comments Section - after homework */}
           {effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (

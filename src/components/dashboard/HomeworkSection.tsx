@@ -72,11 +72,12 @@ export function HomeworkSection() {
 
       const courseIds = enrollments.map((e) => e.course_id);
 
-      const { data: studentGroup } = await supabase
+      const { data: studentGroups } = await supabase
         .from("group_students")
         .select("group_id")
-        .eq("student_id", user.id)
-        .maybeSingle();
+        .eq("student_id", user.id);
+
+      const groupIds = studentGroups?.map((g) => g.group_id) || [];
 
       const { data: lessons } = await supabase
         .from("lessons")
@@ -89,13 +90,52 @@ export function HomeworkSection() {
         return;
       }
 
-      const lessonIds = lessons.map((l) => l.id);
+      let targetLessonIds: string[] = lessons.map((l) => l.id);
 
-      // Show all homework for enrolled course lessons (not gated by lesson completion)
+      // Find the last scheduled lesson for each group and filter to only that
+      if (groupIds.length > 0) {
+        const todayStr = new Date().toISOString().split('T')[0];
+        const { data: lastSchedules } = await supabase
+          .from("group_lesson_schedule")
+          .select("group_id, lesson_number")
+          .in("group_id", groupIds)
+          .lte("lesson_date", todayStr)
+          .order("lesson_date", { ascending: false })
+          .limit(groupIds.length);
+
+        if (lastSchedules && lastSchedules.length > 0) {
+          // Get course_id for each group to map lesson_number -> lesson_id
+          const { data: groupsInfo } = await supabase
+            .from("student_groups")
+            .select("id, course_id")
+            .in("id", groupIds);
+
+          const groupCourseMap = new Map(
+            groupsInfo?.map((g) => [g.id, g.course_id]) || []
+          );
+
+          const lastLessonIds: string[] = [];
+          for (const schedule of lastSchedules) {
+            const courseId = groupCourseMap.get(schedule.group_id);
+            if (courseId) {
+              const lesson = lessons.find(
+                (l) => l.course_id === courseId && (l as any).lesson_number === schedule.lesson_number
+              );
+              if (lesson) lastLessonIds.push(lesson.id);
+            }
+          }
+
+          if (lastLessonIds.length > 0) {
+            targetLessonIds = lastLessonIds;
+          }
+        }
+      }
+
+      // Show only homework for the last lesson(s)
       const { data: homeworkData } = await supabase
         .from("homework")
         .select("*")
-        .in("lesson_id", lessonIds);
+        .in("lesson_id", targetLessonIds);
 
       if (!homeworkData) {
         setHomework([]);

@@ -20,7 +20,7 @@ interface JoinLessonHeroProps {
 }
 
 function getLessonLabel(n: number) {
-  return `M${Math.ceil(n / 4)}L${((n - 1) % 4) + 1}`;
+  return `Lezione ${n}`;
 }
 
 export function JoinLessonHero({ studentId }: JoinLessonHeroProps) {

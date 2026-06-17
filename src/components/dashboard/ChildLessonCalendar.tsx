@@ -164,7 +164,7 @@ export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupI
 
   const getLessonLabel = (lessonNumber: number, lessonTitle: string | null) => {
     if (lessonTitle) return lessonTitle;
-    return `M${Math.ceil(lessonNumber / 4)}L${((lessonNumber - 1) % 4) + 1}`;
+    return `Lezione ${lessonNumber}`;
   };
 
   const getStatusBadge = (lessonDate: string) => {

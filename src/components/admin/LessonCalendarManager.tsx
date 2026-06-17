@@ -86,7 +86,7 @@ function RecordingUrlButton({
             Link registrazione
           </p>
           <p className="text-xs text-muted-foreground">
-            {lesson.lesson_title || `L${lesson.lesson_number}`}
+            {lesson.lesson_title || `Lezione ${lesson.lesson_number}`}
           </p>
         </div>
         <Input
@@ -395,7 +395,7 @@ export function LessonCalendarManager({
                     <CardContent className="p-3 pt-12">
                       <div className="flex items-center justify-between mb-2 gap-2">
                         <Badge variant="secondary" className="text-xs">
-                          {lesson.lesson_title || `L${lesson.lesson_number}`}
+                          {lesson.lesson_title || `Lezione ${lesson.lesson_number}`}
                         </Badge>
                         {lesson.recording_url && (
                           <Badge variant="outline" className="text-[10px] border-secondary/40 text-secondary">

@@ -164,7 +164,7 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
   };
 
   const getLessonLabel = (lessonNumber: number) => {
-    return `M${Math.ceil(lessonNumber / 4)}L${((lessonNumber - 1) % 4) + 1}`;
+    return `Lezione ${lessonNumber}`;
   };
 
   const getStatusBadge = (lessonDate: string) => {

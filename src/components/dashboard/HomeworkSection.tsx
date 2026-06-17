@@ -248,30 +248,7 @@ export function HomeworkSection() {
     return counts;
   }, [homework]);
 
-  const getDeadlineBadge = (hw: HomeworkWithDetails) => {
-    if (!hw.due_date || hw.is_submitted) return null;
-    const now = new Date();
-    const dueDate = new Date(hw.due_date);
-    const hoursUntilDue = (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60);
-    
-    if (hoursUntilDue <= 24) {
-      return (
-        <Badge className="bg-red-500 text-white text-xs">
-          <AlertTriangle className="w-3 h-3 mr-1" />
-          Scade oggi!
-        </Badge>
-      );
-    }
-    if (hoursUntilDue <= 48) {
-      return (
-        <Badge className="bg-orange-500 text-white text-xs">
-          <CalendarClock className="w-3 h-3 mr-1" />
-          Scade domani
-        </Badge>
-      );
-    }
-    return null;
-  };
+  const getDeadlineBadge = (_hw: HomeworkWithDetails) => null;
 
   const formatDueDate = (dateString: string) => {
     const date = new Date(dateString);

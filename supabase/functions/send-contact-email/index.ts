@@ -41,10 +41,40 @@ async function sendEmail(to: string[], subject: string, html: string, replyTo?: 
   return response.json();
 }
 
+const BOT_UA_PATTERNS = /(curl|wget|python-requests|scrapy|httpclient|go-http-client|java\/|libwww|httrack|nikto|sqlmap|nmap|masscan|zgrab|acunetix|nessus|burpsuite)/i;
+
+function getClientIp(req: Request): string {
+  return req.headers.get("cf-connecting-ip")
+    || (req.headers.get("x-forwarded-for") || "").split(",")[0].trim()
+    || req.headers.get("x-real-ip")
+    || "unknown";
+}
+
+async function logSecurityEvent(supabase: any, event: Record<string, unknown>) {
+  try { await supabase.from("security_events").insert(event); } catch (e) { console.error("[sec-log]", e); }
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  const ip = getClientIp(req);
+  const ua = req.headers.get("user-agent") || "";
+
+  if (!ua || BOT_UA_PATTERNS.test(ua)) {
+    await logSecurityEvent(supabase, { event_type: "bot_ua_blocked", ip_address: ip, user_agent: ua, endpoint: "send-contact-email", severity: "warn" });
+    return new Response(JSON.stringify({ error: "Forbidden" }),
+      { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } });
+  }
+
+  const { data: rl } = await supabase.rpc("check_rate_limit", {
+    _identifier: ip, _endpoint: "send-contact-email", _max_requests: 5, _window_seconds: 3600,
+  });
+  if (rl && rl.allowed === false) {
+    await logSecurityEvent(supabase, { event_type: "rate_limit_exceeded", ip_address: ip, user_agent: ua, endpoint: "send-contact-email", severity: "warn", metadata: { retry_after: rl.retry_after_seconds } });
+    return new Response(JSON.stringify({ error: "Troppe richieste, riprova più tardi." }),
+      { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders, "Retry-After": String(rl.retry_after_seconds || 3600) } });
+  }
 
   try {
     const raw = await req.json();
@@ -60,6 +90,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Honeypot
     if (website && website.length > 0) {
       console.warn("[contact] honeypot triggered for", email);
+      await logSecurityEvent(supabase, { event_type: "honeypot_triggered", identifier: email, ip_address: ip, user_agent: ua, endpoint: "send-contact-email", severity: "warn" });
       return new Response(JSON.stringify({ success: true, message: "Email inviate con successo" }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
@@ -67,6 +98,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Time-trap
     if (formOpenedAt && (Date.now() - formOpenedAt) < 2000) {
       console.warn("[contact] time-trap triggered for", email);
+      await logSecurityEvent(supabase, { event_type: "time_trap_triggered", identifier: email, ip_address: ip, user_agent: ua, endpoint: "send-contact-email", severity: "warn" });
       return new Response(JSON.stringify({ success: true, message: "Email inviate con successo" }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } });
     }

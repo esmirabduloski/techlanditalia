@@ -1699,6 +1699,27 @@ export type Database = {
           },
         ]
       }
+      rate_limits: {
+        Row: {
+          created_at: string
+          endpoint: string
+          id: string
+          identifier: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          id?: string
+          identifier: string
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          id?: string
+          identifier?: string
+        }
+        Relationships: []
+      }
       scheduled_lessons: {
         Row: {
           course_id: string
@@ -1736,6 +1757,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      security_events: {
+        Row: {
+          created_at: string
+          endpoint: string | null
+          event_type: string
+          id: string
+          identifier: string | null
+          ip_address: string | null
+          metadata: Json | null
+          severity: string
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          endpoint?: string | null
+          event_type: string
+          id?: string
+          identifier?: string | null
+          ip_address?: string | null
+          metadata?: Json | null
+          severity?: string
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string | null
+          event_type?: string
+          id?: string
+          identifier?: string | null
+          ip_address?: string | null
+          metadata?: Json | null
+          severity?: string
+          user_agent?: string | null
+        }
+        Relationships: []
       }
       site_settings: {
         Row: {
@@ -2287,7 +2344,17 @@ export type Database = {
         }
         Returns: Json
       }
+      check_rate_limit: {
+        Args: {
+          _endpoint: string
+          _identifier: string
+          _max_requests: number
+          _window_seconds: number
+        }
+        Returns: Json
+      }
       cleanup_old_logs: { Args: never; Returns: Json }
+      cleanup_rate_limits: { Args: never; Returns: number }
       generate_slug: { Args: { title: string }; Returns: string }
       get_children_ids: { Args: { _parent_id: string }; Returns: string[] }
       get_leaderboard: {

@@ -16,8 +16,43 @@ const SubscribeSchema = z.object({
   formOpenedAt: z.number().optional(),
 });
 
+const BOT_UA_PATTERNS = /(curl|wget|python-requests|scrapy|httpclient|go-http-client|java\/|libwww|httrack|nikto|sqlmap|nmap|masscan|zgrab|acunetix|nessus|burpsuite)/i;
+
+function getClientIp(req: Request): string {
+  return req.headers.get("cf-connecting-ip")
+    || (req.headers.get("x-forwarded-for") || "").split(",")[0].trim()
+    || req.headers.get("x-real-ip")
+    || "unknown";
+}
+
+async function logSecurityEvent(supabase: any, event: Record<string, unknown>) {
+  try { await supabase.from("security_events").insert(event); } catch (e) { console.error("[sec-log]", e); }
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+  const ip = getClientIp(req);
+  const ua = req.headers.get("user-agent") || "";
+
+  if (!ua || BOT_UA_PATTERNS.test(ua)) {
+    await logSecurityEvent(supabase, { event_type: "bot_ua_blocked", ip_address: ip, user_agent: ua, endpoint: "newsletter-subscribe", severity: "warn" });
+    return new Response(JSON.stringify({ error: "Forbidden" }),
+      { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } });
+  }
+
+  // Rate limit: max 5 per day per IP
+  const { data: rl } = await supabase.rpc("check_rate_limit", {
+    _identifier: ip, _endpoint: "newsletter-subscribe", _max_requests: 5, _window_seconds: 86400,
+  });
+  if (rl && rl.allowed === false) {
+    await logSecurityEvent(supabase, { event_type: "rate_limit_exceeded", ip_address: ip, user_agent: ua, endpoint: "newsletter-subscribe", severity: "warn" });
+    return new Response(JSON.stringify({ error: "Troppe richieste, riprova più tardi." }),
+      { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders, "Retry-After": String(rl.retry_after_seconds || 86400) } });
+  }
 
   try {
     const raw = await req.json();
@@ -29,17 +64,15 @@ const handler = async (req: Request): Promise<Response> => {
     const { email, website, formOpenedAt } = parsed.data;
 
     if (website && website.length > 0) {
+      await logSecurityEvent(supabase, { event_type: "honeypot_triggered", identifier: email, ip_address: ip, user_agent: ua, endpoint: "newsletter-subscribe", severity: "warn" });
       return new Response(JSON.stringify({ message: "Controlla la tua email per confermare l'iscrizione!" }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
     if (formOpenedAt && (Date.now() - formOpenedAt) < 2000) {
+      await logSecurityEvent(supabase, { event_type: "time_trap_triggered", identifier: email, ip_address: ip, user_agent: ua, endpoint: "newsletter-subscribe", severity: "warn" });
       return new Response(JSON.stringify({ message: "Controlla la tua email per confermare l'iscrizione!" }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
-
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const { data: blocked } = await supabase.rpc("is_email_blocked", { _email: email });
     if (blocked === true) {

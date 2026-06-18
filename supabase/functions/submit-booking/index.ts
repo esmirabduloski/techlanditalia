@@ -25,8 +25,48 @@ const BookingSchema = z.object({
   formOpenedAt: z.number().optional(),
 });
 
+const BOT_UA_PATTERNS = /(curl|wget|python-requests|scrapy|httpclient|go-http-client|java\/|libwww|httrack|nikto|sqlmap|nmap|masscan|zgrab|acunetix|nessus|burpsuite)/i;
+
+function getClientIp(req: Request): string {
+  return req.headers.get("cf-connecting-ip")
+    || (req.headers.get("x-forwarded-for") || "").split(",")[0].trim()
+    || req.headers.get("x-real-ip")
+    || "unknown";
+}
+
+async function logSecurityEvent(supabase: any, event: {
+  event_type: string; identifier?: string; ip_address?: string; user_agent?: string;
+  endpoint?: string; severity?: string; metadata?: Record<string, unknown>;
+}) {
+  try { await supabase.from("security_events").insert(event); } catch (e) { console.error("[sec-log]", e); }
+}
+
 serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const ip = getClientIp(req);
+  const ua = req.headers.get("user-agent") || "";
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+  );
+
+  // Block obvious bots / scripted clients
+  if (!ua || BOT_UA_PATTERNS.test(ua)) {
+    await logSecurityEvent(supabase, { event_type: "bot_ua_blocked", ip_address: ip, user_agent: ua, endpoint: "submit-booking", severity: "warn" });
+    return new Response(JSON.stringify({ error: "Forbidden" }),
+      { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+
+  // Rate limit: max 3 per IP per hour
+  const { data: rl } = await supabase.rpc("check_rate_limit", {
+    _identifier: ip, _endpoint: "submit-booking", _max_requests: 3, _window_seconds: 3600,
+  });
+  if (rl && rl.allowed === false) {
+    await logSecurityEvent(supabase, { event_type: "rate_limit_exceeded", ip_address: ip, user_agent: ua, endpoint: "submit-booking", severity: "warn", metadata: { retry_after: rl.retry_after_seconds } });
+    return new Response(JSON.stringify({ error: "Troppe richieste, riprova più tardi." }),
+      { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": String(rl.retry_after_seconds || 3600) } });
+  }
 
   try {
     const raw = await req.json();
@@ -42,6 +82,7 @@ serve(async (req: Request): Promise<Response> => {
     // Honeypot triggered → silent reject (200 to mislead bots)
     if (data.website && data.website.length > 0) {
       console.warn("[submit-booking] honeypot triggered for", data.email);
+      await logSecurityEvent(supabase, { event_type: "honeypot_triggered", identifier: data.email, ip_address: ip, user_agent: ua, endpoint: "submit-booking", severity: "warn" });
       return new Response(JSON.stringify({ success: true, message: "Prenotazione ricevuta" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
@@ -49,14 +90,11 @@ serve(async (req: Request): Promise<Response> => {
     // Time-trap: form compilato in meno di 2s = bot
     if (data.formOpenedAt && (Date.now() - data.formOpenedAt) < 2000) {
       console.warn("[submit-booking] time-trap triggered for", data.email);
+      await logSecurityEvent(supabase, { event_type: "time_trap_triggered", identifier: data.email, ip_address: ip, user_agent: ua, endpoint: "submit-booking", severity: "warn" });
       return new Response(JSON.stringify({ success: true, message: "Prenotazione ricevuta" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
 
     // Blocked email check
     const { data: blocked } = await supabase.rpc("is_email_blocked", { _email: data.email });

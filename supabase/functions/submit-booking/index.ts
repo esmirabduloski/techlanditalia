@@ -96,10 +96,8 @@ serve(async (req: Request): Promise<Response> => {
     }
 
 
-    const supabase2 = supabase;
-
     // Blocked email check
-    const { data: blocked } = await supabase2.rpc("is_email_blocked", { _email: data.email });
+    const { data: blocked } = await supabase.rpc("is_email_blocked", { _email: data.email });
     if (blocked === true) {
       console.warn("[submit-booking] blocked email", data.email);
       return new Response(JSON.stringify({ success: true, message: "Prenotazione ricevuta" }),

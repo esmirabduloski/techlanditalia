@@ -62,30 +62,36 @@ export default function LavoraConNoi() {
     email: "",
     telefono: "",
     posizione: "",
-    messaggio: ""
+    messaggio: "",
+    website: "", // honeypot
   });
+  const [formOpenedAt] = useState(() => Date.now());
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
-    const { error } = await supabase.from('job_applications').insert({
-      nome: formData.nome,
-      email: formData.email,
-      telefono: formData.telefono || null,
-      posizione: formData.posizione,
-      messaggio: formData.messaggio,
+
+    const { data, error } = await supabase.functions.invoke('submit-job-application', {
+      body: {
+        nome: formData.nome,
+        email: formData.email,
+        telefono: formData.telefono || "",
+        posizione: formData.posizione,
+        messaggio: formData.messaggio,
+        website: formData.website,
+        formOpenedAt,
+      },
     });
 
-    if (error) {
+    if (error || (data && (data as any).error)) {
       toast.error("Errore nell'invio della candidatura. Riprova.");
       setIsSubmitting(false);
       return;
     }
 
     toast.success("Candidatura inviata con successo! Ti contatteremo presto.");
-    setFormData({ nome: "", email: "", telefono: "", posizione: "", messaggio: "" });
+    setFormData({ nome: "", email: "", telefono: "", posizione: "", messaggio: "", website: "" });
     setIsSubmitting(false);
   };
 

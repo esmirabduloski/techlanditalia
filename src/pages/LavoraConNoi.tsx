@@ -62,30 +62,36 @@ export default function LavoraConNoi() {
     email: "",
     telefono: "",
     posizione: "",
-    messaggio: ""
+    messaggio: "",
+    website: "", // honeypot
   });
+  const [formOpenedAt] = useState(() => Date.now());
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
-    const { error } = await supabase.from('job_applications').insert({
-      nome: formData.nome,
-      email: formData.email,
-      telefono: formData.telefono || null,
-      posizione: formData.posizione,
-      messaggio: formData.messaggio,
+
+    const { data, error } = await supabase.functions.invoke('submit-job-application', {
+      body: {
+        nome: formData.nome,
+        email: formData.email,
+        telefono: formData.telefono || "",
+        posizione: formData.posizione,
+        messaggio: formData.messaggio,
+        website: formData.website,
+        formOpenedAt,
+      },
     });
 
-    if (error) {
+    if (error || (data && (data as any).error)) {
       toast.error("Errore nell'invio della candidatura. Riprova.");
       setIsSubmitting(false);
       return;
     }
 
     toast.success("Candidatura inviata con successo! Ti contatteremo presto.");
-    setFormData({ nome: "", email: "", telefono: "", posizione: "", messaggio: "" });
+    setFormData({ nome: "", email: "", telefono: "", posizione: "", messaggio: "", website: "" });
     setIsSubmitting(false);
   };
 
@@ -213,6 +219,16 @@ export default function LavoraConNoi() {
             </p>
             
             <form onSubmit={handleSubmit} className="space-y-6 p-8 rounded-2xl bg-card border border-border">
+              <input
+                type="text"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                value={formData.website}
+                onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
+                aria-hidden="true"
+              />
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="nome">Nome completo *</Label>

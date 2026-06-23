@@ -55,7 +55,7 @@ interface HomeworkFormData {
   preview_only: boolean;
 }
 
-const PYTHON_COURSES = ['python-base', 'python-ai'];
+const PYTHON_COURSES = ['python-base', 'python-ai', 'python-avanzato'];
 const WEB_COURSES = ['web-development'];
 
 export default function HomeworkEditor() {

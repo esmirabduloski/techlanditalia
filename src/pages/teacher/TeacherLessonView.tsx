@@ -32,7 +32,7 @@ interface Lesson {
   images: string[] | null;
 }
 
-const PYTHON_COURSES = ['python-base', 'python-ai'];
+const PYTHON_COURSES = ['python-base', 'python-ai', 'python-avanzato'];
 const WEB_COURSES = ['web-development'];
 const SPLIT_LAYOUT_COURSES = [...PYTHON_COURSES, ...WEB_COURSES];
 

@@ -62,7 +62,7 @@ interface Submission {
   points_earned: number;
 }
 
-const PYTHON_COURSES = ['python-base', 'python-ai'];
+const PYTHON_COURSES = ['python-base', 'python-ai', 'python-avanzato'];
 const WEB_COURSES = ['web-development'];
 
 export default function HomeworkView() {

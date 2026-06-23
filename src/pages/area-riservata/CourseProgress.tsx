@@ -292,6 +292,10 @@ export default function CourseProgress() {
                   const completed = isLessonCompleted(lesson.id);
                   const isNext = !completed && lessons.slice(0, index).every(l => isLessonCompleted(l.id));
                   const isLocked = !completed && !isNext && index > 0;
+                  const scheduledDate = scheduleByLessonNumber[lesson.lesson_number];
+                  const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local
+                  const isOnOrAfterScheduledDate = scheduledDate ? todayStr >= scheduledDate : false;
+                  const canComplete = isNext && isOnOrAfterScheduledDate;
 
                     const cardContent = (
                       <CardContent className="py-4">

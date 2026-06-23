@@ -66,7 +66,37 @@ export default function CourseProgress() {
     if (courseId) {
       fetchCourseData();
     }
-  }, [courseId]);
+  }, [courseId, effectiveUserId]);
+
+  useEffect(() => {
+    const fetchSchedule = async () => {
+      if (!courseId || !effectiveUserId) return;
+      // Find the student's group for this course
+      const { data: groups } = await supabase
+        .from('student_groups')
+        .select('id, group_students!inner(student_id)')
+        .eq('course_id', courseId)
+        .eq('group_students.student_id', effectiveUserId);
+      const groupIds = (groups || []).map((g: any) => g.id);
+      if (groupIds.length === 0) {
+        setScheduleByLessonNumber({});
+        return;
+      }
+      const { data: sched } = await supabase
+        .from('group_lesson_schedule')
+        .select('lesson_number, lesson_date')
+        .in('group_id', groupIds);
+      const map: Record<number, string> = {};
+      (sched || []).forEach((s: any) => {
+        // Keep earliest date for each lesson_number if multiple groups
+        if (!map[s.lesson_number] || s.lesson_date < map[s.lesson_number]) {
+          map[s.lesson_number] = s.lesson_date;
+        }
+      });
+      setScheduleByLessonNumber(map);
+    };
+    fetchSchedule();
+  }, [courseId, effectiveUserId]);
 
   const fetchCourseData = async () => {
     if (!courseId) return;

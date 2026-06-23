@@ -335,7 +335,7 @@ export default function CourseProgress() {
                               <Badge variant="outline" className="text-primary border-primary">
                                 ✓ Completata
                               </Badge>
-                            ) : isNext ? (
+                            ) : canComplete ? (
                               <Button 
                                 size="sm"
                                 onClick={(e) => {
@@ -354,6 +354,11 @@ export default function CourseProgress() {
                                   </>
                                 )}
                               </Button>
+                            ) : isNext && scheduledDate ? (
+                              <Badge variant="secondary" title={`Disponibile dal ${new Date(scheduledDate).toLocaleDateString('it-IT')}`}>
+                                <Lock className="w-3 h-3 mr-1" />
+                                Dal {new Date(scheduledDate).toLocaleDateString('it-IT')}
+                              </Badge>
                             ) : (
                               <Badge variant="secondary">
                                 <Lock className="w-3 h-3 mr-1" />

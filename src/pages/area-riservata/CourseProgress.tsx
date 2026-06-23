@@ -370,8 +370,8 @@ export default function CourseProgress() {
                       </CardContent>
                     );
 
-                    // Se la lezione è accessibile, rendi l'intera card cliccabile
-                    if (completed || isNext) {
+                    // Se la lezione è accessibile (completata o sbloccata per data), rendi cliccabile
+                    if (completed || canComplete) {
                       return (
                         <Link 
                           key={lesson.id}

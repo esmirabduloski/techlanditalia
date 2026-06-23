@@ -45,11 +45,12 @@ interface Homework {
 export default function CourseProgress() {
   const { courseId } = useParams<{ courseId: string }>();
   const { user, isLoading: authLoading } = useAuth();
-  const { lessonProgress, homeworkSubmissions, taskProgress, completeLesson, refetch } = useStudentProgress();
+  const { lessonProgress, homeworkSubmissions, taskProgress, completeLesson, refetch, effectiveUserId } = useStudentProgress();
   const [course, setCourse] = useState<Course | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [homework, setHomework] = useState<Homework[]>([]);
   const [allTasks, setAllTasks] = useState<{ id: string; lesson_id: string }[]>([]);
+  const [scheduleByLessonNumber, setScheduleByLessonNumber] = useState<Record<number, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [completingLesson, setCompletingLesson] = useState<string | null>(null);
   const navigate = useNavigate();

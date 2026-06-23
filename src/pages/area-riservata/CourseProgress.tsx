@@ -45,11 +45,12 @@ interface Homework {
 export default function CourseProgress() {
   const { courseId } = useParams<{ courseId: string }>();
   const { user, isLoading: authLoading } = useAuth();
-  const { lessonProgress, homeworkSubmissions, taskProgress, completeLesson, refetch } = useStudentProgress();
+  const { lessonProgress, homeworkSubmissions, taskProgress, completeLesson, refetch, effectiveUserId } = useStudentProgress();
   const [course, setCourse] = useState<Course | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [homework, setHomework] = useState<Homework[]>([]);
   const [allTasks, setAllTasks] = useState<{ id: string; lesson_id: string }[]>([]);
+  const [scheduleByLessonNumber, setScheduleByLessonNumber] = useState<Record<number, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [completingLesson, setCompletingLesson] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -65,7 +66,37 @@ export default function CourseProgress() {
     if (courseId) {
       fetchCourseData();
     }
-  }, [courseId]);
+  }, [courseId, effectiveUserId]);
+
+  useEffect(() => {
+    const fetchSchedule = async () => {
+      if (!courseId || !effectiveUserId) return;
+      // Find the student's group for this course
+      const { data: groups } = await supabase
+        .from('student_groups')
+        .select('id, group_students!inner(student_id)')
+        .eq('course_id', courseId)
+        .eq('group_students.student_id', effectiveUserId);
+      const groupIds = (groups || []).map((g: any) => g.id);
+      if (groupIds.length === 0) {
+        setScheduleByLessonNumber({});
+        return;
+      }
+      const { data: sched } = await supabase
+        .from('group_lesson_schedule')
+        .select('lesson_number, lesson_date')
+        .in('group_id', groupIds);
+      const map: Record<number, string> = {};
+      (sched || []).forEach((s: any) => {
+        // Keep earliest date for each lesson_number if multiple groups
+        if (!map[s.lesson_number] || s.lesson_date < map[s.lesson_number]) {
+          map[s.lesson_number] = s.lesson_date;
+        }
+      });
+      setScheduleByLessonNumber(map);
+    };
+    fetchSchedule();
+  }, [courseId, effectiveUserId]);
 
   const fetchCourseData = async () => {
     if (!courseId) return;
@@ -261,6 +292,10 @@ export default function CourseProgress() {
                   const completed = isLessonCompleted(lesson.id);
                   const isNext = !completed && lessons.slice(0, index).every(l => isLessonCompleted(l.id));
                   const isLocked = !completed && !isNext && index > 0;
+                  const scheduledDate = scheduleByLessonNumber[lesson.lesson_number];
+                  const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local
+                  const isOnOrAfterScheduledDate = scheduledDate ? todayStr >= scheduledDate : false;
+                  const canComplete = isNext && isOnOrAfterScheduledDate;
 
                     const cardContent = (
                       <CardContent className="py-4">
@@ -300,7 +335,7 @@ export default function CourseProgress() {
                               <Badge variant="outline" className="text-primary border-primary">
                                 ✓ Completata
                               </Badge>
-                            ) : isNext ? (
+                            ) : canComplete ? (
                               <Button 
                                 size="sm"
                                 onClick={(e) => {
@@ -319,6 +354,11 @@ export default function CourseProgress() {
                                   </>
                                 )}
                               </Button>
+                            ) : isNext && scheduledDate ? (
+                              <Badge variant="secondary" title={`Disponibile dal ${new Date(scheduledDate).toLocaleDateString('it-IT')}`}>
+                                <Lock className="w-3 h-3 mr-1" />
+                                Dal {new Date(scheduledDate).toLocaleDateString('it-IT')}
+                              </Badge>
                             ) : (
                               <Badge variant="secondary">
                                 <Lock className="w-3 h-3 mr-1" />

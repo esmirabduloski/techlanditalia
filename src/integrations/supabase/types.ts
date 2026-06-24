@@ -2376,6 +2376,18 @@ export type Database = {
         Returns: boolean
       }
       is_email_blocked: { Args: { _email: string }; Returns: boolean }
+      is_enrolled_for_homework: {
+        Args: { _homework_id: string; _student_id: string }
+        Returns: boolean
+      }
+      is_enrolled_for_lesson: {
+        Args: { _lesson_id: string; _student_id: string }
+        Returns: boolean
+      }
+      is_enrolled_for_task: {
+        Args: { _student_id: string; _task_id: string }
+        Returns: boolean
+      }
       is_enrolled_in_course: {
         Args: { _course_id: string; _user_id: string }
         Returns: boolean

@@ -86,7 +86,7 @@ export function BookmarksSection() {
               entity_id: t.id,
               course_id: t.lessons.course_id,
               title: t.title,
-              subtitle: `M${Math.ceil(t.lessons.lesson_number / 4)}L${((t.lessons.lesson_number - 1) % 4) + 1} • Task ${t.task_number}`,
+              subtitle: `Lezione ${t.lessons.lesson_number} • Task ${t.task_number}`,
               courseEmoji: t.lessons.courses.emoji,
               courseSlug: t.lessons.courses.slug,
               courseTitle: t.lessons.courses.title,

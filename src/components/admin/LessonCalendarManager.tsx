@@ -176,7 +176,7 @@ export function LessonCalendarManager({
           group_id: groupId,
           lesson_number: lessonCount,
           lesson_date: format(currentDate, 'yyyy-MM-dd'),
-          lesson_title: `M${Math.ceil(lessonCount / 4)}L${((lessonCount - 1) % 4) + 1}`,
+          lesson_title: `${lessonCount}.`,
           lesson_time: defaultLessonTime || null
         });
       }

@@ -372,7 +372,7 @@ export default function AdminGroups() {
                 group_id: newGroup.id,
                 lesson_number: lessonCount,
                 lesson_date: currentDate.toISOString().split('T')[0],
-                lesson_title: `M${Math.ceil(lessonCount / 4)}L${((lessonCount - 1) % 4) + 1}`,
+                lesson_title: `${lessonCount}.`,
                 lesson_time: formData.lesson_time || null
               });
             }

@@ -195,17 +195,30 @@ serve(async (req) => {
       }
     }
 
-    // Send welcome email
+    // Send welcome email (with a one-time password setup link instead of the plaintext password)
     try {
       const welcomeBody: Record<string, string> = {
         email: email.trim().toLowerCase(),
         fullName: fullName.trim(),
         role: userRole,
-        password,
       };
       if (role === "parent" && childName && childUsername) {
         welcomeBody.childName = childName.trim();
         welcomeBody.childUsername = childUsername.trim();
+      }
+
+      // Generate a one-time recovery link so the user can set their own password
+      try {
+        const { data: linkData } = await supabaseAdmin.auth.admin.generateLink({
+          type: "recovery",
+          email: email.trim().toLowerCase(),
+        });
+        const actionLink = linkData?.properties?.action_link;
+        if (actionLink) {
+          welcomeBody.setupLink = actionLink;
+        }
+      } catch (linkErr) {
+        console.error("Error generating setup link:", linkErr);
       }
 
       // Use anon key client + admin auth header so the welcome-email function authorizes the call

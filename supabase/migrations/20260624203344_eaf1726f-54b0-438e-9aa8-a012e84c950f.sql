@@ -1,0 +1,1 @@
+UPDATE public.group_lesson_schedule SET lesson_title = lesson_number || '.' WHERE lesson_title ~ '^M[0-9]+L[0-9]+$';

@@ -26,7 +26,7 @@ interface WelcomeEmailRequest {
   role: "student" | "parent";
   childName?: string;
   childUsername?: string;
-  password?: string;
+  setupLink?: string;
 }
 
 const getParentEmailTemplate = (
@@ -34,7 +34,7 @@ const getParentEmailTemplate = (
   childName: string,
   childUsername: string,
   email: string,
-  password: string,
+  setupLink: string,
 ) => `
 <!DOCTYPE html>
 <html lang="it">
@@ -50,13 +50,13 @@ const getParentEmailTemplate = (
         <div style="background:linear-gradient(135deg,#eff6ff 0%,#f0f9ff 100%);border-radius:12px;padding:24px;margin:30px 0;border:2px solid #3b82f6;">
           <h3 style="color:#1d4ed8;margin:0 0 15px;font-size:18px;">🔑 Le sue credenziali di accesso (genitore):</h3>
           <p style="color:#1f2937;font-size:16px;font-weight:bold;margin:8px 0;"><strong>Email:</strong> ${email}</p>
-          <p style="color:#1f2937;font-size:16px;font-weight:bold;margin:8px 0;"><strong>Password:</strong> ${password}</p>
-          <p style="color:#6b7280;font-size:13px;margin:12px 0 0;font-style:italic;">Le consigliamo di conservare queste credenziali in un luogo sicuro</p>
+          <p style="color:#4b5563;font-size:15px;line-height:1.6;margin:8px 0 16px;">Per motivi di sicurezza la password non viene inviata via email. Usi il pulsante qui sotto per impostare la sua password personale (link valido una sola volta).</p>
+          ${setupLink ? `<div style="text-align:center;margin:8px 0 0;"><a href="${setupLink}" style="display:inline-block;background:#1d4ed8;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold;font-size:15px;">Imposta la tua password →</a></div>` : `<p style="color:#1f2937;font-size:14px;margin:8px 0;">Acceda a <a href="https://techlanditalia.it/area-riservata">techlanditalia.it/area-riservata</a> e usi "Password dimenticata" per impostare la sua password.</p>`}
         </div>
         <div style="background:linear-gradient(135deg,#f0fdf4 0%,#ecfeff 100%);border-radius:12px;padding:24px;margin:30px 0;border:2px solid #10b981;">
           <h3 style="color:#059669;margin:0 0 15px;font-size:18px;">🔐 Accesso di ${childName}:</h3>
           <p style="color:#1f2937;font-size:16px;font-weight:bold;margin:8px 0;"><strong>Nome utente:</strong> ${childUsername}</p>
-          <p style="color:#4b5563;font-size:15px;margin:8px 0;"><strong>Password:</strong> la stessa del genitore</p>
+          <p style="color:#4b5563;font-size:15px;margin:8px 0;">L'accesso del figlio verrà gestito tramite il suo account genitore dopo aver impostato la password.</p>
         </div>
         <div style="text-align:center;margin:30px 0;">
           <a href="https://techlanditalia.it/area-riservata" style="display:inline-block;background:linear-gradient(135deg,#10b981 0%,#06b6d4 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:bold;font-size:16px;">Accedi all'Area Riservata →</a>

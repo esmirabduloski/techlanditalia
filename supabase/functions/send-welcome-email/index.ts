@@ -111,7 +111,7 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    const { email, fullName, role, childName, childUsername, password }: WelcomeEmailRequest = await req.json();
+    const { email, fullName, role, childName, childUsername, setupLink }: WelcomeEmailRequest = await req.json();
 
     console.log(`Sending welcome email to ${email} (${role})`);
 
@@ -119,9 +119,10 @@ const handler = async (req: Request): Promise<Response> => {
     const safeChildName = escapeHtml(childName || "");
     const safeChildUsername = escapeHtml(childUsername || "");
     const safeEmail = escapeHtml(email || "");
-    const safePassword = escapeHtml(password || "");
+    // setupLink is a Supabase-generated URL; only allow http(s) URLs and do not HTML-escape (used as href)
+    const safeSetupLink = typeof setupLink === "string" && /^https?:\/\//i.test(setupLink) ? setupLink : "";
 
-    const htmlContent = getParentEmailTemplate(safeFullName, safeChildName, safeChildUsername, safeEmail, safePassword);
+    const htmlContent = getParentEmailTemplate(safeFullName, safeChildName, safeChildUsername, safeEmail, safeSetupLink);
     const subject = "Benvenuto in TECHLAND - Account creato con successo";
 
     const emailResponse = await resend.emails.send({

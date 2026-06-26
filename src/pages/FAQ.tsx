@@ -230,8 +230,49 @@ export default function FAQ() {
                     </AccordionItem>
                   ))}
                 </Accordion>
+                {category.title === "Sicurezza e affidabilità" && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowMore(!showMore)}
+                    className="mt-4 group"
+                  >
+                    {showMore ? "Mostra meno" : "Mostra altro"}
+                    <ChevronDown
+                      className={cn(
+                        "w-4 h-4 ml-2 transition-transform duration-200",
+                        showMore && "rotate-180"
+                      )}
+                    />
+                  </Button>
+                )}
               </div>
             ))}
+
+            {showMore && (
+              <div>
+                <h2 className="text-2xl md:text-3xl font-bold mb-6 flex items-center gap-3">
+                  <span className="w-2 h-8 bg-gradient-hero rounded-full" />
+                  Domande frequenti su TechLand Italia
+                </h2>
+                <Accordion type="single" collapsible className="space-y-3">
+                  {moreFaqs.map((faq, faqIndex) => (
+                    <AccordionItem
+                      key={faqIndex}
+                      value={`more-${faqIndex}`}
+                      className="bg-card rounded-2xl border border-border/50 px-6 data-[state=open]:shadow-tech-md transition-shadow"
+                    >
+                      <AccordionTrigger className="text-left font-semibold hover:no-underline py-5">
+                        {faq.question}
+                      </AccordionTrigger>
+                      <AccordionContent className="text-muted-foreground pb-5">
+                        {faq.answer}
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              </div>
+            )}
           </div>
         </div>
       </section>

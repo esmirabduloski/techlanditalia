@@ -159,6 +159,7 @@ export function generateCourseSchema(course: {
     "description": course.description,
     "provider": {
       "@type": "EducationalOrganization",
+      "@id": "https://techlanditalia.it/#organization",
       "name": "TECHLAND",
       "url": "https://techlanditalia.it"
     },
@@ -171,12 +172,20 @@ export function generateCourseSchema(course: {
     },
     "educationalLevel": course.level,
     "timeRequired": course.duration,
+    "hasCourseInstance": {
+      "@type": "CourseInstance",
+      "courseMode": "online",
+      "inLanguage": "it-IT"
+    },
     "offers": {
       "@type": "Offer",
       "category": "Lezione di prova gratuita",
       "price": "0",
-      "priceCurrency": "EUR"
+      "priceCurrency": "EUR",
+      "availability": "https://schema.org/InStock",
+      "url": "https://techlanditalia.it/prenota"
     }
+
   };
 }
 

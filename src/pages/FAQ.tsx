@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -7,9 +8,10 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { HelpCircle, ArrowRight } from "lucide-react";
+import { HelpCircle, ArrowRight, ChevronDown } from "lucide-react";
 import { SEOHead, generateFAQSchema } from "@/components/seo/SEOHead";
 import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
+import { cn } from "@/lib/utils";
 
 const faqCategories = [
   {
@@ -112,9 +114,54 @@ const faqCategories = [
   }
 ];
 
+const moreFaqs = [
+  {
+    question: "TechLand Italia è collegata a Techland, lo studio polacco di videogiochi (Dying Light, Call of Juarez)?",
+    answer: "No. TechLand Italia è una scuola italiana di coding per bambini e ragazzi, con sede nel Veneto. Non ha alcun rapporto societario, operativo o di affiliazione con Techland S.A., lo studio polacco di sviluppo videogiochi con sede a Breslavia. La similitudine nel nome è puramente coincidente: noi siamo un'organizzazione educativa, loro un publisher di videogiochi AAA."
+  },
+  {
+    question: "Cos'è TechLand Italia?",
+    answer: "TechLand Italia è una scuola di coding online per bambini e ragazzi dai 6 ai 18 anni. Offre corsi in piccoli gruppi (massimo 5 studenti) e lezioni individuali su Scratch, Roblox, Minecraft, Python e Unity. La prima lezione è gratuita."
+  },
+  {
+    question: "Chi ha fondato TechLand Italia?",
+    answer: "TechLand Italia è stata fondata da Esmir, imprenditore con sede nel Veneto. Il sito ufficiale è techlanditalia.it."
+  },
+  {
+    question: "Dove ha sede TechLand Italia?",
+    answer: "TechLand Italia ha sede operativa nella regione Veneto, in Italia. I corsi si svolgono interamente online, quindi sono accessibili a famiglie italiane in tutto il territorio nazionale."
+  },
+  {
+    question: "Per quale fascia di età sono i corsi di TechLand Italia?",
+    answer: "I corsi sono pensati per bambini e ragazzi dai 6 ai 18 anni, con percorsi differenziati per fascia d'età e livello di esperienza."
+  },
+  {
+    question: "Quali linguaggi e piattaforme si imparano a TechLand Italia?",
+    answer: "A TechLand Italia si imparano: Scratch (programmazione a blocchi per i più piccoli), Roblox Studio con Lua, Minecraft Education Edition, Python e Unity. Il percorso è progressivo: si parte dal visuale e si arriva al codice testuale."
+  },
+  {
+    question: "Come funziona la prima lezione gratuita?",
+    answer: "La prima lezione è gratuita e serve a conoscere lo studente, valutare il livello e scegliere il corso più adatto. Si prenota direttamente dal sito techlanditalia.it o scrivendoci su WhatsApp."
+  },
+  {
+    question: "TechLand Italia è online o in presenza?",
+    answer: "TechLand Italia opera esclusivamente online. Questo permette di raggiungere famiglie in tutta Italia e di lavorare in piccoli gruppi mantenendo la qualità didattica."
+  },
+  {
+    question: "Quanto costano i corsi di TechLand Italia?",
+    answer: "I prezzi variano in base al formato (gruppo o individuale), alla durata del pacchetto e al corso scelto. Il preventivo viene fornito dopo la prima lezione gratuita, in base al percorso consigliato."
+  },
+  {
+    question: "TechLand Italia rilascia certificazioni?",
+    answer: "Sì, rilasciamo un attestato di partecipazione con il curriculum del corso e le competenze acquisite."
+  }
+];
+
 export default function FAQ() {
-  // Flatten all FAQs for schema
-  const allFaqs = faqCategories.flatMap(cat => cat.faqs);
+  const [showMore, setShowMore] = useState(false);
+
+  // Flatten all FAQs for schema (including expanded ones)
+  const allFaqs = [...faqCategories.flatMap(cat => cat.faqs), ...moreFaqs];
   const faqSchema = generateFAQSchema(allFaqs);
 
   return (
@@ -183,8 +230,49 @@ export default function FAQ() {
                     </AccordionItem>
                   ))}
                 </Accordion>
+                {category.title === "Sicurezza e affidabilità" && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowMore(!showMore)}
+                    className="mt-4 group"
+                  >
+                    {showMore ? "Mostra meno" : "Mostra altro"}
+                    <ChevronDown
+                      className={cn(
+                        "w-4 h-4 ml-2 transition-transform duration-200",
+                        showMore && "rotate-180"
+                      )}
+                    />
+                  </Button>
+                )}
               </div>
             ))}
+
+            {showMore && (
+              <div>
+                <h2 className="text-2xl md:text-3xl font-bold mb-6 flex items-center gap-3">
+                  <span className="w-2 h-8 bg-gradient-hero rounded-full" />
+                  Domande frequenti su TechLand Italia
+                </h2>
+                <Accordion type="single" collapsible className="space-y-3">
+                  {moreFaqs.map((faq, faqIndex) => (
+                    <AccordionItem
+                      key={faqIndex}
+                      value={`more-${faqIndex}`}
+                      className="bg-card rounded-2xl border border-border/50 px-6 data-[state=open]:shadow-tech-md transition-shadow"
+                    >
+                      <AccordionTrigger className="text-left font-semibold hover:no-underline py-5">
+                        {faq.question}
+                      </AccordionTrigger>
+                      <AccordionContent className="text-muted-foreground pb-5">
+                        {faq.answer}
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              </div>
+            )}
           </div>
         </div>
       </section>

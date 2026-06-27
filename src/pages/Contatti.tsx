@@ -133,8 +133,7 @@ export default function Contatti() {
                   "telephone": "+39-350-581-3140",
                   "contactType": "customer service",
                   "email": "info@techlanditalia.it",
-                  "availableLanguage": "Italian",
-                  "contactOption": "TollFree"
+                  "availableLanguage": "Italian"
                 }
               ]
             }

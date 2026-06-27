@@ -127,7 +127,7 @@ export default function Corsi() {
   return (
     <Layout>
       <SEOHead
-        title="TECHLAND | Corso di Coding per Bambini e Ragazzi (5–20 anni)"
+        title="Corsi di Coding per Bambini e Ragazzi 6-18 | TECHLAND"
         description="Corso di coding per bambini e ragazzi online: Scratch, Roblox, Minecraft, Python, Web Development, AI. Piccoli gruppi, docenti esperti. Prima lezione gratuita!"
         canonical="/corsi"
         keywords="corso coding, coding per bambini, corsi di coding, corsi di programmazione per bambini, corsi coding online, scuola coding bambini, lezioni programmazione online ragazzi, corsi online per bambini, corsi di informatica per bambini, corsi di scratch, corsi di roblox, corsi di python per ragazzi, corsi web development bambini, coding bambini, corso coding online"

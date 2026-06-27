@@ -10,7 +10,7 @@ import { SEOKeywordsSection } from "@/components/sections/SEOKeywordsSection";
 import { SEOHead, generateFAQSchema } from "@/components/seo/SEOHead";
 
 const homepageFaqs = [
-  { question: "Qual è l'età minima per iniziare?", answer: "I nostri corsi partono dai 5 anni. Per i bambini più piccoli (5-8 anni) utilizziamo strumenti visivi come Scratch, che permettono di imparare la logica della programmazione senza dover scrivere codice complesso." },
+  { question: "Qual è l'età minima per iniziare?", answer: "I nostri corsi partono dai 6 anni. Per i bambini più piccoli (6-8 anni) utilizziamo strumenti visivi come Scratch, che permettono di imparare la logica della programmazione senza dover scrivere codice complesso." },
   { question: "Quanto costano i corsi?", answer: "I prezzi variano in base al tipo di corso e alla durata. Offriamo piani mensili a partire da €99/mese con lezioni settimanali. La prima lezione è sempre gratuita e senza impegno." },
   { question: "Come funzionano le lezioni?", answer: "Le lezioni si svolgono online in diretta, in piccoli gruppi di massimo 6 studenti. Ogni lezione dura 60-90 minuti a seconda dell'età. I docenti interagiscono costantemente con gli studenti." },
   { question: "Di cosa ha bisogno mio figlio per partecipare?", answer: "Serve un computer (PC o Mac) con una connessione internet stabile e una webcam. Per alcuni corsi avanzati potrebbero esserci requisiti specifici che comunicheremo prima dell'iscrizione." },

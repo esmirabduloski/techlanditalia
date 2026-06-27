@@ -134,6 +134,15 @@ export default function LavoraConNoi() {
                 "addressCountry": "IT",
               },
             },
+            "baseSalary": {
+              "@type": "MonetaryAmount",
+              "currency": "EUR",
+              "value": {
+                "@type": "QuantitativeValue",
+                "value": "Da concordare in base all'esperienza",
+                "unitText": "HOUR"
+              }
+            },
           })),
           {
             "@context": "https://schema.org",

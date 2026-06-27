@@ -20,7 +20,7 @@ interface Course {
   duration: string | null;
 }
 
-const ageFilters = ["Tutti", "5-8", "8-10", "10-14", "12-18"];
+const ageFilters = ["Tutti", "6-8", "8-10", "10-14", "12-18"];
 
 const levelColors: Record<string, string> = {
   Principiante: "bg-tech-green/10 text-tech-green",

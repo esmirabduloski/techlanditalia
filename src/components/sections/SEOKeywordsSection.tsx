@@ -20,7 +20,7 @@ export function SEOKeywordsSection() {
               Cerchi <strong>corsi online per bambini</strong>,
               <strong> corsi di informatica per bambini</strong> o
               <strong> corsi di coding</strong>? TECHLAND propone percorsi live
-              in piccoli gruppi (max 6 alunni) per ogni età, dai 5 ai 20 anni.
+              in piccoli gruppi (max 6 alunni) per ogni età, dai 6 ai 18 anni.
             </p>
           </ScrollReveal>
 

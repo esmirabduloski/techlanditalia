@@ -107,7 +107,7 @@ export default function LavoraConNoi() {
             "@context": "https://schema.org",
             "@type": "JobPosting",
             "title": pos.title,
-            "description": `<p>${pos.description}</p><p>Posizione part-time in modalità remota presso TECHLAND, scuola di coding online per alunni dai 5 ai 20 anni.</p>`,
+            "description": `<p>${pos.description}</p><p>Posizione part-time in modalità remota presso TECHLAND, scuola di coding online per alunni dai 6 ai 18 anni.</p>`,
             "identifier": {
               "@type": "PropertyValue",
               "name": "TECHLAND",

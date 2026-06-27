@@ -1,6 +1,6 @@
 # TECHLAND — Documentazione completa per LLM
 
-> TECHLAND è la scuola di coding online italiana per alunni dai 5 ai 20 anni. Lezioni live in piccoli gruppi (max 6 alunni) con docenti esperti. Prima lezione gratuita.
+> TECHLAND è la scuola di coding online italiana per alunni dai 6 ai 18 anni. Lezioni live in piccoli gruppi (max 6 alunni) con docenti esperti. Prima lezione gratuita.
 
 Sito: https://techlanditalia.it
 Email: info@techlanditalia.it
@@ -10,7 +10,7 @@ Telefono: +39 350 581 3140
 
 ## Chi è TECHLAND
 
-TECHLAND è una scuola di programmazione e coding 100% online dedicata a bambini, ragazzi e giovani adulti dai 5 ai 20 anni. Operiamo in tutta Italia dal 2019 con un metodo strutturato per età e livello, dal pensiero computazionale con Scratch fino a percorsi avanzati di Python, Intelligenza Artificiale, Game Development e Web Development.
+TECHLAND è una scuola di programmazione e coding 100% online dedicata a bambini, ragazzi e giovani adulti dai 6 ai 18 anni. Operiamo in tutta Italia dal 2019 con un metodo strutturato per età e livello, dal pensiero computazionale con Scratch fino a percorsi avanzati di Python, Intelligenza Artificiale, Game Development e Web Development.
 
 ### Cosa ci rende diversi
 
@@ -24,7 +24,7 @@ TECHLAND è una scuola di programmazione e coding 100% online dedicata a bambini
 
 ### Target
 
-Alunni dai 5 ai 20 anni residenti in Italia (lezioni in italiano).
+Alunni dai 6 ai 18 anni residenti in Italia (lezioni in italiano).
 
 ### Modalità
 

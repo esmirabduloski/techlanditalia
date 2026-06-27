@@ -6,7 +6,7 @@ canonical: "https://techlanditalia.it/corsi"
 
 # TECHLAND — Corso di Coding per Bambini e Ragazzi
 
-Tutti i nostri corsi di coding online per alunni dai **5 ai 20 anni**. Lezioni live in piccoli gruppi (max 6), prima lezione **gratuita**.
+Tutti i nostri corsi di coding online per alunni dai **6 ai 18 anni**. Lezioni live in piccoli gruppi (max 6), prima lezione **gratuita**.
 
 👉 [Prenota la lezione di prova gratuita](https://techlanditalia.it/prenota)
 

@@ -1,12 +1,12 @@
 ---
 title: "TECHLAND | Corsi di Programmazione e Coding per Bambini e Ragazzi Online"
-description: "Scuola di coding online per alunni 5-20 anni. Scratch, Roblox, Minecraft, Python, AI. Piccoli gruppi, prima lezione gratis."
+description: "Scuola di coding online per alunni 6-18 anni. Scratch, Roblox, Minecraft, Python, AI. Piccoli gruppi, prima lezione gratis."
 canonical: "https://techlanditalia.it/"
 ---
 
 # TECHLAND — Corsi di Programmazione per Bambini e Ragazzi
 
-TECHLAND è la **scuola di coding online italiana** per alunni dai **5 ai 20 anni**. Lezioni live in piccoli gruppi (max 6 alunni), docenti esperti, prima lezione **gratuita e senza impegno**.
+TECHLAND è la **scuola di coding online italiana** per alunni dai **6 ai 18 anni**. Lezioni live in piccoli gruppi (max 6 alunni), docenti esperti, prima lezione **gratuita e senza impegno**.
 
 👉 [Prenota la lezione di prova gratuita](https://techlanditalia.it/prenota)
 

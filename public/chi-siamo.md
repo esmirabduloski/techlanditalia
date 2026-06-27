@@ -8,7 +8,7 @@ canonical: "https://techlanditalia.it/chi-siamo"
 
 ## La nostra mission
 
-Crediamo che ogni bambino e ragazzo debba avere l'opportunità di **imparare a creare con la tecnologia**, non solo a consumarla. TECHLAND nasce nel **2019** con un obiettivo chiaro: rendere il coding accessibile, divertente e di alta qualità per gli alunni italiani dai 5 ai 20 anni.
+Crediamo che ogni bambino e ragazzo debba avere l'opportunità di **imparare a creare con la tecnologia**, non solo a consumarla. TECHLAND nasce nel **2023** con un obiettivo chiaro: rendere il coding accessibile, divertente e di alta qualità per gli alunni italiani dai 6 ai 18 anni.
 
 ## Cosa facciamo
 

@@ -1,6 +1,6 @@
 ---
 title: "TECHLAND | Chi Siamo - Scuola di Coding Online per Bambini"
-description: "Scopri TECHLAND: scuola di coding online in Italia dal 2019. Mission, metodo e team."
+description: "Scopri TECHLAND: scuola di coding online in Italia dal 2023. Mission, metodo e team."
 canonical: "https://techlanditalia.it/chi-siamo"
 ---
 

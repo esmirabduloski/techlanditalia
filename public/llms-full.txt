@@ -20,7 +20,7 @@ TECHLAND è una scuola di programmazione e coding 100% online dedicata a bambini
 - **Dashboard genitori**: report settimanali, feedback dei docenti, progetti realizzati
 - **Prima lezione gratuita**: prova senza impegno prima di iscriversi
 - **Nessun vincolo**: si può disdire o mettere in pausa in qualsiasi momento
-- **Percorsi pluriennali**: dai 5 anni fino al diploma, con curriculum strutturato
+- **Percorsi pluriennali**: dai 6 anni fino al diploma, con curriculum strutturato
 
 ### Target
 
@@ -102,7 +102,7 @@ Lezioni live online via piattaforma dedicata. Servono PC/Mac, connessione intern
 ## FAQ — Domande frequenti
 
 **Qual è l'età minima per iniziare?**
-I corsi partono dai 5 anni. Per i più piccoli (5–8 anni) usiamo strumenti visivi come Scratch e ambienti grafici per imparare la logica senza scrivere codice complesso.
+I corsi partono dai 6 anni. Per i più piccoli (6–8 anni) usiamo strumenti visivi come Scratch e ambienti grafici per imparare la logica senza scrivere codice complesso.
 
 **Quanto costano i corsi?**
 I prezzi variano in base al corso e alla durata. Piani mensili a partire da €99/mese con lezioni settimanali. La prima lezione è sempre gratuita e senza impegno.

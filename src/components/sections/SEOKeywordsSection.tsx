@@ -77,7 +77,7 @@ export function SEOKeywordsSection() {
               </h3>
               <p className="text-muted-foreground mb-4">
                 TECHLAND è una <strong>scuola di coding online italiana</strong> specializzata in
-                <strong> corsi di programmazione per bambini e ragazzi</strong> dai 5 ai 20 anni.
+                <strong> corsi di programmazione per bambini e ragazzi</strong> dai 6 ai 18 anni.
                 Tutti i nostri <strong>corsi di coding</strong> e <strong>corsi di informatica per bambini</strong>
                 si svolgono in diretta, in piccoli gruppi di massimo 6 alunni, con docenti professionisti
                 del settore tech formati sulla didattica per i più giovani.

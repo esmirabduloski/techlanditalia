@@ -58,7 +58,14 @@ export default function LandingPage() {
   const courseTagline = metadata.course_tagline;
   const courseInfo = metadata.course_info;
 
-  const canonicalUrl = `https://techlanditalia.it/lp/${slug}`;
+  // Strategy B: when an /lp/ duplicates a /corsi/ topic, point canonical to the course page to avoid cannibalization.
+  const lpToCourseCanonical: Record<string, string> = {
+    'roblox': '/corsi/roblox',
+    'python': '/corsi/python-base',
+    'python-ai': '/corsi/python-ai',
+  };
+  const canonicalPath = lpToCourseCanonical[slug!] || `/lp/${slug}`;
+  const canonicalUrl = `https://techlanditalia.it${canonicalPath}`;
   const courseSchema = {
     '@context': 'https://schema.org',
     '@type': 'Course',

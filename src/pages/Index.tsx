@@ -7,7 +7,7 @@ import { ParentsSection } from "@/components/sections/ParentsSection";
 import { FAQSection } from "@/components/sections/FAQSection";
 import { CTASection } from "@/components/sections/CTASection";
 import { SEOKeywordsSection } from "@/components/sections/SEOKeywordsSection";
-import { SEOHead, organizationSchema, websiteSchema, generateFAQSchema } from "@/components/seo/SEOHead";
+import { SEOHead, generateFAQSchema } from "@/components/seo/SEOHead";
 
 const homepageFaqs = [
   { question: "Qual è l'età minima per iniziare?", answer: "I nostri corsi partono dai 5 anni. Per i bambini più piccoli (5-8 anni) utilizziamo strumenti visivi come Scratch, che permettono di imparare la logica della programmazione senza dover scrivere codice complesso." },

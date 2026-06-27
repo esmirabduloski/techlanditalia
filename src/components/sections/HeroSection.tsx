@@ -29,7 +29,7 @@ export function HeroSection() {
               </h1>
 
               <p className="text-lg md:text-xl text-muted-foreground max-w-xl">
-                TECHLAND è la scuola di <strong>coding online per bambini e ragazzi</strong> dai 5 ai 20 anni:
+                TECHLAND è la scuola di <strong>coding online per bambini e ragazzi</strong> dai 6 ai 18 anni:
                 corsi di <strong>Scratch</strong>, <strong>Roblox</strong>, <strong>Minecraft</strong>,
                 <strong> Python</strong>, <strong>Web Development</strong> e <strong>informatica</strong>.
                 Lezioni live in piccoli gruppi con docenti esperti.

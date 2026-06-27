@@ -20,7 +20,7 @@ interface Course {
   duration: string | null;
 }
 
-const ageFilters = ["Tutti", "5-8", "8-10", "10-14", "12-18"];
+const ageFilters = ["Tutti", "6-8", "8-10", "10-14", "12-18"];
 
 const levelColors: Record<string, string> = {
   Principiante: "bg-tech-green/10 text-tech-green",
@@ -127,7 +127,7 @@ export default function Corsi() {
   return (
     <Layout>
       <SEOHead
-        title="TECHLAND | Corso di Coding per Bambini e Ragazzi (5–20 anni)"
+        title="Corsi di Coding per Bambini e Ragazzi 6-18 | TECHLAND"
         description="Corso di coding per bambini e ragazzi online: Scratch, Roblox, Minecraft, Python, Web Development, AI. Piccoli gruppi, docenti esperti. Prima lezione gratuita!"
         canonical="/corsi"
         keywords="corso coding, coding per bambini, corsi di coding, corsi di programmazione per bambini, corsi coding online, scuola coding bambini, lezioni programmazione online ragazzi, corsi online per bambini, corsi di informatica per bambini, corsi di scratch, corsi di roblox, corsi di python per ragazzi, corsi web development bambini, coding bambini, corso coding online"
@@ -146,7 +146,7 @@ export default function Corsi() {
               Corso di <span className="tech-gradient-text">Coding per Bambini</span> e Ragazzi Online
             </h1>
             <p className="text-lg text-muted-foreground">
-              Tutti i nostri <strong>corsi di coding online per bambini e ragazzi</strong> dai 5 ai 20 anni:
+              Tutti i nostri <strong>corsi di coding online per bambini e ragazzi</strong> dai 6 ai 18 anni:
               <strong> Scratch</strong>, <strong>Roblox</strong>, <strong>Minecraft</strong>,
               <strong> Python</strong>, <strong>Web Development</strong> e <strong>informatica</strong>.
               Trova il corso perfetto e prenota la prima lezione gratuita.

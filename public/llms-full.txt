@@ -1,6 +1,6 @@
 # TECHLAND — Documentazione completa per LLM
 
-> TECHLAND è la scuola di coding online italiana per alunni dai 5 ai 20 anni. Lezioni live in piccoli gruppi (max 6 alunni) con docenti esperti. Prima lezione gratuita.
+> TECHLAND è la scuola di coding online italiana per alunni dai 6 ai 18 anni. Lezioni live in piccoli gruppi (max 6 alunni) con docenti esperti. Prima lezione gratuita.
 
 Sito: https://techlanditalia.it
 Email: info@techlanditalia.it
@@ -10,7 +10,7 @@ Telefono: +39 350 581 3140
 
 ## Chi è TECHLAND
 
-TECHLAND è una scuola di programmazione e coding 100% online dedicata a bambini, ragazzi e giovani adulti dai 5 ai 20 anni. Operiamo in tutta Italia dal 2019 con un metodo strutturato per età e livello, dal pensiero computazionale con Scratch fino a percorsi avanzati di Python, Intelligenza Artificiale, Game Development e Web Development.
+TECHLAND è una scuola di programmazione e coding 100% online dedicata a bambini, ragazzi e giovani adulti dai 6 ai 18 anni. Operiamo in tutta Italia dal 2023 con un metodo strutturato per età e livello, dal pensiero computazionale con Scratch fino a percorsi avanzati di Python, Intelligenza Artificiale, Game Development e Web Development.
 
 ### Cosa ci rende diversi
 
@@ -20,11 +20,11 @@ TECHLAND è una scuola di programmazione e coding 100% online dedicata a bambini
 - **Dashboard genitori**: report settimanali, feedback dei docenti, progetti realizzati
 - **Prima lezione gratuita**: prova senza impegno prima di iscriversi
 - **Nessun vincolo**: si può disdire o mettere in pausa in qualsiasi momento
-- **Percorsi pluriennali**: dai 5 anni fino al diploma, con curriculum strutturato
+- **Percorsi pluriennali**: dai 6 anni fino al diploma, con curriculum strutturato
 
 ### Target
 
-Alunni dai 5 ai 20 anni residenti in Italia (lezioni in italiano).
+Alunni dai 6 ai 18 anni residenti in Italia (lezioni in italiano).
 
 ### Modalità
 
@@ -102,7 +102,7 @@ Lezioni live online via piattaforma dedicata. Servono PC/Mac, connessione intern
 ## FAQ — Domande frequenti
 
 **Qual è l'età minima per iniziare?**
-I corsi partono dai 5 anni. Per i più piccoli (5–8 anni) usiamo strumenti visivi come Scratch e ambienti grafici per imparare la logica senza scrivere codice complesso.
+I corsi partono dai 6 anni. Per i più piccoli (6–8 anni) usiamo strumenti visivi come Scratch e ambienti grafici per imparare la logica senza scrivere codice complesso.
 
 **Quanto costano i corsi?**
 I prezzi variano in base al corso e alla durata. Piani mensili a partire da €99/mese con lezioni settimanali. La prima lezione è sempre gratuita e senza impegno.

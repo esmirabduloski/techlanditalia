@@ -109,7 +109,7 @@ export const organizationSchema = {
   "url": "https://techlanditalia.it",
   "logo": "https://techlanditalia.it/logo.png",
   "description": "TECHLAND è la scuola di coding online per bambini e ragazzi dai 6 ai 18 anni. Corsi di programmazione in piccoli gruppi con docenti esperti.",
-  "foundingDate": "2019",
+  "foundingDate": "2023",
   "contactPoint": {
     "@type": "ContactPoint",
     "telephone": "+39-350-581-3140",

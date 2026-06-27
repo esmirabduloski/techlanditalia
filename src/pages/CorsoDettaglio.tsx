@@ -763,25 +763,21 @@ export default function CorsoDettaglio() {
   // SEO meta data generation
   const getSEOTitle = () => {
     const titleMap: Record<string, string> = {
-      "roblox-base": "TECHLAND | Corso Roblox Bambini (8-12 anni)",
-      "roblox": "TECHLAND | Corso Roblox Online (10-14 anni)",
-      "roblox-avanzato": "TECHLAND | Roblox Avanzato Ragazzi (10-14 anni)",
-      "web-development": "TECHLAND | Corso Web Development (12-16 anni)",
-      "python-base": "TECHLAND | Corso Python Ragazzi (12-16 anni)",
-      "python-pro-ai": "TECHLAND | Python Avanzato e AI (14-18 anni)",
-      "python-ai": "TECHLAND | Python e AI Ragazzi (14-18 anni)"
+      "roblox": "Corso Roblox Online per Bambini 10-14 anni | TECHLAND",
+      "roblox-avanzato": "Corso Roblox Avanzato per Ragazzi 10-14 anni | TECHLAND",
+      "web-development": "Corso di Web Development per Ragazzi 12-16 anni | TECHLAND",
+      "python-base": "Corso Python per Ragazzi 12-16 anni | TECHLAND",
+      "python-ai": "Corso Python e AI per Ragazzi 14-18 anni | TECHLAND"
     };
-    return seoOverrides.title || titleMap[id!] || `TECHLAND | Corso ${course?.title}`;
+    return seoOverrides.title || titleMap[id!] || `Corso ${course?.title} | TECHLAND`;
   };
 
   const getSEODescription = () => {
     const descMap: Record<string, string> = {
-      "roblox-base": "Corso Roblox Studio per bambini online (8-12 anni). Crea e pubblica i tuoi giochi. Impara Lua e game design. Lezione di prova gratuita!",
       "roblox": "Corso Roblox per bambini online (10-14 anni). Crea videogiochi con Roblox Studio e Lua. Lezioni live in piccoli gruppi. Prima lezione gratis!",
       "roblox-avanzato": "Corso Roblox avanzato per ragazzi online (10-14 anni). Script Lua complessi, multiplayer, monetizzazione. Diventa un pro developer Roblox!",
       "web-development": "Corso di Web Development per ragazzi online (12-16 anni). HTML, CSS, JavaScript da zero. Crea il tuo sito web. Prima lezione gratuita!",
       "python-base": "Corso di Python per ragazzi online (12-16 anni). Il linguaggio di programmazione più richiesto. Progetti pratici. Prima lezione gratuita!",
-      "python-pro-ai": "Corso Python avanzato e AI per ragazzi online (14-18 anni). Machine learning, NumPy, Pandas, deep learning. Lezione di prova gratis!",
       "python-ai": "Corso Python e Intelligenza Artificiale per ragazzi online (14-18 anni). Machine learning con scikit-learn, AI e LLM. Lezione di prova gratis!"
     };
     return seoOverrides.description || descMap[id!] || course?.description || "";
@@ -804,12 +800,10 @@ export default function CorsoDettaglio() {
 
   const getSEOKeywords = () => {
     const keywordsMap: Record<string, string> = {
-      "roblox-base": "corso roblox, corsi di roblox, corso roblox bambini, roblox studio bambini, creare giochi roblox, programmare roblox, lua bambini, roblox online",
       "roblox": "corso roblox, corsi di roblox, corso roblox bambini, roblox studio, creare giochi roblox, lua, roblox online ragazzi",
       "roblox-avanzato": "corso roblox avanzato, roblox scripting, game design ragazzi, lua avanzato, sviluppo giochi roblox, corsi di roblox avanzato",
       "web-development": "corso web development ragazzi, corsi web design bambini, html css javascript per ragazzi, creare siti web, programmazione web ragazzi",
       "python-base": "corso python ragazzi, corsi di python per ragazzi, python base, imparare python, programmazione python bambini, corso python online",
-      "python-pro-ai": "corso python avanzato, intelligenza artificiale ragazzi, machine learning bambini, python ai corso, corso ai per ragazzi",
       "python-ai": "corso python ai, intelligenza artificiale ragazzi, machine learning ragazzi, python ai corso, corso ai per ragazzi, deep learning ragazzi",
     };
     return seoOverrides.keywords || keywordsMap[id!] || `corso ${course?.title}, corsi per bambini, corsi di programmazione per bambini, ${course?.title} online`;

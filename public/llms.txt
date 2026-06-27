@@ -1,6 +1,6 @@
 # TECHLAND
 
-> TECHLAND è la scuola di coding online italiana per alunni dai 5 ai 20 anni. Lezioni live in piccoli gruppi (max 6 alunni) con docenti esperti, dal pensiero computazionale con Scratch fino a Python, Intelligenza Artificiale, Roblox, Minecraft, Unity e sviluppo web. Prima lezione di prova sempre gratuita e senza impegno.
+> TECHLAND è la scuola di coding online italiana per alunni dai 6 ai 18 anni. Lezioni live in piccoli gruppi (max 6 alunni) con docenti esperti, dal pensiero computazionale con Scratch fino a Python, Intelligenza Artificiale, Roblox, Minecraft, Unity e sviluppo web. Prima lezione di prova sempre gratuita e senza impegno.
 
 TECHLAND opera in tutta Italia con corsi 100% online, lezioni settimanali registrate, dashboard genitori per monitorare i progressi e percorsi pluriennali strutturati per età e livello.
 

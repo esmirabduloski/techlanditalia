@@ -146,7 +146,7 @@ export default function Corsi() {
               Corso di <span className="tech-gradient-text">Coding per Bambini</span> e Ragazzi Online
             </h1>
             <p className="text-lg text-muted-foreground">
-              Tutti i nostri <strong>corsi di coding online per bambini e ragazzi</strong> dai 5 ai 20 anni:
+              Tutti i nostri <strong>corsi di coding online per bambini e ragazzi</strong> dai 6 ai 18 anni:
               <strong> Scratch</strong>, <strong>Roblox</strong>, <strong>Minecraft</strong>,
               <strong> Python</strong>, <strong>Web Development</strong> e <strong>informatica</strong>.
               Trova il corso perfetto e prenota la prima lezione gratuita.

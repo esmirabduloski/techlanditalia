@@ -847,6 +847,48 @@ export type Database = {
         }
         Relationships: []
       }
+      glossary_terms: {
+        Row: {
+          category: string
+          created_at: string
+          definition: string
+          examples: Json | null
+          id: string
+          is_published: boolean
+          related_terms: string[] | null
+          short_definition: string | null
+          slug: string
+          term: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          definition: string
+          examples?: Json | null
+          id?: string
+          is_published?: boolean
+          related_terms?: string[] | null
+          short_definition?: string | null
+          slug: string
+          term: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          definition?: string
+          examples?: Json | null
+          id?: string
+          is_published?: boolean
+          related_terms?: string[] | null
+          short_definition?: string | null
+          slug?: string
+          term?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       group_attendance: {
         Row: {
           group_id: string

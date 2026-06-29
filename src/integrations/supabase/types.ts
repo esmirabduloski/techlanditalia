@@ -1696,6 +1696,7 @@ export type Database = {
           lesson_balance: number
           onboarding_completed: boolean | null
           parent_id: string | null
+          referral_code: string | null
           role: string
           total_points: number
           updated_at: string
@@ -1711,6 +1712,7 @@ export type Database = {
           lesson_balance?: number
           onboarding_completed?: boolean | null
           parent_id?: string | null
+          referral_code?: string | null
           role: string
           total_points?: number
           updated_at?: string
@@ -1726,6 +1728,7 @@ export type Database = {
           lesson_balance?: number
           onboarding_completed?: boolean | null
           parent_id?: string | null
+          referral_code?: string | null
           role?: string
           total_points?: number
           updated_at?: string
@@ -1761,6 +1764,79 @@ export type Database = {
           identifier?: string
         }
         Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          referred_email: string | null
+          referred_lead_id: string | null
+          referred_profile_id: string | null
+          referrer_code: string
+          referrer_id: string
+          reward_reason: string | null
+          rewarded_at: string | null
+          rewarded_by: string | null
+          source_url: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          referred_email?: string | null
+          referred_lead_id?: string | null
+          referred_profile_id?: string | null
+          referrer_code: string
+          referrer_id: string
+          reward_reason?: string | null
+          rewarded_at?: string | null
+          rewarded_by?: string | null
+          source_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          referred_email?: string | null
+          referred_lead_id?: string | null
+          referred_profile_id?: string | null
+          referrer_code?: string
+          referrer_id?: string
+          reward_reason?: string | null
+          rewarded_at?: string | null
+          rewarded_by?: string | null
+          source_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_referred_profile_id_fkey"
+            columns: ["referred_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_rewarded_by_fkey"
+            columns: ["rewarded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       scheduled_lessons: {
         Row: {
@@ -2517,6 +2593,10 @@ export type Database = {
       is_teacher_of_student: {
         Args: { _student_id: string; _teacher_id: string }
         Returns: boolean
+      }
+      reward_referral: {
+        Args: { _credits_each?: number; _reason?: string; _referral_id: string }
+        Returns: Json
       }
       teacher_teaches_student_in_group: {
         Args: { _group_id: string; _teacher_id: string }

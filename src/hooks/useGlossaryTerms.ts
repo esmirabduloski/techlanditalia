@@ -24,14 +24,14 @@ export function useGlossaryTerms() {
       return;
     }
     if (!inflight) {
-      inflight = supabase
-        .from("glossary_terms")
-        .select("id, term, slug, definition, short_definition, category")
-        .eq("is_published", true)
-        .then(({ data }) => {
-          cache = (data || []) as GlossaryTerm[];
-          return cache;
-        });
+      inflight = (async () => {
+        const { data } = await supabase
+          .from("glossary_terms")
+          .select("id, term, slug, definition, short_definition, category")
+          .eq("is_published", true);
+        cache = (data || []) as GlossaryTerm[];
+        return cache;
+      })();
     }
     inflight.then((d) => {
       setTerms(d);

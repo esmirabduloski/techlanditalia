@@ -187,6 +187,22 @@ export default function Prenota() {
         child_age: data.childAge,
       });
 
+      // Track referral if a ref code was provided
+      const storedRef = refCode || (typeof sessionStorage !== "undefined" ? sessionStorage.getItem("referral_code") : null);
+      if (storedRef) {
+        try {
+          await supabase.from("referrals").insert({
+            referrer_code: storedRef,
+            referred_email: data.email,
+            source_url: typeof window !== "undefined" ? window.location.href : null,
+            notes: `Da prenotazione lezione gratuita${data.interest ? ` - ${data.interest}` : ""}`,
+          });
+          try { sessionStorage.removeItem("referral_code"); } catch {}
+        } catch (e) {
+          console.warn("Referral insert failed (silently ignored):", e);
+        }
+      }
+
       setIsSubmitted(true);
     } catch (error: any) {
       console.error("Submission error:", error);

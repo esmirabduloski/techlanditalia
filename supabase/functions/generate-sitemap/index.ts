@@ -103,22 +103,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Fetch active landing pages
-    const { data: landings } = await supabase
-      .from('landing_pages')
-      .select('slug, updated_at')
-      .eq('is_active', true);
-
-    if (landings) {
-      for (const l of landings) {
-        urls.push({
-          loc: `/lp/${l.slug}`,
-          lastmod: (l.updated_at || today).split('T')[0],
-          changefreq: 'weekly',
-          priority: '0.7',
-        });
-      }
-    }
+    // Landing pages /lp/* are intentionally excluded from the sitemap:
+    // they are thin/duplicate campaign pages (noIndex on the route itself)
+    // and would cannibalize the canonical /corsi/* pages.
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

@@ -1,5 +1,6 @@
 import { GoogleSlidesEmbed } from './GoogleSlidesEmbed';
 import DOMPurify from 'dompurify';
+import { GlossaryHTML } from '@/components/glossary/GlossaryHTML';
 
 interface LessonContentProps {
   title: string;

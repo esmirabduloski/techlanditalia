@@ -23,6 +23,7 @@ import { StreakDisplay } from '@/components/dashboard/StreakDisplay';
 import { ChildAttendanceHistory } from '@/components/dashboard/ChildAttendanceHistory';
 import { StreakBonusesDisplay } from '@/components/dashboard/StreakBonusesDisplay';
 import { StreakFreezeCard } from '@/components/dashboard/StreakFreezeCard';
+import { ReferralCard } from '@/components/dashboard/ReferralCard';
 import { DeadlineNotifications } from '@/components/dashboard/DeadlineNotifications';
 import { BookmarksSection } from '@/components/dashboard/BookmarksSection';
 import { ProgressCharts } from '@/components/dashboard/ProgressCharts';

@@ -193,10 +193,12 @@ export default function Prenota() {
         try {
           await supabase.from("referrals").insert({
             referrer_code: storedRef,
+            // referrer_id is filled by BEFORE INSERT trigger from referrer_code
+            referrer_id: "00000000-0000-0000-0000-000000000000",
             referred_email: data.email,
             source_url: typeof window !== "undefined" ? window.location.href : null,
             notes: `Da prenotazione lezione gratuita${data.interest ? ` - ${data.interest}` : ""}`,
-          });
+          } as any);
           try { sessionStorage.removeItem("referral_code"); } catch {}
         } catch (e) {
           console.warn("Referral insert failed (silently ignored):", e);

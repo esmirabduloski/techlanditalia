@@ -1850,6 +1850,47 @@ export type Database = {
           },
         ]
       }
+      streak_freezes: {
+        Row: {
+          auto_consumed: boolean
+          freeze_type: string
+          id: string
+          reason: string | null
+          related_homework_id: string | null
+          related_lesson_number: number | null
+          student_id: string
+          used_at: string
+        }
+        Insert: {
+          auto_consumed?: boolean
+          freeze_type: string
+          id?: string
+          reason?: string | null
+          related_homework_id?: string | null
+          related_lesson_number?: number | null
+          student_id: string
+          used_at?: string
+        }
+        Update: {
+          auto_consumed?: boolean
+          freeze_type?: string
+          id?: string
+          reason?: string | null
+          related_homework_id?: string | null
+          related_lesson_number?: number | null
+          student_id?: string
+          used_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "streak_freezes_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_code_drafts: {
         Row: {
           code_type: string
@@ -2355,6 +2396,17 @@ export type Database = {
       }
       cleanup_old_logs: { Args: never; Returns: Json }
       cleanup_rate_limits: { Args: never; Returns: number }
+      consume_streak_freeze: {
+        Args: {
+          _auto?: boolean
+          _freeze_type: string
+          _homework_id?: string
+          _lesson_number?: number
+          _reason?: string
+          _student_id: string
+        }
+        Returns: boolean
+      }
       generate_slug: { Args: { title: string }; Returns: string }
       get_children_ids: { Args: { _parent_id: string }; Returns: string[] }
       get_leaderboard: {
@@ -2427,6 +2479,10 @@ export type Database = {
       teacher_teaches_student_in_group: {
         Args: { _group_id: string; _teacher_id: string }
         Returns: boolean
+      }
+      use_my_streak_freeze: {
+        Args: { _freeze_type: string; _reason?: string; _student_id: string }
+        Returns: Json
       }
     }
     Enums: {

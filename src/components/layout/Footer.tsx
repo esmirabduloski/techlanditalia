@@ -14,6 +14,7 @@ const buildAziendaLinks = (lavoraVisible: boolean) => [
 const footerLinks = {
   supporto: [
     { label: "FAQ Corsi Coding", href: "/faq", title: "Domande frequenti sui corsi di programmazione" },
+    { label: "Glossario Coding & AI", href: "/glossario", title: "Glossario dei termini di programmazione spiegati semplicemente" },
     { label: "Prenota Lezione Gratuita", href: "/prenota", title: "Prenota una lezione di prova gratuita" },
     { label: "Privacy Policy", href: "/privacy", title: "Informativa sulla privacy" },
     { label: "Termini di Servizio", href: "/termini", title: "Termini e condizioni" },

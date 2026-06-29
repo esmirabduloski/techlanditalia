@@ -581,6 +581,12 @@ export default function Dashboard() {
           {/* Trustpilot Review Collector - Parents only */}
           {effectiveIsParent && (
             <div className="mb-8">
+              <ReferralCard />
+            </div>
+          )}
+
+          {effectiveIsParent && (
+            <div className="mb-8">
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">⭐ Lascia una recensione</CardTitle>

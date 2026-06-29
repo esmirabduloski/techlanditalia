@@ -50,7 +50,7 @@ export function SEOHead({
       <title>{fullTitle}</title>
       <meta name="title" content={fullTitle} />
       <meta name="description" content={truncatedDescription} />
-      {keywords && <meta name="keywords" content={keywords} />}
+      {/* meta keywords intentionally omitted: ignored by Google and adds noise */}
       <meta name="robots" content={noIndex ? "noindex, nofollow" : "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"} />
       
       {/* Canonical */}

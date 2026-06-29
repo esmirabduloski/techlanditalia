@@ -80,6 +80,7 @@ const LandingPage = lazy(() => import("./pages/LandingPage"));
 const AdminLandingPages = lazy(() => import("./pages/admin/AdminLandingPages"));
 const AdminSiteSettings = lazy(() => import("./pages/admin/AdminSiteSettings"));
 const AdminGlossary = lazy(() => import("./pages/admin/AdminGlossary"));
+const AdminReferrals = lazy(() => import("./pages/admin/AdminReferrals"));
 const Glossario = lazy(() => import("./pages/Glossario"));
 
 const queryClient = new QueryClient();

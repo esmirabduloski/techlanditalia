@@ -508,8 +508,12 @@ export default function Dashboard() {
                   currentAttendanceStreak={streaks.attendance_streak}
                 />
               </div>
+              <div className="mt-6">
+                <StreakFreezeCard studentId={effectiveUserId} />
+              </div>
             </div>
           )}
+
 
           {/* Progress Charts */}
           {!effectiveIsTeacher && !effectiveIsParent && (

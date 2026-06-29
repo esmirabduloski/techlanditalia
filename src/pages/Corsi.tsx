@@ -7,6 +7,7 @@ import { Clock, Users, ArrowRight, Filter, Loader2 } from "lucide-react";
 import { CourseEmoji } from "@/components/ui/CourseEmoji";
 import { SEOHead, generateBreadcrumbSchema } from "@/components/seo/SEOHead";
 import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
+import { LearningRoadmap } from "@/components/corsi/LearningRoadmap";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Course {
@@ -155,8 +156,12 @@ export default function Corsi() {
         </div>
       </section>
 
+      {/* Learning Roadmap */}
+      <LearningRoadmap />
+
       {/* Filters */}
       <section className="py-8 border-b border-border/50 sticky top-20 bg-background/95 backdrop-blur-sm z-40">
+
         <div className="tech-container">
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-2 text-muted-foreground">

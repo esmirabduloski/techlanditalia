@@ -22,6 +22,8 @@ import { TeacherBioCard } from '@/components/dashboard/TeacherBioCard';
 import { StreakDisplay } from '@/components/dashboard/StreakDisplay';
 import { ChildAttendanceHistory } from '@/components/dashboard/ChildAttendanceHistory';
 import { StreakBonusesDisplay } from '@/components/dashboard/StreakBonusesDisplay';
+import { StreakFreezeCard } from '@/components/dashboard/StreakFreezeCard';
+import { ReferralCard } from '@/components/dashboard/ReferralCard';
 import { DeadlineNotifications } from '@/components/dashboard/DeadlineNotifications';
 import { BookmarksSection } from '@/components/dashboard/BookmarksSection';
 import { ProgressCharts } from '@/components/dashboard/ProgressCharts';
@@ -508,8 +510,12 @@ export default function Dashboard() {
                   currentAttendanceStreak={streaks.attendance_streak}
                 />
               </div>
+              <div className="mt-6">
+                <StreakFreezeCard studentId={effectiveUserId} />
+              </div>
             </div>
           )}
+
 
           {/* Progress Charts */}
           {!effectiveIsTeacher && !effectiveIsParent && (
@@ -573,6 +579,12 @@ export default function Dashboard() {
           )}
 
           {/* Trustpilot Review Collector - Parents only */}
+          {effectiveIsParent && (
+            <div className="mb-8">
+              <ReferralCard />
+            </div>
+          )}
+
           {effectiveIsParent && (
             <div className="mb-8">
               <Card>

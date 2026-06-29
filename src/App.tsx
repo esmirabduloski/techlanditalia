@@ -79,6 +79,9 @@ const Accessibilita = lazy(() => import("./pages/Accessibilita"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const AdminLandingPages = lazy(() => import("./pages/admin/AdminLandingPages"));
 const AdminSiteSettings = lazy(() => import("./pages/admin/AdminSiteSettings"));
+const AdminGlossary = lazy(() => import("./pages/admin/AdminGlossary"));
+const AdminReferrals = lazy(() => import("./pages/admin/AdminReferrals"));
+const Glossario = lazy(() => import("./pages/Glossario"));
 
 const queryClient = new QueryClient();
 
@@ -120,6 +123,7 @@ const App = () => (
                     <Route path="/contatti" element={<Contatti />} />
                     <Route path="/lavora-con-noi" element={<LavoraConNoi />} />
                     <Route path="/accessibilita" element={<Accessibilita />} />
+                    <Route path="/glossario" element={<Glossario />} />
                     <Route path="/auth" element={<AuthPage />} />
                     <Route path="/area-riservata" element={<AreaRiservataDashboard />} />
                     <Route path="/area-riservata/profilo" element={<AreaRiservataProfile />} />
@@ -165,6 +169,8 @@ const App = () => (
                     <Route path="/admin/access-logs" element={<AdminAccessLogs />} />
                     <Route path="/admin/landing-pages" element={<AdminLandingPages />} />
                     <Route path="/admin/impostazioni" element={<AdminSiteSettings />} />
+                    <Route path="/admin/glossario" element={<AdminGlossary />} />
+                    <Route path="/admin/referral" element={<AdminReferrals />} />
                     <Route path="/lp/:slug" element={<LandingPage />} />
                     <Route path="/insegnante" element={<TeacherDashboard />} />
                     <Route path="/insegnante/valutazioni" element={<TeacherGrading />} />

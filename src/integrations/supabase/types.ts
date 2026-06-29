@@ -847,6 +847,48 @@ export type Database = {
         }
         Relationships: []
       }
+      glossary_terms: {
+        Row: {
+          category: string
+          created_at: string
+          definition: string
+          examples: Json | null
+          id: string
+          is_published: boolean
+          related_terms: string[] | null
+          short_definition: string | null
+          slug: string
+          term: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          definition: string
+          examples?: Json | null
+          id?: string
+          is_published?: boolean
+          related_terms?: string[] | null
+          short_definition?: string | null
+          slug: string
+          term: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          definition?: string
+          examples?: Json | null
+          id?: string
+          is_published?: boolean
+          related_terms?: string[] | null
+          short_definition?: string | null
+          slug?: string
+          term?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       group_attendance: {
         Row: {
           group_id: string
@@ -1654,6 +1696,7 @@ export type Database = {
           lesson_balance: number
           onboarding_completed: boolean | null
           parent_id: string | null
+          referral_code: string | null
           role: string
           total_points: number
           updated_at: string
@@ -1669,6 +1712,7 @@ export type Database = {
           lesson_balance?: number
           onboarding_completed?: boolean | null
           parent_id?: string | null
+          referral_code?: string | null
           role: string
           total_points?: number
           updated_at?: string
@@ -1684,6 +1728,7 @@ export type Database = {
           lesson_balance?: number
           onboarding_completed?: boolean | null
           parent_id?: string | null
+          referral_code?: string | null
           role?: string
           total_points?: number
           updated_at?: string
@@ -1719,6 +1764,79 @@ export type Database = {
           identifier?: string
         }
         Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          referred_email: string | null
+          referred_lead_id: string | null
+          referred_profile_id: string | null
+          referrer_code: string
+          referrer_id: string
+          reward_reason: string | null
+          rewarded_at: string | null
+          rewarded_by: string | null
+          source_url: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          referred_email?: string | null
+          referred_lead_id?: string | null
+          referred_profile_id?: string | null
+          referrer_code: string
+          referrer_id: string
+          reward_reason?: string | null
+          rewarded_at?: string | null
+          rewarded_by?: string | null
+          source_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          referred_email?: string | null
+          referred_lead_id?: string | null
+          referred_profile_id?: string | null
+          referrer_code?: string
+          referrer_id?: string
+          reward_reason?: string | null
+          rewarded_at?: string | null
+          rewarded_by?: string | null
+          source_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_referred_profile_id_fkey"
+            columns: ["referred_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_rewarded_by_fkey"
+            columns: ["rewarded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       scheduled_lessons: {
         Row: {
@@ -1843,6 +1961,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "streak_bonuses_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      streak_freezes: {
+        Row: {
+          auto_consumed: boolean
+          freeze_type: string
+          id: string
+          reason: string | null
+          related_homework_id: string | null
+          related_lesson_number: number | null
+          student_id: string
+          used_at: string
+        }
+        Insert: {
+          auto_consumed?: boolean
+          freeze_type: string
+          id?: string
+          reason?: string | null
+          related_homework_id?: string | null
+          related_lesson_number?: number | null
+          student_id: string
+          used_at?: string
+        }
+        Update: {
+          auto_consumed?: boolean
+          freeze_type?: string
+          id?: string
+          reason?: string | null
+          related_homework_id?: string | null
+          related_lesson_number?: number | null
+          student_id?: string
+          used_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "streak_freezes_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -2355,6 +2514,17 @@ export type Database = {
       }
       cleanup_old_logs: { Args: never; Returns: Json }
       cleanup_rate_limits: { Args: never; Returns: number }
+      consume_streak_freeze: {
+        Args: {
+          _auto?: boolean
+          _freeze_type: string
+          _homework_id?: string
+          _lesson_number?: number
+          _reason?: string
+          _student_id: string
+        }
+        Returns: boolean
+      }
       generate_slug: { Args: { title: string }; Returns: string }
       get_children_ids: { Args: { _parent_id: string }; Returns: string[] }
       get_leaderboard: {
@@ -2424,9 +2594,17 @@ export type Database = {
         Args: { _student_id: string; _teacher_id: string }
         Returns: boolean
       }
+      reward_referral: {
+        Args: { _credits_each?: number; _reason?: string; _referral_id: string }
+        Returns: Json
+      }
       teacher_teaches_student_in_group: {
         Args: { _group_id: string; _teacher_id: string }
         Returns: boolean
+      }
+      use_my_streak_freeze: {
+        Args: { _freeze_type: string; _reason?: string; _student_id: string }
+        Returns: Json
       }
     }
     Enums: {

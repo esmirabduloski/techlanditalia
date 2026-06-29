@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/form";
 import { CheckCircle2, Calendar, Video, Shield, Instagram } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SEOHead } from "@/components/seo/SEOHead";
@@ -64,6 +64,14 @@ export default function Prenota() {
   const { trackFormStart, trackFormSubmit, trackFormError, trackBookingConversion, trackFunnelStep } = useAnalytics();
   const formStartTracked = useRef(false);
   const { formOpenedAt, honeypotProps, honeypotValue } = useFormAntiSpam();
+  const [searchParams] = useSearchParams();
+  const refCode = (searchParams.get("ref") || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 16);
+
+  useEffect(() => {
+    if (refCode) {
+      try { sessionStorage.setItem("referral_code", refCode); } catch {}
+    }
+  }, [refCode]);
 
   const form = useForm<BookingFormData>({
     resolver: zodResolver(bookingSchema),
@@ -178,6 +186,24 @@ export default function Prenota() {
         interest: data.interest,
         child_age: data.childAge,
       });
+
+      // Track referral if a ref code was provided
+      const storedRef = refCode || (typeof sessionStorage !== "undefined" ? sessionStorage.getItem("referral_code") : null);
+      if (storedRef) {
+        try {
+          await supabase.from("referrals").insert({
+            referrer_code: storedRef,
+            // referrer_id is filled by BEFORE INSERT trigger from referrer_code
+            referrer_id: "00000000-0000-0000-0000-000000000000",
+            referred_email: data.email,
+            source_url: typeof window !== "undefined" ? window.location.href : null,
+            notes: `Da prenotazione lezione gratuita${data.interest ? ` - ${data.interest}` : ""}`,
+          } as any);
+          try { sessionStorage.removeItem("referral_code"); } catch {}
+        } catch (e) {
+          console.warn("Referral insert failed (silently ignored):", e);
+        }
+      }
 
       setIsSubmitted(true);
     } catch (error: any) {

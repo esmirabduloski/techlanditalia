@@ -20,6 +20,7 @@ const STATIC_PAGES: UrlEntry[] = [
   { loc: '/prenota', changefreq: 'monthly', priority: '0.9' },
   { loc: '/blog', changefreq: 'daily', priority: '0.8' },
   { loc: '/faq', changefreq: 'monthly', priority: '0.7' },
+  { loc: '/glossario', changefreq: 'weekly', priority: '0.7' },
   { loc: '/chi-siamo', changefreq: 'monthly', priority: '0.6' },
   { loc: '/contatti', changefreq: 'monthly', priority: '0.6' },
   { loc: '/lavora-con-noi', changefreq: 'monthly', priority: '0.5' },

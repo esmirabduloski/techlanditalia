@@ -1,5 +1,6 @@
 import { GoogleSlidesEmbed } from './GoogleSlidesEmbed';
 import DOMPurify from 'dompurify';
+import { GlossaryHTML } from '@/components/glossary/GlossaryHTML';
 
 interface LessonContentProps {
   title: string;
@@ -39,26 +40,22 @@ export function LessonContent({
   };
 
   const renderContent = () => {
-    const sanitizedContent = content ? DOMPurify.sanitize(content, {
-      ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'code', 'pre', 'blockquote', 'img', 'video', 'iframe', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'div', 'span'],
-      ALLOWED_ATTR: ['href', 'src', 'alt', 'class', 'target', 'rel', 'style', 'controls', 'width', 'height', 'frameborder', 'allow', 'allowfullscreen', 'title', 'allowtransparency', 'scrolling'],
-      ALLOW_DATA_ATTR: false
-    }) : '';
     return (
       <div className="space-y-6">
-        {/* Text Content */}
+        {/* Text Content with glossary tooltips */}
         {content && (
-          <div 
+          <GlossaryHTML
+            html={content}
             className="prose prose-lg max-w-none dark:prose-invert
-              prose-headings:text-foreground 
+              prose-headings:text-foreground
               prose-p:text-foreground/90
               prose-a:text-primary hover:prose-a:text-primary/80
               prose-strong:text-foreground
               prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded
             "
-            dangerouslySetInnerHTML={{ __html: sanitizedContent }}
           />
         )}
+
 
         {/* Video */}
         {videoUrl && (

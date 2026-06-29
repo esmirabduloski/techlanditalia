@@ -45,6 +45,7 @@ const navItems: NavItem[] = [
   { to: '/admin/landing-pages', label: 'Landing', icon: Megaphone },
   { to: '/admin/access-logs', label: 'Sicurezza', icon: Shield },
   { to: '/admin/glossario', label: 'Glossario', icon: BookOpen },
+  { to: '/admin/referral', label: 'Referral', icon: Gift },
   { to: '/admin/impostazioni', label: 'Impostazioni', icon: Settings },
 ];
 

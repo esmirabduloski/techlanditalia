@@ -79,6 +79,8 @@ const Accessibilita = lazy(() => import("./pages/Accessibilita"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const AdminLandingPages = lazy(() => import("./pages/admin/AdminLandingPages"));
 const AdminSiteSettings = lazy(() => import("./pages/admin/AdminSiteSettings"));
+const AdminGlossary = lazy(() => import("./pages/admin/AdminGlossary"));
+const Glossario = lazy(() => import("./pages/Glossario"));
 
 const queryClient = new QueryClient();
 

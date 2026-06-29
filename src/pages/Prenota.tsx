@@ -64,6 +64,14 @@ export default function Prenota() {
   const { trackFormStart, trackFormSubmit, trackFormError, trackBookingConversion, trackFunnelStep } = useAnalytics();
   const formStartTracked = useRef(false);
   const { formOpenedAt, honeypotProps, honeypotValue } = useFormAntiSpam();
+  const [searchParams] = useSearchParams();
+  const refCode = (searchParams.get("ref") || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 16);
+
+  useEffect(() => {
+    if (refCode) {
+      try { sessionStorage.setItem("referral_code", refCode); } catch {}
+    }
+  }, [refCode]);
 
   const form = useForm<BookingFormData>({
     resolver: zodResolver(bookingSchema),

@@ -101,6 +101,7 @@ export default function LandingPage() {
         title={page.meta_title || page.title}
         description={page.meta_description || ''}
         canonical={canonicalUrl}
+        noIndex={true}
         structuredData={faqSchema ? [courseSchema, faqSchema] : courseSchema}
       />
 

@@ -77,10 +77,26 @@ export function PythonCompiler({ defaultCode, taskId }: PythonCompilerProps) {
 
     try {
       pyodideRef.current.runPython(`
-import sys
+import sys, builtins
 from io import StringIO
 sys.stdout = StringIO()
 sys.stderr = StringIO()
+
+def _js_input(prompt_text=""):
+    from js import prompt as _js_prompt
+    # Flush pending stdout to the browser output before showing the prompt
+    pending = sys.stdout.getvalue()
+    msg = str(prompt_text)
+    if pending:
+        msg = pending + msg
+    result = _js_prompt(msg)
+    if result is None:
+        raise KeyboardInterrupt("Input annullato dall'utente")
+    # Echo the input into stdout so it appears in the output panel
+    print(str(prompt_text) + str(result))
+    return str(result)
+
+builtins.input = _js_input
       `);
 
       await pyodideRef.current.runPythonAsync(code);

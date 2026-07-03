@@ -15,39 +15,41 @@ interface Stage {
 
 const stages: Stage[] = [
   {
-    id: "foundations",
-    title: "Fondamenta visuali",
-    age: "6-9 anni",
-    description: "Primi passi col coding a blocchi: logica, sequenze, creatività.",
+    id: "digital-creativity",
+    title: "Creatività digitale",
+    age: "5-7 anni",
+    description: "Primi passi nel mondo digitale: disegno, logica e coding visivo a blocchi.",
     badge: "Inizia qui",
     icon: Sparkles,
     courses: [
+      { label: "Design creativo", slug: "design-creativo" },
+      { label: "Informatica di base", slug: "informatica-di-base" },
       { label: "Scratch", slug: "programmazione-visiva-con-scratch" },
-      { label: "Minecraft", slug: "programmazione-visiva-con-minecraft" },
     ],
     accent: "from-tech-green to-tech-green/40",
   },
   {
     id: "game-design",
     title: "Game design",
-    age: "9-13 anni",
-    description: "Costruire giochi veri con Lua: variabili, eventi, scripting.",
+    age: "8-9 anni",
+    description: "Costruire mondi e giochi con Minecraft Education e Roblox Studio.",
     badge: "Livello 2",
     icon: Gamepad2,
     courses: [
-      { label: "Roblox Base", slug: "roblox" },
-      { label: "Roblox Avanzato", slug: "roblox-avanzato" },
+      { label: "Minecraft", slug: "programmazione-visiva-con-minecraft" },
+      { label: "Roblox Base", slug: "sviluppo-giochi-con-roblox" },
     ],
     accent: "from-tech-blue to-tech-blue/40",
   },
   {
     id: "real-coding",
     title: "Coding reale",
-    age: "11-16 anni",
-    description: "Python: il linguaggio più usato al mondo, dal pensiero algoritmico ai progetti veri.",
+    age: "10-11 anni",
+    description: "Scripting avanzato con Roblox e primi progetti in Python.",
     badge: "Livello 3",
     icon: Code2,
     courses: [
+      { label: "Roblox Avanzato", slug: "roblox-avanzato" },
       { label: "Python Base", slug: "python-base" },
     ],
     accent: "from-tech-cyan to-tech-cyan/40",
@@ -55,16 +57,17 @@ const stages: Stage[] = [
   {
     id: "ai-future",
     title: "AI & futuro",
-    age: "14-18 anni",
-    description: "Intelligenza artificiale, machine learning e progetti che usano modelli generativi.",
+    age: "14+ anni",
+    description: "Python avanzato, intelligenza artificiale e progetti con modelli generativi.",
     badge: "Livello 4",
     icon: Brain,
     courses: [
-      { label: "Python + AI", slug: "python-ai" },
+      { label: "Python Avanzato", slug: "python-avanzato" },
     ],
     accent: "from-primary to-tech-cyan",
   },
 ];
+
 
 export function LearningRoadmap() {
   const itemListSchema = {

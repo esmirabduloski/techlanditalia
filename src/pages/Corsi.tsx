@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Users, ArrowRight, Filter, Loader2 } from "lucide-react";
+import { Clock, Users, ArrowRight, Loader2 } from "lucide-react";
 import { CourseEmoji } from "@/components/ui/CourseEmoji";
 import { SEOHead, generateBreadcrumbSchema } from "@/components/seo/SEOHead";
 import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
@@ -20,8 +19,6 @@ interface Course {
   age_range: string | null;
   duration: string | null;
 }
-
-const ageFilters = ["Tutti", "6-8", "8-10", "10-14", "12-18"];
 
 const levelColors: Record<string, string> = {
   Principiante: "bg-tech-green/10 text-tech-green",
@@ -40,7 +37,6 @@ const levelLabels: Record<string, string> = {
 export default function Corsi() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [ageFilter, setAgeFilter] = useState("Tutti");
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -58,36 +54,6 @@ export default function Corsi() {
 
     fetchCourses();
   }, []);
-
-  // Extract age range as [min, max] from strings like "8-12 anni"
-  const parseAgeRange = (ageRange: string | null): [number, number] | null => {
-    if (!ageRange) return null;
-    const match = ageRange.match(/(\d+)-(\d+)/);
-    return match ? [parseInt(match[1]), parseInt(match[2])] : null;
-  };
-
-  // Check if two age ranges overlap
-  const rangesOverlap = (courseRange: [number, number], filterRange: [number, number]) => {
-    return courseRange[0] <= filterRange[1] && courseRange[1] >= filterRange[0];
-  };
-
-  const filteredCourses = courses
-    .filter((course) => {
-      if (ageFilter !== "Tutti") {
-        const courseRange = parseAgeRange(course.age_range);
-        const filterRange = parseAgeRange(ageFilter + " anni");
-        if (!courseRange || !filterRange) return false;
-        if (!rangesOverlap(courseRange, filterRange)) return false;
-      }
-      return true;
-    })
-    .sort((a, b) => {
-      const rangeA = parseAgeRange(a.age_range);
-      const rangeB = parseAgeRange(b.age_range);
-      if (!rangeA) return 1;
-      if (!rangeB) return -1;
-      return rangeA[0] - rangeB[0];
-    });
 
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: "/" },
@@ -159,43 +125,15 @@ export default function Corsi() {
       {/* Learning Roadmap */}
       <LearningRoadmap />
 
-      {/* Filters */}
-      <section className="py-8 border-b border-border/50 sticky top-20 bg-background/95 backdrop-blur-sm z-40">
-
-        <div className="tech-container">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Filter className="w-4 h-4" />
-              <span className="text-sm font-medium">Filtri</span>
-            </div>
-            
-            {/* Age Filter */}
-            <div className="flex flex-wrap gap-2">
-              <span className="text-sm text-muted-foreground mr-2 flex items-center">Età:</span>
-              {ageFilters.map((filter) => (
-                <Button
-                  key={filter}
-                  variant={ageFilter === filter ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setAgeFilter(filter)}
-                >
-                  {filter === "Tutti" ? filter : `${filter} anni`}
-                </Button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Course Grid */}
       <section className="tech-section">
         <div className="tech-container">
           <p className="text-muted-foreground mb-8">
-            {filteredCourses.length} {filteredCourses.length === 1 ? "corso trovato" : "corsi trovati"}
+            {courses.length} {courses.length === 1 ? "corso trovato" : "corsi trovati"}
           </p>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCourses.map((course) => (
+            {courses.map((course) => (
               <Link
                 key={course.id}
                 to={`/corsi/${course.slug}`}
@@ -242,17 +180,6 @@ export default function Corsi() {
               </Link>
             ))}
           </div>
-
-          {filteredCourses.length === 0 && (
-            <div className="text-center py-16">
-              <p className="text-muted-foreground text-lg mb-4">
-                Nessun corso trovato con i filtri selezionati.
-              </p>
-              <Button variant="outline" onClick={() => setAgeFilter("Tutti")}>
-                Rimuovi filtri
-              </Button>
-            </div>
-          )}
         </div>
       </section>
     </Layout>

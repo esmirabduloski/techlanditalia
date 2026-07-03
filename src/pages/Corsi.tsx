@@ -34,6 +34,15 @@ const levelLabels: Record<string, string> = {
   avanzato: "Avanzato",
 };
 
+const parseAgeRange = (ageRange: string | null): [number, number] | null => {
+  if (!ageRange) return null;
+  const rangeMatch = ageRange.match(/(\d+)-(\d+)/);
+  if (rangeMatch) return [parseInt(rangeMatch[1]), parseInt(rangeMatch[2])];
+  const plusMatch = ageRange.match(/(\d+)\+/);
+  if (plusMatch) return [parseInt(plusMatch[1]), 99];
+  return null;
+};
+
 export default function Corsi() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -54,6 +63,15 @@ export default function Corsi() {
 
     fetchCourses();
   }, []);
+
+  const sortedCourses = [...courses].sort((a, b) => {
+    const rangeA = parseAgeRange(a.age_range);
+    const rangeB = parseAgeRange(b.age_range);
+    if (!rangeA) return 1;
+    if (!rangeB) return -1;
+    return rangeA[0] - rangeB[0];
+  });
+
 
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: "/" },
@@ -129,11 +147,11 @@ export default function Corsi() {
       <section className="tech-section">
         <div className="tech-container">
           <p className="text-muted-foreground mb-8">
-            {courses.length} {courses.length === 1 ? "corso trovato" : "corsi trovati"}
+            {sortedCourses.length} {sortedCourses.length === 1 ? "corso trovato" : "corsi trovati"}
           </p>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {courses.map((course) => (
+            {sortedCourses.map((course) => (
               <Link
                 key={course.id}
                 to={`/corsi/${course.slug}`}
@@ -185,3 +203,4 @@ export default function Corsi() {
     </Layout>
   );
 }
+

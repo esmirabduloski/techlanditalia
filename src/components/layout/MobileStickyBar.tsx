@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Sparkles } from "lucide-react";
 
@@ -8,6 +9,17 @@ import { Sparkles } from "lucide-react";
  */
 export function MobileStickyBar() {
   const { pathname } = useLocation();
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    // Show only after the user scrolls past the hero area (~600px),
+    // so it doesn't overlap the primary CTA already visible on load.
+    const threshold = 600;
+    const onScroll = () => setVisible(window.scrollY > threshold);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [pathname]);
 
   const hiddenPrefixes = [
     "/prenota",
@@ -23,9 +35,10 @@ export function MobileStickyBar() {
 
   return (
     <div
-      className="md:hidden fixed bottom-0 inset-x-0 z-40 px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 bg-background/95 backdrop-blur border-t border-border shadow-[0_-4px_16px_rgba(0,0,0,0.08)]"
+      className={`md:hidden fixed bottom-0 inset-x-0 z-40 px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 bg-background/95 backdrop-blur border-t border-border shadow-[0_-4px_16px_rgba(0,0,0,0.08)] transition-all duration-300 ${visible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 pointer-events-none"}`}
       role="complementary"
       aria-label="Prenotazione rapida"
+      aria-hidden={!visible}
     >
       <Link
         to="/prenota"

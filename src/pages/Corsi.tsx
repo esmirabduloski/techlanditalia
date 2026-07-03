@@ -34,6 +34,15 @@ const levelLabels: Record<string, string> = {
   avanzato: "Avanzato",
 };
 
+const parseAgeRange = (ageRange: string | null): [number, number] | null => {
+  if (!ageRange) return null;
+  const rangeMatch = ageRange.match(/(\d+)-(\d+)/);
+  if (rangeMatch) return [parseInt(rangeMatch[1]), parseInt(rangeMatch[2])];
+  const plusMatch = ageRange.match(/(\d+)\+/);
+  if (plusMatch) return [parseInt(plusMatch[1]), 99];
+  return null;
+};
+
 export default function Corsi() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -54,6 +63,15 @@ export default function Corsi() {
 
     fetchCourses();
   }, []);
+
+  const sortedCourses = [...courses].sort((a, b) => {
+    const rangeA = parseAgeRange(a.age_range);
+    const rangeB = parseAgeRange(b.age_range);
+    if (!rangeA) return 1;
+    if (!rangeB) return -1;
+    return rangeA[0] - rangeB[0];
+  });
+
 
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: "/" },

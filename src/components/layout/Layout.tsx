@@ -1,6 +1,7 @@
 import * as React from "react";
 import { ReactNode, lazy, Suspense, useEffect, useState } from "react";
 import { Navbar } from "./Navbar";
+import { MobileStickyBar } from "./MobileStickyBar";
 
 // Lazy: footer is below-the-fold and triggers a Supabase query for courses
 const Footer = lazy(() =>
@@ -33,7 +34,7 @@ export function Layout({ children }: LayoutProps) {
       <header>
         <Navbar />
       </header>
-      <main id="main-content" role="main" className="flex-1 pt-16" tabIndex={-1}>
+      <main id="main-content" role="main" className="flex-1 pt-16 pb-20 md:pb-0" tabIndex={-1}>
         {children}
       </main>
       {showDeferred && (
@@ -42,6 +43,7 @@ export function Layout({ children }: LayoutProps) {
           <ChatWidget />
         </Suspense>
       )}
+      <MobileStickyBar />
     </div>
   );
 }

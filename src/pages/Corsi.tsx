@@ -147,11 +147,11 @@ export default function Corsi() {
       <section className="tech-section">
         <div className="tech-container">
           <p className="text-muted-foreground mb-8">
-            {courses.length} {courses.length === 1 ? "corso trovato" : "corsi trovati"}
+            {sortedCourses.length} {sortedCourses.length === 1 ? "corso trovato" : "corsi trovati"}
           </p>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {courses.map((course) => (
+            {sortedCourses.map((course) => (
               <Link
                 key={course.id}
                 to={`/corsi/${course.slug}`}
@@ -203,3 +203,4 @@ export default function Corsi() {
     </Layout>
   );
 }
+

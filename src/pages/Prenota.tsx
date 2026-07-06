@@ -505,6 +505,20 @@ export default function Prenota() {
                     )}
                   />
 
+                  {submitError && (
+                    <div
+                      role="alert"
+                      aria-live="assertive"
+                      className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive"
+                    >
+                      <p className="font-semibold mb-1">Errore nell'invio</p>
+                      <p>{submitError}</p>
+                      <p className="mt-2 text-xs text-destructive/80">
+                        Se il problema persiste, scrivici su WhatsApp o a info@techland.it
+                      </p>
+                    </div>
+                  )}
+
                   <Button 
                     type="submit" 
                     variant="hero" 

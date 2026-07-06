@@ -60,7 +60,7 @@ serve(async (req: Request): Promise<Response> => {
 
   // Rate limit: max 3 per IP per hour
   const { data: rl } = await supabase.rpc("check_rate_limit", {
-    _identifier: ip, _endpoint: "submit-booking", _max_requests: 3, _window_seconds: 3600,
+    _identifier: ip, _endpoint: "submit-booking", _max_requests: 15, _window_seconds: 3600,
   });
   if (rl && rl.allowed === false) {
     await logSecurityEvent(supabase, { event_type: "rate_limit_exceeded", ip_address: ip, user_agent: ua, endpoint: "submit-booking", severity: "warn", metadata: { retry_after: rl.retry_after_seconds } });

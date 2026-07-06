@@ -60,6 +60,7 @@ export default function Prenota() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [interests, setInterests] = useState(fallbackInterests);
   const { trackFormStart, trackFormSubmit, trackFormError, trackBookingConversion, trackFunnelStep } = useAnalytics();
   const formStartTracked = useRef(false);

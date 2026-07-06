@@ -208,10 +208,12 @@ export default function Prenota() {
       setIsSubmitted(true);
     } catch (error: any) {
       console.error("Submission error:", error);
-      trackFormError('booking_form', error.message || 'Submission error');
+      const msg = error.message || "Si è verificato un errore. Riprova più tardi.";
+      trackFormError('booking_form', msg);
+      setSubmitError(msg);
       toast({
         title: "Errore",
-        description: error.message || "Si è verificato un errore. Riprova più tardi.",
+        description: msg,
         variant: "destructive",
       });
     } finally {

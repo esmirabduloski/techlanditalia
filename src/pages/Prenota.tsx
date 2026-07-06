@@ -127,7 +127,8 @@ export default function Prenota() {
 
   const onSubmit = async (data: BookingFormData) => {
     setIsSubmitting(true);
-    
+    setSubmitError(null);
+
     // Track funnel step: form submit attempt
     trackFunnelStep('booking_funnel', 3, 'form_submit_attempt');
 

@@ -60,6 +60,7 @@ export default function Prenota() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [interests, setInterests] = useState(fallbackInterests);
   const { trackFormStart, trackFormSubmit, trackFormError, trackBookingConversion, trackFunnelStep } = useAnalytics();
   const formStartTracked = useRef(false);
@@ -126,7 +127,8 @@ export default function Prenota() {
 
   const onSubmit = async (data: BookingFormData) => {
     setIsSubmitting(true);
-    
+    setSubmitError(null);
+
     // Track funnel step: form submit attempt
     trackFunnelStep('booking_funnel', 3, 'form_submit_attempt');
 
@@ -206,10 +208,12 @@ export default function Prenota() {
       setIsSubmitted(true);
     } catch (error: any) {
       console.error("Submission error:", error);
-      trackFormError('booking_form', error.message || 'Submission error');
+      const msg = error.message || "Si è verificato un errore. Riprova più tardi.";
+      trackFormError('booking_form', msg);
+      setSubmitError(msg);
       toast({
         title: "Errore",
-        description: error.message || "Si è verificato un errore. Riprova più tardi.",
+        description: msg,
         variant: "destructive",
       });
     } finally {
@@ -500,6 +504,20 @@ export default function Prenota() {
                       </FormItem>
                     )}
                   />
+
+                  {submitError && (
+                    <div
+                      role="alert"
+                      aria-live="assertive"
+                      className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive"
+                    >
+                      <p className="font-semibold mb-1">Errore nell'invio</p>
+                      <p>{submitError}</p>
+                      <p className="mt-2 text-xs text-destructive/80">
+                        Se il problema persiste, scrivici su WhatsApp o a info@techland.it
+                      </p>
+                    </div>
+                  )}
 
                   <Button 
                     type="submit" 

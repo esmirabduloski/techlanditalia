@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { defineTool } from "@lovable.dev/mcp-js";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";

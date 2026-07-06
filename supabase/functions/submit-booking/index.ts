@@ -41,6 +41,40 @@ async function logSecurityEvent(supabase: any, event: {
   try { await supabase.from("security_events").insert(event); } catch (e) { console.error("[sec-log]", e); }
 }
 
+function sendNotificationInBackground(payload: Record<string, unknown>) {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+
+  const notificationTask = fetch(`${supabaseUrl}/functions/v1/send-booking-notification`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-internal-secret": serviceKey,
+      "Authorization": `Bearer ${serviceKey}`,
+    },
+    signal: controller.signal,
+    body: JSON.stringify(payload),
+  })
+    .then(async (response) => {
+      await response.text();
+      if (!response.ok) {
+        console.error("[submit-booking] notification email failed with status:", response.status);
+      }
+    })
+    .catch((error) => {
+      console.error("[submit-booking] notification email failed:", error);
+    })
+    .finally(() => clearTimeout(timeout));
+
+  if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) {
+    EdgeRuntime.waitUntil(notificationTask);
+  } else {
+    notificationTask.catch(() => undefined);
+  }
+}
+
 serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -135,30 +169,16 @@ serve(async (req: Request): Promise<Response> => {
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Send notification email server-to-server (so client doesn't need access to the open endpoint)
-    try {
-      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-      await fetch(`${supabaseUrl}/functions/v1/send-booking-notification`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-internal-secret": serviceKey,
-          "Authorization": `Bearer ${serviceKey}`,
-        },
-        body: JSON.stringify({
-          parentName: data.parentName.trim(),
-          email: data.email,
-          phone: data.phone.trim(),
-          childAge: data.childAge,
-          interest: data.interest,
-          availability: data.availability,
-          message: data.message?.trim(),
-        }),
-      });
-    } catch (e) {
-      console.error("[submit-booking] notification email failed:", e);
-    }
+    // Send notification email server-to-server without blocking the user's confirmation UI.
+    sendNotificationInBackground({
+      parentName: data.parentName.trim(),
+      email: data.email,
+      phone: data.phone.trim(),
+      childAge: data.childAge,
+      interest: data.interest,
+      availability: data.availability,
+      message: data.message?.trim(),
+    });
 
     return new Response(
       JSON.stringify({

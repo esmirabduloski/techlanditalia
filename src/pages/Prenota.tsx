@@ -139,8 +139,6 @@ export default function Prenota() {
           phone: data.phone,
           childAge: data.childAge ? parseInt(data.childAge) : null,
           interest: data.interest || null,
-          availability: null,
-          message: null,
           adminEmail: ADMIN_EMAIL,
           website: honeypotValue,
           formOpenedAt,

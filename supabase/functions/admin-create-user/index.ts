@@ -119,6 +119,24 @@ serve(async (req) => {
 
     const newUserId = authData.user.id;
 
+    const { error: parentProfileError } = await supabaseAdmin
+      .from("profiles")
+      .upsert({
+        id: newUserId,
+        full_name: fullName.trim(),
+        email: email.trim().toLowerCase(),
+        role: userRole,
+      }, { onConflict: "id" });
+
+    if (parentProfileError) {
+      console.error("Error creating/updating parent profile:", parentProfileError);
+      await supabaseAdmin.auth.admin.deleteUser(newUserId);
+      return new Response(JSON.stringify({ error: "Impossibile creare il profilo utente" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Add role to user_roles table
     if (role === "teacher") {
       const { error: roleError } = await supabaseAdmin
@@ -167,17 +185,26 @@ serve(async (req) => {
         });
       }
 
-      // Update child profile
+      // Create/update child profile explicitly instead of relying on auth triggers.
       const { error: profileError } = await supabaseAdmin
         .from("profiles")
-        .update({
+        .upsert({
+          id: childAuthData.user.id,
+          full_name: childName.trim(),
+          email: childEmail,
+          role: "student",
           username: childUsername.trim(),
           parent_id: newUserId,
-        })
-        .eq("id", childAuthData.user.id);
+        }, { onConflict: "id" });
 
       if (profileError) {
         console.error("Error updating child profile:", profileError);
+        await supabaseAdmin.auth.admin.deleteUser(childAuthData.user.id);
+        await supabaseAdmin.auth.admin.deleteUser(newUserId);
+        return new Response(JSON.stringify({ error: "Account genitore creato ma non è stato possibile associare il figlio. Riprova o contatta supporto." }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
 
       // Enroll child in course if selected

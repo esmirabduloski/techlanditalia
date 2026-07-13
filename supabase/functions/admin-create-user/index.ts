@@ -178,6 +178,11 @@ serve(async (req) => {
 
       if (profileError) {
         console.error("Error updating child profile:", profileError);
+        await supabaseAdmin.auth.admin.deleteUser(childAuthData.user.id);
+        return new Response(JSON.stringify({ error: "Account genitore creato ma non è stato possibile associare il figlio. Riprova o contatta supporto." }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
 
       // Enroll child in course if selected

@@ -582,34 +582,15 @@ export default function AdminUsers() {
   const handleSaveChildrenAssignment = async () => {
     setIsSaving(true);
     try {
-      const allStudents = profiles.filter(p => p.role === 'student');
-      
-      // Students to assign to this parent
-      const toAssign = allStudents.filter(s => 
-        selectedChildrenToAssign.includes(s.id) && s.parent_id !== assignChildrenDialog.parentId
-      );
-      
-      // Students to unassign from this parent
-      const toUnassign = allStudents.filter(s => 
-        s.parent_id === assignChildrenDialog.parentId && !selectedChildrenToAssign.includes(s.id)
-      );
+      const { data, error } = await supabase.functions.invoke('admin-assign-children', {
+        body: {
+          parentId: assignChildrenDialog.parentId,
+          childIds: selectedChildrenToAssign,
+        },
+      });
 
-      // Assign new children
-      for (const student of toAssign) {
-        const { error } = await supabase
-          .from('profiles')
-          .update({ parent_id: assignChildrenDialog.parentId })
-          .eq('id', student.id);
-        if (error) throw error;
-      }
-
-      // Unassign removed children
-      for (const student of toUnassign) {
-        const { error } = await supabase
-          .from('profiles')
-          .update({ parent_id: null })
-          .eq('id', student.id);
-        if (error) throw error;
+      if (error || data?.error) {
+        throw new Error(data?.error || error?.message || 'Impossibile aggiornare i figli');
       }
 
       toast({ title: 'Successo', description: 'Figli aggiornati' });

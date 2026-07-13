@@ -3,7 +3,7 @@
 // supabase function: mcp
 // Bundled from src/lib/mcp/index.ts by @lovable.dev/mcp-js.
 // src/lib/mcp/index.ts
-import { defineMcp } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { auth, defineMcp } from "npm:@lovable.dev/mcp-js@0.20.0";
 
 // src/lib/mcp/tools/list-courses.ts
 import { defineTool } from "npm:@lovable.dev/mcp-js@0.20.0";
@@ -113,11 +113,16 @@ var get_blog_post_default = defineTool4({
 });
 
 // src/lib/mcp/index.ts
+var projectRef = "aedpckxjyyklqwrzrnmg";
 var mcp_default = defineMcp({
   name: "techland-mcp",
   title: "TECHLAND",
   version: "0.1.0",
   instructions: "Read-only access to TECHLAND's public catalog: coding courses for kids/teens (6-18) and the blog. Use `list_courses` to browse the catalog, `get_course` for a course by slug, `list_blog_posts` to browse articles, and `get_blog_post` to read one.",
+  auth: auth.oauth.issuer({
+    issuer: `https://${projectRef}.supabase.co/auth/v1`,
+    acceptedAudiences: "authenticated"
+  }),
   tools: [list_courses_default, get_course_default, list_blog_posts_default, get_blog_post_default]
 });
 

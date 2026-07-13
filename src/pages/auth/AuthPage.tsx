@@ -49,10 +49,23 @@ export default function AuthPage() {
     }
   }, [isAdmin]);
 
+  // Safely resolve `?next=` to a same-origin relative path only.
+  const resolveNext = (): string | null => {
+    const raw = searchParams.get("next");
+    if (!raw) return null;
+    if (!raw.startsWith("/") || raw.startsWith("//")) return null;
+    return raw;
+  };
+
   // Redirect authenticated non-admin users
   useEffect(() => {
     const checkRoleAndRedirect = async () => {
       if (!authLoading && user && !showNewPasswordForm) {
+        const next = resolveNext();
+        if (next) {
+          window.location.href = next;
+          return;
+        }
         if (isAdmin) return;
 
         const { data: teacherRole } = await supabase
@@ -71,6 +84,7 @@ export default function AuthPage() {
     };
 
     checkRoleAndRedirect();
+     
   }, [user, isAdmin, authLoading, showNewPasswordForm, navigate]);
 
   // Check if user came from password reset link

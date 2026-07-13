@@ -82,6 +82,7 @@ const AdminSiteSettings = lazy(() => import("./pages/admin/AdminSiteSettings"));
 const AdminGlossary = lazy(() => import("./pages/admin/AdminGlossary"));
 const AdminReferrals = lazy(() => import("./pages/admin/AdminReferrals"));
 const Glossario = lazy(() => import("./pages/Glossario"));
+const OAuthConsent = lazy(() => import("./pages/OAuthConsent"));
 
 const queryClient = new QueryClient();
 
@@ -125,6 +126,7 @@ const App = () => (
                     <Route path="/accessibilita" element={<Accessibilita />} />
                     <Route path="/glossario" element={<Glossario />} />
                     <Route path="/auth" element={<AuthPage />} />
+                    <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
                     <Route path="/area-riservata" element={<AreaRiservataDashboard />} />
                     <Route path="/area-riservata/profilo" element={<AreaRiservataProfile />} />
                     <Route path="/area-riservata/corso/:courseId" element={<CourseProgress />} />

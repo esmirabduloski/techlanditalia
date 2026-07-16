@@ -500,10 +500,18 @@ export default function TeacherGroupDetail() {
         return s;
       }));
 
+      toast({ title: 'Presenza salvata', description: `${selectedAttendance.studentName} · Lezione ${selectedAttendance.lessonNumber}` });
       setIsAttendanceDialogOpen(false);
       setSelectedAttendance(null);
     } catch (error: any) {
-      toast({ title: 'Errore', description: error.message, variant: 'destructive' });
+      console.error('[saveAttendance] error', error);
+      const description = error?.message || error?.details || error?.hint || 'Errore sconosciuto durante il salvataggio della presenza. Riprova o contatta il supporto.';
+      toast({
+        title: '❌ Impossibile salvare la presenza',
+        description,
+        variant: 'destructive',
+        duration: 10000,
+      });
     }
   };
 

@@ -184,15 +184,9 @@ export function useStudentProgress() {
     if (!effectiveUserId) return false;
 
     try {
-      const { error } = await supabase
-        .from('lesson_progress')
-        .insert({
-          student_id: effectiveUserId,
-          lesson_id: lessonId,
-          // points_earned is set by database trigger from lessons.points_reward
-        });
-
-      if (!error) {
+      const { data, error } = await supabase.rpc('complete_lesson', { _lesson_id: lessonId });
+      const result = data as { success?: boolean } | null;
+      if (!error && result?.success) {
         await fetchStudentData();
         return true;
       }

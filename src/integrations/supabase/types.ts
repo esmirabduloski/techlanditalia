@@ -1462,6 +1462,7 @@ export type Database = {
           default_python_code: string | null
           description: string | null
           id: string
+          is_visible: boolean
           lesson_id: string
           points_reward: number
           python_env: string | null
@@ -1482,6 +1483,7 @@ export type Database = {
           default_python_code?: string | null
           description?: string | null
           id?: string
+          is_visible?: boolean
           lesson_id: string
           points_reward?: number
           python_env?: string | null
@@ -1502,6 +1504,7 @@ export type Database = {
           default_python_code?: string | null
           description?: string | null
           id?: string
+          is_visible?: boolean
           lesson_id?: string
           points_reward?: number
           python_env?: string | null

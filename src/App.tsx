@@ -156,10 +156,10 @@ const App = () => (
                     <Route path="/admin/blog/:id/modifica" element={<BlogEditor />} />
                     <Route path="/admin/utenti" element={<AdminUsers />} />
                     <Route path="/admin/commenti" element={<AdminStudentComments />} />
-                    <Route path="/admin/valutazioni" element={<AdminGrading />} />
+                    
                     <Route path="/admin/statistiche" element={<AdminStats />} />
                     <Route path="/admin/newsletter" element={<AdminNewsletter />} />
-                    <Route path="/admin/lezioni-programmate" element={<AdminScheduledLessons />} />
+                    
                     
                     <Route path="/admin/analytics" element={<AdminAnalytics />} />
                     <Route path="/admin/gruppi" element={<AdminGroups />} />

@@ -392,7 +392,7 @@ export default function Dashboard() {
             <div className="mb-8">
               <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                 <Rocket className="w-5 h-5 text-primary" />
-                I Tuoi Corsi
+                I Tuoi Corsi (Lezioni + Compiti)
               </h2>
 
               {enrollments.length === 0 ? (

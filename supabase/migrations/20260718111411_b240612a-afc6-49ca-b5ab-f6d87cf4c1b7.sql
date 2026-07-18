@@ -1,0 +1,1 @@
+ALTER TABLE public.student_groups ADD COLUMN IF NOT EXISTS mega_chat_link text;

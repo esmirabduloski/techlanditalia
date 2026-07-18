@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { GraduationCap, BookOpen } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { GraduationCap, BookOpen, MessageCircle } from "lucide-react";
 
 interface TeacherInfo {
   name: string;
   bio: string | null;
   courses: { emoji: string; title: string }[];
+  chatLinks: { groupTitle: string; link: string }[];
 }
 
 interface TeacherBioCardProps {
@@ -23,10 +25,10 @@ export function TeacherBioCard({ studentId }: TeacherBioCardProps) {
 
     const fetchTeachers = async () => {
       try {
-        // Get the student's groups with teacher info
+        // Get the student's groups with teacher info + mega chat link
         const { data: groups } = await supabase
           .from("group_students")
-          .select("group_id, student_groups!inner(teacher_id, course_id, courses!inner(title, emoji))")
+          .select("group_id, student_groups!inner(title, teacher_id, mega_chat_link, course_id, courses!inner(title, emoji))")
           .eq("student_id", studentId);
 
         if (!groups || groups.length === 0) {
@@ -45,13 +47,11 @@ export function TeacherBioCard({ studentId }: TeacherBioCardProps) {
           return;
         }
 
-        // Get teacher profiles and names
         const [{ data: profiles }, { data: teacherProfiles }] = await Promise.all([
           supabase.from("profiles").select("id, full_name").in("id", teacherIds),
           supabase.from("teacher_profiles").select("user_id, bio").in("user_id", teacherIds),
         ]);
 
-        // Get teacher courses
         const { data: teacherCourses } = await supabase
           .from("teacher_courses")
           .select("teacher_id, course_id, courses!inner(title, emoji)")
@@ -66,11 +66,19 @@ export function TeacherBioCard({ studentId }: TeacherBioCardProps) {
             .filter((tc: any) => tc.teacher_id === tid)
             .map((tc: any) => ({ emoji: tc.courses.emoji, title: tc.courses.title }));
 
+          const chatLinks = groups
+            .filter((g: any) => g.student_groups?.teacher_id === tid && g.student_groups?.mega_chat_link)
+            .map((g: any) => ({
+              groupTitle: g.student_groups.title,
+              link: g.student_groups.mega_chat_link as string,
+            }));
+
           if (profile) {
             teacherMap.set(tid as string, {
               name: profile.full_name,
               bio: (tp as any)?.bio || null,
               courses,
+              chatLinks,
             });
           }
         });
@@ -116,6 +124,24 @@ export function TeacherBioCard({ studentId }: TeacherBioCardProps) {
                     </Badge>
                   ))}
                 </div>
+              </div>
+            )}
+            {teacher.chatLinks.length > 0 && (
+              <div className="space-y-2 pt-1">
+                {teacher.chatLinks.map((cl, k) => (
+                  <Button
+                    key={k}
+                    asChild
+                    className="w-full"
+                    size="sm"
+                  >
+                    <a href={cl.link} target="_blank" rel="noopener noreferrer">
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      Chatta con l'insegnante
+                      {teacher.chatLinks.length > 1 && ` · ${cl.groupTitle}`}
+                    </a>
+                  </Button>
+                ))}
               </div>
             )}
           </CardContent>

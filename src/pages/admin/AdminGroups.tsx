@@ -121,6 +121,7 @@ export default function AdminGroups() {
     lesson_days: [0] as number[], // Default Sunday
     lesson_time: '',
     whatsapp_link: '',
+    mega_chat_link: '',
     teacher_meeting_link: '',
     student_meeting_link: '',
     selected_students: [] as string[]
@@ -242,6 +243,7 @@ export default function AdminGroups() {
       lesson_days: [0],
       lesson_time: '',
       whatsapp_link: '',
+      mega_chat_link: '',
       teacher_meeting_link: '',
       student_meeting_link: '',
       selected_students: []
@@ -255,7 +257,7 @@ export default function AdminGroups() {
     // Fetch current students and group details with lesson_days
     const { data: groupDetails } = await supabase
       .from('student_groups')
-      .select('lesson_days, whatsapp_link, certificates, teacher_meeting_link, student_meeting_link')
+      .select('lesson_days, whatsapp_link, mega_chat_link, certificates, teacher_meeting_link, student_meeting_link')
       .eq('id', group.id)
       .single();
 
@@ -274,6 +276,7 @@ export default function AdminGroups() {
       lesson_days: (groupDetails?.lesson_days as number[]) || [0],
       lesson_time: group.lesson_time || '',
       whatsapp_link: (groupDetails as any)?.whatsapp_link || '',
+      mega_chat_link: (groupDetails as any)?.mega_chat_link || '',
       teacher_meeting_link: (groupDetails as any)?.teacher_meeting_link || '',
       student_meeting_link: (groupDetails as any)?.student_meeting_link || '',
       selected_students: groupStudents?.map(gs => gs.student_id) || []
@@ -305,6 +308,7 @@ export default function AdminGroups() {
             lesson_days: formData.lesson_days,
             lesson_time: formData.lesson_time || null,
             whatsapp_link: formData.whatsapp_link || null,
+            mega_chat_link: formData.mega_chat_link || null,
             teacher_meeting_link: formData.teacher_meeting_link || null,
             student_meeting_link: formData.student_meeting_link || null
           } as any)
@@ -339,6 +343,7 @@ export default function AdminGroups() {
             lesson_days: formData.lesson_days,
             lesson_time: formData.lesson_time || null,
             whatsapp_link: formData.whatsapp_link || null,
+            mega_chat_link: formData.mega_chat_link || null,
             teacher_meeting_link: formData.teacher_meeting_link || null,
             student_meeting_link: formData.student_meeting_link || null
           } as any)
@@ -894,6 +899,18 @@ export default function AdminGroups() {
                 />
                 <p className="text-xs text-muted-foreground">
                   L'insegnante potrà vedere questo link per entrare nel gruppo WhatsApp
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>💬 Link Chat MEGA (Insegnante ↔ Alunni)</Label>
+                <Input
+                  value={formData.mega_chat_link}
+                  onChange={(e) => setFormData(prev => ({ ...prev, mega_chat_link: e.target.value }))}
+                  placeholder="https://mega.nz/chat/..."
+                />
+                <p className="text-xs text-muted-foreground">
+                  Gli alunni vedranno un bottone "Chatta con l'insegnante" nella loro dashboard
                 </p>
               </div>
 

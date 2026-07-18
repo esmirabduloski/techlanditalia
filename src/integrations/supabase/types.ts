@@ -2126,6 +2126,7 @@ export type Database = {
           lesson_days: number[] | null
           lesson_time: string | null
           max_lessons: number | null
+          mega_chat_link: string | null
           start_date: string | null
           status: string
           student_meeting_link: string | null
@@ -2145,6 +2146,7 @@ export type Database = {
           lesson_days?: number[] | null
           lesson_time?: string | null
           max_lessons?: number | null
+          mega_chat_link?: string | null
           start_date?: string | null
           status?: string
           student_meeting_link?: string | null
@@ -2164,6 +2166,7 @@ export type Database = {
           lesson_days?: number[] | null
           lesson_time?: string | null
           max_lessons?: number | null
+          mega_chat_link?: string | null
           start_date?: string | null
           status?: string
           student_meeting_link?: string | null

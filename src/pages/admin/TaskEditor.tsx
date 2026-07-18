@@ -385,8 +385,22 @@ export default function TaskEditor() {
                 </div>
               </div>
 
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <div className="space-y-0.5">
+                  <Label htmlFor="is_visible" className="text-sm font-medium">Visibile agli alunni</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Se disattivato, il task viene saltato nella navigazione e non appare agli alunni.
+                  </p>
+                </div>
+                <Switch
+                  id="is_visible"
+                  checked={formData.is_visible}
+                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_visible: checked }))}
+                />
+              </div>
+
               <div className="space-y-2">
-                <Label htmlFor="description">Descrizione</Label>
+                <Label>Descrizione</Label>
                 <Textarea
                   id="description"
                   value={formData.description}

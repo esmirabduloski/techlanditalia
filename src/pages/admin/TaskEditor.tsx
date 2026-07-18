@@ -191,7 +191,7 @@ export default function TaskEditor() {
 
         // If there's a saved draft, prefer it over DB data (user was editing and switched tabs)
         if (savedDraft && savedDraft.title) {
-          setFormData(savedDraft);
+          setFormData({ is_visible: true, ...savedDraft });
         } else {
           setFormData(dbData);
         }
@@ -200,6 +200,7 @@ export default function TaskEditor() {
       // New task: load draft if exists
       if (savedDraft && savedDraft.title) {
         setFormData(prev => ({
+          is_visible: true,
           ...savedDraft,
           task_number: prev.task_number, // Keep task_number from DB
         }));

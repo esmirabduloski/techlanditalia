@@ -17,6 +17,7 @@ import RichTextEditor from '@/components/editor/RichTextEditor';
 import { TaskAttachmentUpload } from '@/components/admin/TaskAttachmentUpload';
 import { useTaskEditorDraft } from '@/hooks/useTaskEditorDraft';
 import { useAutoBackup } from '@/hooks/useAutoBackup';
+import { Switch } from '@/components/ui/switch';
 interface Attachment {
   name: string;
   url: string;
@@ -51,6 +52,7 @@ interface TaskData {
   python_env: string;
   replit_url: string;
   attachments: Attachment[];
+  is_visible: boolean;
 }
 
 export default function TaskEditor() {
@@ -80,6 +82,7 @@ export default function TaskEditor() {
     python_env: 'standard',
     replit_url: '',
     attachments: [],
+    is_visible: true,
   });
 
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
@@ -183,11 +186,12 @@ export default function TaskEditor() {
           python_env: (taskData as any).python_env || 'standard',
           replit_url: (taskData as any).replit_url || '',
           attachments,
+          is_visible: (taskData as any).is_visible ?? true,
         };
 
         // If there's a saved draft, prefer it over DB data (user was editing and switched tabs)
         if (savedDraft && savedDraft.title) {
-          setFormData(savedDraft);
+          setFormData({ is_visible: true, ...savedDraft });
         } else {
           setFormData(dbData);
         }
@@ -196,6 +200,7 @@ export default function TaskEditor() {
       // New task: load draft if exists
       if (savedDraft && savedDraft.title) {
         setFormData(prev => ({
+          is_visible: true,
           ...savedDraft,
           task_number: prev.task_number, // Keep task_number from DB
         }));
@@ -252,6 +257,7 @@ export default function TaskEditor() {
       python_env: formData.python_env || 'standard',
       replit_url: formData.python_env === 'pgzero' ? (formData.replit_url || null) : null,
       attachments: formData.attachments,
+      is_visible: formData.is_visible,
     };
 
     try {
@@ -379,8 +385,22 @@ export default function TaskEditor() {
                 </div>
               </div>
 
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <div className="space-y-0.5">
+                  <Label htmlFor="is_visible" className="text-sm font-medium">Visibile agli alunni</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Se disattivato, il task viene saltato nella navigazione e non appare agli alunni.
+                  </p>
+                </div>
+                <Switch
+                  id="is_visible"
+                  checked={formData.is_visible}
+                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_visible: checked }))}
+                />
+              </div>
+
               <div className="space-y-2">
-                <Label htmlFor="description">Descrizione</Label>
+                <Label>Descrizione</Label>
                 <Textarea
                   id="description"
                   value={formData.description}

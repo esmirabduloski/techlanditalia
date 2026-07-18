@@ -68,7 +68,7 @@ export default function TaskView() {
   const [course, setCourse] = useState<Course | null>(null);
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [task, setTask] = useState<Task | null>(null);
-  const [totalTasks, setTotalTasks] = useState(0);
+  const [visibleTaskNumbers, setVisibleTaskNumbers] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -109,20 +109,39 @@ export default function TaskView() {
       if (lessonData) {
         setLesson(lessonData);
 
-        // Fetch total tasks count
-        const { count } = await supabase
+        // Fetch visible task numbers for navigation
+        const { data: visibleTasksData } = await supabase
           .from('lesson_tasks')
-          .select('*', { count: 'exact', head: true })
-          .eq('lesson_id', lessonData.id);
+          .select('task_number')
+          .eq('lesson_id', lessonData.id)
+          .eq('is_visible', true)
+          .order('task_number');
 
-        setTotalTasks(count || 0);
+        const visibleNumbers = (visibleTasksData || []).map((t: any) => t.task_number);
+        setVisibleTaskNumbers(visibleNumbers);
 
-        // Fetch the specific task
+        const requestedNumber = parseInt(taskNumber);
+
+        // If the requested task is hidden or missing, jump to next visible one (or back to course)
+        if (!visibleNumbers.includes(requestedNumber)) {
+          const nextVisible = visibleNumbers.find(n => n > requestedNumber) ?? visibleNumbers[visibleNumbers.length - 1];
+          if (nextVisible && nextVisible !== requestedNumber) {
+            navigate(`/area-riservata/corso/${courseId}/lezione/${lessonNumber}/task/${nextVisible}`, { replace: true });
+            return;
+          }
+          if (!nextVisible) {
+            navigate(`/area-riservata/corso/${courseId}`, { replace: true });
+            return;
+          }
+        }
+
+        // Fetch the specific task (only if visible)
         const { data: taskData } = await supabase
           .from('lesson_tasks')
           .select('*')
           .eq('lesson_id', lessonData.id)
-          .eq('task_number', parseInt(taskNumber))
+          .eq('task_number', requestedNumber)
+          .eq('is_visible', true)
           .maybeSingle();
 
         if (taskData) {
@@ -189,6 +208,15 @@ export default function TaskView() {
 
   const isPythonCourse = PYTHON_COURSES.includes(course.slug);
   const isWebCourse = WEB_COURSES.includes(course.slug);
+
+  // Navigation among visible tasks only
+  const currentIndex = visibleTaskNumbers.indexOf(task.task_number);
+  const previousTaskNumber = currentIndex > 0 ? visibleTaskNumbers[currentIndex - 1] : undefined;
+  const nextTaskNumber = currentIndex >= 0 && currentIndex < visibleTaskNumbers.length - 1
+    ? visibleTaskNumbers[currentIndex + 1]
+    : undefined;
+  const displayPosition = currentIndex >= 0 ? currentIndex + 1 : 1;
+  const totalTasks = visibleTaskNumbers.length || 1;
   const isMixedType = task.content_type === 'mixed';
   const isScratchType = task.content_type === 'scratch';
   const showCompiler = (isPythonCourse || isWebCourse) && isMixedType;
@@ -256,10 +284,10 @@ export default function TaskView() {
                 <TaskNavigation
                   courseId={course.id}
                   lessonNumber={lesson.lesson_number}
-                  currentTaskNumber={task.task_number}
+                  currentTaskNumber={displayPosition}
                   totalTasks={totalTasks}
-                  onPrevious={task.task_number > 1 ? () => navigateToTask(task.task_number - 1) : undefined}
-                  onNext={task.task_number < totalTasks ? () => navigateToTask(task.task_number + 1) : undefined}
+                  onPrevious={previousTaskNumber !== undefined ? () => navigateToTask(previousTaskNumber) : undefined}
+                  onNext={nextTaskNumber !== undefined ? () => navigateToTask(nextTaskNumber) : undefined}
                   onComplete={handleNavigateToCourse}
                 />
               </div>
@@ -343,10 +371,10 @@ export default function TaskView() {
                 <TaskNavigation
                   courseId={course.id}
                   lessonNumber={lesson.lesson_number}
-                  currentTaskNumber={task.task_number}
+                  currentTaskNumber={displayPosition}
                   totalTasks={totalTasks}
-                  onPrevious={task.task_number > 1 ? () => navigateToTask(task.task_number - 1) : undefined}
-                  onNext={task.task_number < totalTasks ? () => navigateToTask(task.task_number + 1) : undefined}
+                  onPrevious={previousTaskNumber !== undefined ? () => navigateToTask(previousTaskNumber) : undefined}
+                  onNext={nextTaskNumber !== undefined ? () => navigateToTask(nextTaskNumber) : undefined}
                   onComplete={handleNavigateToCourse}
                 />
               </div>
@@ -415,10 +443,10 @@ export default function TaskView() {
         <TaskNavigation
           courseId={course.id}
           lessonNumber={lesson.lesson_number}
-          currentTaskNumber={task.task_number}
+          currentTaskNumber={displayPosition}
           totalTasks={totalTasks}
-          onPrevious={task.task_number > 1 ? () => navigateToTask(task.task_number - 1) : undefined}
-          onNext={task.task_number < totalTasks ? () => navigateToTask(task.task_number + 1) : undefined}
+          onPrevious={previousTaskNumber !== undefined ? () => navigateToTask(previousTaskNumber) : undefined}
+          onNext={nextTaskNumber !== undefined ? () => navigateToTask(nextTaskNumber) : undefined}
           onComplete={handleNavigateToCourse}
         />
       </div>

@@ -127,7 +127,8 @@ export default function Dashboard() {
           const { data: tasks } = await supabase
             .from('lesson_tasks')
             .select('id')
-            .in('lesson_id', lessonIds);
+            .in('lesson_id', lessonIds)
+            .eq('is_visible', true);
 
           const totalTasks = tasks?.length || 0;
           const completedTasks = tasks?.filter(t => completedTaskIds.includes(t.id)).length || 0;

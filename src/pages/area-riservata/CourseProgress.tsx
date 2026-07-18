@@ -129,7 +129,8 @@ export default function CourseProgress() {
           const { data: tasksData } = await supabase
             .from('lesson_tasks')
             .select('id, lesson_id')
-            .in('lesson_id', lessonIds);
+            .in('lesson_id', lessonIds)
+            .eq('is_visible', true);
 
           if (tasksData) {
             setAllTasks(tasksData);

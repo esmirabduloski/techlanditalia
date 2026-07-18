@@ -19,7 +19,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { 
-  LogOut, Loader2, Plus, Edit, Trash2, ArrowLeft, ListChecks
+  LogOut, Loader2, Plus, Edit, Trash2, ArrowLeft, ListChecks, Eye, EyeOff
 } from 'lucide-react';
 
 interface Course {
@@ -41,6 +41,7 @@ interface Task {
   description: string | null;
   content_type: string | null;
   points_reward: number;
+  is_visible: boolean;
   created_at: string;
 }
 
@@ -112,6 +113,20 @@ export default function AdminTasks() {
       setTasks(tasks.filter(t => t.id !== id));
       toast({ title: 'Successo', description: 'Task eliminato' });
     }
+  };
+
+  const toggleVisibility = async (task: Task) => {
+    const next = !task.is_visible;
+    const { error } = await supabase
+      .from('lesson_tasks')
+      .update({ is_visible: next })
+      .eq('id', task.id);
+    if (error) {
+      toast({ title: 'Errore', description: 'Impossibile aggiornare la visibilità', variant: 'destructive' });
+      return;
+    }
+    setTasks(tasks.map(t => t.id === task.id ? { ...t, is_visible: next } : t));
+    toast({ title: next ? 'Task visibile' : 'Task nascosto', description: next ? 'Ora è visibile agli alunni' : 'Non sarà mostrato agli alunni' });
   };
 
   const handleSignOut = async () => {
@@ -186,7 +201,7 @@ export default function AdminTasks() {
         ) : (
           <div className="space-y-3">
             {tasks.map((task) => (
-              <div key={task.id} className="tech-card p-4 flex items-center justify-between gap-4">
+              <div key={task.id} className={`tech-card p-4 flex items-center justify-between gap-4 ${!task.is_visible ? 'opacity-60' : ''}`}>
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
                     {task.task_number}
@@ -197,6 +212,12 @@ export default function AdminTasks() {
                       {task.content_type && task.content_type !== 'text' && (
                         <Badge variant="outline">{task.content_type}</Badge>
                       )}
+                      {!task.is_visible && (
+                        <Badge variant="secondary" className="gap-1">
+                          <EyeOff className="w-3 h-3" />
+                          Nascosto
+                        </Badge>
+                      )}
                     </div>
                     <div className="flex items-center gap-3 text-sm text-muted-foreground">
                       <span>{task.points_reward} punti</span>
@@ -206,6 +227,14 @@ export default function AdminTasks() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => toggleVisibility(task)}
+                    title={task.is_visible ? 'Nascondi agli alunni' : 'Rendi visibile agli alunni'}
+                  >
+                    {task.is_visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
+                  </Button>
                   <Button variant="ghost" size="icon" asChild>
                     <Link to={`/admin/corsi/${courseId}/lezioni/${lessonId}/task/${task.id}/modifica`}>
                       <Edit className="w-4 h-4" />

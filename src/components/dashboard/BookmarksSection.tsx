@@ -73,8 +73,9 @@ export function BookmarksSection() {
     if (taskBookmarks.length > 0) {
       const { data: tasks } = await supabase
         .from('lesson_tasks')
-        .select('id, title, task_number, lesson_id, lessons!inner(lesson_number, course_id, courses!inner(title, emoji, slug))')
-        .in('id', taskBookmarks.map(b => b.entity_id));
+        .select('id, title, task_number, lesson_id, is_visible, lessons!inner(lesson_number, course_id, courses!inner(title, emoji, slug))')
+        .in('id', taskBookmarks.map(b => b.entity_id))
+        .eq('is_visible', true);
 
       if (tasks) {
         tasks.forEach((t: any) => {

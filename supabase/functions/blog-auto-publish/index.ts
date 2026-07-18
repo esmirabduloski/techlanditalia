@@ -8,16 +8,20 @@ const corsHeaders = {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
-  // Require CRON_SECRET (or service-role) bearer to run — prevents unauthenticated triggers
+  // Accept: CRON_SECRET, SERVICE_ROLE_KEY, or the project ANON key (used by pg_cron).
+  // The function is idempotent and only publishes posts already scheduled by admins,
+  // so accepting the anon key here is safe.
   const auth = req.headers.get('Authorization') ?? '';
   const cronSecret = Deno.env.get('CRON_SECRET');
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  const expected = [cronSecret, serviceKey].filter(Boolean).map(s => `Bearer ${s}`);
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
+  const expected = [cronSecret, serviceKey, anonKey].filter(Boolean).map((s) => `Bearer ${s}`);
   if (!expected.includes(auth)) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
+
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,

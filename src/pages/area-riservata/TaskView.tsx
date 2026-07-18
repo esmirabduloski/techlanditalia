@@ -208,6 +208,15 @@ export default function TaskView() {
 
   const isPythonCourse = PYTHON_COURSES.includes(course.slug);
   const isWebCourse = WEB_COURSES.includes(course.slug);
+
+  // Navigation among visible tasks only
+  const currentIndex = visibleTaskNumbers.indexOf(task.task_number);
+  const previousTaskNumber = currentIndex > 0 ? visibleTaskNumbers[currentIndex - 1] : undefined;
+  const nextTaskNumber = currentIndex >= 0 && currentIndex < visibleTaskNumbers.length - 1
+    ? visibleTaskNumbers[currentIndex + 1]
+    : undefined;
+  const displayPosition = currentIndex >= 0 ? currentIndex + 1 : 1;
+  const totalTasks = visibleTaskNumbers.length || 1;
   const isMixedType = task.content_type === 'mixed';
   const isScratchType = task.content_type === 'scratch';
   const showCompiler = (isPythonCourse || isWebCourse) && isMixedType;

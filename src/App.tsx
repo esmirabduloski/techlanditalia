@@ -160,7 +160,7 @@ const App = () => (
                     <Route path="/admin/statistiche" element={<AdminStats />} />
                     <Route path="/admin/newsletter" element={<AdminNewsletter />} />
                     <Route path="/admin/lezioni-programmate" element={<AdminScheduledLessons />} />
-                    <Route path="/admin/presenze" element={<AdminAttendance />} />
+                    
                     <Route path="/admin/analytics" element={<AdminAnalytics />} />
                     <Route path="/admin/gruppi" element={<AdminGroups />} />
                     <Route path="/admin/disponibilita" element={<AdminTeacherCalendar />} />

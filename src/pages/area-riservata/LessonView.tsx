@@ -85,15 +85,18 @@ export default function LessonView() {
         .maybeSingle();
 
       if (lessonData) {
-        // Check if lesson has tasks
-        const { count } = await supabase
+        // Check if lesson has visible tasks
+        const { data: visibleTasks } = await supabase
           .from('lesson_tasks')
-          .select('*', { count: 'exact', head: true })
-          .eq('lesson_id', lessonData.id);
+          .select('task_number')
+          .eq('lesson_id', lessonData.id)
+          .eq('is_visible', true)
+          .order('task_number')
+          .limit(1);
 
-        // If lesson has tasks, redirect to first task
-        if (count && count > 0) {
-          navigate(`/area-riservata/corso/${courseId}/lezione/${lessonNumber}/task/1`, { replace: true });
+        // If lesson has visible tasks, redirect to the first visible one
+        if (visibleTasks && visibleTasks.length > 0) {
+          navigate(`/area-riservata/corso/${courseId}/lezione/${lessonNumber}/task/${visibleTasks[0].task_number}`, { replace: true });
           return;
         }
 

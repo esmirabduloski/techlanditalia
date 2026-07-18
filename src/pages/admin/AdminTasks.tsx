@@ -115,6 +115,20 @@ export default function AdminTasks() {
     }
   };
 
+  const toggleVisibility = async (task: Task) => {
+    const next = !task.is_visible;
+    const { error } = await supabase
+      .from('lesson_tasks')
+      .update({ is_visible: next })
+      .eq('id', task.id);
+    if (error) {
+      toast({ title: 'Errore', description: 'Impossibile aggiornare la visibilità', variant: 'destructive' });
+      return;
+    }
+    setTasks(tasks.map(t => t.id === task.id ? { ...t, is_visible: next } : t));
+    toast({ title: next ? 'Task visibile' : 'Task nascosto', description: next ? 'Ora è visibile agli alunni' : 'Non sarà mostrato agli alunni' });
+  };
+
   const handleSignOut = async () => {
     await signOut();
     navigate('/admin/login');

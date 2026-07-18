@@ -19,7 +19,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { 
-  LogOut, Loader2, Plus, Edit, Trash2, ArrowLeft, ListChecks
+  LogOut, Loader2, Plus, Edit, Trash2, ArrowLeft, ListChecks, Eye, EyeOff
 } from 'lucide-react';
 
 interface Course {
@@ -41,6 +41,7 @@ interface Task {
   description: string | null;
   content_type: string | null;
   points_reward: number;
+  is_visible: boolean;
   created_at: string;
 }
 

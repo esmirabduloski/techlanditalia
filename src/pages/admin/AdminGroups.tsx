@@ -243,6 +243,7 @@ export default function AdminGroups() {
       lesson_days: [0],
       lesson_time: '',
       whatsapp_link: '',
+      mega_chat_link: '',
       teacher_meeting_link: '',
       student_meeting_link: '',
       selected_students: []

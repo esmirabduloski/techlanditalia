@@ -99,7 +99,7 @@ export function TeacherBioCard({ studentId }: TeacherBioCardProps) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p className="font-semibold text-foreground">{teacher.name}</p>
+            <p className="font-semibold text-foreground">{teacher.name?.trim().toLowerCase() === "admin" ? "Esmir" : teacher.name}</p>
             {teacher.bio && (
               <p className="text-sm text-muted-foreground leading-relaxed">{teacher.bio}</p>
             )}

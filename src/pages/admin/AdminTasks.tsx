@@ -201,7 +201,7 @@ export default function AdminTasks() {
         ) : (
           <div className="space-y-3">
             {tasks.map((task) => (
-              <div key={task.id} className="tech-card p-4 flex items-center justify-between gap-4">
+              <div key={task.id} className={`tech-card p-4 flex items-center justify-between gap-4 ${!task.is_visible ? 'opacity-60' : ''}`}>
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
                     {task.task_number}
@@ -212,6 +212,12 @@ export default function AdminTasks() {
                       {task.content_type && task.content_type !== 'text' && (
                         <Badge variant="outline">{task.content_type}</Badge>
                       )}
+                      {!task.is_visible && (
+                        <Badge variant="secondary" className="gap-1">
+                          <EyeOff className="w-3 h-3" />
+                          Nascosto
+                        </Badge>
+                      )}
                     </div>
                     <div className="flex items-center gap-3 text-sm text-muted-foreground">
                       <span>{task.points_reward} punti</span>
@@ -221,6 +227,14 @@ export default function AdminTasks() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => toggleVisibility(task)}
+                    title={task.is_visible ? 'Nascondi agli alunni' : 'Rendi visibile agli alunni'}
+                  >
+                    {task.is_visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
+                  </Button>
                   <Button variant="ghost" size="icon" asChild>
                     <Link to={`/admin/corsi/${courseId}/lezioni/${lessonId}/task/${task.id}/modifica`}>
                       <Edit className="w-4 h-4" />

@@ -17,6 +17,7 @@ import RichTextEditor from '@/components/editor/RichTextEditor';
 import { TaskAttachmentUpload } from '@/components/admin/TaskAttachmentUpload';
 import { useTaskEditorDraft } from '@/hooks/useTaskEditorDraft';
 import { useAutoBackup } from '@/hooks/useAutoBackup';
+import { Switch } from '@/components/ui/switch';
 interface Attachment {
   name: string;
   url: string;
@@ -51,6 +52,7 @@ interface TaskData {
   python_env: string;
   replit_url: string;
   attachments: Attachment[];
+  is_visible: boolean;
 }
 
 export default function TaskEditor() {
@@ -80,6 +82,7 @@ export default function TaskEditor() {
     python_env: 'standard',
     replit_url: '',
     attachments: [],
+    is_visible: true,
   });
 
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
@@ -183,6 +186,7 @@ export default function TaskEditor() {
           python_env: (taskData as any).python_env || 'standard',
           replit_url: (taskData as any).replit_url || '',
           attachments,
+          is_visible: (taskData as any).is_visible ?? true,
         };
 
         // If there's a saved draft, prefer it over DB data (user was editing and switched tabs)
@@ -252,6 +256,7 @@ export default function TaskEditor() {
       python_env: formData.python_env || 'standard',
       replit_url: formData.python_env === 'pgzero' ? (formData.replit_url || null) : null,
       attachments: formData.attachments,
+      is_visible: formData.is_visible,
     };
 
     try {

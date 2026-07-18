@@ -47,3 +47,6 @@ verify_jwt = false
 
 [functions.check-login-attempts]
 verify_jwt = false
+
+[functions.blog-auto-publish]
+verify_jwt = false

@@ -239,14 +239,9 @@ export function useStudentProgress() {
     }
 
     try {
-      const { error } = await supabase
-        .from('task_progress')
-        .insert({
-          student_id: effectiveUserId,
-          task_id: taskId,
-        });
-
-      if (!error) {
+      const { data, error } = await supabase.rpc('complete_task', { _task_id: taskId });
+      const result = data as { success?: boolean } | null;
+      if (!error && result?.success) {
         await fetchStudentData();
         return true;
       }

@@ -2523,6 +2523,8 @@ export type Database = {
       }
       cleanup_old_logs: { Args: never; Returns: Json }
       cleanup_rate_limits: { Args: never; Returns: number }
+      complete_lesson: { Args: { _lesson_id: string }; Returns: Json }
+      complete_task: { Args: { _task_id: string }; Returns: Json }
       consume_streak_freeze: {
         Args: {
           _auto?: boolean

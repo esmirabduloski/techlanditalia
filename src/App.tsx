@@ -48,7 +48,7 @@ const AdminNewsletter = lazy(() => import("./pages/admin/AdminNewsletter"));
 const AdminStudentComments = lazy(() => import("./pages/admin/AdminStudentComments"));
 const AdminGrading = lazy(() => import("./pages/admin/AdminGrading"));
 const AdminScheduledLessons = lazy(() => import("./pages/admin/AdminScheduledLessons"));
-const AdminAttendance = lazy(() => import("./pages/admin/AdminAttendance"));
+
 const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics"));
 const AuthPage = lazy(() => import("./pages/auth/AuthPage"));
 const AreaRiservataDashboard = lazy(() => import("./pages/area-riservata/Dashboard"));

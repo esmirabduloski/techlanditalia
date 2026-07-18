@@ -343,6 +343,7 @@ export default function AdminGroups() {
             lesson_days: formData.lesson_days,
             lesson_time: formData.lesson_time || null,
             whatsapp_link: formData.whatsapp_link || null,
+            mega_chat_link: formData.mega_chat_link || null,
             teacher_meeting_link: formData.teacher_meeting_link || null,
             student_meeting_link: formData.student_meeting_link || null
           } as any)

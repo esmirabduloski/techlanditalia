@@ -284,10 +284,10 @@ export default function TaskView() {
                 <TaskNavigation
                   courseId={course.id}
                   lessonNumber={lesson.lesson_number}
-                  currentTaskNumber={task.task_number}
+                  currentTaskNumber={displayPosition}
                   totalTasks={totalTasks}
-                  onPrevious={task.task_number > 1 ? () => navigateToTask(task.task_number - 1) : undefined}
-                  onNext={task.task_number < totalTasks ? () => navigateToTask(task.task_number + 1) : undefined}
+                  onPrevious={previousTaskNumber !== undefined ? () => navigateToTask(previousTaskNumber) : undefined}
+                  onNext={nextTaskNumber !== undefined ? () => navigateToTask(nextTaskNumber) : undefined}
                   onComplete={handleNavigateToCourse}
                 />
               </div>
@@ -371,10 +371,10 @@ export default function TaskView() {
                 <TaskNavigation
                   courseId={course.id}
                   lessonNumber={lesson.lesson_number}
-                  currentTaskNumber={task.task_number}
+                  currentTaskNumber={displayPosition}
                   totalTasks={totalTasks}
-                  onPrevious={task.task_number > 1 ? () => navigateToTask(task.task_number - 1) : undefined}
-                  onNext={task.task_number < totalTasks ? () => navigateToTask(task.task_number + 1) : undefined}
+                  onPrevious={previousTaskNumber !== undefined ? () => navigateToTask(previousTaskNumber) : undefined}
+                  onNext={nextTaskNumber !== undefined ? () => navigateToTask(nextTaskNumber) : undefined}
                   onComplete={handleNavigateToCourse}
                 />
               </div>
@@ -443,10 +443,10 @@ export default function TaskView() {
         <TaskNavigation
           courseId={course.id}
           lessonNumber={lesson.lesson_number}
-          currentTaskNumber={task.task_number}
+          currentTaskNumber={displayPosition}
           totalTasks={totalTasks}
-          onPrevious={task.task_number > 1 ? () => navigateToTask(task.task_number - 1) : undefined}
-          onNext={task.task_number < totalTasks ? () => navigateToTask(task.task_number + 1) : undefined}
+          onPrevious={previousTaskNumber !== undefined ? () => navigateToTask(previousTaskNumber) : undefined}
+          onNext={nextTaskNumber !== undefined ? () => navigateToTask(nextTaskNumber) : undefined}
           onComplete={handleNavigateToCourse}
         />
       </div>

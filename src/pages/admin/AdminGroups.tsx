@@ -902,6 +902,18 @@ export default function AdminGroups() {
                 </p>
               </div>
 
+              <div className="space-y-2">
+                <Label>💬 Link Chat MEGA (Insegnante ↔ Alunni)</Label>
+                <Input
+                  value={formData.mega_chat_link}
+                  onChange={(e) => setFormData(prev => ({ ...prev, mega_chat_link: e.target.value }))}
+                  placeholder="https://mega.nz/chat/..."
+                />
+                <p className="text-xs text-muted-foreground">
+                  Gli alunni vedranno un bottone "Chatta con l'insegnante" nella loro dashboard
+                </p>
+              </div>
+
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>🎥 Link Meeting Insegnante</Label>

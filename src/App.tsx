@@ -48,7 +48,7 @@ const AdminNewsletter = lazy(() => import("./pages/admin/AdminNewsletter"));
 const AdminStudentComments = lazy(() => import("./pages/admin/AdminStudentComments"));
 const AdminGrading = lazy(() => import("./pages/admin/AdminGrading"));
 const AdminScheduledLessons = lazy(() => import("./pages/admin/AdminScheduledLessons"));
-const AdminAttendance = lazy(() => import("./pages/admin/AdminAttendance"));
+
 const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics"));
 const AuthPage = lazy(() => import("./pages/auth/AuthPage"));
 const AreaRiservataDashboard = lazy(() => import("./pages/area-riservata/Dashboard"));
@@ -160,7 +160,7 @@ const App = () => (
                     <Route path="/admin/statistiche" element={<AdminStats />} />
                     <Route path="/admin/newsletter" element={<AdminNewsletter />} />
                     <Route path="/admin/lezioni-programmate" element={<AdminScheduledLessons />} />
-                    <Route path="/admin/presenze" element={<AdminAttendance />} />
+                    
                     <Route path="/admin/analytics" element={<AdminAnalytics />} />
                     <Route path="/admin/gruppi" element={<AdminGroups />} />
                     <Route path="/admin/disponibilita" element={<AdminTeacherCalendar />} />

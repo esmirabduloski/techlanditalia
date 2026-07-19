@@ -817,7 +817,7 @@ export default function CorsoDettaglio() {
         title={getSEOTitle()}
         description={getSEODescription()}
         canonical={`/corsi/${id}`}
-        keywords={getSEOKeywords()}
+        
         structuredData={courseSchema ? [courseSchema, breadcrumbSchema] : [breadcrumbSchema]}
       />
       

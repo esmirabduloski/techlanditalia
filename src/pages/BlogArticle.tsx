@@ -19,6 +19,7 @@ interface BlogPost {
   category: string;
   read_time: string | null;
   created_at: string;
+  updated_at?: string | null;
 }
 
 const categoryColors: Record<string, string> = {
@@ -108,34 +109,16 @@ export default function BlogArticle() {
     );
   }
 
-  // Schema.org per BlogPosting
-  const articleSchema = {
-    "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    "headline": post.title,
-    "description": post.excerpt || `Articolo su ${post.category} - TECHLAND`,
-    "image": post.featured_image || "https://techlanditalia.it/og-image.jpg",
-    "datePublished": post.created_at,
-    "dateModified": post.created_at,
-    "author": {
-      "@type": "Organization",
-      "name": "TECHLAND"
-    },
-    "publisher": {
-      "@type": "Organization",
-      "name": "TECHLAND",
-      "logo": {
-        "@type": "ImageObject",
-        "url": "https://techlanditalia.it/favicon.ico"
-      }
-    },
-    "mainEntityOfPage": {
-      "@type": "WebPage",
-      "@id": `https://techlanditalia.it/blog/${post.slug}`
-    },
-    "articleSection": post.category,
-    "inLanguage": "it-IT"
-  };
+  // Schema.org per BlogPosting (generated centrally to avoid drift)
+  const articleSchema = generateBlogPostSchema({
+    title: post.title,
+    description: post.excerpt || `Articolo su ${post.category} - TECHLAND`,
+    slug: post.slug,
+    datePublished: post.created_at,
+    dateModified: post.updated_at || post.created_at,
+    image: post.featured_image || undefined,
+    author: 'TECHLAND',
+  });
 
   return (
     <Layout>
@@ -143,12 +126,11 @@ export default function BlogArticle() {
         title={`${post.title} | Blog TECHLAND`}
         description={post.excerpt || `Scopri di più su ${post.title}. Articoli e guide sulla programmazione per bambini e ragazzi.`}
         canonical={`https://techlanditalia.it/blog/${post.slug}`}
-        keywords={`${post.category.toLowerCase()}, programmazione bambini, coding ragazzi, ${post.title.toLowerCase().split(' ').slice(0, 3).join(', ')}`}
         ogImage={post.featured_image || undefined}
         ogType="article"
         article={{
           publishedTime: post.created_at,
-          modifiedTime: post.created_at,
+          modifiedTime: post.updated_at || post.created_at,
           author: "TECHLAND",
           section: post.category,
         }}
@@ -203,9 +185,12 @@ export default function BlogArticle() {
         <section className="tech-container -mt-8">
           <div className="max-w-4xl mx-auto">
             <div className="rounded-2xl overflow-hidden shadow-xl">
-              <img 
-                src={post.featured_image} 
+              <img
+                src={post.featured_image}
                 alt={post.title}
+                width={1200}
+                height={675}
+                loading="lazy"
                 className="w-full aspect-video object-cover"
               />
             </div>
@@ -221,7 +206,7 @@ export default function BlogArticle() {
               className="prose prose-lg max-w-none"
               dangerouslySetInnerHTML={{ 
                 __html: DOMPurify.sanitize(`<p class="mb-4">${parseMarkdown(post.content)}</p>`, {
-                  ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'p', 'strong', 'em', 'a', 'li', 'br', 'img'],
+                  ALLOWED_TAGS: ['h2', 'h3', 'h4', 'p', 'strong', 'em', 'a', 'li', 'br', 'img'],
                   ALLOWED_ATTR: ['href', 'class', 'target', 'rel', 'src', 'alt', 'loading'],
                 })
               }}

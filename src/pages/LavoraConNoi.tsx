@@ -101,7 +101,6 @@ export default function LavoraConNoi() {
         title="Lavora Con Noi - Insegnanti Coding per Bambini | TECHLAND"
         description="Unisciti al team TECHLAND! Cerchiamo insegnanti di programmazione per bambini e ragazzi. Lavoro remoto, orari flessibili, formazione continua."
         canonical="/lavora-con-noi"
-        keywords="lavora con noi techland, insegnante coding bambini, lavoro insegnante programmazione, docente scratch python roblox, lavoro remoto insegnante"
         structuredData={[
           ...positions.map((pos, i) => ({
             "@context": "https://schema.org",

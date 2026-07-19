@@ -447,7 +447,6 @@ export default function Blog() {
         title="Blog Coding per Bambini: Guide e Consigli | TECHLAND"
         description="Scopri articoli, guide e risorse sulla programmazione per bambini e ragazzi. Consigli per genitori su corsi di coding, robotica e tecnologia educativa."
         canonical="https://techlanditalia.it/blog"
-        keywords="blog programmazione bambini, guide coding ragazzi, consigli genitori tecnologia, articoli educazione digitale, risorse coding bambini"
         ogImage={posts[0]?.featured_image || defaultImage}
         schemaData={blogSchema}
       />

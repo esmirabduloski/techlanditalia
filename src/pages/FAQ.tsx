@@ -170,7 +170,6 @@ export default function FAQ() {
         title="FAQ Corsi di Programmazione per Bambini | TECHLAND"
         description="Domande frequenti sui corsi di coding per bambini e ragazzi TECHLAND. Prezzi, requisiti, lezioni di prova, certificati e molto altro."
         canonical="/faq"
-        keywords="FAQ corsi coding bambini, domande frequenti programmazione ragazzi, costi corsi coding, requisiti lezioni online, certificato corso programmazione"
         structuredData={[faqSchema, {
           "@context": "https://schema.org",
           "@type": "BreadcrumbList",

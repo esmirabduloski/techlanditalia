@@ -4,6 +4,7 @@ interface SEOHeadProps {
   title: string;
   description: string;
   canonical?: string;
+  /** @deprecated meta keywords are ignored by Google; kept only for backward compatibility, not emitted. */
   keywords?: string;
   ogImage?: string;
   ogType?: "website" | "article";
@@ -55,10 +56,7 @@ export function SEOHead({
       
       {/* Canonical */}
       {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
-      
-      {/* Hreflang */}
-      {canonicalUrl && <link rel="alternate" hrefLang="it" href={canonicalUrl} />}
-      {canonicalUrl && <link rel="alternate" hrefLang="x-default" href={canonicalUrl} />}
+
       
       {/* Open Graph / Facebook */}
       <meta property="og:type" content={ogType} />

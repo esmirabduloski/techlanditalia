@@ -1,114 +1,83 @@
+# Piano applicazione SEO Audit (techlanditalia.it)
 
-# Piano implementazione: Roadmap, Streak Freeze, Glossario, Referral
-
-Quattro feature indipendenti, organizzate in batch separati così posso fermarmi tra uno e l'altro se vuoi rivedere.
-
----
-
-## Batch 1 — Roadmap visiva "Da Scratch a Python a AI" (#20)
-
-**Dove:** sezione dedicata in `/corsi`, sopra la grid dei corsi. Solo frontend, nessuna modifica DB.
-
-**Cosa costruisco:**
-- Nuovo componente `src/components/corsi/LearningRoadmap.tsx`: timeline orizzontale (desktop) / verticale (mobile) con 4 tappe in ordine pedagogico:
-  1. **Fondamenta visuali** (6-9 anni) → Scratch, Minecraft
-  2. **Game design** (9-13 anni) → Roblox base & avanzato
-  3. **Coding reale** (11-16 anni) → Python base
-  4. **AI & futuro** (14-18 anni) → Python + AI
-- Ogni tappa: icona corso, età, durata media, badge "Inizia qui" / "Livello successivo", CTA che linka a `/corsi/{slug}`.
-- Linea di connessione animata (CSS gradient verde primario → blu accent) tra le tappe.
-- Inserita in `src/pages/Corsi.tsx` subito sopra la sezione filtri/grid.
-- JSON-LD `ItemList` con i 4 step per visibilità SEO/AI.
-
-**Niente impatto su:** DB, auth, altre pagine.
+L'audit contiene 22 finding. Li raggruppo in **3 fasi** in base a rischio/dipendenze. Ti chiedo conferma prima di partire, perché alcuni fix richiedono decisioni tue (catalogo corsi, hosting, claim marketing).
 
 ---
 
-## Batch 2 — Streak Freeze (#26, entrambi)
+## FASE 1 — Quick wins (rischio ~zero, nessuna decisione richiesta)
 
-Due meccaniche combinate:
+Eseguibili tutti in un'unica release. Nessun impatto su prodotto/marketing.
 
-### 2A. Freeze automatico per assenze giustificate (logica server, zero UI)
-- Modifica `update_group_attendance_streak`: status `'excused'` non azzera più la streak (oggi solo `'absent'` reset — verifico in fix la coerenza).
-- Stessa logica per `update_homework_streak`: aggiungo controllo su nuovo campo o flag per "assenza giustificata in quella lezione" → niente reset per compito non consegnato.
+1. **robots.txt** (SEO-011): gruppo `*` unico con Disallow su `/admin /area-riservata /insegnante /auth`; rimozione `Crawl-delay`. Fix critico: oggi Googlebot ignora i Disallow.
+2. **`.gitignore`** (SEO-007): aggiungo `.env`, `.env.*`, `!.env.example`; `git rm --cached .env`; creo `.env.example`. Non riscrivo la storia (nessun secret vero committato).
+3. **NotFound** (SEO-012 mitigazione): aggiungo `SEOHead noIndex`, traduzione IT, Layout con link a corsi/blog/prenota.
+4. **Schema JSON-LD** (SEO-004): fix `og-image.jpg → .png`, uso `generateBlogPostSchema` con `dateModified: updated_at`, rimuovo HowTo dalla home, FAQPage solo su `/faq`, dedup org schema con `@id`.
+5. **Meta duplicati parziali** (SEO-003): rimuovo hreflang statici e `og:url` statico da `index.html`; **non** tocco gli altri og:* statici finché non c'è prerender (servono ai social crawler).
+6. **Asset pesanti** (SEO-017): ricomprimo `logo.png` (545KB → <40KB) e `og-image.png` (793KB → <200KB); aggiungo `width/height` alla featured image blog.
+7. **Markdown parser** (SEO-018): `# → h2`, rimuovo `h1` da ALLOWED_TAGS DOMPurify.
+8. **Prop keywords morta** (SEO-020): rimuovo da `SEOHead` e call-site.
+9. **Meta title corsi tampone** (SEO-005 partial): allineo age nei title `CorsoDettaglio` a quello on-page (fix provvisorio, la matrice unica arriva in Fase 2).
+10. **LinkedIn sameAs** (SEO-022 tech): correggo il link se mi confermi l'URL company (o rimuovo se non esiste ancora).
 
-### 2B. Freeze manuali (2/mese) attivabili dall'alunno
-- **Nuova tabella `streak_freezes`**: `id, student_id, used_at, freeze_type ('homework'|'attendance'), reason, related_homework_id?, related_lesson_number?`.
-- **Funzione `consume_streak_freeze(student_id, freeze_type)`** SECURITY DEFINER: verifica < 2 freeze nel mese corrente, inserisce record, ritorna boolean.
-- **Trigger streak homework** modificato: prima di azzerare, prova a consumare un freeze; se ok, mantiene streak.
-- **UI nuovo componente `StreakFreezeButton.tsx`** in `HomeworkSection.tsx` e nella card streak del dashboard: "🧊 Usa Freeze (X/2 questo mese)" con dialog di conferma.
-- Visualizzazione storico freeze usati nel mese nel widget streak.
-
-**Tabelle modificate:** nuova `streak_freezes` + GRANT + RLS (student/parent vede i propri, admin tutti).
-
----
-
-## Batch 3 — Glossario interattivo (#36)
-
-### 3A. Database & gestione
-- **Nuova tabella `glossary_terms`**: `id, term, slug, definition (text), category ('scratch'|'python'|'roblox'|'ai'|'general'), examples (jsonb), related_terms (uuid[]), is_published`.
-- Seed iniziale ~40 termini (variabile, ciclo, funzione, classe, IDE, debug, sprite, blocco, evento, API, ML, prompt, ecc.).
-- CRUD admin in nuova pagina `src/pages/admin/AdminGlossary.tsx` (link in sidebar admin).
-
-### 3B. Pagina pubblica `/glossario` (SEO)
-- `src/pages/Glossario.tsx`: filtro A-Z + filtro categoria, ricerca, card per termine, `DefinedTerm` JSON-LD per ogni voce.
-- Route in `App.tsx`, voce in footer, sitemap aggiornata.
-
-### 3C. Tooltip in-lezione
-- Componente `GlossaryTooltip.tsx`: wrappa parole matchate.
-- Hook `useGlossaryHighlight(htmlContent)`: parsa HTML lezione, sostituisce occorrenze (case-insensitive, prima occorrenza per termine, no match dentro `<code>`/`<pre>`) con `<span data-term="slug">`.
-- Applicato in `LessonView` / componente di rendering contenuto lezione. Popover shadcn con definizione + link a `/glossario#slug`.
+**Tempo stimato:** ~2-3h. Un solo deploy.
 
 ---
 
-## Batch 4 — Referral program (#57, versione admin-driven)
+## FASE 2 — Strutturali (richiedono TUE decisioni)
 
-**Flusso scelto:** codice univoco genitore → link tracking → admin vede pending → accredita manualmente con motivo.
+Non parto finché non rispondi a queste 4 domande:
 
-### 4A. Database
-- Aggiungo a `profiles`: `referral_code text unique` (auto-generato per genitori al primo login).
-- **Nuova tabella `referrals`**: `id, referrer_id (parent), referred_email, referred_lead_id?, referred_profile_id?, status ('pending'|'qualified'|'rewarded'|'rejected'), source_url, created_at, rewarded_at, reward_notes`.
-- Estendo enum `lesson_balance_log.operation_type` (o aggiungo riga con `notes`) per supportare reason "referral_paying" e altri motivi liberi.
+### D1 — Catalogo corsi canonico (SEO-010)
+Oggi coesistono 3 set di slug divergenti (5 hardcoded, 8 in DB, 9 in llms.txt). `/corsi/roblox` e `/corsi/sviluppo-giochi-con-roblox` rispondono entrambi 200 → cannibalizzazione.
+- **Opzione A (consigliata):** slug corti hardcoded diventano canonici (`roblox`, `python-base`…), rinomino gli slug DB, DB = unica fonte dati.
+- **Opzione B:** slug lunghi DB diventano canonici, aggiorno sitemap/link/llms.txt.
+- Cosa faccio di `web-development` (solo hardcoded) e `design-creativo`/`informatica-di-base` (solo DB)?
 
-### 4B. Dashboard genitore
-- Nuova sezione "Invita un amico" in `src/pages/Dashboard.tsx`:
-  - Mostra codice + link copiabile (`https://techlanditalia.it/?ref=CODICE`).
-  - Bottoni share WhatsApp/email/copy.
-  - Lista dei propri referral con stato (in attesa / accreditato).
-  - Messaggio: "Quando il tuo amico paga la prima lezione, riceverete entrambi 1 lezione gratis dopo verifica admin."
+### D2 — Matrice età unica (SEO-005)
+Oggi lo stesso corso ha 4 età diverse (title vs on-page vs DB vs llms.txt). Fascia brand ufficiale: **6-18** o **5-18**? Ti preparo una tabella corso-per-corso da validare col team didattico.
 
-### 4C. Tracking
-- Hook `useReferralTracking()`: legge `?ref=` da URL, salva in localStorage 30 giorni.
-- Form trial booking + signup leggono il codice, creano riga `referrals` (pending) con referrer + email/lead.
+### D3 — Hosting redirect/header (SEO-008)
+Lovable/Cloudflare **non processa** `public/_redirects` e `public/_headers` (formato Netlify). Conseguenza: la sitemap "dinamica" non è servita, gli header custom (CSP/HSTS estesi) non applicati, i 301 non funzionerebbero. Tre opzioni:
+- **A) Sitemap rigenerata al build** (script che chiama `generate-sitemap` e scrive `public/sitemap.xml`): risolve solo la sitemap, ma è a rischio zero.
+- **B) Cloudflare zone propria** con Worker/Redirect Rules: sblocca tutto, ma richiede migrazione DNS.
+- **C) Aspettare** capability Lovable per redirect custom.
+Consigliata **A ora + B dopo** se vuoi 301 reali.
 
-### 4D. Admin
-- Nuova pagina `src/pages/admin/AdminReferrals.tsx`:
-  - Lista referral pending, qualified, rewarded.
-  - Azione "Accredita lezione" con dropdown motivi (`1 referral pagante`, `bonus campagna`, `compensazione`, `altro` con textarea libera).
-  - Al click: aggiorna `profiles.lesson_balance` (+1) per referrer e per referred, scrive 2 righe in `lesson_balance_log` con `operation_type='credit_added'` e `notes` con il motivo scelto, marca referral `rewarded`.
+### D4 — Landing `/lp/` (SEO-006)
+Oggi hanno `noIndex` client-side ma sono nella sitemap live. Le tolgo dalla sitemap e mantengo pure ads (noindex), oppure vuoi indicizzarle come long-tail?
+
+**Una volta ricevute le risposte**, eseguo in questo ordine:
+- SEO-010 (consolidamento catalogo + redirect/canonical) →
+- SEO-009 (sitemap allineata al nuovo catalogo) →
+- SEO-005 (matrice età propagata: DB, title generati, LearningRoadmap, llms.txt) →
+- SEO-014 (rigenerazione llms.txt e mirror .md dai dati DB) →
+- SEO-006 (allineamento /lp/ secondo decisione D4) →
+- SEO-013 (301 www + trailing slash, se D3=B) →
+- SEO-015 (footer con colonne link + related posts in BlogArticle + audit link editoriali).
 
 ---
 
-## Dettagli tecnici (riassunto)
+## FASE 3 — Prerendering (traccia già in corso separatamente)
 
-```text
-DB migrations richieste:
-  - streak_freezes (tabella + RLS + GRANT)
-  - consume_streak_freeze() function
-  - update_homework_streak / update_group_attendance_streak (revisione 'excused')
-  - glossary_terms (tabella + RLS + GRANT, public read, admin write)
-  - profiles.referral_code (colonna + unique + backfill)
-  - referrals (tabella + RLS + GRANT)
+- **SEO-001** (prerender build-time): già pianificato nel `PRERENDER_PLAN.md` v2.1 che avevi approvato. Quando lo eseguiamo, sblocca:
+- **SEO-002** (dedup completo meta statici vs Helmet) → rilasciato insieme al prerender, non prima.
+- **SEO-012** (404 reali server-side).
+- **SEO-016** (paginazione blog crawlabile con URL reali `/blog?page=N`).
 
-Nuove pagine / route:
-  - /glossario (pubblica)
-  - /admin/glossary
-  - /admin/referrals
+---
 
-Nuovi componenti chiave:
-  - LearningRoadmap, StreakFreezeButton, GlossaryTooltip, ReferralCard
-```
+## Non applico (o richiedono conferma esplicita)
 
-## Esecuzione
+- **SEO-019** (rimozione claim "#1 in Italia" / "1.200+ studenti"): è una decisione marketing, non tecnica. Se me lo confermi, sostituisco con claim verificabili ("gruppi max 6", "prima lezione gratuita", Trustpilot).
+- **SEO-021** (backlog articoli 86 vs 210): serve che tu verifichi in `/admin` quante bozze reali ci sono. Se ce ne sono, definiamo cadenza publish.
+- **SEO-022 entity building non-tecnico** (Wikidata, pagina LinkedIn company, paragrafo disambiguazione in `/chi-siamo`): richiedono azioni fuori dal codice.
 
-Procedo **Batch 1 → 2 → 3 → 4** in ordine, fermandomi dopo ogni batch così puoi testare. Confermi di partire dal Batch 1 (Roadmap)?
+---
+
+## Cosa mi serve da te per partire
+
+1. **Vado con la Fase 1 subito?** (nessun rischio)
+2. **Risposte a D1, D2, D3, D4** per la Fase 2.
+3. Conferma su SEO-019 (claim marketing) sì/no.
+
+Se vuoi, posso partire **oggi con la sola Fase 1** e aprire in parallelo la discussione sulle 4 domande della Fase 2.

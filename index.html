@@ -14,48 +14,12 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
-    <!-- Primary Meta Tags (neutral fallback — per-route Helmet overrides these) -->
-    <title>TECHLAND | Coding per Bambini e Ragazzi 6-18</title>
-    <meta name="title" content="TECHLAND | Coding per Bambini e Ragazzi 6-18" />
-    <meta
-      name="description"
-      content="Corsi di coding online per bambini e ragazzi 6-18 anni: Scratch, Roblox, Minecraft, Python. Lezioni live in piccoli gruppi. Prima lezione gratis!"
-    />
-    <meta name="author" content="TECHLAND Italia" />
-    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
-    <meta name="googlebot" content="index, follow" />
+    <!-- Meta per-pagina (title, description, robots, canonical, og:*, twitter:*) emessi
+         nell'HTML statico da vite-react-ssg via SEOHead: nessun fallback statico qui per
+         evitare tag duplicati/conflittuali (audit SEO-002). Le route non prerenderate
+         (aree private) sono noindex/dietro auth e impostano il title a runtime. -->
     <meta name="google-site-verification" content="OI5SJeV2TBEb8DNnNYMe6u1FwzvPLkA9-Gc1Y41TFbU" />
-
-
-    <!-- Geo Tags -->
-    <meta name="geo.region" content="IT" />
-    <meta name="geo.placename" content="Italia" />
-    <meta name="language" content="Italian" />
-
-    <!-- Open Graph / Facebook (fallback for non-JS crawlers; per-route og:url set via Helmet) -->
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="TECHLAND | Corsi di Coding per Bambini e Ragazzi Online" />
-    <meta
-      property="og:description"
-      content="Corsi di coding online per bambini e ragazzi: Scratch, Roblox, Minecraft, Python. Lezioni live in piccoli gruppi. Prima lezione gratis!"
-    />
-    <meta property="og:image" content="https://techlanditalia.it/og-image.png" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="TECHLAND - Corsi di coding per bambini" />
-    <meta property="og:locale" content="it_IT" />
-    <meta property="og:site_name" content="TECHLAND" />
-
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@techlanditalia" />
-    <meta name="twitter:creator" content="@techlanditalia" />
-    <meta name="twitter:title" content="TECHLAND | Corsi di Coding per Bambini e Ragazzi Online" />
-    <meta
-      name="twitter:description"
-      content="Corsi di coding online per bambini e ragazzi: Scratch, Roblox, Minecraft, Python. Lezioni live in piccoli gruppi. Prima lezione gratis!"
-    />
-    <meta name="twitter:image" content="https://techlanditalia.it/og-image.png" />
 
     <!-- Font loaded locally via @fontsource -->
 

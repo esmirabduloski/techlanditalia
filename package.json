@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite-react-ssg build",
-    "build:dev": "vite-react-ssg build --mode development",
+    "build": "vite-react-ssg build && node scripts/generate-sitemap.mjs",
+    "build:dev": "vite-react-ssg build --mode development && node scripts/generate-sitemap.mjs",
     "build:spa": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",

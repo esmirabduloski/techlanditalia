@@ -97,6 +97,27 @@ for (const dir of FORBIDDEN_DIRS) {
     errors.push(`AREA ESCLUSA PRERENDERATA: dist/${dir} non deve esistere`);
 }
 
+// --- Sitemap: deve esistere, coprire tutte le route prerenderate, non contenere aree escluse ---
+const sitemapPath = join(DIST, 'sitemap.xml');
+if (!existsSync(sitemapPath)) {
+  errors.push('sitemap: dist/sitemap.xml mancante (lo genera `node scripts/generate-sitemap.mjs` dopo la build)');
+} else {
+  const sitemap = readFileSync(sitemapPath, 'utf8');
+  const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+  for (const route of Object.keys(STATIC_ROUTES)) {
+    const expected = `${BASE_URL}${route === '/' ? '/' : route}`;
+    if (!locs.includes(expected)) errors.push(`sitemap: manca ${expected}`);
+  }
+  for (const loc of locs) {
+    const path = loc.replace(BASE_URL, '');
+    if (FORBIDDEN_DIRS.some((d) => path === `/${d}` || path.startsWith(`/${d}/`)))
+      errors.push(`sitemap: contiene area esclusa ${loc}`);
+    const file = join(DIST, path === '/' ? '' : path, 'index.html');
+    if (!existsSync(file)) errors.push(`sitemap: ${loc} non corrisponde a nessuna pagina prerenderata`);
+  }
+  console.log(`sitemap: ${locs.length} URL in dist/sitemap.xml`);
+}
+
 const total = Object.keys(STATIC_ROUTES).length;
 console.log(`verify:prerender — ${total} route controllate (${blogSlugs.length} articoli blog)`);
 if (warn.length) console.log(`\n⚠️  Warning:\n${warn.map((w) => `  - ${w}`).join('\n')}`);

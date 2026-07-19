@@ -32,13 +32,15 @@ const categoryColors: Record<string, string> = {
   Novità: "bg-secondary/10 text-secondary",
 };
 
-// Simple markdown parser for basic formatting
+// Simple markdown parser for basic formatting.
+// Note: `#` is intentionally degraded to h2 — the article page already renders the title as h1,
+// keeping a single h1 per page. Editors using `#` will still see a visible heading.
 function parseMarkdown(text: string): string {
   return text
     .replace(/^#### (.*$)/gim, '<h4 class="text-lg font-semibold mt-5 mb-2">$1</h4>')
     .replace(/^### (.*$)/gim, '<h3 class="text-xl font-bold mt-6 mb-3">$1</h3>')
     .replace(/^## (.*$)/gim, '<h2 class="text-2xl font-bold mt-8 mb-4">$1</h2>')
-    .replace(/^# (.*$)/gim, '<h1 class="text-3xl font-bold mt-8 mb-4">$1</h1>')
+    .replace(/^# (.*$)/gim, '<h2 class="text-2xl font-bold mt-8 mb-4">$1</h2>')
     .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="rounded-xl my-6 max-w-sm w-full shadow-md" loading="lazy" />')
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')

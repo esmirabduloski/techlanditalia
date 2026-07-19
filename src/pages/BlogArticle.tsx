@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLoaderData, type LoaderFunctionArgs } from 'react-router-dom';
 import DOMPurify from 'dompurify';
 import { Layout } from '@/components/layout/Layout';
 import { SEOHead, generateBlogPostSchema } from '@/components/seo/SEOHead';
@@ -52,31 +52,52 @@ function parseMarkdown(text: string): string {
     .replace(/\n/g, '<br>');
 }
 
+async function fetchPostBySlug(slug: string | undefined): Promise<BlogPost | null> {
+  if (!slug) return null;
+  const { data, error } = await supabase
+    .from('blog_posts')
+    .select('*')
+    .eq('slug', slug)
+    .eq('published', true)
+    .maybeSingle();
+  return error ? null : (data as BlogPost | null);
+}
+
+// Eseguito da vite-react-ssg a build-time (contenuto nell'HTML statico).
+// Per gli articoli pubblicati DOPO l'ultima build il manifest statico restituisce
+// null e il componente ripiega sul fetch client-side qui sotto.
+export async function loader({ params }: LoaderFunctionArgs) {
+  return fetchPostBySlug(params.slug);
+}
+
 export default function BlogArticle() {
   const { slug } = useParams();
-  const [post, setPost] = useState<BlogPost | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const loaderPost = useLoaderData() as BlogPost | null | undefined;
+  const [post, setPost] = useState<BlogPost | null>(loaderPost ?? null);
+  const [isLoading, setIsLoading] = useState(!loaderPost);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    const fetchPost = async () => {
-      const { data, error } = await supabase
-        .from('blog_posts')
-        .select('*')
-        .eq('slug', slug)
-        .eq('published', true)
-        .maybeSingle();
-
-      if (error || !data) {
-        setNotFound(true);
-      } else {
-        setPost(data);
-      }
+    if (loaderPost && loaderPost.slug === slug) {
+      setPost(loaderPost);
       setIsLoading(false);
+      setNotFound(false);
+      return;
+    }
+    // Fallback client-side: articolo fuori dal manifest di build (es. appena pubblicato)
+    let cancelled = false;
+    setIsLoading(true);
+    setNotFound(false);
+    fetchPostBySlug(slug).then((data) => {
+      if (cancelled) return;
+      if (!data) setNotFound(true);
+      else setPost(data);
+      setIsLoading(false);
+    });
+    return () => {
+      cancelled = true;
     };
-
-    fetchPost();
-  }, [slug]);
+  }, [slug, loaderPost]);
 
   if (isLoading) {
     return (

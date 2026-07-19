@@ -99,9 +99,21 @@ export default function Corsi() {
     }))
   };
 
+  // Fuori dall'early-return di loading: l'head deve essere emesso anche nell'HTML
+  // statico generato a build-time, quando il fetch client-side non è ancora partito.
+  const seoHead = (
+    <SEOHead
+      title="Corsi di Coding per Bambini e Ragazzi 6-18 | TECHLAND"
+      description="Corso di coding per bambini e ragazzi online: Scratch, Roblox, Minecraft, Python, Web Development, AI. Piccoli gruppi, docenti esperti. Prima lezione gratuita!"
+      canonical="/corsi"
+      structuredData={[breadcrumbSchema, coursesListSchema]}
+    />
+  );
+
   if (isLoading) {
     return (
       <Layout>
+        {seoHead}
         <div className="min-h-screen flex items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
@@ -111,13 +123,8 @@ export default function Corsi() {
 
   return (
     <Layout>
-      <SEOHead
-        title="Corsi di Coding per Bambini e Ragazzi 6-18 | TECHLAND"
-        description="Corso di coding per bambini e ragazzi online: Scratch, Roblox, Minecraft, Python, Web Development, AI. Piccoli gruppi, docenti esperti. Prima lezione gratuita!"
-        canonical="/corsi"
-        structuredData={[breadcrumbSchema, coursesListSchema]}
-      />
-      
+      {seoHead}
+
       {/* Hero */}
       <section className="py-16 md:py-24 bg-gradient-to-b from-primary/10 via-tech-green-light to-background dark:from-background dark:via-background dark:to-background">
         <div className="tech-container">

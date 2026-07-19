@@ -300,7 +300,6 @@ export default function Prenota() {
         title="Prenota la Lezione di Prova Gratuita | TECHLAND"
         description="Prenota una lezione di prova gratuita per il tuo bambino. Scopri i nostri corsi di programmazione per bambini e ragazzi 6-18 anni. Nessun impegno!"
         canonical="/prenota"
-        keywords="lezione prova gratuita coding bambini, prenotare corso programmazione, lezione gratuita coding, prova gratis corso bambini, iscrizione corso programmazione"
         structuredData={[
           {
             "@context": "https://schema.org",

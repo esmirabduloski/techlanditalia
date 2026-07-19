@@ -100,7 +100,6 @@ export default function ChiSiamo() {
         title="Chi Siamo - Scuola di Coding per Bambini | TECHLAND"
         description="Scopri TECHLAND: la scuola italiana di corsi di programmazione per bambini e ragazzi 6-18 anni. 1.200+ studenti formati, docenti esperti. La nostra missione."
         canonical="/chi-siamo"
-        keywords="chi siamo techland, scuola coding bambini italia, corsi programmazione ragazzi, insegnanti coding qualificati, formazione digitale giovani, storia techland"
         schemaData={organizationSchema}
       />
 

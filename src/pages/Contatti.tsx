@@ -113,7 +113,6 @@ export default function Contatti() {
         title="Contattaci - Corsi Coding per Bambini | TECHLAND"
         description="Hai domande sui nostri corsi di programmazione per bambini? Contattaci via email, WhatsApp o compila il form. Ti rispondiamo entro 24 ore!"
         canonical="/contatti"
-        keywords="contatti techland, info corsi coding bambini, assistenza corsi programmazione, contattare scuola coding, informazioni corsi programmazione bambini"
         structuredData={[
           {
             "@context": "https://schema.org",

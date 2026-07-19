@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { ChevronRight, Home } from "lucide-react";
-import { Helmet } from "react-helmet-async";
+import { Head } from "vite-react-ssg";
 
 export interface BreadcrumbItem {
   label: string;
@@ -35,11 +35,11 @@ export const SEOBreadcrumb = ({ items, className = "" }: SEOBreadcrumbProps) => 
 
   return (
     <>
-      <Helmet>
+      <Head>
         <script type="application/ld+json">
           {JSON.stringify(schemaData)}
         </script>
-      </Helmet>
+      </Head>
       
       <nav 
         aria-label="Breadcrumb" 

@@ -48,7 +48,7 @@ const stages: Stage[] = [
     badge: "Livello 3",
     icon: Gamepad2,
     courses: [
-      { label: "Roblox Base", slug: "sviluppo-giochi-con-roblox" },
+      { label: "Roblox Base", slug: "roblox" },
       { label: "Roblox Avanzato", slug: "roblox-avanzato" },
     ],
     accent: "from-tech-cyan to-tech-cyan/40",
@@ -62,7 +62,8 @@ const stages: Stage[] = [
     icon: Brain,
     courses: [
       { label: "Python Base", slug: "python-base" },
-      { label: "Python Avanzato", slug: "python-avanzato" },
+      { label: "Python Avanzato", slug: "python-ai" },
+
     ],
     accent: "from-primary to-tech-cyan",
   },

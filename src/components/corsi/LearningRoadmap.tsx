@@ -17,7 +17,7 @@ const stages: Stage[] = [
   {
     id: "digital-creativity",
     title: "Creatività digitale",
-    age: "5-7 anni",
+    age: "5+ anni",
     description: "Primi passi nel mondo digitale: disegno, logica e creatività digitale.",
     badge: "Livello 1",
     icon: Sparkles,
@@ -30,7 +30,7 @@ const stages: Stage[] = [
   {
     id: "block-coding",
     title: "Programmazione a blocchi",
-    age: "7-9 anni",
+    age: "7+ anni",
     description: "Coding visivo con Scratch e prime costruzioni in Minecraft Education.",
     badge: "Livello 2",
     icon: Code2,
@@ -43,7 +43,7 @@ const stages: Stage[] = [
   {
     id: "game-design-coding",
     title: "Game design + coding",
-    age: "9-12 anni",
+    age: "9+ anni",
     description: "Costruire mondi e giochi con Roblox Studio, dal livello base all'avanzato.",
     badge: "Livello 3",
     icon: Gamepad2,
@@ -56,7 +56,7 @@ const stages: Stage[] = [
   {
     id: "real-coding-ai",
     title: "Coding reale + AI",
-    age: "12+ anni",
+    age: "11+ anni",
     description: "Python base e avanzato, intelligenza artificiale e progetti con modelli generativi.",
     badge: "Livello 4",
     icon: Brain,

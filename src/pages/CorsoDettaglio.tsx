@@ -54,7 +54,7 @@ const coursesData: Record<string, {
     description: "Crea giochi con Roblox Studio: progetta mondi e personaggi, imposta le tue regole e pubblica il tuo primo videogame online.",
     longDescription: "Il corso si concentra sull'apprendimento del linguaggio di programmazione LUA così come sulla modellazione in 3D degli scenari. Il corso insegna le basi della programmazione, utili come punto di partenza per gli studenti che intendono diventare programmatori professionisti. Il corso sviluppa il pensiero creativo e spaziale attraverso la modellazione di diversi oggetti in 3D. Gli studenti creeranno i loro giochi e svilupperanno il pensiero progettuale (design thinking).",
     tags: ["Roblox", "LUA", "Programmazione", "Game design"],
-    age: "8+ anni",
+    age: "9+ anni",
     level: "Principiante",
     duration: "32 lezioni",
     topics: [
@@ -158,7 +158,7 @@ const coursesData: Record<string, {
     description: "Un corso pensato per chi usa già Roblox Studio: affina le tue abilità e crea giochi più complessi, originali e coinvolgenti.",
     longDescription: "Il corso si concentra sull'apprendimento avanzato del linguaggio di programmazione LUA così come sulla modellazione in 3D degli scenari. Il corso sviluppa il pensiero creativo e spaziale attraverso la modellazione di diversi oggetti in 3D. Gli studenti creeranno i loro giochi complessi e svilupperanno il pensiero progettuale (design thinking).",
     tags: ["Script complessi", "Programmazione avanzata", "Meccaniche di gioco"],
-    age: "10-14 anni",
+    age: "10+ anni",
     level: "Avanzato",
     duration: "32 lezioni",
     topics: [
@@ -368,7 +368,7 @@ const coursesData: Record<string, {
     description: "Impara Python, il linguaggio scelto dagli sviluppatori di tutto il mondo, e crea giochi, app e siti web trasformando le tue idee in progetti reali.",
     longDescription: "In questo corso per adolescenti imparerai le basi di Python, uno dei linguaggi di programmazione più versatili e richiesti nel mondo del lavoro. Creerai applicazioni come chatbot e programmi interattivi. Acquisirai esperienza pratica con strumenti e tecniche standard, imparando anche a sviluppare e pubblicare i tuoi progetti.",
     tags: ["Python", "Programmazione", "Logica", "Progetti pratici"],
-    age: "13+ anni",
+    age: "11+ anni",
     level: "Principiante",
     duration: "32 lezioni",
     topics: [
@@ -472,7 +472,7 @@ const coursesData: Record<string, {
     description: "Un percorso avanzato per creare bot, siti web e progetti con IA. Con Python PRO lavori su progetti reali e partecipi a un hackathon sul clima.",
     longDescription: "In questo corso per adolescenti libererai la tua creatività e scoprirai le potenzialità avanzate del linguaggio Python! Creerai applicazioni avanzate come chatbot, siti web e programmi basati sull'intelligenza artificiale. Acquisirai non solo esperienza pratica con strumenti e tecniche standard, ma imparerai anche a sviluppare e pubblicare i tuoi progetti open source. Le competenze acquisite ti permetteranno di fare un passo importante nel mondo della tecnologia!",
     tags: ["API", "HTML", "Estrazione dati", "Intelligenza artificiale"],
-    age: "13+ anni",
+    age: "14+ anni",
     level: "Avanzato",
     duration: "32 lezioni",
     topics: [
@@ -776,22 +776,22 @@ export default function CorsoDettaglio() {
   // (tampone in attesa della matrice età unica — FASE 2 dell'audit SEO).
   const getSEOTitle = () => {
     const titleMap: Record<string, string> = {
-      "roblox": "Corso Roblox Online per Bambini 8+ anni | TECHLAND",
-      "roblox-avanzato": "Corso Roblox Avanzato per Ragazzi 10-14 anni | TECHLAND",
+      "roblox": "Corso Roblox Online per Bambini 9+ anni | TECHLAND",
+      "roblox-avanzato": "Corso Roblox Avanzato per Ragazzi 10+ anni | TECHLAND",
       "web-development": "Corso di Web Development per Ragazzi 13+ anni | TECHLAND",
-      "python-base": "Corso Python per Ragazzi 13+ anni | TECHLAND",
-      "python-ai": "Corso Python e AI per Ragazzi 13+ anni | TECHLAND"
+      "python-base": "Corso Python per Ragazzi 11+ anni | TECHLAND",
+      "python-ai": "Corso Python e AI per Ragazzi 14+ anni | TECHLAND"
     };
     return seoOverrides.title || titleMap[id!] || `Corso ${course?.title} | TECHLAND`;
   };
 
   const getSEODescription = () => {
     const descMap: Record<string, string> = {
-      "roblox": "Corso Roblox per bambini online (dagli 8 anni). Crea videogiochi con Roblox Studio e Lua. Lezioni live in piccoli gruppi. Prima lezione gratis!",
-      "roblox-avanzato": "Corso Roblox avanzato per ragazzi online (10-14 anni). Script Lua complessi, multiplayer, monetizzazione. Diventa un pro developer Roblox!",
+      "roblox": "Corso Roblox per bambini online (dai 9 anni). Crea videogiochi con Roblox Studio e Lua. Lezioni live in piccoli gruppi. Prima lezione gratis!",
+      "roblox-avanzato": "Corso Roblox avanzato per ragazzi online (dai 10 anni). Script Lua complessi, multiplayer, monetizzazione. Diventa un pro developer Roblox!",
       "web-development": "Corso di Web Development per ragazzi online (dai 13 anni). HTML, CSS, JavaScript da zero. Crea il tuo sito web. Prima lezione gratuita!",
-      "python-base": "Corso di Python per ragazzi online (dai 13 anni). Il linguaggio di programmazione più richiesto. Progetti pratici. Prima lezione gratuita!",
-      "python-ai": "Corso Python e Intelligenza Artificiale per ragazzi online (dai 13 anni). Machine learning con scikit-learn, AI e LLM. Lezione di prova gratis!"
+      "python-base": "Corso di Python per ragazzi online (dagli 11 anni). Il linguaggio di programmazione più richiesto. Progetti pratici. Prima lezione gratuita!",
+      "python-ai": "Corso Python e Intelligenza Artificiale per ragazzi online (dai 14 anni). Machine learning con scikit-learn, AI e LLM. Lezione di prova gratis!"
     };
     return seoOverrides.description || descMap[id!] || course?.description || "";
   };

@@ -98,6 +98,7 @@ function meta(route) {
   if (['/faq', '/glossario'].includes(route)) return { changefreq: 'weekly', priority: '0.7' };
   if (['/chi-siamo', '/contatti'].includes(route)) return { changefreq: 'monthly', priority: '0.6' };
   if (route === '/lavora-con-noi') return { changefreq: 'monthly', priority: '0.5' };
+  if (route.startsWith('/lp/')) return { changefreq: 'weekly', priority: '0.7' };
   return { changefreq: 'yearly', priority: '0.3' }; // privacy, termini, cookie, accessibilita
 }
 

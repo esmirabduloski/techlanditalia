@@ -1,2 +1,0 @@
-# Serve dynamic sitemap from the edge function so new blog posts, courses and landings are always included.
-/sitemap.xml  https://aedpckxjyyklqwrzrnmg.supabase.co/functions/v1/generate-sitemap  200

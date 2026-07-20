@@ -614,10 +614,6 @@ type TrialFormData = z.infer<typeof trialFormSchema>;
 export default function CorsoDettaglio() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  // SEO-010: redirect immediato per slug legacy ai nuovi canonical.
-  if (id && LEGACY_SLUG_REDIRECTS[id]) {
-    return <Navigate to={`/corsi/${LEGACY_SLUG_REDIRECTS[id]}`} replace />;
-  }
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isHidden, setIsHidden] = useState(false);

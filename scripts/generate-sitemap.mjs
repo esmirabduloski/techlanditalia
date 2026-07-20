@@ -62,7 +62,27 @@ async function fetchBlogLastmod() {
   }
 }
 
+async function fetchActiveLandingSlugs() {
+  const base = loadEnvVar('VITE_SUPABASE_URL');
+  const apikey = loadEnvVar('VITE_SUPABASE_PUBLISHABLE_KEY');
+  if (!base || !apikey) return [];
+  try {
+    const res = await fetch(`${base}/rest/v1/landing_pages?select=slug&is_active=eq.true`, {
+      headers: { apikey },
+    });
+    if (!res.ok) return [];
+    const rows = await res.json();
+    return rows.map((r) => `/lp/${r.slug}`);
+  } catch {
+    return [];
+  }
+}
+
 const blogLastmod = await fetchBlogLastmod();
+const landingRoutes = await fetchActiveLandingSlugs();
+// Merge landing routes (esclusi dal prerender ma indicizzabili — SEO-006 D4).
+for (const lp of landingRoutes) if (!routes.includes(lp)) routes.push(lp);
+routes.sort();
 
 // --- 3. Regole changefreq/priority per tipo di pagina ---
 function meta(route) {
@@ -78,6 +98,7 @@ function meta(route) {
   if (['/faq', '/glossario'].includes(route)) return { changefreq: 'weekly', priority: '0.7' };
   if (['/chi-siamo', '/contatti'].includes(route)) return { changefreq: 'monthly', priority: '0.6' };
   if (route === '/lavora-con-noi') return { changefreq: 'monthly', priority: '0.5' };
+  if (route.startsWith('/lp/')) return { changefreq: 'weekly', priority: '0.7' };
   return { changefreq: 'yearly', priority: '0.3' }; // privacy, termini, cookie, accessibilita
 }
 

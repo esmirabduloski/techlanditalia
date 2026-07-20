@@ -1,4 +1,10 @@
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, Navigate } from "react-router-dom";
+
+// SEO-010: alias slug legacy → canonici. Vecchi URL mantengono backlink senza cannibalizzazione.
+const LEGACY_SLUG_REDIRECTS: Record<string, string> = {
+  "sviluppo-giochi-con-roblox": "roblox",
+  "python-avanzato": "python-ai",
+};
 import { useState, useEffect } from "react";
 import NotFound from "./NotFound";
 import { useFormAntiSpam } from "@/hooks/useFormAntiSpam";
@@ -693,6 +699,11 @@ export default function CorsoDettaglio() {
     },
   });
   const { formOpenedAt, honeypotProps, honeypotValue } = useFormAntiSpam();
+
+  // SEO-010: redirect slug legacy → canonical (dopo hook per rispettare React rules).
+  if (id && LEGACY_SLUG_REDIRECTS[id]) {
+    return <Navigate to={`/corsi/${LEGACY_SLUG_REDIRECTS[id]}`} replace />;
+  }
 
   const onSubmit = async (data: TrialFormData) => {
     if (!course) return;

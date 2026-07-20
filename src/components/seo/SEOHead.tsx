@@ -20,7 +20,7 @@ interface SEOHeadProps {
 }
 
 const BASE_URL = "https://techlanditalia.it";
-const DEFAULT_OG_IMAGE = `${BASE_URL}/og-image.png`;
+const DEFAULT_OG_IMAGE = `${BASE_URL}/og-image.jpg`;
 
 export function SEOHead({
   title,
@@ -45,8 +45,10 @@ export function SEOHead({
   // Combine schema data
   const allSchemaData = schemaData || structuredData;
 
+  // defer={false}: commit sincrono dei tag head — con il defer di default (rAF)
+  // l'analytics leggerebbe il document.title della pagina precedente al route change
   return (
-    <Head>
+    <Head defer={false}>
       {/* Primary Meta Tags */}
       <title>{fullTitle}</title>
       <meta name="title" content={fullTitle} />
@@ -204,7 +206,7 @@ export function generateBlogPostSchema(post: {
     "url": `https://techlanditalia.it/blog/${post.slug}`,
     "datePublished": post.datePublished,
     "dateModified": post.dateModified || post.datePublished,
-    "image": post.image || "https://techlanditalia.it/og-image.png",
+    "image": post.image || "https://techlanditalia.it/og-image.jpg",
     "author": {
       "@type": "Organization",
       "name": post.author || "TECHLAND"

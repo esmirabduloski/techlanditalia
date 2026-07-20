@@ -23,7 +23,7 @@ const App = () => (
         <ImpersonationProvider>
           <TooltipProvider>
             {/* Fallback per le route senza SEOHead (aree private): le pagine pubbliche lo sovrascrivono */}
-            <Head defaultTitle="TECHLAND | Coding per Bambini e Ragazzi 6-18">
+            <Head defer={false} defaultTitle="TECHLAND | Coding per Bambini e Ragazzi 6-18">
               <meta name="application-name" content="TECHLAND" />
             </Head>
             <Sonner />

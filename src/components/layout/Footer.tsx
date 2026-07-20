@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Facebook, Instagram, Linkedin, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { publicCourseSlug } from "@/lib/courseCatalog";
 import { useSiteSetting } from "@/hooks/useSiteSetting";
 
 const buildAziendaLinks = (lavoraVisible: boolean) => [
@@ -93,7 +94,7 @@ export function Footer() {
               {courses.map((course) => (
                 <li key={course.slug}>
                   <Link
-                    to={`/corsi/${course.slug}`}
+                    to={`/corsi/${publicCourseSlug(course.slug)}`}
                     title={`Corso ${course.title}`}
                     className="text-background/70 hover:text-background transition-colors text-sm"
                   >

@@ -35,7 +35,7 @@ export const SEOBreadcrumb = ({ items, className = "" }: SEOBreadcrumbProps) => 
 
   return (
     <>
-      <Head>
+      <Head defer={false}>
         <script type="application/ld+json">
           {JSON.stringify(schemaData)}
         </script>

@@ -1,4 +1,5 @@
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, Navigate } from "react-router-dom";
+import { DB_TO_SHORT_SLUG, dbCourseSlug } from "@/lib/courseCatalog";
 import { useState, useEffect } from "react";
 import NotFound from "./NotFound";
 import { useFormAntiSpam } from "@/hooks/useFormAntiSpam";
@@ -605,7 +606,7 @@ const trialFormSchema = z.object({
 
 type TrialFormData = z.infer<typeof trialFormSchema>;
 
-export default function CorsoDettaglio() {
+function CorsoDettaglio() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -661,7 +662,7 @@ export default function CorsoDettaglio() {
       const { data, error } = await supabase
         .from("courses")
         .select("is_visible, detail_content, title, emoji, description, age_range, level, duration")
-        .eq("slug", id)
+        .eq("slug", dbCourseSlug(id))
         .maybeSingle();
       if (cancelled) return;
       if (!error && data) {
@@ -1149,4 +1150,14 @@ export default function CorsoDettaglio() {
       </section>
     </Layout>
   );
+}
+
+// Redirect degli slug lunghi storici (DB) verso lo slug corto canonico
+// (SEO-010). Wrapper separato: il componente interno mantiene i suoi hook
+// stabili anche quando il param cambia da slug-alias a slug-canonico.
+export default function CorsoDettaglioRoute() {
+  const { id } = useParams<{ id: string }>();
+  const short = id ? DB_TO_SHORT_SLUG[id] : undefined;
+  if (short) return <Navigate to={`/corsi/${short}`} replace />;
+  return <CorsoDettaglio />;
 }

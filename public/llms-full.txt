@@ -34,64 +34,64 @@ Lezioni live online via piattaforma dedicata. Servono PC/Mac, connessione intern
 
 ## Catalogo Corsi Completo
 
-### L'ABC della creatività digitale
-- **Età**: 5–7 anni
+### Design creativo
+- **Età**: dai 5 anni
 - **Livello**: Base
 - **Durata**: 8 mesi
-- **Descrizione**: Corso pensato per bambini piccoli, incentrato sulle basi del design digitale e dell'alfabetizzazione informatica. I bambini imparano a usare editor grafici, creare biglietti di auguri, poster, animazioni e semplici presentazioni. Acquisiscono padronanza di Google Docs, Canva e competenze informatiche di base. Sviluppa pensiero creativo e logico in formato ludico.
-- **URL**: https://techlanditalia.it/corsi/abc-creativita-digitale
+- **Descrizione**: Corso pensato per bambini piccoli, incentrato sulle basi del design digitale e dell'alfabetizzazione informatica. I bambini imparano a usare editor grafici, creare biglietti di auguri, poster, animazioni e semplici presentazioni. Sviluppa pensiero creativo e logico in formato ludico.
+- **URL**: https://techlanditalia.it/corsi/design-creativo
 
-### L'ABC dell'informatica
-- **Età**: 6–8 anni
+### Informatica di base
+- **Età**: dai 6 anni
 - **Livello**: Base
 - **Durata**: 8 mesi
 - **Descrizione**: Corso introduttivo ai fondamenti dell'informatica: come funziona un computer, file, cartelle, internet sicuro, primi passi con strumenti digitali e logica computazionale.
-- **URL**: https://techlanditalia.it/corsi/abc-informatica
+- **URL**: https://techlanditalia.it/corsi/informatica-di-base
 
 ### Programmazione visiva con Scratch
-- **Età**: 8–10 anni
+- **Età**: dai 7 anni
 - **Livello**: Base
 - **Durata**: 8 mesi
 - **Descrizione**: Primo vero corso di coding. Con Scratch i bambini imparano la logica della programmazione (cicli, condizioni, variabili, eventi) creando giochi, animazioni e storie interattive senza dover scrivere codice testuale.
 - **URL**: https://techlanditalia.it/corsi/scratch
 
-### Minecraft Education
-- **Età**: 8–9 anni
+### Programmazione visiva con Minecraft
+- **Età**: dagli 8 anni
 - **Livello**: Base
 - **Durata**: 10 mesi
-- **Descrizione**: Logica, programmazione e automazione dentro Minecraft Education. Si programma con MakeCode (blocchi e poi JavaScript), si costruiscono fattorie automatizzate e minigiochi personalizzati.
-- **URL**: https://techlanditalia.it/corsi/minecraft-education
+- **Descrizione**: Logica, programmazione e automazione dentro il mondo di Minecraft. Si programma a blocchi, si costruiscono fattorie automatizzate e minigiochi personalizzati.
+- **URL**: https://techlanditalia.it/corsi/minecraft
 
 ### Sviluppo giochi con Roblox
-- **Età**: 10–14 anni
+- **Età**: dagli 8 anni
 - **Livello**: Intermedio
 - **Durata**: 8 mesi
 - **Descrizione**: Creazione di videogiochi con Roblox Studio. Si imparano gli strumenti di modellazione 3D, scripting in Lua, gestione di player e oggetti, pubblicazione di esperienze sulla piattaforma Roblox.
 - **URL**: https://techlanditalia.it/corsi/roblox
 
 ### Roblox Avanzato
-- **Età**: 12–16 anni
+- **Età**: 10–14 anni
 - **Livello**: Avanzato
 - **Durata**: 8 mesi
 - **Descrizione**: Per chi ha già basi di Roblox. Sviluppo avanzato in Lua, sistemi multiplayer, monetizzazione, ottimizzazione delle performance, deploy professionale.
 - **URL**: https://techlanditalia.it/corsi/roblox-avanzato
 
 ### Web Development
-- **Età**: 12–16 anni
+- **Età**: dai 13 anni
 - **Livello**: Intermedio
 - **Durata**: 8 mesi
 - **Descrizione**: HTML, CSS e JavaScript per costruire siti web da zero. Si imparano responsive design, animazioni, manipolazione del DOM e si pubblica online il proprio primo sito.
 - **URL**: https://techlanditalia.it/corsi/web-development
 
 ### Python Base
-- **Età**: 12–16 anni
+- **Età**: dai 13 anni
 - **Livello**: Base
 - **Durata**: 8 mesi
 - **Descrizione**: Introduzione al linguaggio Python, oggi il più richiesto al mondo. Variabili, strutture dati, funzioni, OOP, primi mini-progetti (giochi, automazioni, calcolatrici).
 - **URL**: https://techlanditalia.it/corsi/python-base
 
 ### Python PRO & AI
-- **Età**: 14–18 anni
+- **Età**: dai 13 anni
 - **Livello**: Avanzato
 - **Durata**: 8 mesi
 - **Descrizione**: Curriculum 8 moduli x 4 lezioni. Python avanzato (decoratori, generatori, async), librerie di Data Science (NumPy, Pandas), Machine Learning con scikit-learn, introduzione al Deep Learning e ai Large Language Models.

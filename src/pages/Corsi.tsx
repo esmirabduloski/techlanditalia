@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { publicCourseSlug } from "@/lib/courseCatalog";
 import { Layout } from "@/components/layout/Layout";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Users, ArrowRight, Loader2 } from "lucide-react";
@@ -90,7 +91,7 @@ export default function Corsi() {
         "@type": "Course",
         "name": course.title,
         "description": course.description,
-        "url": `https://techlanditalia.it/corsi/${course.slug}`,
+        "url": `https://techlanditalia.it/corsi/${publicCourseSlug(course.slug)}`,
         "provider": {
           "@type": "EducationalOrganization",
           "name": "TECHLAND"
@@ -160,7 +161,7 @@ export default function Corsi() {
             {sortedCourses.map((course) => (
               <Link
                 key={course.id}
-                to={`/corsi/${course.slug}`}
+                to={`/corsi/${publicCourseSlug(course.slug)}`}
                 className="tech-card tech-card-hover p-6 group"
               >
                 <div className="flex items-start justify-between mb-4">

@@ -1,11 +1,11 @@
 # TECHLAND
 
-> TECHLAND è la scuola di coding online italiana per alunni dai 6 ai 18 anni. Lezioni live in piccoli gruppi (max 6 alunni) con docenti esperti, dal pensiero computazionale con Scratch fino a Python, Intelligenza Artificiale, Roblox, Minecraft, Unity e sviluppo web. Prima lezione di prova sempre gratuita e senza impegno.
+> TECHLAND è la scuola di coding online italiana per bambini e ragazzi dai 6 ai 18 anni. Lezioni live in piccoli gruppi (max 6 alunni) con docenti esperti: dal pensiero computazionale con Scratch e Minecraft fino a Python, Intelligenza Artificiale, Roblox e sviluppo web. Prima lezione di prova sempre gratuita e senza impegno. Da non confondere con Techland S.A., lo studio polacco di videogiochi: TECHLAND Italia è una scuola di programmazione per ragazzi.
 
 TECHLAND opera in tutta Italia con corsi 100% online, lezioni settimanali registrate, dashboard genitori per monitorare i progressi e percorsi pluriennali strutturati per età e livello.
 
-- **Sede**: Italia (online)
-- **Età alunni**: 5–20 anni
+- **Sede**: Italia (online) — sede operativa in Veneto
+- **Età alunni**: 6–18 anni
 - **Modalità**: Lezioni live online in piccoli gruppi (max 6 alunni)
 - **Lingua**: Italiano
 - **Sito**: https://techlanditalia.it
@@ -22,19 +22,19 @@ TECHLAND opera in tutta Italia con corsi 100% online, lezioni settimanali regist
 
 ## Corsi di programmazione
 
-- [L'ABC della creatività digitale (5-7 anni)](https://techlanditalia.it/corsi/abc-creativita-digitale.md): Corso base di alfabetizzazione informatica e design digitale per bambini piccoli
-- [L'ABC dell'informatica (6-8 anni)](https://techlanditalia.it/corsi/abc-informatica.md): Fondamenti dell'informatica per i più piccoli
-- [Programmazione visiva con Scratch (8-10 anni)](https://techlanditalia.it/corsi/scratch.md): Primo corso di coding con Scratch per imparare la logica della programmazione divertendosi
-- [Minecraft Education (8-9 anni)](https://techlanditalia.it/corsi/minecraft-education.md): Logica e programmazione con MakeCode dentro Minecraft Education
-- [Sviluppo giochi con Roblox (10-14 anni)](https://techlanditalia.it/corsi/roblox.md): Creazione videogiochi con Roblox Studio e linguaggio Lua
-- [Roblox Avanzato (12-16 anni)](https://techlanditalia.it/corsi/roblox-avanzato.md): Sviluppo avanzato di esperienze Roblox e monetizzazione
-- [Web Development (12-16 anni)](https://techlanditalia.it/corsi/web-development.md): HTML, CSS e JavaScript per costruire siti web da zero
-- [Python Base (12-16 anni)](https://techlanditalia.it/corsi/python-base.md): Introduzione a Python, il linguaggio più richiesto al mondo
-- [Python PRO & AI (14-18 anni)](https://techlanditalia.it/corsi/python-ai.md): Python avanzato e introduzione all'Intelligenza Artificiale e Machine Learning
+- [Design creativo (dai 5 anni)](https://techlanditalia.it/corsi/design-creativo): Primo approccio alla creatività digitale per i più piccoli
+- [Informatica di base (dai 6 anni)](https://techlanditalia.it/corsi/informatica-di-base): Fondamenti dell'informatica e alfabetizzazione digitale
+- [Programmazione visiva con Scratch (dai 7 anni)](https://techlanditalia.it/corsi/scratch): Primo corso di coding con Scratch per imparare la logica della programmazione divertendosi
+- [Programmazione visiva con Minecraft (dagli 8 anni)](https://techlanditalia.it/corsi/minecraft): Logica e programmazione a blocchi dentro il mondo di Minecraft
+- [Sviluppo giochi con Roblox (dagli 8 anni)](https://techlanditalia.it/corsi/roblox): Creazione videogiochi con Roblox Studio e linguaggio Lua
+- [Roblox Avanzato (10-14 anni)](https://techlanditalia.it/corsi/roblox-avanzato): Sviluppo avanzato di esperienze Roblox e monetizzazione
+- [Web Development (dai 13 anni)](https://techlanditalia.it/corsi/web-development): HTML, CSS e JavaScript per costruire siti web da zero
+- [Python Base (dai 13 anni)](https://techlanditalia.it/corsi/python-base): Introduzione a Python, il linguaggio più richiesto al mondo
+- [Python e Intelligenza Artificiale (dai 13 anni)](https://techlanditalia.it/corsi/python-ai): Python avanzato e introduzione all'AI e al Machine Learning
 
 ## Blog
 
-- [Blog TECHLAND](https://techlanditalia.it/blog.md): Articoli, guide e consigli su coding, AI ed educazione tecnologica per ragazzi
+- [Blog TECHLAND](https://techlanditalia.it/blog): Articoli, guide e consigli su coding, AI ed educazione tecnologica per ragazzi
 
 ## Optional
 

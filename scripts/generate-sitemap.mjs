@@ -62,7 +62,27 @@ async function fetchBlogLastmod() {
   }
 }
 
+async function fetchActiveLandingSlugs() {
+  const base = loadEnvVar('VITE_SUPABASE_URL');
+  const apikey = loadEnvVar('VITE_SUPABASE_PUBLISHABLE_KEY');
+  if (!base || !apikey) return [];
+  try {
+    const res = await fetch(`${base}/rest/v1/landing_pages?select=slug&is_active=eq.true`, {
+      headers: { apikey },
+    });
+    if (!res.ok) return [];
+    const rows = await res.json();
+    return rows.map((r) => `/lp/${r.slug}`);
+  } catch {
+    return [];
+  }
+}
+
 const blogLastmod = await fetchBlogLastmod();
+const landingRoutes = await fetchActiveLandingSlugs();
+// Merge landing routes (esclusi dal prerender ma indicizzabili — SEO-006 D4).
+for (const lp of landingRoutes) if (!routes.includes(lp)) routes.push(lp);
+routes.sort();
 
 // --- 3. Regole changefreq/priority per tipo di pagina ---
 function meta(route) {

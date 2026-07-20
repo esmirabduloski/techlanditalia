@@ -700,6 +700,11 @@ export default function CorsoDettaglio() {
   });
   const { formOpenedAt, honeypotProps, honeypotValue } = useFormAntiSpam();
 
+  // SEO-010: redirect slug legacy → canonical (dopo hook per rispettare React rules).
+  if (id && LEGACY_SLUG_REDIRECTS[id]) {
+    return <Navigate to={`/corsi/${LEGACY_SLUG_REDIRECTS[id]}`} replace />;
+  }
+
   const onSubmit = async (data: TrialFormData) => {
     if (!course) return;
     setIsSubmitting(true);

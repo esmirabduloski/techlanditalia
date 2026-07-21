@@ -107,7 +107,7 @@ export function TeacherBioCard({ studentId }: TeacherBioCardProps) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p className="font-semibold text-foreground">{teacher.name?.trim().toLowerCase() === "admin" ? "Esmir" : teacher.name}</p>
+            <p className="font-semibold text-foreground">{teacher.name}</p>
             {teacher.bio && (
               <p className="text-sm text-muted-foreground leading-relaxed">{teacher.bio}</p>
             )}
@@ -137,7 +137,7 @@ export function TeacherBioCard({ studentId }: TeacherBioCardProps) {
                   >
                     <a href={cl.link} target="_blank" rel="noopener noreferrer">
                       <MessageCircle className="w-4 h-4 mr-2" />
-                      Chatta con l'insegnante
+                      Apri Chat
                       {teacher.chatLinks.length > 1 && ` · ${cl.groupTitle}`}
                     </a>
                   </Button>

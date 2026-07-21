@@ -536,12 +536,6 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Teacher Info Card */}
-          {effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (
-            <div className="mb-8">
-              <TeacherBioCard studentId={effectiveUserId} />
-            </div>
-          )}
 
           {/* Parent Children Section */}
           {!effectiveIsTeacher && (

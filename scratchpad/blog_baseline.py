@@ -65,7 +65,9 @@ for p in posts:
             path = url.split("#")[0].split("?")[0].rstrip("/")
             if path == "":
                 path = "/"
-            if path.startswith("/corsi/"):
+            if path.startswith("/images/") or path.startswith("/assets/") or "." in path.rsplit("/",1)[-1]:
+                pass  # static asset, not a route
+            elif path.startswith("/corsi/"):
                 if path in VALID_COURSE_ROUTES or path in LEGACY_REDIRECTS:
                     course_links.append(url)
                 else:
@@ -78,6 +80,8 @@ for p in posts:
                     ghost_links.append(url)
             elif path in STATIC_INTERNAL or path == "/corsi":
                 pass  # ok
+            elif path.startswith("/lp/"):
+                pass  # landing page
             else:
                 ghost_links.append(url)
         else:

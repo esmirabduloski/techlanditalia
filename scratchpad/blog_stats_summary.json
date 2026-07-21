@@ -1,0 +1,19 @@
+{
+  "total_published": 92,
+  "thin_lt600": "84/92 (91%)",
+  "orphans": "85/92 (92%)",
+  "zero_internal_out": "22/92 (24%)",
+  "no_course_link": "71/92 (77%)",
+  "ghost_links": "44/92 (48%)",
+  "no_aeo": "83/92 (90%)",
+  "no_faq": "63/92 (68%)",
+  "title_long": "51/92 (55%)",
+  "excerpt_out_of_range": "40/92 (43%)",
+  "regional_mentions": "0/92 (0%)",
+  "disambig_when_needed": "0/92 (0%)",
+  "game_topic_articles": 36,
+  "body_h1_violations": "1/92 (1%)",
+  "median_words": 358,
+  "max_words": 789,
+  "articles_gte_1000": 0
+}

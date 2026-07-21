@@ -8,7 +8,7 @@ FROM blog_posts WHERE slug IN ('la-programmazione','coding-matematica-bambini','
 UPDATE blog_posts SET content = REPLACE(content, '/corsi/scratch', '/corsi'), updated_at = now() WHERE published = true AND content LIKE '%/corsi/scratch%';
 UPDATE blog_posts SET content = REPLACE(content, '/corsi/minecraft-education', '/corsi/roblox'), updated_at = now() WHERE published = true AND content LIKE '%/corsi/minecraft-education%';
 UPDATE blog_posts SET content = REPLACE(content, '/corsi/abc-creativita-digitale', '/corsi'), updated_at = now() WHERE published = true AND content LIKE '%/corsi/abc-creativita-digitale%';
-UPDATE blog_posts SET content = REPLACE(content, '/corsi/python', '/corsi/python-base'), updated_at = now() WHERE published = true AND content LIKE '%/corsi/python%';
+UPDATE blog_posts SET content = regexp_replace(content, '/corsi/python\M', '/corsi/python-base', 'g'), updated_at = now() WHERE published = true AND content ~ '/corsi/python\M';
 
 UPDATE blog_posts SET content = regexp_replace(content, '^# ', '## '), updated_at = now() WHERE slug = 'la-programmazione' AND published = true;
 

@@ -73,14 +73,14 @@ export function TeacherBioCard({ studentId }: TeacherBioCardProps) {
               link: g.student_groups.mega_chat_link as string,
             }));
 
-          if (profile) {
-            teacherMap.set(tid as string, {
-              name: profile.full_name,
-              bio: (tp as any)?.bio || null,
-              courses,
-              chatLinks,
-            });
-          }
+          const rawName = profile?.full_name || "Insegnante";
+          const displayName = rawName.trim().toLowerCase() === "admin" ? "Esmir" : rawName;
+          teacherMap.set(tid as string, {
+            name: displayName,
+            bio: (tp as any)?.bio || null,
+            courses,
+            chatLinks,
+          });
         });
 
         setTeachers(Array.from(teacherMap.values()));
@@ -107,7 +107,7 @@ export function TeacherBioCard({ studentId }: TeacherBioCardProps) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p className="font-semibold text-foreground">{teacher.name?.trim().toLowerCase() === "admin" ? "Esmir" : teacher.name}</p>
+            <p className="font-semibold text-foreground">{teacher.name}</p>
             {teacher.bio && (
               <p className="text-sm text-muted-foreground leading-relaxed">{teacher.bio}</p>
             )}
@@ -137,7 +137,7 @@ export function TeacherBioCard({ studentId }: TeacherBioCardProps) {
                   >
                     <a href={cl.link} target="_blank" rel="noopener noreferrer">
                       <MessageCircle className="w-4 h-4 mr-2" />
-                      Chatta con l'insegnante
+                      Apri Chat
                       {teacher.chatLinks.length > 1 && ` · ${cl.groupTitle}`}
                     </a>
                   </Button>

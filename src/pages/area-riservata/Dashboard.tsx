@@ -458,6 +458,14 @@ export default function Dashboard() {
             </div>
           )}
 
+          {/* Teacher Info Card - moved up, right under courses */}
+          {effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (
+            <div className="mb-8">
+              <TeacherBioCard studentId={effectiveUserId} />
+            </div>
+          )}
+
+
           {/* Homework Section - below courses */}
           {!effectiveIsTeacher && !effectiveIsParent && (
             <div className="mb-8">
@@ -536,12 +544,6 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Teacher Info Card */}
-          {effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (
-            <div className="mb-8">
-              <TeacherBioCard studentId={effectiveUserId} />
-            </div>
-          )}
 
           {/* Parent Children Section */}
           {!effectiveIsTeacher && (

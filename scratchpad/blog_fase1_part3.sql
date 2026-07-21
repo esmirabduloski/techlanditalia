@@ -1,78 +1,4 @@
--- Fase 1: zero-risk blog fixes
--- Generated: 2026-07-21T07:59:50.060770Z
 BEGIN;
-## Coding e Disabilità
-
-La programmazione offre opportunità straordinarie per bambini con **disabilità**:
-
-### Disturbi dello Spettro Autistico
-Il coding offre **struttura**, **prevedibilità** e **regole chiare** che possono essere particolarmente confortevoli. Molti bambini autistici eccellono nella programmazione.
-
-### Dislessia
-La programmazione visuale come **[Programmazione visiva con Scratch](/corsi)** bypassa le difficoltà di lettura, permettendo di concentrarsi sulla **logica** pura.
-
-### Disabilità Motorie
-Con gli **strumenti assistivi** giusti (controllo vocale, switch, eye-tracking), programmare è accessibile anche a chi ha limitazioni motorie severe.
-
-![Bambini programmano insieme](/images/blog/inline/teamwork-coding.jpg)
-
-## Il Gender Gap nel Tech
-
-Solo il **28%** dei professionisti tech in Italia è donna. Cambiare questa statistica inizia dall''**infanzia**:
-
-- Presentare **role model femminili** nel tech
-- Evitare stereotipi su cosa sia "da maschi" o "da femmine"
-- Creare **ambienti accoglienti** per tutti
-
-## Coding e Inclusione Sociale
-
-![Scuola e coding](/images/blog/inline/school-coding.jpg)
-
-Il coding può essere un **equalizzatore sociale**. Con un computer e una connessione internet, un bambino di qualsiasi background può imparare le stesse competenze di chi frequenta le scuole più prestigiose.
-
-## Il Nostro Impegno
-
-Crediamo che ogni bambino meriti l''opportunità di imparare a programmare, indipendentemente dalle sue circostanze. Il coding non è un privilegio: è un **diritto**.', updated_at = now() WHERE slug = 'coding-inclusione-accessibilita' AND published = true;
-
-INSERT INTO content_snapshots (entity_type, entity_id, entity_label, snapshot_label, snapshot_data) VALUES ('blog_post', '68204741-3367-42d5-aa0e-94d99e54c976', 'coding-soft-skills-lavoro-futuro', 'pre-fase1-audit', '{"title": "Le Soft Skills che il Coding Insegna ai Bambini (e che le Aziende Cercano)", "excerpt": "Come la programmazione sviluppa le soft skills più richieste dal mercato del lavoro: problem solving, creatività, comunicazione e collaborazione.", "content": "## Le Soft Skills che il Coding Insegna\n\nLe soft skills sono le competenze più richieste dalle aziende nel 2026. E il coding le sviluppa **tutte** in modo naturale.\n\n![Competenze e coding](/images/blog/inline/teamwork-coding.jpg)\n\n## Le 5 Soft Skills Più Richieste\n\n### 1. Problem Solving\nOgni progetto di coding è un **problema da risolvere**. I bambini imparano il metodo: analizzare, ipotizzare, testare, iterare.\n\n### 2. Pensiero Critico\nDebugare il codice significa analizzare criticamente il proprio lavoro, trovare **errori logici** e valutare diverse soluzioni.\n\n### 3. Creatività\nProgettare un gioco o un''app richiede **immaginazione** e originalità. Il coding è un mezzo espressivo potente quanto il disegno o la musica.\n\n![Creatività nel coding](/images/blog/inline/motivation.jpg)\n\n### 4. Collaborazione\nI progetti di gruppo insegnano **divisione del lavoro**, gestione dei conflitti e comunicazione efficace.\n\n### 5. Comunicazione\nSpiegare il proprio codice, documentare un progetto, presentare una soluzione: il coding richiede comunicazione **chiara e strutturata**.\n\n## Il Vantaggio Competitivo\n\n![Carriere future](/images/blog/inline/career-future.jpg)\n\nI bambini che programmano sviluppano queste soft skills **prima dei coetanei**, in un contesto pratico e coinvolgente. Non studiano la teoria: la **vivono** ogni lezione.\n\n## Cosa Dicono le Aziende\n\nSecondo LinkedIn, le top 5 competenze più richieste nel 2026 sono: problem solving, pensiero critico, creatività, gestione delle persone e collaborazione. Il coding le sviluppa **tutte e cinque**.\n\n## Conclusione\n\nInvestire nel coding non significa scommettere su una specifica carriera tecnologica. Significa fornire ai vostri figli le **competenze universali** che li renderanno professionisti di successo in qualsiasi campo.", "read_time": "5 min"}'::jsonb);
-UPDATE blog_posts SET title = 'Le Soft Skills che il Coding Insegna ai Bambini', excerpt = 'Come la programmazione sviluppa le soft skills più richieste dal mercato del lavoro: problem solving, creatività, comunicazione e collaborazione.', content = '## Le Soft Skills che il Coding Insegna
-
-Le soft skills sono le competenze più richieste dalle aziende nel 2026. E il coding le sviluppa **tutte** in modo naturale.
-
-![Competenze e coding](/images/blog/inline/teamwork-coding.jpg)
-
-## Le 5 Soft Skills Più Richieste
-
-### 1. Problem Solving
-Ogni progetto di coding è un **problema da risolvere**. I bambini imparano il metodo: analizzare, ipotizzare, testare, iterare.
-
-### 2. Pensiero Critico
-Debugare il codice significa analizzare criticamente il proprio lavoro, trovare **errori logici** e valutare diverse soluzioni.
-
-### 3. Creatività
-Progettare un gioco o un''app richiede **immaginazione** e originalità. Il coding è un mezzo espressivo potente quanto il disegno o la musica.
-
-![Creatività nel coding](/images/blog/inline/motivation.jpg)
-
-### 4. Collaborazione
-I progetti di gruppo insegnano **divisione del lavoro**, gestione dei conflitti e comunicazione efficace.
-
-### 5. Comunicazione
-Spiegare il proprio codice, documentare un progetto, presentare una soluzione: il coding richiede comunicazione **chiara e strutturata**.
-
-## Il Vantaggio Competitivo
-
-![Carriere future](/images/blog/inline/career-future.jpg)
-
-I bambini che programmano sviluppano queste soft skills **prima dei coetanei**, in un contesto pratico e coinvolgente. Non studiano la teoria: la **vivono** ogni lezione.
-
-## Cosa Dicono le Aziende
-
-Secondo LinkedIn, le top 5 competenze più richieste nel 2026 sono: problem solving, pensiero critico, creatività, gestione delle persone e collaborazione. Il coding le sviluppa **tutte e cinque**.
-
-## Conclusione
-
-Investire nel coding non significa scommettere su una specifica carriera tecnologica. Significa fornire ai vostri figli le **competenze universali** che li renderanno professionisti di successo in qualsiasi campo.', updated_at = now() WHERE slug = 'coding-soft-skills-lavoro-futuro' AND published = true;
 
 INSERT INTO content_snapshots (entity_type, entity_id, entity_label, snapshot_label, snapshot_data) VALUES ('blog_post', '37f337f2-48d7-456e-a845-6a6a75e9ada7', 'progetti-coding-estivi-bambini', 'pre-fase1-audit', '{"title": "8 Progetti di Coding Perfetti per le Vacanze Estive", "excerpt": "Otto progetti creativi di programmazione perfetti per le vacanze estive, con indicazioni di età, strumenti e durata.", "content": "## 8 Progetti di Coding per le Vacanze Estive\n\nL''estate è il momento perfetto per esplorare il coding senza la pressione dei compiti scolastici. Ecco **8 progetti creativi** che terranno i vostri figli impegnati e divertiti durante le vacanze.\n\n![Coding estivo](/images/blog/inline/summer-coding.jpg)\n\n## Progetto 1: Il Diario Digitale delle Vacanze\n\n### Difficoltà: Facile | Età: 8+\n\nCreate un **sito web** o un progetto [Programmazione visiva con Scratch](/corsi/scratch) che raccoglie i ricordi dell''estate: foto, disegni, descrizioni dei luoghi visitati. È un mix perfetto di **creatività** e **programmazione**.\n\n### Cosa Si Impara\n- **HTML/CSS** base per il sito web\n- Gestione di **immagini** e testo\n- Organizzazione dei **contenuti**\n\n## Progetto 2: Il Gioco dell''Estate\n\n### Difficoltà: Media | Età: 9+\n\n![Game development](/images/blog/inline/game-dev.jpg)\n\nUn **platform game** a tema estivo con Scratch: il personaggio deve raccogliere gelati evitando granchi sulla spiaggia. Un classico che insegna tutti i fondamentali.\n\n### Cosa Si Impara\n- **Movimento** del personaggio e gravità\n- **Collisioni** e punteggio\n- **Livelli** progressivi\n\n## Progetto 3: La Stazione Meteo\n\n### Difficoltà: Media | Età: 10+\n\nUn programma Python che mostra le **previsioni del tempo** della vostra località. I bambini imparano a usare le **API** e a visualizzare dati reali.\n\n## Progetto 4: Il Quiz Familiare\n\n### Difficoltà: Facile | Età: 7+\n\n![Famiglia e coding](/images/blog/inline/family-coding.jpg)\n\nUn quiz interattivo con domande sulle vacanze, sulla famiglia o su argomenti che il bambino ama. Perfetto per essere giocato **tutti insieme**!\n\n## Progetto 5: L''Animazione Estiva\n\n### Difficoltà: Facile | Età: 7+\n\nCon **Scratch**, create una breve animazione: un tramonto sulla spiaggia, pesci che nuotano, una storia avventurosa. I bambini esplorano **sequenze**, **cicli** e **eventi**.\n\n## Progetto 6: Il Portfolio Artistico\n\n### Difficoltà: Media | Età: 10+\n\n![Turtle art](/images/blog/inline/turtle-art.jpg)\n\nCon **[python turtle](/blog/python-turtle-programmare-disegnando)**, create una collezione di disegni geometrici: spirali colorate, mandala, frattali. Un modo bellissimo per unire **arte**, **matematica** e **codice**.\n\n## Progetto 7: Il Gioco Roblox Estivo\n\n### Difficoltà: Avanzata | Età: 11+\n\nPer i più grandi, un obby (percorso a ostacoli) a tema estivo su **[Sviluppo giochi con Roblox](/corsi/roblox)**. Insegna **Lua**, game design 3D e la soddisfazione di pubblicare un gioco che gli amici possono giocare.\n\n## Progetto 8: Il Sito Web Personale\n\n### Difficoltà: Media | Età: 11+\n\n![Sviluppo web](/images/blog/inline/web-dev-kids.jpg)\n\nCreate un vero **sito web personale** con HTML, CSS e JavaScript. Il bambino può presentarsi, mostrare i suoi hobby e condividere i link ai progetti coding completati durante l''anno.\n\n## Consigli per i Genitori\n\n- Non forzate: il coding estivo deve restare **divertente**\n- Lasciate scegliere il progetto al bambino\n- Programmate sessioni brevi: **30-45 minuti** sono sufficienti\n- Celebrate ogni progetto completato!\n\n## Il Bello dell''Estate\n\nL''estate offre il **tempo** e la **serenità** per esplorare senza fretta. Approfittatene per scoprire insieme il potere creativo del coding!", "read_time": "7 min"}'::jsonb);
 UPDATE blog_posts SET title = '8 Progetti di Coding Perfetti per le Vacanze Estive', excerpt = 'Otto progetti creativi di programmazione perfetti per le vacanze estive, con indicazioni di età, strumenti e durata.', content = '## 8 Progetti di Coding per le Vacanze Estive
@@ -608,5 +534,54 @@ UPDATE blog_posts SET title = 'Programmazione visiva con Scratch', excerpt = 'Sc
 Scratch è il linguaggio di programmazione più usato al mondo per insegnare il coding ai bambini. E c''è un motivo: funziona incredibilmente bene.
 
 ### Cosa impareranno
+
+Nel nostro corso di Scratch, i bambini:
+- Creeranno videogiochi originali
+- Realizzeranno animazioni e storie interattive
+- Impareranno i concetti fondamentali della programmazione
+- Useranno variabili, loop, condizioni e funzioni
+- Svilupperanno il [pensiero computazionale](/blog/pensiero-computazionale-vita-quotidiana)
+- Condivideranno i progetti con la comunità globale
+
+### Perché Scratch?
+
+Scratch è stato creato dal MIT appositamente per bambini dagli 8 anni in su. I suoi vantaggi:
+
+**Programmazione a blocchi**: niente sintassi da memorizzare. Si trascinano blocchi colorati come pezzi di puzzle.
+
+**Feedback immediato**: ogni modifica si vede subito. Niente compilazione o attese.
+
+**Comunità globale**: milioni di progetti da esplorare e remixare.
+
+**Gratuito e sicuro**: piattaforma moderata e adatta ai bambini.
+
+### Progetti tipici del corso
+
+- Un gioco arcade stile Pac-Man
+- Una storia animata con personaggi originali
+- Un quiz interattivo
+- Una simulazione scientifica
+- Un''app musicale
+- Un gioco multiplayer
+
+### Competenze sviluppate
+
+- **Sequenze**: capire l''ordine delle istruzioni
+- **Loop**: ripetere azioni automaticamente
+- **Condizioni**: prendere decisioni nel codice
+- **Variabili**: memorizzare e manipolare dati
+- **Eventi**: reagire alle azioni dell''utente
+- **Debugging**: trovare e correggere errori
+
+### Dopo Scratch
+
+I bambini che padroneggiano Scratch possono passare a:
+- [Python Base](/corsi/python-base)
+- [Sviluppo giochi con Roblox](/corsi/roblox)
+- [Web Development](/corsi/web-development)
+
+### Prenota una lezione di prova
+
+Vieni a creare il tuo primo gioco con Scratch!', updated_at = now() WHERE slug = 'scratch-creativita-codice' AND published = true;
 
 COMMIT;

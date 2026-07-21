@@ -1,40 +1,4 @@
--- Fase 1: zero-risk blog fixes
--- Generated: 2026-07-21T07:59:50.060770Z
 BEGIN;
-- **AI Engineer** (Python avanzato, machine learning)
-- **Game Developer** (Unity, Unreal Engine)
-- **Web Developer** (Full-stack moderno)
-- **Mobile Developer** (Swift, Kotlin)
-- **Cybersecurity Specialist**
-
-![Sviluppatore al lavoro su laptop](https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&w=800&q=70)
-
-## Quanto tempo serve davvero?
-
-Da Scratch a sviluppatore in grado di realizzare progetti veri: **5-8 anni di percorso continuativo**.
-
-Non è poco, ma è esattamente quanto serve a un ragazzo per imparare uno strumento musicale o uno sport ad alto livello.
-
-## E se non vuole fare lo sviluppatore?
-
-Perfetto. Le competenze che acquisisce — pensiero logico, problem solving, capacità di concentrazione, lavoro in team — gli serviranno in qualsiasi professione scelga.
-
-## FAQ
-
-**Mio figlio si stuferà a metà del percorso?**
-Può succedere. Per questo è importante variare strumenti e progetti, e non forzare la mano.
-
-**Devo iscriverlo "subito" a tutto?**
-No. Si va per tappe: una alla volta, con la possibilità di approfondire o cambiare direzione.
-
-**Quanto costa nel tempo?**
-Meno di uno strumento musicale serio o di uno sport competitivo. E con sbocchi professionali molto più diretti.
-
-## In conclusione
-
-Il percorso esiste, è collaudato, e funziona. Il momento migliore per iniziare è oggi.
-
-[Prenota una lezione di prova gratuita](/prenota) per capire da quale tappa partire in base all''età e al carattere di tuo figlio.', updated_at = now() WHERE slug = 'techland-da-scratch-a-sviluppatore-percorso' AND published = true;
 
 INSERT INTO content_snapshots (entity_type, entity_id, entity_label, snapshot_label, snapshot_data) VALUES ('blog_post', '1f6eef38-15ab-428a-a370-9ad2588d981a', 'techland-gaming-carriera-coding', 'pre-fase1-audit', '{"title": "TECHLAND rivela: come il gaming può diventare una carriera (sul serio)", "excerpt": "Il gaming non è solo perdita di tempo. È un settore da 200 miliardi che assume sviluppatori, designer e creator. Ecco come trasformare la passione in lavoro vero.", "content": "![Setup gaming professionale](https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&w=800&q=70)\n\nSe tuo figlio passa ore sui videogiochi, hai due opzioni: combatterlo (e perdere), oppure trasformare quella passione in qualcosa di concreto.\n\nIl settore dei videogiochi vale oggi più di Hollywood e dell''industria musicale messe insieme. E assume in continuazione.\n\n## Numeri reali del settore\n\n- **200 miliardi di dollari**: valore globale del gaming nel 2026\n- **3 miliardi di giocatori** nel mondo\n- **+30%** di crescita prevista nei prossimi 5 anni\n- **Italia**: oltre 17 milioni di giocatori, 2.2 miliardi di fatturato\n\nNon è un settore di nicchia. È un mercato gigantesco.\n\n## Le carriere reali nel gaming\n\n### 1. Sviluppatore di videogiochi\nProgramma il gioco. Linguaggi: C++, C#, Lua. Stipendio in Italia: 30-60k. All''estero: 60-120k.\n\n### 2. Game Designer\nProgetta meccaniche di gioco, livelli, esperienze. Spesso ha basi di coding.\n\n### 3. 3D Artist / Animator\nCrea personaggi e ambienti. Lavora con software come Blender, Maya, ZBrush.\n\n### 4. Sound Designer\nMusica e effetti sonori. Settore poco saturo, ottime opportunità.\n\n### 5. QA Tester / Game Engineer\nTesta i giochi e ne migliora la qualità. Punto di ingresso classico nel settore.\n\n### 6. Streamer / Content Creator\nÈ una vera professione. I top creator italiani superano i 6 cifre annue.\n\n### 7. Esports Player o Coach\nMercato cresciuto del 1000% in 10 anni. Italia in forte espansione.\n\n## Come si inizia?\n\nIl punto di partenza più solido? **Imparare a creare giochi, non solo a giocarci**.\n\n[Roblox Studio](/corsi/roblox) è perfetto per iniziare: usa Lua, è gratuito, e permette di pubblicare giochi che possono essere giocati da milioni di persone reali.\n\nDopo Roblox, il percorso naturale è verso Unity (C#) o Unreal Engine (C++).\n\n![Codice di sviluppo videogiochi](https://images.unsplash.com/photo-1556438064-2d7646166914?auto=format&w=800&q=70)\n\n## Storie vere di alunni\n\nAbbiamo seguito ragazzi che a 12 anni creavano i loro primi giochi su Scratch. A 15, pubblicavano giochi su Roblox con migliaia di giocatori attivi. A 18, alcuni si sono iscritti a corsi di Game Design universitari, altri lavorano già part-time per piccoli studi indipendenti.\n\nNon è fantascienza. È un percorso replicabile, se si parte presto e con metodo.\n\n## Ma \"stare al computer tutto il giorno\" non è dannoso?\n\nDipende **cosa** fa al computer. Giocare 6 ore al giorno è dannoso. Costruire un gioco 6 ore al giorno è esattamente quello che fa un professionista del settore.\n\nLa differenza tra consumo passivo e creazione attiva è enorme.\n\n## FAQ\n\n**Mio figlio vuole diventare streamer. Lo assecondo?**\nSi può fare carriera, ma è difficilissimo. Il consiglio: che impari anche a creare contenuti tecnici (video tutorial, game development), non solo a giocare.\n\n**Quanto costa sognare in grande?**\nUn computer decente (1.000-1.500 €) e un percorso di formazione strutturato. Niente di più.\n\n**Da che età si può \"lavorare\" davvero nel gaming?**\nProgetti pubblici a 14-15 anni, prime collaborazioni pagate a 17-18, lavoro stabile dai 19-20.\n\n## In conclusione\n\nIl gaming può essere distrazione o opportunità. La differenza la fanno gli strumenti che dai a tuo figlio.\n\n[Prenota una lezione di prova gratuita](/prenota) e scopri come trasformare le ore di gioco in ore di costruzione, una skill alla volta.", "read_time": "7 min"}'::jsonb);
 UPDATE blog_posts SET title = 'TECHLAND rivela: come il gaming può diventare una carriera', excerpt = 'Il gaming non è solo perdita di tempo. È un settore da 200 miliardi che assume sviluppatori, designer e creator. Ecco come trasformare la passione in lavoro.', content = '![Setup gaming professionale](https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&w=800&q=70)
@@ -596,5 +560,78 @@ UPDATE blog_posts SET title = 'Coding per Tutti: Come la Programmazione Diventa 
 La programmazione ha un potere speciale: è **democratica**. Non importa il genere, la provenienza sociale o le abilità fisiche. Nel mondo del codice, tutti possono **creare e contribuire**.
 
 ![Inclusione nel coding](/images/blog/inline/inclusion.jpg)
+
+## Coding e Disabilità
+
+La programmazione offre opportunità straordinarie per bambini con **disabilità**:
+
+### Disturbi dello Spettro Autistico
+Il coding offre **struttura**, **prevedibilità** e **regole chiare** che possono essere particolarmente confortevoli. Molti bambini autistici eccellono nella programmazione.
+
+### Dislessia
+La programmazione visuale come **[Programmazione visiva con Scratch](/corsi)** bypassa le difficoltà di lettura, permettendo di concentrarsi sulla **logica** pura.
+
+### Disabilità Motorie
+Con gli **strumenti assistivi** giusti (controllo vocale, switch, eye-tracking), programmare è accessibile anche a chi ha limitazioni motorie severe.
+
+![Bambini programmano insieme](/images/blog/inline/teamwork-coding.jpg)
+
+## Il Gender Gap nel Tech
+
+Solo il **28%** dei professionisti tech in Italia è donna. Cambiare questa statistica inizia dall''**infanzia**:
+
+- Presentare **role model femminili** nel tech
+- Evitare stereotipi su cosa sia "da maschi" o "da femmine"
+- Creare **ambienti accoglienti** per tutti
+
+## Coding e Inclusione Sociale
+
+![Scuola e coding](/images/blog/inline/school-coding.jpg)
+
+Il coding può essere un **equalizzatore sociale**. Con un computer e una connessione internet, un bambino di qualsiasi background può imparare le stesse competenze di chi frequenta le scuole più prestigiose.
+
+## Il Nostro Impegno
+
+Crediamo che ogni bambino meriti l''opportunità di imparare a programmare, indipendentemente dalle sue circostanze. Il coding non è un privilegio: è un **diritto**.', updated_at = now() WHERE slug = 'coding-inclusione-accessibilita' AND published = true;
+
+INSERT INTO content_snapshots (entity_type, entity_id, entity_label, snapshot_label, snapshot_data) VALUES ('blog_post', '68204741-3367-42d5-aa0e-94d99e54c976', 'coding-soft-skills-lavoro-futuro', 'pre-fase1-audit', '{"title": "Le Soft Skills che il Coding Insegna ai Bambini (e che le Aziende Cercano)", "excerpt": "Come la programmazione sviluppa le soft skills più richieste dal mercato del lavoro: problem solving, creatività, comunicazione e collaborazione.", "content": "## Le Soft Skills che il Coding Insegna\n\nLe soft skills sono le competenze più richieste dalle aziende nel 2026. E il coding le sviluppa **tutte** in modo naturale.\n\n![Competenze e coding](/images/blog/inline/teamwork-coding.jpg)\n\n## Le 5 Soft Skills Più Richieste\n\n### 1. Problem Solving\nOgni progetto di coding è un **problema da risolvere**. I bambini imparano il metodo: analizzare, ipotizzare, testare, iterare.\n\n### 2. Pensiero Critico\nDebugare il codice significa analizzare criticamente il proprio lavoro, trovare **errori logici** e valutare diverse soluzioni.\n\n### 3. Creatività\nProgettare un gioco o un''app richiede **immaginazione** e originalità. Il coding è un mezzo espressivo potente quanto il disegno o la musica.\n\n![Creatività nel coding](/images/blog/inline/motivation.jpg)\n\n### 4. Collaborazione\nI progetti di gruppo insegnano **divisione del lavoro**, gestione dei conflitti e comunicazione efficace.\n\n### 5. Comunicazione\nSpiegare il proprio codice, documentare un progetto, presentare una soluzione: il coding richiede comunicazione **chiara e strutturata**.\n\n## Il Vantaggio Competitivo\n\n![Carriere future](/images/blog/inline/career-future.jpg)\n\nI bambini che programmano sviluppano queste soft skills **prima dei coetanei**, in un contesto pratico e coinvolgente. Non studiano la teoria: la **vivono** ogni lezione.\n\n## Cosa Dicono le Aziende\n\nSecondo LinkedIn, le top 5 competenze più richieste nel 2026 sono: problem solving, pensiero critico, creatività, gestione delle persone e collaborazione. Il coding le sviluppa **tutte e cinque**.\n\n## Conclusione\n\nInvestire nel coding non significa scommettere su una specifica carriera tecnologica. Significa fornire ai vostri figli le **competenze universali** che li renderanno professionisti di successo in qualsiasi campo.", "read_time": "5 min"}'::jsonb);
+UPDATE blog_posts SET title = 'Le Soft Skills che il Coding Insegna ai Bambini', excerpt = 'Come la programmazione sviluppa le soft skills più richieste dal mercato del lavoro: problem solving, creatività, comunicazione e collaborazione.', content = '## Le Soft Skills che il Coding Insegna
+
+Le soft skills sono le competenze più richieste dalle aziende nel 2026. E il coding le sviluppa **tutte** in modo naturale.
+
+![Competenze e coding](/images/blog/inline/teamwork-coding.jpg)
+
+## Le 5 Soft Skills Più Richieste
+
+### 1. Problem Solving
+Ogni progetto di coding è un **problema da risolvere**. I bambini imparano il metodo: analizzare, ipotizzare, testare, iterare.
+
+### 2. Pensiero Critico
+Debugare il codice significa analizzare criticamente il proprio lavoro, trovare **errori logici** e valutare diverse soluzioni.
+
+### 3. Creatività
+Progettare un gioco o un''app richiede **immaginazione** e originalità. Il coding è un mezzo espressivo potente quanto il disegno o la musica.
+
+![Creatività nel coding](/images/blog/inline/motivation.jpg)
+
+### 4. Collaborazione
+I progetti di gruppo insegnano **divisione del lavoro**, gestione dei conflitti e comunicazione efficace.
+
+### 5. Comunicazione
+Spiegare il proprio codice, documentare un progetto, presentare una soluzione: il coding richiede comunicazione **chiara e strutturata**.
+
+## Il Vantaggio Competitivo
+
+![Carriere future](/images/blog/inline/career-future.jpg)
+
+I bambini che programmano sviluppano queste soft skills **prima dei coetanei**, in un contesto pratico e coinvolgente. Non studiano la teoria: la **vivono** ogni lezione.
+
+## Cosa Dicono le Aziende
+
+Secondo LinkedIn, le top 5 competenze più richieste nel 2026 sono: problem solving, pensiero critico, creatività, gestione delle persone e collaborazione. Il coding le sviluppa **tutte e cinque**.
+
+## Conclusione
+
+Investire nel coding non significa scommettere su una specifica carriera tecnologica. Significa fornire ai vostri figli le **competenze universali** che li renderanno professionisti di successo in qualsiasi campo.', updated_at = now() WHERE slug = 'coding-soft-skills-lavoro-futuro' AND published = true;
 
 COMMIT;

@@ -1,6 +1,5 @@
--- Fase 1: zero-risk blog fixes
--- Generated: 2026-07-21T07:59:50.060770Z
 BEGIN;
+
 INSERT INTO content_snapshots (entity_type, entity_id, entity_label, snapshot_label, snapshot_data) VALUES ('blog_post', '1a57e906-d95b-4043-b3c6-84d5f2626c70', 'la-programmazione', 'pre-fase1-audit', '{"title": "Cos''è la programmazione? ", "excerpt": "Un''introduzione facile e motivante alla programmazione per ragazzi. Scopri come funziona il codice, perché è importante imparare e come iniziare il tuo viaggio digitale con Techaland", "content": "# Cos''è la Programmazione? Scopriamolo Insieme\n\nCiao ragazzi! Avete mai pensato a come funzionano i vostri videogame preferiti? O come fa il vostro smartphone a capire quando gli dite qualcosa? Dietro tutto questo c''è la **programmazione**: una vera e propria magia del mondo digitale che potete imparare anche voi!\n\n## La Programmazione è Come Dare Ordini a un Robot\n\nImmaginate di avere un amico robot molto intelligente, ma che non capisce quello che gli dite se non glielo spiegate perfettamente. La programmazione è esattamente questo: **insegnare al computer a fare quello che vogliamo**, passo dopo passo, con istruzioni molto precise.\n\nSe volete che il vostro robot ami vada a prendere un bicchiere d''acqua, non potete dirgli semplicemente \"va a prendere l''acqua\". Dovete essere chiarissimi:\n- Alzati dalla sedia\n- Cammina verso la cucina\n- Apri lo sportello\n- Prendi un bicchiere\n- Riempilo d''acqua\n- Ritorna qui\n\nEsattamente così! I computer hanno bisogno di istruzioni super dettagliate, e questo è quello che fa un **programmatore**: scrive una serie di ordini che il computer legge e esegue.\n\n## Il Linguaggio del Computer\n\nMa come parliamo al computer? Non con l''italiano normale, ma con un **linguaggio di programmazione**. È come una lingua speciale fatta di regole precise che il computer riesce a capire.\n\nCi sono tanti linguaggi di programmazione diversi (Python, JavaScript, C++, Java...) ma tutti servono allo stesso scopo: comunicare con il computer. È un po'' come le lingue che parlate voi: in Italia parlate italiano, in Francia francese, ma il significato è lo stesso. Allo stesso modo, i linguaggi di programmazione sono diversi, ma tutti dicono al computer cosa deve fare.\n\n## Cosa Possiamo Fare con la Programmazione?\n\nPreparatevi, perché la programmazione è veramente ovunque:\n\n**Videogame e App**: Ogni volta che giocate su uno smartphone o su un computer, state usando il lavoro di programmatori che hanno scritto migliaia di righe di codice.\n\n**Social Media**: Instagram, TikTok, YouTube... tutto questo è programmazione! Qualcuno ha scritto il codice che fa apparire i vostri video, che conta i \"mi piace\" e che vi fa scoprire nuovi contenuti.\n\n**Intelligenza Artificiale**: Sì, avete capito bene! Anche quella chat che vi aiuta a fare i compiti è programmazione.\n\n**Siti Internet**: Questo sito che state leggendo? È stato creato da programmatori.\n\n**Auto Intelligenti, Robot, Droni**: Tutto questo è programmazione.\n\n## Perché è Importante Imparare a Programmare?\n\nLa programmazione non è solo per gli scienziati pazzi dei film! Ecco perché è importante:\n\n**È il futuro**: Il mondo è sempre più digitale. Imparare a programmare significa avere super poteri nel mondo del lavoro del domani.\n\n**Sviluppa il pensiero logico**: Quando programmate, dovete pensare in modo ordinato e logico. È come risolvere un puzzle gigante!\n\n**È creativo**: Sì, avete letto bene! La programmazione non è solo numeri e regole: potete creare qualsiasi cosa vi passi per la testa. Un videogame, un''app, un sito,\n", "read_time": "1 min"}'::jsonb);
 UPDATE blog_posts SET title = 'Cos''è la programmazione? ', excerpt = 'Un''introduzione facile e motivante alla programmazione per ragazzi. Scopri come funziona il codice, perché è importante imparare e come iniziare il tuo.', content = '## Cos''è la Programmazione? Scopriamolo Insieme
 
@@ -641,5 +640,40 @@ A questo punto si esce dai percorsi guidati e si lavora a progetti veri: siti we
 ## Tappa 5 (17+ anni): Specializzazione
 
 Qui il ragazzo sceglie la sua strada:
+
+- **AI Engineer** (Python avanzato, machine learning)
+- **Game Developer** (Unity, Unreal Engine)
+- **Web Developer** (Full-stack moderno)
+- **Mobile Developer** (Swift, Kotlin)
+- **Cybersecurity Specialist**
+
+![Sviluppatore al lavoro su laptop](https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&w=800&q=70)
+
+## Quanto tempo serve davvero?
+
+Da Scratch a sviluppatore in grado di realizzare progetti veri: **5-8 anni di percorso continuativo**.
+
+Non è poco, ma è esattamente quanto serve a un ragazzo per imparare uno strumento musicale o uno sport ad alto livello.
+
+## E se non vuole fare lo sviluppatore?
+
+Perfetto. Le competenze che acquisisce — pensiero logico, problem solving, capacità di concentrazione, lavoro in team — gli serviranno in qualsiasi professione scelga.
+
+## FAQ
+
+**Mio figlio si stuferà a metà del percorso?**
+Può succedere. Per questo è importante variare strumenti e progetti, e non forzare la mano.
+
+**Devo iscriverlo "subito" a tutto?**
+No. Si va per tappe: una alla volta, con la possibilità di approfondire o cambiare direzione.
+
+**Quanto costa nel tempo?**
+Meno di uno strumento musicale serio o di uno sport competitivo. E con sbocchi professionali molto più diretti.
+
+## In conclusione
+
+Il percorso esiste, è collaudato, e funziona. Il momento migliore per iniziare è oggi.
+
+[Prenota una lezione di prova gratuita](/prenota) per capire da quale tappa partire in base all''età e al carattere di tuo figlio.', updated_at = now() WHERE slug = 'techland-da-scratch-a-sviluppatore-percorso' AND published = true;
 
 COMMIT;

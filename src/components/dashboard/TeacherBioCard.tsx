@@ -73,14 +73,14 @@ export function TeacherBioCard({ studentId }: TeacherBioCardProps) {
               link: g.student_groups.mega_chat_link as string,
             }));
 
-          if (profile) {
-            teacherMap.set(tid as string, {
-              name: profile.full_name,
-              bio: (tp as any)?.bio || null,
-              courses,
-              chatLinks,
-            });
-          }
+          const rawName = profile?.full_name || "Insegnante";
+          const displayName = rawName.trim().toLowerCase() === "admin" ? "Esmir" : rawName;
+          teacherMap.set(tid as string, {
+            name: displayName,
+            bio: (tp as any)?.bio || null,
+            courses,
+            chatLinks,
+          });
         });
 
         setTeachers(Array.from(teacherMap.values()));

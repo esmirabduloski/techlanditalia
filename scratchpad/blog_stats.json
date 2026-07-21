@@ -157,8 +157,6 @@
     "blog_links": 1,
     "external_links": 0,
     "ghost_links": [
-      "/images/blog/inline/math-coding.jpg",
-      "/images/blog/inline/turtle-art.jpg",
       "/corsi/scratch"
     ],
     "is_game_topic": false,
@@ -191,9 +189,6 @@
     "blog_links": 1,
     "external_links": 0,
     "ghost_links": [
-      "/images/blog/inline/web-dev-kids.jpg",
-      "/images/blog/inline/motivation.jpg",
-      "/images/blog/inline/brain-thinking.jpg",
       "/corsi/scratch"
     ],
     "is_game_topic": false,
@@ -427,11 +422,7 @@
     "course_links": 0,
     "blog_links": 0,
     "external_links": 0,
-    "ghost_links": [
-      "/images/blog/inline/parent-faq.jpg",
-      "/images/blog/inline/teamwork-coding.jpg",
-      "/images/blog/inline/motivation.jpg"
-    ],
+    "ghost_links": [],
     "is_game_topic": false,
     "has_disambig": false,
     "has_regional": false,
@@ -440,7 +431,6 @@
     "has_body_h1": false,
     "findings": [
       "T2_no_course_link",
-      "T3_ghost_links",
       "T4_thin",
       "T6_no_aeo",
       "T6_no_faq"
@@ -576,10 +566,7 @@
     "blog_links": 0,
     "external_links": 0,
     "ghost_links": [
-      "/images/blog/inline/minecraft-edu.jpg",
-      "/corsi/minecraft-education",
-      "/images/blog/inline/brain-thinking.jpg",
-      "/images/blog/inline/teamwork-coding.jpg"
+      "/corsi/minecraft-education"
     ],
     "is_game_topic": true,
     "has_disambig": false,
@@ -1215,10 +1202,7 @@
     "course_links": 0,
     "blog_links": 0,
     "external_links": 0,
-    "ghost_links": [
-      "/images/blog/inline/scratch-blocks.jpg",
-      "/images/blog/inline/python-learning.jpg"
-    ],
+    "ghost_links": [],
     "is_game_topic": false,
     "has_disambig": false,
     "has_regional": false,
@@ -1228,7 +1212,6 @@
     "findings": [
       "T1_orphan",
       "T2_no_course_link",
-      "T3_ghost_links",
       "T4_thin",
       "T6_no_aeo",
       "T6_no_faq"
@@ -1277,11 +1260,7 @@
     "course_links": 0,
     "blog_links": 0,
     "external_links": 0,
-    "ghost_links": [
-      "/images/blog/inline/game-dev.jpg",
-      "/images/blog/inline/python-learning.jpg",
-      "/images/blog/inline/teamwork-coding.jpg"
-    ],
+    "ghost_links": [],
     "is_game_topic": true,
     "has_disambig": false,
     "has_regional": false,
@@ -1291,7 +1270,6 @@
     "findings": [
       "T1_orphan",
       "T2_no_course_link",
-      "T3_ghost_links",
       "T4_thin",
       "T5_title_long",
       "T6_no_aeo",
@@ -1313,10 +1291,7 @@
     "blog_links": 0,
     "external_links": 0,
     "ghost_links": [
-      "/images/blog/inline/ai-kids.jpg",
-      "/images/blog/inline/brain-thinking.jpg",
-      "/corsi/scratch",
-      "/images/blog/inline/web-dev-kids.jpg"
+      "/corsi/scratch"
     ],
     "is_game_topic": false,
     "has_disambig": false,
@@ -1348,10 +1323,7 @@
     "blog_links": 0,
     "external_links": 0,
     "ghost_links": [
-      "/images/blog/inline/game-dev.jpg",
-      "/images/blog/inline/scratch-blocks.jpg",
-      "/corsi/scratch",
-      "/images/blog/inline/motivation.jpg"
+      "/corsi/scratch"
     ],
     "is_game_topic": true,
     "has_disambig": false,
@@ -1380,11 +1352,7 @@
     "course_links": 0,
     "blog_links": 0,
     "external_links": 0,
-    "ghost_links": [
-      "/images/blog/inline/screen-balance.jpg",
-      "/images/blog/inline/teamwork-coding.jpg",
-      "/images/blog/inline/unplugged.jpg"
-    ],
+    "ghost_links": [],
     "is_game_topic": false,
     "has_disambig": false,
     "has_regional": false,
@@ -1394,7 +1362,6 @@
     "findings": [
       "T1_orphan",
       "T2_no_course_link",
-      "T3_ghost_links",
       "T4_thin",
       "T6_no_aeo",
       "T6_no_faq"
@@ -1414,10 +1381,7 @@
     "blog_links": 0,
     "external_links": 0,
     "ghost_links": [
-      "/images/blog/inline/safety-digital.jpg",
-      "/images/blog/inline/web-dev-kids.jpg",
-      "/corsi/scratch",
-      "/images/blog/inline/family-coding.jpg"
+      "/corsi/scratch"
     ],
     "is_game_topic": true,
     "has_disambig": false,
@@ -1449,11 +1413,7 @@
     "course_links": 0,
     "blog_links": 0,
     "external_links": 0,
-    "ghost_links": [
-      "/images/blog/inline/motivation.jpg",
-      "/images/blog/inline/motivation.jpg",
-      "/images/blog/inline/teamwork-coding.jpg"
-    ],
+    "ghost_links": [],
     "is_game_topic": false,
     "has_disambig": false,
     "has_regional": false,
@@ -1463,7 +1423,6 @@
     "findings": [
       "T1_orphan",
       "T2_no_course_link",
-      "T3_ghost_links",
       "T4_thin",
       "T5_excerpt_range",
       "T6_no_aeo",
@@ -1484,10 +1443,7 @@
     "blog_links": 0,
     "external_links": 0,
     "ghost_links": [
-      "/images/blog/inline/parent-faq.jpg",
-      "/corsi/scratch",
-      "/images/blog/inline/screen-balance.jpg",
-      "/images/blog/inline/inclusion.jpg"
+      "/corsi/scratch"
     ],
     "is_game_topic": false,
     "has_disambig": false,
@@ -1519,11 +1475,7 @@
     "course_links": 0,
     "blog_links": 0,
     "external_links": 0,
-    "ghost_links": [
-      "/images/blog/inline/family-coding.jpg",
-      "/images/blog/inline/scratch-blocks.jpg",
-      "/images/blog/inline/teamwork-coding.jpg"
-    ],
+    "ghost_links": [],
     "is_game_topic": false,
     "has_disambig": false,
     "has_regional": false,
@@ -1533,7 +1485,6 @@
     "findings": [
       "T1_orphan",
       "T2_no_course_link",
-      "T3_ghost_links",
       "T4_thin",
       "T5_excerpt_range",
       "T6_no_aeo",
@@ -1554,10 +1505,7 @@
     "blog_links": 0,
     "external_links": 0,
     "ghost_links": [
-      "/images/blog/inline/inclusion.jpg",
-      "/corsi/scratch",
-      "/images/blog/inline/teamwork-coding.jpg",
-      "/images/blog/inline/school-coding.jpg"
+      "/corsi/scratch"
     ],
     "is_game_topic": false,
     "has_disambig": false,
@@ -1588,11 +1536,7 @@
     "course_links": 0,
     "blog_links": 0,
     "external_links": 0,
-    "ghost_links": [
-      "/images/blog/inline/brain-thinking.jpg",
-      "/images/blog/inline/math-coding.jpg",
-      "/images/blog/inline/teamwork-coding.jpg"
-    ],
+    "ghost_links": [],
     "is_game_topic": false,
     "has_disambig": false,
     "has_regional": false,
@@ -1601,7 +1545,6 @@
     "has_body_h1": false,
     "findings": [
       "T2_no_course_link",
-      "T3_ghost_links",
       "T4_thin",
       "T5_title_long",
       "T6_no_aeo",
@@ -1621,11 +1564,7 @@
     "course_links": 0,
     "blog_links": 0,
     "external_links": 0,
-    "ghost_links": [
-      "/images/blog/inline/teamwork-coding.jpg",
-      "/images/blog/inline/motivation.jpg",
-      "/images/blog/inline/career-future.jpg"
-    ],
+    "ghost_links": [],
     "is_game_topic": false,
     "has_disambig": false,
     "has_regional": false,
@@ -1635,7 +1574,6 @@
     "findings": [
       "T1_orphan",
       "T2_no_course_link",
-      "T3_ghost_links",
       "T4_thin",
       "T5_title_long",
       "T6_no_aeo",
@@ -1656,12 +1594,7 @@
     "blog_links": 1,
     "external_links": 0,
     "ghost_links": [
-      "/images/blog/inline/summer-coding.jpg",
-      "/corsi/scratch",
-      "/images/blog/inline/game-dev.jpg",
-      "/images/blog/inline/family-coding.jpg",
-      "/images/blog/inline/turtle-art.jpg",
-      "/images/blog/inline/web-dev-kids.jpg"
+      "/corsi/scratch"
     ],
     "is_game_topic": true,
     "has_disambig": false,
@@ -1693,10 +1626,6 @@
     "blog_links": 0,
     "external_links": 0,
     "ghost_links": [
-      "/images/blog/inline/brain-thinking.jpg",
-      "/images/blog/inline/math-coding.jpg",
-      "/images/blog/inline/web-dev-kids.jpg",
-      "/images/blog/inline/teamwork-coding.jpg",
       "/corsi/scratch"
     ],
     "is_game_topic": false,
@@ -1727,10 +1656,7 @@
     "blog_links": 1,
     "external_links": 0,
     "ghost_links": [
-      "/images/blog/inline/school-coding.jpg",
-      "/images/blog/inline/family-coding.jpg",
-      "/corsi/scratch",
-      "/images/blog/inline/teamwork-coding.jpg"
+      "/corsi/scratch"
     ],
     "is_game_topic": false,
     "has_disambig": false,
@@ -1762,8 +1688,6 @@
     "blog_links": 1,
     "external_links": 0,
     "ghost_links": [
-      "/images/blog/inline/unplugged.jpg",
-      "/images/blog/inline/brain-thinking.jpg",
       "/corsi/scratch"
     ],
     "is_game_topic": false,
@@ -1794,11 +1718,7 @@
     "course_links": 0,
     "blog_links": 0,
     "external_links": 0,
-    "ghost_links": [
-      "/images/blog/inline/career-future.jpg",
-      "/images/blog/inline/ai-kids.jpg",
-      "/images/blog/inline/teamwork-coding.jpg"
-    ],
+    "ghost_links": [],
     "is_game_topic": false,
     "has_disambig": false,
     "has_regional": false,
@@ -1808,7 +1728,6 @@
     "findings": [
       "T1_orphan",
       "T2_no_course_link",
-      "T3_ghost_links",
       "T4_thin",
       "T5_excerpt_range",
       "T6_no_aeo",
@@ -2142,8 +2061,6 @@
     "blog_links": 0,
     "external_links": 0,
     "ghost_links": [
-      "/images/blog/inline/teamwork-coding.jpg",
-      "/images/blog/inline/brain-thinking.jpg",
       "/corsi/scratch"
     ],
     "is_game_topic": true,
@@ -2203,9 +2120,7 @@
     "blog_links": 0,
     "external_links": 0,
     "ghost_links": [
-      "/corsi/scratch",
-      "/images/blog/inline/turtle-art.jpg",
-      "/images/blog/inline/math-coding.jpg"
+      "/corsi/scratch"
     ],
     "is_game_topic": false,
     "has_disambig": false,
@@ -2777,9 +2692,7 @@
     "course_links": 0,
     "blog_links": 0,
     "external_links": 0,
-    "ghost_links": [
-      "/lp/scratch"
-    ],
+    "ghost_links": [],
     "is_game_topic": false,
     "has_disambig": false,
     "has_regional": false,
@@ -2789,7 +2702,6 @@
     "findings": [
       "T1_orphan",
       "T2_no_course_link",
-      "T3_ghost_links",
       "T4_thin"
     ],
     "updated_at": "2026-07-18T23:53:48.418245+00:00"
@@ -2806,9 +2718,7 @@
     "course_links": 0,
     "blog_links": 0,
     "external_links": 0,
-    "ghost_links": [
-      "/lp/roblox"
-    ],
+    "ghost_links": [],
     "is_game_topic": true,
     "has_disambig": false,
     "has_regional": false,
@@ -2818,7 +2728,6 @@
     "findings": [
       "T1_orphan",
       "T2_no_course_link",
-      "T3_ghost_links",
       "T4_thin",
       "T5_title_long",
       "T7_no_disambig"

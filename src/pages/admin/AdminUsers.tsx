@@ -32,7 +32,9 @@ import {
   Users2,
   UserPlus,
   Eye,
-  CreditCard
+  CreditCard,
+  Download,
+  Upload
 } from 'lucide-react';
 import { LessonBalanceManager } from '@/components/admin/LessonBalanceManager';
 import {
@@ -145,6 +147,118 @@ export default function AdminUsers() {
     courseId: string;
   }>({ role: 'parent', fullName: '', email: '', password: '', childName: '', childUsername: '', courseId: 'none' });
   const [creatingUser, setCreatingUser] = useState(false);
+  const [selectedFamilies, setSelectedFamilies] = useState<Set<string>>(new Set());
+  const [importDialog, setImportDialog] = useState<{ open: boolean; running: boolean; log: string[]; total: number; done: number }>({ open: false, running: false, log: [], total: 0, done: 0 });
+
+  const toggleFamilySelection = (parentId: string) => {
+    setSelectedFamilies(prev => {
+      const next = new Set(prev);
+      if (next.has(parentId)) next.delete(parentId); else next.add(parentId);
+      return next;
+    });
+  };
+
+  const buildExportPayload = (mode: 'all' | 'selected') => {
+    const groups = groupedUsers();
+    const users: Array<{ role: string; fullName: string; email: string; isTeacher?: boolean; isAdmin?: boolean; children: Array<{ fullName: string; username: string; courseId: string | null }> }> = [];
+    for (const g of groups) {
+      if (!g.parent) continue;
+      if (mode === 'selected' && !selectedFamilies.has(g.parent.id)) continue;
+      const children = g.children.map(c => {
+        const enr = enrollments.find(e => e.student_id === c.id);
+        return { fullName: c.full_name, username: c.username || '', courseId: enr?.course_id || null };
+      });
+      users.push({
+        role: 'parent',
+        fullName: g.parent.full_name,
+        email: g.parent.email || '',
+        isTeacher: !!g.parent.isTeacher,
+        isAdmin: !!g.parent.isAdmin,
+        children,
+      });
+    }
+    return { version: 1, exportedAt: new Date().toISOString(), note: 'Le password non sono incluse: verranno generate all\'import se non specificate.', users };
+  };
+
+  const handleExport = (mode: 'all' | 'selected') => {
+    if (mode === 'selected' && selectedFamilies.size === 0) {
+      toast({ variant: 'destructive', title: 'Nessuna selezione', description: 'Seleziona almeno una famiglia con la checkbox.' });
+      return;
+    }
+    const payload = buildExportPayload(mode);
+    if (payload.users.length === 0) {
+      toast({ variant: 'destructive', title: 'Nulla da esportare', description: 'Nessun utente trovato con i filtri correnti.' });
+      return;
+    }
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const stamp = new Date().toISOString().split('T')[0];
+    a.href = url;
+    a.download = `techland-utenti-${mode}-${stamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    toast({ title: 'Export completato', description: `${payload.users.length} utenti esportati.` });
+  };
+
+  const handleImportFile = async (file: File) => {
+    let parsed: any;
+    try {
+      const text = await file.text();
+      parsed = JSON.parse(text);
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'File non valido', description: 'Il file non è JSON valido.' });
+      return;
+    }
+    const items: any[] = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.users) ? parsed.users : [];
+    if (items.length === 0) {
+      toast({ variant: 'destructive', title: 'Formato non riconosciuto', description: 'Nessun utente trovato nel file. Serve un array o { users: [...] }.' });
+      return;
+    }
+    setImportDialog({ open: true, running: true, log: [`Import di ${items.length} utenti...`], total: items.length, done: 0 });
+
+    let ok = 0, skip = 0, err = 0;
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const label = `${item.fullName || '?'} (${item.email || '?'})`;
+      try {
+        const body: any = {
+          role: item.role === 'teacher' ? 'teacher' : 'parent',
+          fullName: (item.fullName || '').trim(),
+          email: (item.email || '').trim().toLowerCase(),
+        };
+        if (item.password) body.password = String(item.password);
+        if (body.role === 'parent' && Array.isArray(item.children)) {
+          body.children = item.children
+            .filter((c: any) => c && c.fullName && c.username)
+            .map((c: any) => ({ fullName: String(c.fullName).trim(), username: String(c.username).trim(), courseId: c.courseId || undefined }));
+        }
+        const { data, error } = await supabase.functions.invoke('admin-import-user', { body });
+        if (error || data?.error) {
+          if (data?.skipped) {
+            skip++;
+            setImportDialog(prev => ({ ...prev, done: i + 1, log: [...prev.log, `⚠️ Saltato ${label}: ${data.error}`] }));
+          } else {
+            err++;
+            setImportDialog(prev => ({ ...prev, done: i + 1, log: [...prev.log, `❌ Errore ${label}: ${data?.error || error?.message}`] }));
+          }
+        } else {
+          ok++;
+          const pwd = data?.password ? ` (pwd: ${data.password})` : '';
+          const kids = data?.children?.length ? ` +${data.children.length} figli` : '';
+          setImportDialog(prev => ({ ...prev, done: i + 1, log: [...prev.log, `✅ ${label}${kids}${pwd}`] }));
+        }
+      } catch (e: any) {
+        err++;
+        setImportDialog(prev => ({ ...prev, done: i + 1, log: [...prev.log, `❌ Errore ${label}: ${e?.message || 'sconosciuto'}`] }));
+      }
+    }
+    setImportDialog(prev => ({ ...prev, running: false, log: [...prev.log, `--- Completato: ${ok} creati, ${skip} saltati, ${err} errori.`] }));
+    toast({ title: 'Import completato', description: `${ok} creati, ${skip} saltati, ${err} errori.` });
+    fetchData();
+  };
 
   const generatePassword = () => {
     const chars = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -828,6 +942,37 @@ export default function AdminUsers() {
           </Button>
         </div>
 
+        {/* Import/Export toolbar */}
+        <div className="flex flex-wrap items-center gap-2 mb-4 p-3 border rounded-lg bg-muted/20">
+          <span className="text-sm font-medium mr-2">Import / Export JSON:</span>
+          <Button variant="outline" size="sm" onClick={() => handleExport('all')} className="gap-1">
+            <Download className="w-4 h-4" /> Esporta tutti
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => handleExport('selected')} className="gap-1" disabled={selectedFamilies.size === 0}>
+            <Download className="w-4 h-4" /> Esporta selezionati ({selectedFamilies.size})
+          </Button>
+          <Button variant="outline" size="sm" asChild className="gap-1">
+            <label className="cursor-pointer">
+              <Upload className="w-4 h-4" /> Importa JSON
+              <input
+                type="file"
+                accept="application/json,.json"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleImportFile(f);
+                  e.target.value = '';
+                }}
+              />
+            </label>
+          </Button>
+          {selectedFamilies.size > 0 && (
+            <Button variant="ghost" size="sm" onClick={() => setSelectedFamilies(new Set())}>
+              Deseleziona tutto
+            </Button>
+          )}
+        </div>
+
         {/* Search and Filter */}
         <div className="flex flex-col gap-4 mb-6">
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
@@ -930,6 +1075,12 @@ export default function AdminUsers() {
                         <div className="p-4 cursor-pointer hover:bg-muted/50 transition-colors">
                           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 lg:gap-4">
                             <div className="flex items-center gap-3 min-w-0">
+                              <Checkbox
+                                checked={selectedFamilies.has(group.parent.id)}
+                                onCheckedChange={() => toggleFamilySelection(group.parent!.id)}
+                                onClick={(e) => e.stopPropagation()}
+                                aria-label={`Seleziona ${group.parent.full_name}`}
+                              />
                               {hasChildren ? (
                                 isExpanded ? <ChevronDown className="w-5 h-5 text-muted-foreground flex-shrink-0" /> : <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
                               ) : (
@@ -1360,6 +1511,45 @@ export default function AdminUsers() {
           )}
         </div>
       </main>
+
+      {/* Import Progress Dialog */}
+      <Dialog open={importDialog.open} onOpenChange={(open) => !importDialog.running && setImportDialog(prev => ({ ...prev, open }))}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Import utenti da JSON</DialogTitle>
+            <DialogDescription>
+              {importDialog.running
+                ? `Elaborazione ${importDialog.done}/${importDialog.total}...`
+                : `Completato: ${importDialog.done}/${importDialog.total}`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-96 overflow-y-auto bg-muted/30 rounded p-3 font-mono text-xs space-y-1">
+            {importDialog.log.map((line, i) => (
+              <div key={i} className="whitespace-pre-wrap break-all">{line}</div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              disabled={importDialog.running}
+              onClick={() => {
+                const blob = new Blob([importDialog.log.join('\n')], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `import-log-${Date.now()}.txt`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+            >
+              Scarica log
+            </Button>
+            <Button disabled={importDialog.running} onClick={() => setImportDialog(prev => ({ ...prev, open: false }))}>
+              Chiudi
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Password Dialog */}
       <Dialog open={passwordDialog.open} onOpenChange={(open) => !open && setPasswordDialog({ open: false, userId: '', userName: '' })}>

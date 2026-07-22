@@ -942,9 +942,36 @@ export default function AdminUsers() {
           </Button>
         </div>
 
-        {/* Search and Filter */}
-        <div className="flex flex-col gap-4 mb-6">
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+        {/* Import/Export toolbar */}
+        <div className="flex flex-wrap items-center gap-2 mb-4 p-3 border rounded-lg bg-muted/20">
+          <span className="text-sm font-medium mr-2">Import / Export JSON:</span>
+          <Button variant="outline" size="sm" onClick={() => handleExport('all')} className="gap-1">
+            <Download className="w-4 h-4" /> Esporta tutti
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => handleExport('selected')} className="gap-1" disabled={selectedFamilies.size === 0}>
+            <Download className="w-4 h-4" /> Esporta selezionati ({selectedFamilies.size})
+          </Button>
+          <Button variant="outline" size="sm" asChild className="gap-1">
+            <label className="cursor-pointer">
+              <Upload className="w-4 h-4" /> Importa JSON
+              <input
+                type="file"
+                accept="application/json,.json"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleImportFile(f);
+                  e.target.value = '';
+                }}
+              />
+            </label>
+          </Button>
+          {selectedFamilies.size > 0 && (
+            <Button variant="ghost" size="sm" onClick={() => setSelectedFamilies(new Set())}>
+              Deseleziona tutto
+            </Button>
+          )}
+        </div>
             <div className="relative flex-1 sm:max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input

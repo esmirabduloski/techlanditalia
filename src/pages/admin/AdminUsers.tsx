@@ -1075,6 +1075,12 @@ export default function AdminUsers() {
                         <div className="p-4 cursor-pointer hover:bg-muted/50 transition-colors">
                           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 lg:gap-4">
                             <div className="flex items-center gap-3 min-w-0">
+                              <Checkbox
+                                checked={selectedFamilies.has(group.parent.id)}
+                                onCheckedChange={() => toggleFamilySelection(group.parent!.id)}
+                                onClick={(e) => e.stopPropagation()}
+                                aria-label={`Seleziona ${group.parent.full_name}`}
+                              />
                               {hasChildren ? (
                                 isExpanded ? <ChevronDown className="w-5 h-5 text-muted-foreground flex-shrink-0" /> : <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
                               ) : (

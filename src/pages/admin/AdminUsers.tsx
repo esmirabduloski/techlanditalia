@@ -1512,6 +1512,45 @@ export default function AdminUsers() {
         </div>
       </main>
 
+      {/* Import Progress Dialog */}
+      <Dialog open={importDialog.open} onOpenChange={(open) => !importDialog.running && setImportDialog(prev => ({ ...prev, open }))}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Import utenti da JSON</DialogTitle>
+            <DialogDescription>
+              {importDialog.running
+                ? `Elaborazione ${importDialog.done}/${importDialog.total}...`
+                : `Completato: ${importDialog.done}/${importDialog.total}`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-96 overflow-y-auto bg-muted/30 rounded p-3 font-mono text-xs space-y-1">
+            {importDialog.log.map((line, i) => (
+              <div key={i} className="whitespace-pre-wrap break-all">{line}</div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              disabled={importDialog.running}
+              onClick={() => {
+                const blob = new Blob([importDialog.log.join('\n')], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `import-log-${Date.now()}.txt`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+            >
+              Scarica log
+            </Button>
+            <Button disabled={importDialog.running} onClick={() => setImportDialog(prev => ({ ...prev, open: false }))}>
+              Chiudi
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Password Dialog */}
       <Dialog open={passwordDialog.open} onOpenChange={(open) => !open && setPasswordDialog({ open: false, userId: '', userName: '' })}>
         <DialogContent>

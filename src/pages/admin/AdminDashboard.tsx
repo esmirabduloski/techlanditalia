@@ -38,6 +38,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { JsonImportExport } from "@/components/admin/JsonImportExport";
 
 interface BlogPost {
   id: string;

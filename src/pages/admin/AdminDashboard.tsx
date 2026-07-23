@@ -191,12 +191,21 @@ export default function AdminDashboard() {
               })()}
             </div>
           </div>
-          <Button asChild>
-            <Link to="/admin/blog/nuovo">
-              <Plus className="w-4 h-4 mr-2" />
-              Nuovo Articolo
-            </Link>
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <JsonImportExport
+              filePrefix="blog-posts"
+              tableName="blog_posts"
+              conflictColumn="slug"
+              entityLabel="articoli"
+              onImported={fetchPosts}
+            />
+            <Button asChild>
+              <Link to="/admin/blog/nuovo">
+                <Plus className="w-4 h-4 mr-2" />
+                Nuovo Articolo
+              </Link>
+            </Button>
+          </div>
         </div>
 
         {/* Info Box: 3 modalità di pubblicazione */}

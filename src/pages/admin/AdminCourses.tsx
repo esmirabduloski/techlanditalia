@@ -42,6 +42,7 @@ import {
 import { toast } from 'sonner';
 import { Switch } from '@/components/ui/switch';
 import { useAutoBackup } from '@/hooks/useAutoBackup';
+import { JsonImportExport } from '@/components/admin/JsonImportExport';
 
 interface Course {
   id: string;

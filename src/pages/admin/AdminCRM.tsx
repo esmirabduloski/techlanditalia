@@ -16,12 +16,13 @@ import { CRMLeadDetailDrawer } from "@/components/admin/crm/CRMLeadDetailDrawer"
 import { CRMNotionSettings } from "@/components/admin/crm/CRMNotionSettings";
 import { Loader2, Plus, LogOut, KanbanSquare, List, BarChart3, Database } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { JsonImportExport } from "@/components/admin/JsonImportExport";
 
 export default function AdminCRM() {
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { leads, loading, updateLead, deleteLead, createLead } = useCRMLeads();
+  const { leads, loading, updateLead, deleteLead, createLead, reload } = useCRMLeads();
 
   const [selectedLead, setSelectedLead] = useState<CrmLead | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -62,10 +63,18 @@ export default function AdminCRM() {
       <AdminHeader />
       <div className="border-b">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button size="sm" onClick={() => setCreateOpen(true)}>
               <Plus className="w-4 h-4 mr-1" /> Nuovo lead
             </Button>
+            <JsonImportExport
+              filePrefix="crm-leads"
+              tableName="crm_leads"
+              conflictColumn="email"
+              stripColumns={["notion_page_id", "notion_last_sync_at", "notion_sync_error"]}
+              entityLabel="lead"
+              onImported={reload}
+            />
           </div>
           <Button variant="ghost" size="sm" onClick={handleSignOut}>
             <LogOut className="w-4 h-4 mr-1" /> Esci

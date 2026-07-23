@@ -436,10 +436,19 @@ export default function AdminCourses() {
             <p className="text-muted-foreground mt-1">{courses.length} corsi totali</p>
           </div>
           
-          <Button className="gap-2" onClick={openCreateDialog}>
-            <Plus className="w-4 h-4" />
-            Crea Corso
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <JsonImportExport
+              filePrefix="courses"
+              tableName="courses"
+              conflictColumn="slug"
+              entityLabel="corsi"
+              onImported={fetchCourses}
+            />
+            <Button className="gap-2" onClick={openCreateDialog}>
+              <Plus className="w-4 h-4" />
+              Crea Corso
+            </Button>
+          </div>
         </div>
 
         {/* Create Dialog */}

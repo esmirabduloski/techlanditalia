@@ -39,6 +39,7 @@ const navItems: NavItem[] = [
   { to: '/admin/link-insegnanti', label: 'Link', icon: LinkIcon },
   { to: '/admin/report-lezioni', label: 'Report', icon: ClipboardList },
   { to: '/admin/backup', label: 'Backup', icon: Database },
+  { to: '/admin/backup-json', label: 'Backup JSON', icon: Database },
   { to: '/admin/documentazione', label: 'Docs', icon: BookText },
   { to: '/admin/landing-pages', label: 'Landing', icon: Megaphone },
   { to: '/admin/access-logs', label: 'Sicurezza', icon: Shield },

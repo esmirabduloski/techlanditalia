@@ -50,3 +50,9 @@ verify_jwt = false
 
 [functions.blog-auto-publish]
 verify_jwt = false
+
+[functions.backup-json-snapshot]
+verify_jwt = false
+
+[functions.backup-json-cleanup]
+verify_jwt = false

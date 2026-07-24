@@ -1,79 +1,114 @@
-# Analisi BLOG_AUDIT_PLAN.md e piano di esecuzione
+# Export / Import JSON — estensione admin + storico automatico
 
-## Verdetto: applicabile, con 1 blocco e 2 ipotesi da confermare
+## 1) Cosa conviene aggiungere a Export/Import JSON
 
-Il piano è ben strutturato e tecnicamente corretto rispetto a quello che vedo nel codice:
+Divido per "utilità reale" nel gestire la piattaforma. Per ognuno indico la tabella, la colonna di conflitto (per upsert idempotente) e le colonne da rimuovere all'import.
 
-- Conferma verificata: gli articoli sono in `blog_posts` (non file MD nel repo), la coda `auto_publish_queue` è gestita da `supabase/functions/blog-auto-publish`, la sitemap dinamica in `generate-sitemap` legge `updated_at` (quindi il fix di `updated_at = now()` alimenta davvero il lastmod), e il parser markdown fragile citato al §8.2 è reale (`src/pages/BlogArticle.tsx:36-50`, whitelist DOMPurify limitata).
-- Blocco principale: **non abbiamo GSC/GA4 nel repo**. I criteri quantitativi Q1–Q4 (§4) non sono calcolabili finché non carichi i CSV. Senza quelli, la Fase 2 "classificazione completa con Priority Score" non è eseguibile.
-- Buona notizia: i criteri tecnici T1–T8 (§4) e la baseline §3 sono **già calcolabili senza dati esterni** — quindi possiamo iniziare subito da lì e dare valore anche prima dei CSV.
+### Alta priorità (gestione contenuti didattici)
+| Sezione admin | Tabella | Conflict | Strip on import | Perché serve |
+|---|---|---|---|---|
+| Lezioni | `lessons` | `id` (o coppia `course_id + lesson_number`) | `created_at, updated_at` | Duplicare contenuti tra corsi, backup pre-modifiche massive |
+| Task lezione | `lesson_tasks` | `id` | `created_at, updated_at` | Riordinare/clonare esercizi, migrare da un corso all'altro |
+| Compiti | `homework` | `id` | `created_at, updated_at` | Riutilizzare compiti tipo tra gruppi |
+| Glossario | `glossary_terms` | `slug` | `created_at, updated_at` | Import massivo termini, backup |
+| Landing pages | `landing_pages` | `slug` | `created_at, updated_at` | Duplicare landing SEO, versionare |
+| FAQ / Site settings | `site_settings` | `key` | `updated_at` | Backup configurazioni home/SEO |
+| Badge | `badges` | `id` | `created_at` | Clonare set di badge tra ambienti |
 
-## Punti forti del piano da tenere
+### Media priorità (CRM & marketing)
+| Sezione | Tabella | Conflict | Note |
+|---|---|---|---|
+| Newsletter | `newsletter_subscribers` | `email` | Import lista esterna |
+| Prenotazioni trial | `trial_bookings` | `id` | Solo export (archivio) |
+| Contatti | `contact_submissions` | `id` | Solo export |
+| Referral | `referrals` | `id` | Solo export (audit) |
+| Blocked emails | `blocked_emails` | `pattern + type` | Import blocklist condivise |
 
-- Guardrail chiari (slug immutabili, sottoinsieme markdown, articoli "sani" intoccati).
-- Backup obbligatorio via `blog_posts_backup` prima di ogni batch, UPDATE per singolo slug.
-- Whitelist esplicita delle route corso valide per evitare i soft-404 (§8.2).
-- Snapshot before/after in `content-backups/blog/` = diff verificabile e rollback.
+### Bassa priorità / solo export (dati sensibili, non ha senso reimportare)
+- `homework_submissions`, `lesson_progress`, `task_progress`, `group_attendance`, `lesson_reports` → solo **export** per backup/analisi. Import è pericoloso (invaliderebbe punti, streak, trigger).
+- `admin_access_logs`, `security_events`, `login_attempts` → solo **export** per audit.
+- `crm_interactions` → solo export (storia lead).
 
-## Cose da correggere/migliorare rispetto al piano originale
+### Da NON esportare/importare via JSON
+- `profiles`, `user_roles`, `enrollments`, `group_students` → già gestiti dal flusso "Utenti" con Edge Function dedicata (creano auth.users). Duplicarli qui rompe l'integrità.
+- Tabelle `auth.*`, `storage.*` → mai.
+- `analytics_events`, `page_views`, `conversion_funnels` → volumi enormi, non ha senso.
 
-1. **§8.4 sconsiglio di creare `blog_posts_backup` come tabella parallela**: già esiste il sistema `content_snapshots` (backup JSONB, memoria progetto). Uso quello invece di duplicare uno schema che poi diverge.
-2. **Manca un dry-run rendering**: il parser è fragile (§8.2). Prima di ogni UPDATE di `content` serve un check automatico che il markdown stia nella whitelist, altrimenti il rendering si rompe silenziosamente.
-3. **Coda ~121 bozze**: il piano offre opzioni A/B ma non decide. Propongo A (audit preventivo anche sulle bozze) perché così escono già corretti e non si accumula debito.
-4. **Semrush senza unità API**: uso query GSC come proxy come previsto — nessun blocco, solo perdita di precisione su Q4.
-5. **Menzioni Veneto e disambiguazione TechLand**: la memoria di progetto conferma che TECHLAND va front-loaded; ma "0 menzioni Veneto su 89" può essere una scelta editoriale, non un bug. Da confermare prima di trattarlo come gap sistemico.
+### Suggerimento UX
+Nel pannello admin aggiungere una pagina unica **"Backup & Import"** (`/admin/backup`) con una tabella che elenca ogni entità e i suoi pulsanti Export/Import, invece di spargere i bottoni in ogni tab. Rimane comunque il bottone rapido nelle pagine principali.
 
-## Divisione in 3 fasi
+---
 
-### Fase 1 — Discovery tecnica + fix a zero rischio (eseguibile subito, senza input esterni)
+## 2) Storico automatico degli export
 
-Obiettivo: chiudere tutto ciò che non richiede GSC/GA4 né rewrite di contenuto.
+### Dove salvarli
+Non nella cartella `/dev-server` del repo (i file scritti non tornano in git dal runtime dell'app). L'unico posto veramente persistente e leggibile dall'admin è **Supabase Storage**, in un bucket privato dedicato: `backups-json/`.
 
-1. Ri-eseguire la baseline §3 aggiornata (ora ci sono più articoli pubblicati) e salvarla in `scratchpad/blog_stats.json`.
-2. Produrre `BLOG_AUDIT_RESULTS.md` **parziale**: solo criteri tecnici T1–T8, classifica per gravità, senza Priority Score (opportunità non ancora nota).
-3. Fix chirurgici a rischio nullo su TUTTI gli articoli (anche i "sani"):
-   - T3 link ghost/rotti (33 articoli): retarget su slug corso validi o rimozione.
-   - T5 title >60 char e excerpt fuori range (50 + 3 articoli).
-   - Aggiungere `updated_at = now()` solo agli articoli effettivamente modificati.
-4. Setup infrastruttura riutilizzabile per Fase 2/3:
-   - Validator markdown (whitelist §8.2) come check pre-UPDATE.
-   - Backup via `content_snapshots` esistente, non nuova tabella.
-   - Log delle modifiche in `BLOG_FIX_LOG.md`.
+Struttura proposta:
+```
+backups-json/
+  2026/
+    07/
+      2026-07-24_blog_posts.json
+      2026-07-24_courses.json
+      2026-07-24_crm_leads.json
+      ...
+    08/
+      ...
+```
+File uno per tabella, timestamp nel nome. Un file "manifest" giornaliero `2026-07-24_manifest.json` con conteggi/righe per verifica.
 
-Deliverable: `BLOG_AUDIT_RESULTS.md` parziale + ~53 articoli con meta/link corretti + validator riutilizzabile.
+### Come generarli
+Edge Function `backup-json-snapshot` (verify_jwt = false, protetta da secret header):
+1. Legge la whitelist di tabelle da esportare.
+2. Per ogni tabella fa `select *` (paginazione se > 10k righe).
+3. Scrive su Storage al path `YYYY/MM/YYYY-MM-DD_<tabella>.json`.
+4. Aggiorna `manifest.json` del giorno.
 
-### Fase 2 — Classificazione completa e batch strutturali (richiede CSV GSC + GA4)
+### Schedulazione
+`pg_cron` giornaliero (es. 03:00 Europe/Rome) che chiama la function via `net.http_post`. Frequenza consigliata: **giornaliera** per contenuti "vivi" (blog, courses, crm_leads, landing_pages), **settimanale** per il resto.
 
-Prerequisito: CSV `Pagine` e `Query` da GSC (90gg, filtro `/blog/`) + CSV GA4 landing page. Decisione su coda bozze (A consigliata).
+### Retention / pulizia mensile
+Job `pg_cron` mensile (1° del mese) che:
+- Elenca gli oggetti in `backups-json/`.
+- Mantiene: ultimi **90 giorni** completi + il **primo snapshot di ogni mese** dei 12 mesi precedenti (archivio storico).
+- Cancella tutto il resto.
 
-1. Calcolare criteri Q1–Q4 e Priority Score completo.
-2. Riscrivere `BLOG_AUDIT_RESULTS.md` con classifica finale + top 20 per impatto.
-3. Batch di internal linking sistematico (T1/T2): orfani (82), inbound da articoli affini, 2–4 link corso per articolo. Zero rewrite di contenuto, solo link.
-4. Batch AEO/FAQ minimo (T6): aggiungere blocco "Risposta breve" + 3 FAQ dove manca, senza espandere il resto.
-5. Se scegli opzione A: audit preventivo delle ~121 bozze sugli stessi criteri tecnici, così vengono corrette prima della pubblicazione automatica.
+### Accesso admin
+Nuova pagina `/admin/backups-json`: lista file per mese, download diretto tramite signed URL (bucket privato). Nessun dato mai pubblico.
 
-Deliverable: linking sano su tutto il blog + AEO/FAQ diffusi + bozze pulite.
+---
 
-### Fase 3 — Content expansion e intent realignment (batch iterativi, on-demand)
+## 3) Costi Lovable Cloud
 
-Solo per articoli in cima al Priority Score che lo giustificano.
+**Sì, consuma un po' di Cloud usage (non crediti chat)**, ma quantità piccole:
 
-1. Content expansion (T4 + Q2 striking distance): sezioni mancanti vs top SERP, target ≥800 parole su topic competitivi.
-2. Meta refresh mirato (Q1): title/excerpt su articoli con impression alte e CTR basso.
-3. Intent realignment / rewrite completi (Q3): stimati 5–10, non di più.
-4. Disambiguazione TechLand (T7) e menzioni regionali (T8): solo dove naturale — da approvare articolo per articolo, non broadcast.
+- **Storage**: JSON compresso poco (testo). Stima con volumi attuali (~72 blog post, 10 profiles, poche centinaia di lead) → ogni snapshot giornaliero **< 5 MB**. In un mese: ~150 MB. Con retention proposta: sotto **~1 GB stabile**. Costo Storage Supabase: trascurabile rispetto al credito Cloud incluso ($25/mese).
+- **Egress**: solo quando l'admin scarica un file. Marginale.
+- **Compute Edge Function**: pochi secondi al giorno.
+- **pg_cron**: gratuito.
 
-Deliverable: batch di 5–10 articoli/settimana con rewrite mirato, ognuno con snapshot before/after.
+**Non consuma crediti di messaggi Lovable AI** (nessuna chiamata a modelli).
 
-## Cosa serve da te per sbloccare le fasi
+Verdict: **rientra abbondantemente nei $25 gratuiti mensili di Cloud** finché il DB non cresce di 10-20×. Se in futuro si vuole ridurre a zero, si può ospitare i backup su un bucket esterno (S3/R2), ma non è necessario oggi.
 
-- **Per Fase 1 (adesso)**: nulla, parto.
-- **Per Fase 2**: CSV GSC (Pagine + Query, 90gg) e CSV GA4 landing page. Conferma opzione A per la coda bozze. Conferma se vuoi che T8 (Veneto) sia trattato come gap da colmare o come scelta editoriale da lasciare com'è.
-- **Per Fase 3**: approvazione batch per batch (rewrite più invasivi).
+---
 
-## Note tecniche (per te lato dev)
+## 4) Fasi di implementazione proposte
 
-- Scritture: le faccio via migrazione SQL (tool Supabase disponibile), un UPDATE per slug, con snapshot `content_snapshots` prima. Nessun uso di service_role in chiaro.
-- Non tocco: `slug`, `published`, `scheduled_publish_at`, `auto_publish_queue`, `queue_order`, `created_at`. Aggiorno solo `title`, `excerpt`, `content`, `read_time`, `updated_at`.
-- Route corso whitelisted (verificate): `/corsi/roblox`, `/corsi/roblox-avanzato`, `/corsi/web-development`, `/corsi/python-base`, `/corsi/python-ai`. Confermate anche dai redirect legacy già in `CorsoDettaglio.tsx`.
-- Sitemap dinamica: si aggiorna da sola via `updated_at` — nessun intervento su `generate-sitemap`.
+**Fase A — Estensione UI Import/Export** (piccola)
+- Aggiungere il componente `JsonImportExport` a: Lezioni, Task, Compiti, Glossario, Landing Pages, Site Settings, Badge, Newsletter, Blocked emails.
+- Solo export per: prenotazioni, contatti, referral, submission/progress, log admin.
+
+**Fase B — Backup automatico su Storage** (media)
+- Creare bucket privato `backups-json`.
+- Edge Function `backup-json-snapshot` con whitelist tabelle e paginazione.
+- Cron giornaliero + manifest.
+- Pagina admin `/admin/backups-json` con lista/download via signed URL.
+
+**Fase C — Retention & pulizia mensile** (piccola)
+- Edge Function `backup-json-cleanup` che applica la policy 90 giorni + 1/mese storico.
+- Cron mensile.
+- Bottone manuale "Esegui pulizia ora" in `/admin/backups-json`.
+
+Confermi che procedo con Fase A + B + C, oppure vuoi partire solo dalla A?

@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { AdminNav } from '@/components/admin/AdminNav';
-import { ArrowLeft, Save, Loader2, Link2, BookOpen, GraduationCap, Copy, Check } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Link2, BookOpen, GraduationCap, Copy, Check, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { z } from 'zod';
 import DOMPurify from 'dompurify';
 import { Badge } from '@/components/ui/badge';

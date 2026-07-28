@@ -54,6 +54,11 @@ export default function BlogEditor() {
   const [blogPosts, setBlogPosts] = useState<{ title: string; slug: string; category: string }[]>([]);
   const [copiedLink, setCopiedLink] = useState<string | null>(null);
   const [linksOpen, setLinksOpen] = useState(true);
+  const [postsSearch, setPostsSearch] = useState('');
+  const [postsPage, setPostsPage] = useState(0);
+  const [postsExpanded, setPostsExpanded] = useState(false);
+  const POSTS_PER_PAGE = 50;
+  const COLLAPSED_PREVIEW = 6;
   const contentRef = React.useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {

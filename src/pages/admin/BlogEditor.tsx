@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { AdminNav } from '@/components/admin/AdminNav';
-import { ArrowLeft, Save, Loader2, Link2, BookOpen, GraduationCap, Copy, Check } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Link2, BookOpen, GraduationCap, Copy, Check, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { z } from 'zod';
 import DOMPurify from 'dompurify';
 import { Badge } from '@/components/ui/badge';
@@ -54,6 +54,11 @@ export default function BlogEditor() {
   const [blogPosts, setBlogPosts] = useState<{ title: string; slug: string; category: string }[]>([]);
   const [copiedLink, setCopiedLink] = useState<string | null>(null);
   const [linksOpen, setLinksOpen] = useState(true);
+  const [postsSearch, setPostsSearch] = useState('');
+  const [postsPage, setPostsPage] = useState(0);
+  const [postsExpanded, setPostsExpanded] = useState(false);
+  const POSTS_PER_PAGE = 50;
+  const COLLAPSED_PREVIEW = 6;
   const contentRef = React.useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -459,38 +464,107 @@ export default function BlogEditor() {
                     )}
 
                     {/* Blog Posts */}
-                    {blogPosts.length > 0 && (
-                      <div>
-                        <h4 className="text-sm font-semibold flex items-center gap-1.5 mb-2">
-                          <BookOpen className="w-4 h-4 text-primary" />
-                          Altri Articoli
-                        </h4>
-                        <div className="flex flex-wrap gap-1.5">
-                          {blogPosts.map((p) => (
-                            <div key={p.slug} className="flex items-center gap-0.5">
+                    {blogPosts.length > 0 && (() => {
+                      const q = postsSearch.trim().toLowerCase();
+                      const filtered = q
+                        ? blogPosts.filter(p => p.title.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q))
+                        : blogPosts;
+                      const isSearching = q.length > 0;
+                      const showPagination = postsExpanded || isSearching;
+                      const totalPages = Math.max(1, Math.ceil(filtered.length / POSTS_PER_PAGE));
+                      const currentPage = Math.min(postsPage, totalPages - 1);
+                      const visible = showPagination
+                        ? filtered.slice(currentPage * POSTS_PER_PAGE, (currentPage + 1) * POSTS_PER_PAGE)
+                        : filtered.slice(0, COLLAPSED_PREVIEW);
+                      return (
+                        <div>
+                          <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+                            <h4 className="text-sm font-semibold flex items-center gap-1.5">
+                              <BookOpen className="w-4 h-4 text-primary" />
+                              Altri Articoli
+                              <Badge variant="secondary" className="ml-1">{blogPosts.length}</Badge>
+                            </h4>
+                            <div className="relative flex-1 min-w-[180px] max-w-xs">
+                              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                              <Input
+                                type="search"
+                                placeholder="Cerca articolo..."
+                                value={postsSearch}
+                                onChange={(e) => { setPostsSearch(e.target.value); setPostsPage(0); }}
+                                className="h-8 pl-7 text-xs"
+                              />
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {visible.map((p) => (
+                              <div key={p.slug} className="flex items-center gap-0.5">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  type="button"
+                                  className="text-xs h-7 gap-1"
+                                  onClick={() => insertLink(p.title, `/blog/${p.slug}`)}
+                                >
+                                  📄 {p.title}
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  type="button"
+                                  className="h-7 w-7"
+                                  onClick={() => copyMarkdownLink(p.title, `/blog/${p.slug}`)}
+                                >
+                                  {copiedLink === `/blog/${p.slug}` ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+                                </Button>
+                              </div>
+                            ))}
+                            {visible.length === 0 && (
+                              <p className="text-xs text-muted-foreground">Nessun articolo trovato.</p>
+                            )}
+                          </div>
+                          <div className="flex items-center justify-between gap-2 mt-3 flex-wrap">
+                            {!isSearching && filtered.length > COLLAPSED_PREVIEW && (
                               <Button
-                                variant="outline"
+                                variant="link"
                                 size="sm"
                                 type="button"
-                                className="text-xs h-7 gap-1"
-                                onClick={() => insertLink(p.title, `/blog/${p.slug}`)}
+                                className="h-auto p-0 text-xs"
+                                onClick={() => { setPostsExpanded(!postsExpanded); setPostsPage(0); }}
                               >
-                                📄 {p.title}
+                                {postsExpanded ? 'Mostra meno' : `Mostra tutti (${filtered.length})`}
                               </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                type="button"
-                                className="h-7 w-7"
-                                onClick={() => copyMarkdownLink(p.title, `/blog/${p.slug}`)}
-                              >
-                                {copiedLink === `/blog/${p.slug}` ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
-                              </Button>
-                            </div>
-                          ))}
+                            )}
+                            {showPagination && filtered.length > POSTS_PER_PAGE && (
+                              <div className="flex items-center gap-2 ml-auto">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  type="button"
+                                  className="h-7 px-2"
+                                  disabled={currentPage === 0}
+                                  onClick={() => setPostsPage(p => Math.max(0, p - 1))}
+                                >
+                                  <ChevronLeft className="w-3 h-3" />
+                                </Button>
+                                <span className="text-xs text-muted-foreground">
+                                  Pagina {currentPage + 1} di {totalPages}
+                                </span>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  type="button"
+                                  className="h-7 px-2"
+                                  disabled={currentPage >= totalPages - 1}
+                                  onClick={() => setPostsPage(p => Math.min(totalPages - 1, p + 1))}
+                                >
+                                  <ChevronRight className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      );
+                    })()}
                   </div>
                 </CollapsibleContent>
               </Collapsible>

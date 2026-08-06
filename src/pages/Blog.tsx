@@ -163,6 +163,7 @@ export default function Blog() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [mobileFiltersExpanded, setMobileFiltersExpanded] = useState(false);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -495,7 +496,58 @@ export default function Blog() {
       {!isLoading && posts.length > 0 && (
         <section className="py-6 border-b">
           <div className="tech-container">
-            <div className="flex flex-wrap items-center gap-3 justify-center">
+            {/* Mobile: collapsible filter chips */}
+            <div className="flex md:hidden flex-wrap items-center gap-3 justify-center">
+              <button
+                onClick={clearFilters}
+                className={`px-4 py-2 rounded-full font-medium transition-all ${
+                  !selectedCategory 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+                }`}
+              >
+                Tutti ({posts.length})
+              </button>
+              {(mobileFiltersExpanded ? categories : (() => {
+                const visible = new Set<string>();
+                if (selectedCategory && categories.includes(selectedCategory)) {
+                  visible.add(selectedCategory);
+                }
+                for (const category of categories) {
+                  if (visible.size >= 2) break;
+                  visible.add(category);
+                }
+                return Array.from(visible);
+              })()).map((category) => {
+                const config = categoryConfig[category] || categoryConfig.Generale;
+                const count = posts.filter(p => p.category === category).length;
+                return (
+                  <button
+                    key={category}
+                    onClick={() => setSelectedCategory(selectedCategory === category ? null : category)}
+                    className={`px-4 py-2 rounded-full font-medium transition-all flex items-center gap-2 ${
+                      selectedCategory === category 
+                        ? 'bg-primary text-primary-foreground' 
+                        : `${config.color} border hover:opacity-80`
+                    }`}
+                  >
+                    <span>{config.icon}</span>
+                    {category} ({count})
+                  </button>
+                );
+              })}
+              {categories.length > 2 && (
+                <button
+                  onClick={() => setMobileFiltersExpanded(!mobileFiltersExpanded)}
+                  className="px-4 py-2 rounded-full font-medium transition-all bg-muted hover:bg-muted/80 text-muted-foreground"
+                >
+                  {mobileFiltersExpanded ? 'Mostra meno' : 'Mostra tutti'}
+                </button>
+              )}
+            </div>
+
+            {/* Desktop: all filters always visible */}
+            <div className="hidden md:flex flex-wrap items-center gap-3 justify-center">
               <button
                 onClick={clearFilters}
                 className={`px-4 py-2 rounded-full font-medium transition-all ${

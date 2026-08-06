@@ -168,7 +168,7 @@ export function Footer() {
             <p>© {new Date().getFullYear()} TECHLAND. Tutti i diritti riservati.</p>
             <p>P.IVA: 05596490267 — Sede legale: Vedelago (TV)</p>
           </div>
-          <div className="flex items-center gap-4 text-background/50 text-sm">
+          <div className="flex items-center justify-between md:justify-end w-full md:w-auto gap-4 text-background/50 text-sm">
             <Link to="/accessibilita" className="hover:text-background transition-colors underline">
               Accessibilità
             </Link>

@@ -24,6 +24,7 @@ import { ChildAttendanceHistory } from '@/components/dashboard/ChildAttendanceHi
 import { StreakBonusesDisplay } from '@/components/dashboard/StreakBonusesDisplay';
 import { StreakFreezeCard } from '@/components/dashboard/StreakFreezeCard';
 import { ReferralCard } from '@/components/dashboard/ReferralCard';
+import { DataDeletionRequestCard } from '@/components/dashboard/DataDeletionRequestCard';
 import { DeadlineNotifications } from '@/components/dashboard/DeadlineNotifications';
 import { BookmarksSection } from '@/components/dashboard/BookmarksSection';
 import { ProgressCharts } from '@/components/dashboard/ProgressCharts';
@@ -612,6 +613,14 @@ export default function Dashboard() {
               </Card>
             </div>
           )}
+
+          {/* Richiesta cancellazione dati - solo genitori */}
+          {effectiveIsParent && (
+            <div className="mb-8">
+              <DataDeletionRequestCard />
+            </div>
+          )}
+
 
           {/* Quick Actions */}
           <Card>

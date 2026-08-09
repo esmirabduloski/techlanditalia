@@ -284,9 +284,16 @@ export default function Contatti() {
                 </div>
               </div>
 
+              <p className="text-xs text-muted-foreground">
+                Inviando il messaggio dichiari di aver letto la{" "}
+                <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>. Usiamo i tuoi dati solo
+                per rispondere alla tua richiesta.
+              </p>
+
               <Button type="submit" variant="cta" className="w-full" disabled={isSubmitting}>
                 {isSubmitting ? "Invio in corso..." : "Invia messaggio"}
               </Button>
+
             </form>
           </div>
         </div>

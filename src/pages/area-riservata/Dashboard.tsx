@@ -613,6 +613,14 @@ export default function Dashboard() {
             </div>
           )}
 
+          {/* Richiesta cancellazione dati - solo genitori */}
+          {effectiveIsParent && (
+            <div className="mb-8">
+              <DataDeletionRequestCard />
+            </div>
+          )}
+
+
           {/* Quick Actions */}
           <Card>
             <CardHeader>

@@ -252,6 +252,47 @@
   a[target="_blank"][aria-label]::after {
     content: none;
   }
+
+  /* ===== Mobile responsiveness hardening (admin / teacher / student areas) ===== */
+  @media (max-width: 640px) {
+    /* Prevent accidental horizontal page scroll from wide inner content */
+    body {
+      overflow-x: hidden;
+    }
+
+    /* Compact tables so more columns fit on small screens */
+    table th,
+    table td {
+      @apply px-2 py-2 text-xs;
+    }
+
+    /* Comfortable touch targets for icon-only actions */
+    button[class*="w-9"],
+    button[class*="w-8"],
+    a[class*="w-9"] {
+      min-height: 2.25rem;
+      min-width: 2.25rem;
+    }
+
+    /* Popovers / dropdowns / selects never exceed the viewport */
+    [data-radix-popper-content-wrapper] > * {
+      max-width: calc(100vw - 1.5rem) !important;
+    }
+
+    /* Long words (emails, slugs, URLs) wrap instead of overflowing */
+    .break-anywhere,
+    .tech-card h1,
+    .tech-card h2,
+    .tech-card h3 {
+      overflow-wrap: anywhere;
+    }
+  }
+
+  /* Horizontal scroll helper for wide rows/tables on mobile */
+  .scroll-x-mobile {
+    @apply -mx-4 px-4 overflow-x-auto sm:mx-0 sm:px-0;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 @layer utilities {

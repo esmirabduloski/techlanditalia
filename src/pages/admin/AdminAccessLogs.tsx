@@ -102,7 +102,7 @@ export default function AdminAccessLogs() {
   return (
     <Layout>
       <AdminNav />
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 py-5 sm:py-8">
         <div className="mb-6 flex items-center gap-3">
           <Shield className="w-7 h-7 text-primary" />
           <div>

@@ -143,7 +143,7 @@ export default function AdminGlossary() {
   return (
     <Layout>
       <AdminNav />
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 py-5 sm:py-8">
         <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -203,7 +203,7 @@ export default function AdminGlossary() {
               <DialogTitle>{editing ? "Modifica termine" : "Nuovo termine"}</DialogTitle>
             </DialogHeader>
             <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label>Termine *</Label>
                   <Input

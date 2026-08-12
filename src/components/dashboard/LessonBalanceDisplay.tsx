@@ -30,7 +30,7 @@ export function LessonBalanceDisplay({ studentId }: LessonBalanceDisplayProps) {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm text-muted-foreground mb-1">Lezioni Rimanenti</p>
-            <p className="text-3xl font-bold text-foreground">{balance}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-foreground">{balance}</p>
           </div>
           <CreditCard className="w-10 h-10 text-primary/30" />
         </div>

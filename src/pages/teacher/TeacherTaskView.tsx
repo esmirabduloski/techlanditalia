@@ -340,7 +340,7 @@ import { Loader2, ArrowLeft } from 'lucide-react';
  
    return (
      <Layout>
-       <div className="max-w-4xl mx-auto px-4 py-8">
+       <div className="max-w-4xl mx-auto px-3 sm:px-4 py-5 sm:py-8">
         <Button variant="ghost" onClick={handleNavigateToCourse} className="mb-4">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Torna al corso

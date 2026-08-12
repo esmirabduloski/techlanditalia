@@ -23,7 +23,7 @@ export function CRMAnalytics({ leads }: Props) {
         <CardHeader><CardTitle className="text-base">Tasso di conversione</CardTitle></CardHeader>
         <CardContent>
           <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold">{stats.conversionRate.toFixed(1)}%</span>
+            <span className="text-2xl sm:text-3xl font-bold">{stats.conversionRate.toFixed(1)}%</span>
             <span className="text-muted-foreground text-sm">su lead chiusi (won + lost)</span>
           </div>
           <div className="mt-3 h-3 bg-muted rounded-full overflow-hidden">

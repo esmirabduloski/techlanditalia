@@ -400,7 +400,7 @@ export default function AdminBookings() {
 
   const BookingFormFields = () => (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="text-sm font-medium mb-1 block">Nome genitore *</label>
           <Input
@@ -419,7 +419,7 @@ export default function AdminBookings() {
           />
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="text-sm font-medium mb-1 block">Telefono</label>
           <Input
@@ -455,7 +455,7 @@ export default function AdminBookings() {
           </SelectContent>
         </Select>
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="text-sm font-medium mb-1 block">Giorno preferito</label>
           <Select value={formData.preferred_day} onValueChange={(v) => setFormData({ ...formData, preferred_day: v })}>

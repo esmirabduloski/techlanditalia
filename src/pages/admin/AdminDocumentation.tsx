@@ -156,7 +156,7 @@ export default function AdminDocumentation() {
   return (
     <Layout>
       <AdminNav />
-      <div className="max-w-5xl mx-auto px-4 py-8">
+      <div className="max-w-5xl mx-auto px-3 sm:px-4 py-5 sm:py-8">
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold mb-2">Documentazione Funzionalità</h1>
           <p className="text-muted-foreground">

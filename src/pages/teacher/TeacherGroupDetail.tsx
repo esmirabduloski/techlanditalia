@@ -589,32 +589,32 @@ export default function TeacherGroupDetail() {
     <div className="min-h-screen bg-muted/30">
       {/* Header */}
       <header className="bg-background border-b sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/" className="text-2xl font-bold">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <Link to="/" className="text-xl sm:text-2xl font-bold whitespace-nowrap">
               <span className="text-primary">TECH</span>
               <span className="text-tech-teal">LAND</span>
             </Link>
-            <Badge className="bg-tech-teal text-white">Insegnante</Badge>
+            <Badge className="bg-tech-teal text-white text-xs">Insegnante</Badge>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <Button variant="ghost" onClick={() => navigate('/insegnante')} className="mb-6">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-5 sm:py-8">
+        <Button variant="ghost" onClick={() => navigate('/insegnante')} className="mb-4 sm:mb-6 -ml-2">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Torna alla Dashboard
         </Button>
 
         {/* Group Info Card */}
         <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <CardContent className="pt-5 sm:pt-6 px-4 sm:px-6">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
               <div>
-                <p className="text-sm text-muted-foreground">Gruppo</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Gruppo</p>
                 <div className="flex items-center gap-2">
-                  <p className="text-lg font-semibold">{group.title}</p>
+                  <p className="text-base sm:text-lg font-semibold">{group.title}</p>
                   {group.status === 'archived' ? (
                     <Badge variant="secondary">Archiviato</Badge>
                   ) : (
@@ -623,20 +623,20 @@ export default function TeacherGroupDetail() {
                 </div>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Corso</p>
-                <p className="text-lg font-semibold">
+                <p className="text-xs sm:text-sm text-muted-foreground">Corso</p>
+                <p className="text-base sm:text-lg font-semibold">
                   {group.course_emoji} {group.course_title}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Data Inizio</p>
-                <p className="text-lg font-semibold flex items-center gap-2">
+                <p className="text-xs sm:text-sm text-muted-foreground">Data Inizio</p>
+                <p className="text-base sm:text-lg font-semibold flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
                   {group.start_date ? new Date(group.start_date).toLocaleDateString('it-IT') : '-'}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Giorni Lezione</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Giorni Lezione</p>
                 <div className="flex gap-1 mt-1">
                   {group.lesson_days.map(day => (
                     <Badge key={day} variant="secondary" className="text-xs">
@@ -646,15 +646,15 @@ export default function TeacherGroupDetail() {
                 </div>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Orario</p>
-                <p className="text-lg font-semibold flex items-center gap-2">
+                <p className="text-xs sm:text-sm text-muted-foreground">Orario</p>
+                <p className="text-base sm:text-lg font-semibold flex items-center gap-2">
                   <Clock className="w-4 h-4" />
                   {group.lesson_time ? group.lesson_time.substring(0, 5) : '-'}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Studenti</p>
-                <p className="text-lg font-semibold flex items-center gap-2">
+                <p className="text-xs sm:text-sm text-muted-foreground">Studenti</p>
+                <p className="text-base sm:text-lg font-semibold flex items-center gap-2">
                   <Users className="w-4 h-4" />
                   {students.length}
                 </p>
@@ -663,22 +663,22 @@ export default function TeacherGroupDetail() {
             
             <div className="mt-4 pt-4 border-t">
               <p className="text-sm text-muted-foreground mb-1">Ultima Lezione Svolta</p>
-              <p className="text-lg font-semibold text-primary">{lastCompletedLesson}</p>
+              <p className="text-base sm:text-lg font-semibold text-primary">{lastCompletedLesson}</p>
             </div>
 
-            <div className="mt-4 pt-4 border-t flex flex-wrap gap-3">
+            <div className="mt-4 pt-4 border-t flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-3">
               {group.teacher_meeting_link && (
                 <a
                   href={group.teacher_meeting_link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold transition-colors shadow-tech-sm"
+                  className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold transition-colors shadow-tech-sm"
                 >
                   <ExternalLink className="w-4 h-4" />
                   Avvia Lezione (Organizzatore)
                 </a>
               )}
-              <Button asChild>
+              <Button asChild className="w-full sm:w-auto">
                 <Link to={`/insegnante/valutazioni?gruppo=${groupId}`}>
                   <Award className="w-4 h-4 mr-2" />
                   Valuta Compiti
@@ -689,7 +689,7 @@ export default function TeacherGroupDetail() {
                   href={group.whatsapp_link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors"
+                  className="inline-flex items-center justify-center gap-2 w-full sm:w-auto min-h-10 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors"
                 >
                   <ExternalLink className="w-4 h-4" />
                   Apri Gruppo WhatsApp
@@ -724,7 +724,7 @@ export default function TeacherGroupDetail() {
                 Nessun calendario generato. Imposta una data di inizio gruppo.
               </p>
             ) : (
-              <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6">
                 {lessonSchedule.map(lesson => {
                   const lessonDate = new Date(lesson.lesson_date);
                   const isPast = isBefore(lessonDate, startOfDay(new Date()));
@@ -781,7 +781,7 @@ export default function TeacherGroupDetail() {
 
         {/* Group Comments */}
         <Card className="mb-6">
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <CardTitle className="flex items-center gap-2">
               <MessageCircle className="w-5 h-5" />
               Note del Gruppo
@@ -911,7 +911,7 @@ export default function TeacherGroupDetail() {
                                 onClick={() => openAttendanceDialog(student.student_id, student.full_name, lessonNum, lesson.lesson_date)}
                                 disabled={!isAvailable}
                                 className={cn(
-                                  "w-6 h-6 rounded transition-colors flex items-center justify-center",
+                                  "w-8 h-8 sm:w-6 sm:h-6 rounded transition-colors flex items-center justify-center",
                                   !isAvailable && "pointer-events-none",
                                   status === 'present' && (isAvailable ? "bg-green-500 hover:bg-green-600" : "bg-green-500 opacity-50"),
                                   status === 'absent' && (isAvailable ? "bg-red-500 hover:bg-red-600" : "bg-red-500 opacity-50"),

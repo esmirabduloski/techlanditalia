@@ -239,7 +239,7 @@ export default function LessonEditor() {
                     placeholder="Introduzione a Python"
                   />
                 </div>
-                <div className="grid gap-3 grid-cols-2">
+                <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="lesson_number">N° Lezione</Label>
                     <Input

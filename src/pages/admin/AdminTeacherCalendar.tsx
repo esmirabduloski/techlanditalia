@@ -406,7 +406,7 @@ END:VCALENDAR`;
   return (
     <div className="min-h-screen bg-muted/30">
       <AdminNav />
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-5 sm:py-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-3">

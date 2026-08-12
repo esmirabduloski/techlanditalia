@@ -287,7 +287,7 @@ export default function BlogEditor() {
       {/* Editor */}
 
       {/* Editor */}
-      <main className="max-w-4xl mx-auto px-4 py-8">
+      <main className="max-w-4xl mx-auto px-3 sm:px-4 py-5 sm:py-8">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Pubblicazione */}
           <div className="tech-card p-6 space-y-4 border-l-4 border-l-primary">

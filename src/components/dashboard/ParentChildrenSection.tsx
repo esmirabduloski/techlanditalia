@@ -214,7 +214,7 @@ function ChildDashboard({ child }: { child: Child }) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Livello</p>
-                <p className="text-3xl font-bold text-foreground">{level.level}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-foreground">{level.level}</p>
                 <p className="text-sm text-muted-foreground">{level.name}</p>
               </div>
               <Award className="w-10 h-10 text-secondary/30" />

@@ -320,51 +320,51 @@ export default function Dashboard() {
           {/* Stats Cards - Hide for parents and teachers */}
           {!effectiveIsTeacher && !effectiveIsParent && (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
                 <Card className="border-primary/20 bg-gradient-to-br from-card to-primary/5">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center justify-between">
+                  <CardContent className="pt-5 sm:pt-6 px-4 sm:px-6">
+                    <div className="flex items-center justify-between gap-2">
                       <div>
-                        <p className="text-sm text-muted-foreground mb-1">Livello Attuale</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground mb-1">Livello Attuale</p>
                         <LevelBadge points={profile.total_points} size="md" showProgress />
                       </div>
-                      <Trophy className="w-10 h-10 text-primary/30" />
+                      <Trophy className="w-7 h-7 sm:w-10 sm:h-10 text-primary/30 flex-shrink-0" />
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card className="border-accent/20 bg-gradient-to-br from-card to-accent/5">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center justify-between">
+                  <CardContent className="pt-5 sm:pt-6 px-4 sm:px-6">
+                    <div className="flex items-center justify-between gap-2">
                       <div>
-                        <p className="text-sm text-muted-foreground mb-1">Punti Totali</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground mb-1">Punti Totali</p>
                         <PointsDisplay points={profile.total_points} size="lg" />
                       </div>
-                      <Target className="w-10 h-10 text-accent/30" />
+                      <Target className="w-7 h-7 sm:w-10 sm:h-10 text-accent/30 flex-shrink-0" />
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card className="border-secondary/20 bg-gradient-to-br from-card to-secondary/5">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center justify-between">
+                  <CardContent className="pt-5 sm:pt-6 px-4 sm:px-6">
+                    <div className="flex items-center justify-between gap-2">
                       <div>
-                        <p className="text-sm text-muted-foreground mb-1">Lezioni Completate</p>
-                        <p className="text-3xl font-bold text-foreground">{completedLessons}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground mb-1">Lezioni Completate</p>
+                        <p className="text-2xl sm:text-3xl font-bold text-foreground">{completedLessons}</p>
                       </div>
-                      <BookOpen className="w-10 h-10 text-secondary/30" />
+                      <BookOpen className="w-7 h-7 sm:w-10 sm:h-10 text-secondary/30 flex-shrink-0" />
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card className="border-primary/20 bg-gradient-to-br from-card to-primary/5">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center justify-between">
+                  <CardContent className="pt-5 sm:pt-6 px-4 sm:px-6">
+                    <div className="flex items-center justify-between gap-2">
                       <div>
-                        <p className="text-sm text-muted-foreground mb-1">Lezioni Rimanenti</p>
-                        <p className="text-3xl font-bold text-foreground">{(profile as any).lesson_balance || 0}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground mb-1">Lezioni Rimanenti</p>
+                        <p className="text-2xl sm:text-3xl font-bold text-foreground">{(profile as any).lesson_balance || 0}</p>
                       </div>
-                      <CreditCard className="w-10 h-10 text-primary/30" />
+                      <CreditCard className="w-7 h-7 sm:w-10 sm:h-10 text-primary/30 flex-shrink-0" />
                     </div>
                   </CardContent>
                 </Card>
@@ -379,10 +379,10 @@ export default function Dashboard() {
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground mb-1">Lezioni Insegnate</p>
-                      <p className="text-3xl font-bold text-foreground">{teacherLessonsCount}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground mb-1">Lezioni Insegnate</p>
+                      <p className="text-2xl sm:text-3xl font-bold text-foreground">{teacherLessonsCount}</p>
                     </div>
-                    <BookOpen className="w-10 h-10 text-secondary/30" />
+                    <BookOpen className="w-7 h-7 sm:w-10 sm:h-10 text-secondary/30 flex-shrink-0" />
                   </div>
                 </CardContent>
               </Card>
@@ -427,7 +427,7 @@ export default function Dashboard() {
                         <Card className="hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border-border/50">
                           <CardHeader className="pb-2">
                             <div className="flex items-center gap-3">
-                              <span className="text-4xl">{course.emoji}</span>
+                              <span className="text-3xl sm:text-4xl">{course.emoji}</span>
                               <div className="flex-1">
                                 <CardTitle className="text-lg">{course.title}</CardTitle>
                                 <CardDescription className="flex items-center gap-2">

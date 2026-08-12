@@ -329,7 +329,7 @@ export default function AdminContatti() {
         <div className="mt-12">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 sm:mb-8">
             <div>
-              <h2 className="text-3xl font-bold flex items-center gap-2">
+              <h2 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
                 <Briefcase className="w-7 h-7" />
                 Invii Form Candidature
               </h2>
@@ -424,7 +424,7 @@ export default function AdminContatti() {
           </DialogHeader>
           {selectedSubmission && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Nome</p>
                   <p className="font-medium">{selectedSubmission.nome}</p>
@@ -490,7 +490,7 @@ export default function AdminContatti() {
           </DialogHeader>
           {selectedJob && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Nome</p>
                   <p className="font-medium">{selectedJob.nome}</p>

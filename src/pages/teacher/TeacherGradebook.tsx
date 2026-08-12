@@ -302,11 +302,11 @@ export default function TeacherGradebook() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-5 sm:py-8">
         {/* Title + Filter */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
               <BarChart3 className="w-8 h-8 text-tech-teal" />
               Registro Voti
             </h1>

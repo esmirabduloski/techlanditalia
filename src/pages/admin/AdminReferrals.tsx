@@ -130,7 +130,7 @@ export default function AdminReferrals() {
   return (
     <Layout>
       <AdminNav />
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 py-5 sm:py-8">
         <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">

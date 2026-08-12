@@ -251,7 +251,7 @@ export function ChildAttendanceHistory({ childId, childName, groupIds: filterGro
       </CardHeader>
       <CardContent>
         {/* Stats summary */}
-        <div className="grid grid-cols-4 gap-3 mb-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4">
           <div className="text-center p-2 bg-muted/50 rounded-lg">
             <p className="text-2xl font-bold text-foreground">{stats.total}</p>
             <p className="text-xs text-muted-foreground">Totale</p>

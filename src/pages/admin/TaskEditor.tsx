@@ -361,7 +361,7 @@ export default function TaskEditor() {
                     placeholder="Introduzione al topic"
                   />
                 </div>
-                <div className="grid gap-3 grid-cols-2">
+                <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="task_number">N° Task</Label>
                     <Input

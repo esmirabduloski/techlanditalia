@@ -228,7 +228,7 @@ export default function Acquisti() {
   return (
     <Layout>
       <div className="min-h-screen bg-gradient-to-br from-background via-tech-green-light/20 to-tech-cyan-light/20 dark:from-background dark:via-background dark:to-background">
-        <div className="max-w-5xl mx-auto px-4 py-8">
+        <div className="max-w-5xl mx-auto px-3 sm:px-4 py-5 sm:py-8">
           {/* Header */}
           <div className="flex items-center gap-3 mb-2">
             <Button variant="ghost" size="icon" asChild>

@@ -249,7 +249,7 @@ export function AdminViewSimulator() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Card>
                     <CardContent className="pt-4">
                       <p className="text-sm text-muted-foreground">Punti Totali</p>

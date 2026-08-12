@@ -213,7 +213,7 @@ export default function AdminSimulator() {
       <AdminNav />
 
       {/* Main Content */}
-      <main className="max-w-5xl mx-auto px-4 py-8">
+      <main className="max-w-5xl mx-auto px-3 sm:px-4 py-5 sm:py-8">
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-3">
             <Eye className="w-8 h-8 text-primary" />
@@ -306,7 +306,7 @@ export default function AdminSimulator() {
                       </Button>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <Card>
                         <CardContent className="pt-4">
                           <p className="text-sm text-muted-foreground">Punti Totali</p>

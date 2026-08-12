@@ -269,23 +269,24 @@ export default function Dashboard() {
           )}
 
           {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 sm:mb-8">
+            <div className="flex items-center gap-3 sm:gap-4 min-w-0">
               <AvatarDisplay 
                 avatarId={profile.avatar_id} 
                 level={level.level} 
                 size="lg"
               />
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+              <div className="min-w-0">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground break-anywhere">
                   Ciao, {profile.full_name}! 👋
                 </h1>
-                <p className="text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Benvenuto nella tua area riservata
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+
               {effectiveIsTeacher && (
                 <Button variant="outline" size="sm" asChild>
                   <Link to="/insegnante">

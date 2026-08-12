@@ -1349,7 +1349,7 @@ export default function TeacherDashboard() {
               <CardHeader>
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <CardTitle>Gruppi Assegnati</CardTitle>
-                  <div className="flex items-center gap-3">
+                  <div className="grid grid-cols-2 sm:flex items-center gap-2 sm:gap-3">
                     <Select value={groupStatusFilter} onValueChange={setGroupStatusFilter}>
                       <SelectTrigger className="w-full sm:w-[150px]">
                         <SelectValue placeholder="Stato" />

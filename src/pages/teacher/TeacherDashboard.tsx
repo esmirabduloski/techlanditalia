@@ -839,16 +839,16 @@ export default function TeacherDashboard() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <GraduationCap className="w-8 h-8 text-tech-teal" />
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-5 sm:py-8">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 sm:gap-3">
+            <GraduationCap className="w-6 h-6 sm:w-8 sm:h-8 text-tech-teal flex-shrink-0" />
             Dashboard Insegnante
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Gestisci i tuoi corsi, gruppi e studenti
           </p>
-          <div className="flex gap-3 mt-3">
+          <div className="grid grid-cols-2 sm:flex gap-2 sm:gap-3 mt-3">
             <Button asChild variant="default">
               <Link to="/insegnante/valutazioni">
                 <Award className="w-4 h-4 mr-2" />
@@ -865,7 +865,7 @@ export default function TeacherDashboard() {
         </div>
 
         {/* Statistics Section */}
-        <div className="grid gap-6 md:grid-cols-2 mb-8">
+        <div className="grid gap-4 sm:gap-6 md:grid-cols-2 mb-6 sm:mb-8">
           {/* Attendance by Group */}
           <Card>
             <CardHeader className="pb-3">
@@ -1033,22 +1033,22 @@ export default function TeacherDashboard() {
         )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="profilo" className="gap-2">
+          <TabsList className="grid w-full grid-cols-4 gap-1">
+            <TabsTrigger value="profilo" className="flex-col sm:flex-row gap-1 sm:gap-2 py-2">
               <User className="w-4 h-4" />
-              <span className="hidden sm:inline">Profilo</span>
+              <span className="text-[10px] sm:text-sm">Profilo</span>
             </TabsTrigger>
-            <TabsTrigger value="corsi" className="gap-2">
+            <TabsTrigger value="corsi" className="flex-col sm:flex-row gap-1 sm:gap-2 py-2">
               <BookOpen className="w-4 h-4" />
-              <span className="hidden sm:inline">Corsi</span>
+              <span className="text-[10px] sm:text-sm">Corsi</span>
             </TabsTrigger>
-            <TabsTrigger value="studenti" className="gap-2">
+            <TabsTrigger value="studenti" className="flex-col sm:flex-row gap-1 sm:gap-2 py-2">
               <Users className="w-4 h-4" />
-              <span className="hidden sm:inline">Studenti</span>
+              <span className="text-[10px] sm:text-sm">Studenti</span>
             </TabsTrigger>
-            <TabsTrigger value="gruppi" className="gap-2">
+            <TabsTrigger value="gruppi" className="flex-col sm:flex-row gap-1 sm:gap-2 py-2">
               <UsersRound className="w-4 h-4" />
-              <span className="hidden sm:inline">Gruppi</span>
+              <span className="text-[10px] sm:text-sm">Gruppi</span>
             </TabsTrigger>
           </TabsList>
 
@@ -1351,7 +1351,7 @@ export default function TeacherDashboard() {
                   <CardTitle>Gruppi Assegnati</CardTitle>
                   <div className="flex items-center gap-3">
                     <Select value={groupStatusFilter} onValueChange={setGroupStatusFilter}>
-                      <SelectTrigger className="w-[150px]">
+                      <SelectTrigger className="w-full sm:w-[150px]">
                         <SelectValue placeholder="Stato" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1361,7 +1361,7 @@ export default function TeacherDashboard() {
                       </SelectContent>
                     </Select>
                     <Select value={groupSortBy} onValueChange={setGroupSortBy}>
-                      <SelectTrigger className="w-[160px]">
+                      <SelectTrigger className="w-full sm:w-[160px]">
                         <SelectValue placeholder="Ordina per" />
                       </SelectTrigger>
                       <SelectContent>

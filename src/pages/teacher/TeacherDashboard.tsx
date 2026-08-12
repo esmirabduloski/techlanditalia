@@ -721,15 +721,15 @@ export default function TeacherDashboard() {
       )}
       {/* Header */}
       <header className="bg-background border-b sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/" className="text-2xl font-bold">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <Link to="/" className="text-xl sm:text-2xl font-bold whitespace-nowrap">
               <span className="text-primary">TECH</span>
               <span className="text-tech-teal">LAND</span>
             </Link>
-            <Badge className="bg-tech-teal text-white">Insegnante</Badge>
+            <Badge className="bg-tech-teal text-white text-xs">Insegnante</Badge>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             {/* Notifications */}
             <Popover open={notificationsOpen} onOpenChange={setNotificationsOpen}>
               <PopoverTrigger asChild>
@@ -742,7 +742,7 @@ export default function TeacherDashboard() {
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-80 p-0" align="end">
+              <PopoverContent className="w-[min(20rem,calc(100vw-1.5rem))] p-0" align="end">
                 <div className="flex items-center justify-between p-3 border-b">
                   <h4 className="font-semibold">Notifiche</h4>
                   {unreadCount > 0 && (
@@ -821,18 +821,18 @@ export default function TeacherDashboard() {
             </Popover>
 
             <BugReportButton />
-            <span className="text-sm text-muted-foreground hidden sm:block">{user?.email}</span>
+            <span className="text-sm text-muted-foreground hidden lg:block max-w-[180px] truncate">{user?.email}</span>
             {isAdmin && !isImpersonating && (
-              <Button variant="outline" size="sm" asChild>
-                <Link to="/admin">
-                  <Shield className="w-4 h-4 mr-2" />
-                  Admin
+              <Button variant="outline" size="sm" asChild className="px-2 sm:px-3">
+                <Link to="/admin" aria-label="Area admin">
+                  <Shield className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Admin</span>
                 </Link>
               </Button>
             )}
-            <Button variant="outline" size="sm" onClick={handleSignOut}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Esci
+            <Button variant="outline" size="sm" onClick={handleSignOut} className="px-2 sm:px-3" aria-label="Esci">
+              <LogOut className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Esci</span>
             </Button>
           </div>
         </div>

@@ -262,7 +262,7 @@ export default function Dashboard() {
         }
         return {};
       })()}>
-        <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="max-w-6xl mx-auto px-3 sm:px-4 py-5 sm:py-8">>
           {/* Big "Entra a Lezione" CTA at top center for students */}
           {effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (
             <JoinLessonHero studentId={effectiveUserId} />

@@ -113,6 +113,9 @@ export function CRMLeadList({ leads, onSelectLead }: Props) {
                   <tr key={l.id} onClick={() => onSelectLead(l)} className="border-t cursor-pointer hover:bg-muted/30">
                     <td className="p-3 font-medium">{l.full_name || "—"}</td>
                     <td className="p-3 text-muted-foreground">{l.email}</td>
+                    <td className="p-3 text-muted-foreground">
+                      {format(new Date(l.created_at), "dd MMM yyyy", { locale: it })}
+                    </td>
                     <td className="p-3 text-muted-foreground hidden md:table-cell">{l.phone || "—"}</td>
                     <td className="p-3 hidden lg:table-cell"><Badge variant="outline">{SOURCE_LABELS[l.source]}</Badge></td>
                     <td className="p-3">
@@ -123,9 +126,6 @@ export function CRMLeadList({ leads, onSelectLead }: Props) {
                     </td>
                     <td className={`p-3 hidden lg:table-cell ${overdue ? "text-red-500 font-medium" : "text-muted-foreground"}`}>
                       {l.next_followup_at ? format(new Date(l.next_followup_at), "dd MMM HH:mm", { locale: it }) : "—"}
-                    </td>
-                    <td className="p-3 text-muted-foreground hidden xl:table-cell">
-                      {format(new Date(l.created_at), "dd MMM yyyy", { locale: it })}
                     </td>
                   </tr>
                 );

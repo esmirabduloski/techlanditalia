@@ -145,6 +145,8 @@ export function CRMKanbanBoard({ leads, onSelectLead, onMoveLead }: Props) {
           </div>
         ))}
       </div>
+      </div>
     </div>
   );
 }
+

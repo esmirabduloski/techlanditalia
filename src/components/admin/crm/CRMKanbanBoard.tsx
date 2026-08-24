@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { AlertCircle, Calendar, Mail, Phone } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 import { it } from "date-fns/locale";
 
 interface Props {
@@ -74,6 +74,10 @@ export function CRMKanbanBoard({ leads, onSelectLead, onMoveLead }: Props) {
                       </div>
                       <div className="text-xs text-muted-foreground truncate flex items-center gap-1">
                         <Mail className="w-3 h-3" /> {lead.email}
+                      </div>
+                      <div className="text-xs text-muted-foreground truncate flex items-center gap-1 mt-0.5">
+                        <Calendar className="w-3 h-3" />
+                        {format(new Date(lead.created_at), "dd MMM yyyy", { locale: it })}
                       </div>
                     </div>
                   </div>

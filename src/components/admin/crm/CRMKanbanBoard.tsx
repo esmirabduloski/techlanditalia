@@ -35,7 +35,23 @@ export function CRMKanbanBoard({ leads, onSelectLead, onMoveLead }: Props) {
 
 
   return (
-    <div className="overflow-x-auto pb-4">
+    <div className="space-y-3">
+      <div className="flex justify-end">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setCreatedSort((prev) => (prev === "asc" ? "desc" : "asc"))}
+        >
+          Ordina per: Creato il
+          {createdSort === "asc" ? (
+            <ArrowUp className="w-4 h-4 ml-1" />
+          ) : (
+            <ArrowDown className="w-4 h-4 ml-1" />
+          )}
+        </Button>
+      </div>
+      <div className="overflow-x-auto pb-4">
+
       <div className="flex gap-3 min-w-max">
         {PIPELINE_STAGES.map((stage) => (
           <div

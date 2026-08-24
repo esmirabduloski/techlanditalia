@@ -98,11 +98,11 @@ export function CRMLeadList({ leads, onSelectLead }: Props) {
               <tr>
                 <th className="text-left p-3 font-medium">Nome</th>
                 <th className="text-left p-3 font-medium">Email</th>
+                <th className="text-left p-3 font-medium">Creato</th>
                 <th className="text-left p-3 font-medium hidden md:table-cell">Telefono</th>
                 <th className="text-left p-3 font-medium hidden lg:table-cell">Sorgente</th>
                 <th className="text-left p-3 font-medium">Stage</th>
                 <th className="text-left p-3 font-medium hidden lg:table-cell">Follow-up</th>
-                <th className="text-left p-3 font-medium hidden xl:table-cell">Creato</th>
               </tr>
             </thead>
             <tbody>

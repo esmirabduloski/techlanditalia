@@ -125,6 +125,7 @@ export function CRMLeadDetailDrawer({ lead, open, onClose, onUpdate, onDelete }:
           <div className="flex flex-wrap gap-2 items-center text-sm text-muted-foreground">
             <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{lead.email}</span>
             {lead.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{lead.phone}</span>}
+            <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />Creato {format(new Date(lead.created_at), "dd MMM yyyy", { locale: it })}</span>
             <Badge variant="outline">{SOURCE_LABELS[lead.source]}</Badge>
           </div>
         </SheetHeader>

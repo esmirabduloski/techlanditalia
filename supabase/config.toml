@@ -56,3 +56,6 @@ verify_jwt = false
 
 [functions.backup-json-cleanup]
 verify_jwt = false
+
+[functions.diag-key]
+verify_jwt = false

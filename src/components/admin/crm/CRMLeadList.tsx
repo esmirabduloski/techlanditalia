@@ -107,12 +107,27 @@ export function CRMLeadList({ leads, onSelectLead }: Props) {
               <tr>
                 <th className="text-left p-3 font-medium">Nome</th>
                 <th className="text-left p-3 font-medium">Email</th>
-                <th className="text-left p-3 font-medium">Creato</th>
+                <th className="text-left p-3 font-medium">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="-ml-2 h-8 gap-1 font-medium"
+                    onClick={() => setCreatedSort((prev) => (prev === "asc" ? "desc" : "asc"))}
+                  >
+                    Creato il
+                    {createdSort === "asc" ? (
+                      <ArrowUp className="w-4 h-4" />
+                    ) : (
+                      <ArrowDown className="w-4 h-4" />
+                    )}
+                  </Button>
+                </th>
                 <th className="text-left p-3 font-medium hidden md:table-cell">Telefono</th>
                 <th className="text-left p-3 font-medium hidden lg:table-cell">Sorgente</th>
                 <th className="text-left p-3 font-medium">Stage</th>
                 <th className="text-left p-3 font-medium hidden lg:table-cell">Follow-up</th>
               </tr>
+
             </thead>
             <tbody>
               {filtered.map((l) => {

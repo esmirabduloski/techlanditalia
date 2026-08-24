@@ -4,9 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Download, AlertCircle } from "lucide-react";
+import { Search, Download, AlertCircle, ArrowUp, ArrowDown } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
+
 
 interface Props {
   leads: CrmLead[];
@@ -18,10 +19,11 @@ export function CRMLeadList({ leads, onSelectLead }: Props) {
   const [sourceFilter, setSourceFilter] = useState<LeadSource | "all">("all");
   const [stageFilter, setStageFilter] = useState<PipelineStage | "all">("all");
   const [overdueOnly, setOverdueOnly] = useState(false);
+  const [createdSort, setCreatedSort] = useState<"asc" | "desc">("desc");
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
-    return leads.filter((l) => {
+    let result = leads.filter((l) => {
       if (sourceFilter !== "all" && l.source !== sourceFilter) return false;
       if (stageFilter !== "all" && l.pipeline_stage !== stageFilter) return false;
       if (overdueOnly) {
@@ -36,7 +38,14 @@ export function CRMLeadList({ leads, onSelectLead }: Props) {
         l.tags.some((t) => t.toLowerCase().includes(q))
       );
     });
-  }, [leads, search, sourceFilter, stageFilter, overdueOnly]);
+    result = [...result].sort((a, b) => {
+      const timeA = new Date(a.created_at).getTime();
+      const timeB = new Date(b.created_at).getTime();
+      return createdSort === "asc" ? timeA - timeB : timeB - timeA;
+    });
+    return result;
+  }, [leads, search, sourceFilter, stageFilter, overdueOnly, createdSort]);
+
 
   const exportCSV = () => {
     const header = ["Nome", "Email", "Telefono", "Sorgente", "Stage", "Tag", "Follow-up", "Note", "Creato"];
@@ -98,12 +107,27 @@ export function CRMLeadList({ leads, onSelectLead }: Props) {
               <tr>
                 <th className="text-left p-3 font-medium">Nome</th>
                 <th className="text-left p-3 font-medium">Email</th>
-                <th className="text-left p-3 font-medium">Creato</th>
+                <th className="text-left p-3 font-medium">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="-ml-2 h-8 gap-1 font-medium"
+                    onClick={() => setCreatedSort((prev) => (prev === "asc" ? "desc" : "asc"))}
+                  >
+                    Creato il
+                    {createdSort === "asc" ? (
+                      <ArrowUp className="w-4 h-4" />
+                    ) : (
+                      <ArrowDown className="w-4 h-4" />
+                    )}
+                  </Button>
+                </th>
                 <th className="text-left p-3 font-medium hidden md:table-cell">Telefono</th>
                 <th className="text-left p-3 font-medium hidden lg:table-cell">Sorgente</th>
                 <th className="text-left p-3 font-medium">Stage</th>
                 <th className="text-left p-3 font-medium hidden lg:table-cell">Follow-up</th>
               </tr>
+
             </thead>
             <tbody>
               {filtered.map((l) => {

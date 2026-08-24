@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { CrmLead, PIPELINE_STAGES, PipelineStage, SOURCE_LABELS } from "@/hooks/useCRM";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { AlertCircle, Calendar, Mail, Phone } from "lucide-react";
+import { AlertCircle, Calendar, Mail, Phone, ArrowUp, ArrowDown } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { it } from "date-fns/locale";
+
 
 interface Props {
   leads: CrmLead[];
@@ -16,14 +18,40 @@ interface Props {
 export function CRMKanbanBoard({ leads, onSelectLead, onMoveLead }: Props) {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [overStage, setOverStage] = useState<PipelineStage | null>(null);
+  const [createdSort, setCreatedSort] = useState<"asc" | "desc">("desc");
+
+  const sortedLeads = useMemo(() => {
+    return [...leads].sort((a, b) => {
+      const timeA = new Date(a.created_at).getTime();
+      const timeB = new Date(b.created_at).getTime();
+      return createdSort === "asc" ? timeA - timeB : timeB - timeA;
+    });
+  }, [leads, createdSort]);
 
   const grouped: Record<PipelineStage, CrmLead[]> = {
     new: [], contacted: [], qualified: [], proposal_sent: [], won: [], lost: [], nurture: [],
   };
-  leads.forEach((l) => grouped[l.pipeline_stage].push(l));
+  sortedLeads.forEach((l) => grouped[l.pipeline_stage].push(l));
+
 
   return (
-    <div className="overflow-x-auto pb-4">
+    <div className="space-y-3">
+      <div className="flex justify-end">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setCreatedSort((prev) => (prev === "asc" ? "desc" : "asc"))}
+        >
+          Ordina per: Creato il
+          {createdSort === "asc" ? (
+            <ArrowUp className="w-4 h-4 ml-1" />
+          ) : (
+            <ArrowDown className="w-4 h-4 ml-1" />
+          )}
+        </Button>
+      </div>
+      <div className="overflow-x-auto pb-4">
+
       <div className="flex gap-3 min-w-max">
         {PIPELINE_STAGES.map((stage) => (
           <div
@@ -117,6 +145,8 @@ export function CRMKanbanBoard({ leads, onSelectLead, onMoveLead }: Props) {
           </div>
         ))}
       </div>
+      </div>
     </div>
   );
 }
+

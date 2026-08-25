@@ -65,7 +65,7 @@ export const SOURCE_LABELS: Record<LeadSource, string> = {
 };
 
 export function useCRMLeads() {
-  const [leads, setLeads] = useState<CrmLead[]>([]);
+  const [allLeads, setAllLeads] = useState<CrmLead[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -79,10 +79,13 @@ export function useCRMLeads() {
     if (error) {
       toast({ title: "Errore caricamento CRM", description: error.message, variant: "destructive" });
     } else {
-      setLeads((data ?? []) as unknown as CrmLead[]);
+      setAllLeads((data ?? []) as unknown as CrmLead[]);
     }
     setLoading(false);
   };
+
+  const leads = useMemo(() => allLeads.filter((l) => !l.deleted_at), [allLeads]);
+  const trashedLeads = useMemo(() => allLeads.filter((l) => !!l.deleted_at), [allLeads]);
 
   useEffect(() => {
     load();

@@ -14,6 +14,7 @@ import { CRMLeadList } from "@/components/admin/crm/CRMLeadList";
 import { CRMAnalytics } from "@/components/admin/crm/CRMAnalytics";
 import { CRMLeadDetailDrawer } from "@/components/admin/crm/CRMLeadDetailDrawer";
 import { CRMNotionSettings } from "@/components/admin/crm/CRMNotionSettings";
+import { CRMTrash } from "@/components/admin/crm/CRMTrash";
 import { Loader2, Plus, LogOut, KanbanSquare, List, BarChart3, Database } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { JsonImportExport } from "@/components/admin/JsonImportExport";

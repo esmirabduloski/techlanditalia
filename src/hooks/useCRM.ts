@@ -169,7 +169,18 @@ export function useCRMLeads() {
     return true;
   };
 
-  return { leads, loading, reload: load, updateLead, deleteLead, createLead };
+  return {
+    leads,
+    trashedLeads,
+    loading,
+    reload: load,
+    updateLead,
+    deleteLead,
+    restoreLead,
+    permanentlyDeleteLead,
+    emptyTrash,
+    createLead,
+  };
 }
 
 export function useCRMInteractions(leadId: string | null) {

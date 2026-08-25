@@ -126,6 +126,7 @@ export default function AdminCRM() {
               <CRMNotionSettings totalLeads={leads.length} />
             </TabsContent>
           </Tabs>
+          </>
         )}
       </main>
 

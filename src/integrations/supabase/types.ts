@@ -603,6 +603,7 @@ export type Database = {
           assigned_to: string | null
           child_age: number | null
           created_at: string
+          deleted_at: string | null
           email: string
           full_name: string
           id: string
@@ -629,6 +630,7 @@ export type Database = {
           assigned_to?: string | null
           child_age?: number | null
           created_at?: string
+          deleted_at?: string | null
           email: string
           full_name?: string
           id?: string
@@ -655,6 +657,7 @@ export type Database = {
           assigned_to?: string | null
           child_age?: number | null
           created_at?: string
+          deleted_at?: string | null
           email?: string
           full_name?: string
           id?: string

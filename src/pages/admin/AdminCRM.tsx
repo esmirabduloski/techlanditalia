@@ -23,7 +23,10 @@ export default function AdminCRM() {
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { leads, loading, updateLead, deleteLead, createLead, reload } = useCRMLeads();
+  const {
+    leads, trashedLeads, loading, updateLead, deleteLead,
+    restoreLead, permanentlyDeleteLead, emptyTrash, createLead, reload,
+  } = useCRMLeads();
 
   const [selectedLead, setSelectedLead] = useState<CrmLead | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);

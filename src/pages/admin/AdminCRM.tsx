@@ -93,6 +93,15 @@ export default function AdminCRM() {
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         ) : (
+          <>
+          <div className="mb-4">
+            <CRMTrash
+              trashedLeads={trashedLeads}
+              onRestore={restoreLead}
+              onPermanentDelete={permanentlyDeleteLead}
+              onEmptyTrash={emptyTrash}
+            />
+          </div>
           <Tabs defaultValue="kanban">
             <TabsList className="mb-4">
               <TabsTrigger value="kanban"><KanbanSquare className="w-4 h-4 mr-1" /> Pipeline</TabsTrigger>

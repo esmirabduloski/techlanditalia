@@ -14,6 +14,7 @@ import { CRMLeadList } from "@/components/admin/crm/CRMLeadList";
 import { CRMAnalytics } from "@/components/admin/crm/CRMAnalytics";
 import { CRMLeadDetailDrawer } from "@/components/admin/crm/CRMLeadDetailDrawer";
 import { CRMNotionSettings } from "@/components/admin/crm/CRMNotionSettings";
+import { CRMTrash } from "@/components/admin/crm/CRMTrash";
 import { Loader2, Plus, LogOut, KanbanSquare, List, BarChart3, Database } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { JsonImportExport } from "@/components/admin/JsonImportExport";
@@ -22,7 +23,10 @@ export default function AdminCRM() {
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { leads, loading, updateLead, deleteLead, createLead, reload } = useCRMLeads();
+  const {
+    leads, trashedLeads, loading, updateLead, deleteLead,
+    restoreLead, permanentlyDeleteLead, emptyTrash, createLead, reload,
+  } = useCRMLeads();
 
   const [selectedLead, setSelectedLead] = useState<CrmLead | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -89,6 +93,15 @@ export default function AdminCRM() {
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         ) : (
+          <>
+          <div className="mb-4">
+            <CRMTrash
+              trashedLeads={trashedLeads}
+              onRestore={restoreLead}
+              onPermanentDelete={permanentlyDeleteLead}
+              onEmptyTrash={emptyTrash}
+            />
+          </div>
           <Tabs defaultValue="kanban">
             <TabsList className="mb-4">
               <TabsTrigger value="kanban"><KanbanSquare className="w-4 h-4 mr-1" /> Pipeline</TabsTrigger>
@@ -113,6 +126,7 @@ export default function AdminCRM() {
               <CRMNotionSettings totalLeads={leads.length} />
             </TabsContent>
           </Tabs>
+          </>
         )}
       </main>
 

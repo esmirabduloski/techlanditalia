@@ -156,11 +156,16 @@ export function useCRMLeads() {
   };
 
   const createLead = async (lead: Partial<CrmLead>) => {
-    const { error } = await supabase.from("crm_leads" as any).insert({
-      ...lead,
-      email: (lead.email || "").toLowerCase(),
-      source: lead.source ?? "manual",
-    } as any);
+    // upsert su email: se il lead esiste (anche nel cestino) viene ripristinato e aggiornato
+    const { error } = await supabase.from("crm_leads" as any).upsert(
+      {
+        ...lead,
+        email: (lead.email || "").toLowerCase(),
+        source: lead.source ?? "manual",
+        deleted_at: null,
+      } as any,
+      { onConflict: "email" }
+    );
     if (error) {
       toast({ title: "Errore creazione lead", description: error.message, variant: "destructive" });
       return false;

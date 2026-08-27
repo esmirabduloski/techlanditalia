@@ -47,27 +47,49 @@ const availabilityLabels: Record<string, string> = {
   "qualsiasi": "Qualsiasi orario",
 };
 
-async function sendEmail(to: string[], subject: string, html: string) {
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${RESEND_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: "TechLand Italia <info@techlanditalia.it>",
-      to,
-      subject,
-      html,
-    }),
-  });
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
+const INVALID_DOMAINS = ["example.com", "example.org", "example.net", "test.com", "localhost"];
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Resend API error: ${error}`);
+function isSendableEmail(email: string): boolean {
+  const value = (email || "").trim().toLowerCase();
+  if (!EMAIL_RE.test(value)) return false;
+  const domain = value.split("@")[1] || "";
+  return !INVALID_DOMAINS.includes(domain);
+}
+
+// Never throws: returns the outcome so one failed recipient can't fail the whole request.
+async function sendEmail(to: string[], subject: string, html: string) {
+  const recipients = to.filter(isSendableEmail);
+  if (recipients.length === 0) {
+    console.warn("[send-booking-notification] skipped send: no valid recipient");
+    return { skipped: true, reason: "invalid_recipient" as const };
   }
 
-  return await response.json();
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: "TechLand Italia <info@techlanditalia.it>",
+        to: recipients,
+        subject,
+        html,
+      }),
+    });
+
+    const bodyText = await response.text();
+    if (!response.ok) {
+      console.error(`[send-booking-notification] Resend error [${response.status}]: ${bodyText}`);
+      return { sent: false, status: response.status, error: bodyText };
+    }
+    return { sent: true, response: bodyText ? JSON.parse(bodyText) : null };
+  } catch (e) {
+    console.error("[send-booking-notification] Resend request failed:", e);
+    return { sent: false, error: String(e) };
+  }
 }
 
 serve(async (req: Request): Promise<Response> => {

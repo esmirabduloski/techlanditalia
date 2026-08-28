@@ -166,7 +166,7 @@ export function Footer() {
         <div className="border-t border-background/10 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="text-background/50 text-sm text-center md:text-left space-y-1">
             <p>© {new Date().getFullYear()} TECHLAND. Tutti i diritti riservati.</p>
-            <p>P.IVA: 05596490267 — Sede legale: Vedelago (TV)</p>
+            <p>P.IVA: 05596490267 — REA: 459874 — Sede legale: Vedelago (TV)</p>
           </div>
           <div className="flex items-center justify-between md:justify-end w-full md:w-auto gap-4 text-background/50 text-sm">
             <Link to="/accessibilita" className="hover:text-background transition-colors underline">

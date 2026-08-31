@@ -14,7 +14,10 @@ if (!import.meta.env.SSR) {
     dsn: import.meta.env.VITE_SENTRY_DSN,
     integrations: [Sentry.browserTracingIntegration(), Sentry.replayIntegration()],
     tracesSampleRate: 1.0,
-    tracePropagationTargets: ["localhost", /^https:\/\/[a-z0-9-]+\.supabase\.co\/functions/],
+    // IMPORTANTE: NON propagare i trace header (sentry-trace, baggage) verso
+    // domini terzi come Supabase: aggiungono header non previsti dal preflight
+    // CORS delle edge function e bloccherebbero login/chiamate API.
+    tracePropagationTargets: [/^\//],
     replaysSessionSampleRate: 0.1,
     replaysOnErrorSampleRate: 1.0,
   });

@@ -3,7 +3,7 @@ import { useRef, useState, useEffect } from 'react';
 import { 
   FileText, GraduationCap, BookOpen, Mail, User, BarChart3, 
   Award, Calendar, ClipboardCheck, Users, Newspaper, UsersRound, CalendarClock, Link as LinkIcon,
-  ChevronLeft, ChevronRight, Menu, X, Database, ClipboardList, BookText, Megaphone, Briefcase, Shield, Settings, Gift
+  ChevronLeft, ChevronRight, Menu, X, Database, ClipboardList, BookText, Megaphone, Briefcase, Shield, Settings, Gift, Bug
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -45,6 +45,7 @@ const navItems: NavItem[] = [
   { to: '/admin/glossario', label: 'Glossario', icon: BookOpen },
   { to: '/admin/referral', label: 'Referral', icon: Gift },
   { to: '/admin/impostazioni', label: 'Impostazioni', icon: Settings },
+  { to: '/admin/sentry-log-error', label: 'Sentry Log error', icon: Bug },
 ];
 
 export function AdminNav() {

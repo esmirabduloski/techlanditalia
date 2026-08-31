@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -603,6 +603,7 @@ export type Database = {
           assigned_to: string | null
           child_age: number | null
           created_at: string
+          deleted_at: string | null
           email: string
           full_name: string
           id: string
@@ -629,6 +630,7 @@ export type Database = {
           assigned_to?: string | null
           child_age?: number | null
           created_at?: string
+          deleted_at?: string | null
           email: string
           full_name?: string
           id?: string
@@ -655,6 +657,7 @@ export type Database = {
           assigned_to?: string | null
           child_age?: number | null
           created_at?: string
+          deleted_at?: string | null
           email?: string
           full_name?: string
           id?: string
@@ -765,6 +768,65 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      data_deletion_requests: {
+        Row: {
+          admin_notes: string | null
+          children: Json
+          confirm_understood: boolean
+          created_at: string
+          id: string
+          processed_at: string | null
+          processed_by: string | null
+          reason: string | null
+          request_type: string
+          requester_email: string
+          requester_id: string
+          requester_name: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          children?: Json
+          confirm_understood?: boolean
+          created_at?: string
+          id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          reason?: string | null
+          request_type?: string
+          requester_email: string
+          requester_id: string
+          requester_name: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          children?: Json
+          confirm_understood?: boolean
+          created_at?: string
+          id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          reason?: string | null
+          request_type?: string
+          requester_email?: string
+          requester_id?: string
+          requester_name?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_deletion_requests_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       enrollments: {
         Row: {
@@ -2583,6 +2645,10 @@ export type Database = {
       }
       is_parent_of_group: {
         Args: { _group_id: string; _parent_id: string }
+        Returns: boolean
+      }
+      is_parent_of_teacher: {
+        Args: { _parent_id: string; _teacher_id: string }
         Returns: boolean
       }
       is_student_in_group: {

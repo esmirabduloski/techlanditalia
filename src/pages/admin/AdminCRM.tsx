@@ -14,6 +14,7 @@ import { CRMLeadList } from "@/components/admin/crm/CRMLeadList";
 import { CRMAnalytics } from "@/components/admin/crm/CRMAnalytics";
 import { CRMLeadDetailDrawer } from "@/components/admin/crm/CRMLeadDetailDrawer";
 import { CRMNotionSettings } from "@/components/admin/crm/CRMNotionSettings";
+import { CRMTrash } from "@/components/admin/crm/CRMTrash";
 import { Loader2, Plus, LogOut, KanbanSquare, List, BarChart3, Database } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -21,7 +22,17 @@ export default function AdminCRM() {
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { leads, loading, updateLead, deleteLead, createLead } = useCRMLeads();
+  const {
+    leads,
+    trashedLeads,
+    loading,
+    updateLead,
+    deleteLead,
+    restoreLead,
+    permanentlyDeleteLead,
+    emptyTrash,
+    createLead,
+  } = useCRMLeads();
 
   const [selectedLead, setSelectedLead] = useState<CrmLead | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -104,6 +115,15 @@ export default function AdminCRM() {
               <CRMNotionSettings totalLeads={leads.length} />
             </TabsContent>
           </Tabs>
+        )}
+
+        {!loading && (
+          <CRMTrash
+            trashedLeads={trashedLeads}
+            onRestore={restoreLead}
+            onPermanentDelete={permanentlyDeleteLead}
+            onEmptyTrash={emptyTrash}
+          />
         )}
       </main>
 

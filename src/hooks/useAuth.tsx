@@ -29,21 +29,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         // Check admin role with setTimeout to avoid deadlock
         if (session?.user) {
-          setTimeout(() => {
-            checkAdminRole(session.user.id);
+          setIsLoading(true);
+          setTimeout(async () => {
+            await checkAdminRole(session.user.id);
+            setIsLoading(false);
           }, 0);
         } else {
           setIsAdmin(false);
+          setIsLoading(false);
         }
       }
     );
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // THEN check for existing session (attendi il controllo ruolo prima di sbloccare le guard)
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        checkAdminRole(session.user.id);
+        await checkAdminRole(session.user.id);
       }
       setIsLoading(false);
     });

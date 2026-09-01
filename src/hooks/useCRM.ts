@@ -31,6 +31,7 @@ export interface CrmLead {
   notion_page_id?: string | null;
   notion_last_sync_at?: string | null;
   notion_sync_error?: string | null;
+  deleted_at?: string | null;
 }
 
 export interface CrmInteraction {
@@ -65,6 +66,7 @@ export const SOURCE_LABELS: Record<LeadSource, string> = {
 
 export function useCRMLeads() {
   const [leads, setLeads] = useState<CrmLead[]>([]);
+  const [trashedLeads, setTrashedLeads] = useState<CrmLead[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -78,7 +80,9 @@ export function useCRMLeads() {
     if (error) {
       toast({ title: "Errore caricamento CRM", description: error.message, variant: "destructive" });
     } else {
-      setLeads((data ?? []) as unknown as CrmLead[]);
+      const all = (data ?? []) as unknown as CrmLead[];
+      setLeads(all.filter((l) => !l.deleted_at));
+      setTrashedLeads(all.filter((l) => !!l.deleted_at));
     }
     setLoading(false);
   };
@@ -105,8 +109,12 @@ export function useCRMLeads() {
     return true;
   };
 
+  // Soft delete: il lead finisce nel cestino
   const deleteLead = async (id: string) => {
-    const { error } = await supabase.from("crm_leads" as any).delete().eq("id", id);
+    const { error } = await supabase
+      .from("crm_leads" as any)
+      .update({ deleted_at: new Date().toISOString() } as any)
+      .eq("id", id);
     if (error) {
       toast({ title: "Errore eliminazione", description: error.message, variant: "destructive" });
       return false;
@@ -115,12 +123,49 @@ export function useCRMLeads() {
     return true;
   };
 
+  const restoreLead = async (id: string) => {
+    const { error } = await supabase
+      .from("crm_leads" as any)
+      .update({ deleted_at: null } as any)
+      .eq("id", id);
+    if (error) {
+      toast({ title: "Errore ripristino", description: error.message, variant: "destructive" });
+      return false;
+    }
+    await load();
+    return true;
+  };
+
+  const permanentlyDeleteLead = async (id: string) => {
+    const { error } = await supabase.from("crm_leads" as any).delete().eq("id", id);
+    if (error) {
+      toast({ title: "Errore eliminazione definitiva", description: error.message, variant: "destructive" });
+      return false;
+    }
+    await load();
+    return true;
+  };
+
+  const emptyTrash = async () => {
+    const { error } = await supabase
+      .from("crm_leads" as any)
+      .delete()
+      .not("deleted_at", "is", null);
+    if (error) {
+      toast({ title: "Errore svuotamento cestino", description: error.message, variant: "destructive" });
+      return false;
+    }
+    await load();
+    return true;
+  };
+
   const createLead = async (lead: Partial<CrmLead>) => {
-    const { error } = await supabase.from("crm_leads" as any).insert({
+    const { error } = await supabase.from("crm_leads" as any).upsert({
       ...lead,
       email: (lead.email || "").toLowerCase(),
       source: lead.source ?? "manual",
-    } as any);
+      deleted_at: null,
+    } as any, { onConflict: "email" } as any);
     if (error) {
       toast({ title: "Errore creazione lead", description: error.message, variant: "destructive" });
       return false;
@@ -129,7 +174,18 @@ export function useCRMLeads() {
     return true;
   };
 
-  return { leads, loading, reload: load, updateLead, deleteLead, createLead };
+  return {
+    leads,
+    trashedLeads,
+    loading,
+    reload: load,
+    updateLead,
+    deleteLead,
+    restoreLead,
+    permanentlyDeleteLead,
+    emptyTrash,
+    createLead,
+  };
 }
 
 export function useCRMInteractions(leadId: string | null) {

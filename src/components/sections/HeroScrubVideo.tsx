@@ -73,7 +73,8 @@ export function HeroScrubVideo() {
       preload="auto"
       aria-label="Bambini che imparano programmazione con TECHLAND"
       className="w-full h-full object-cover"
-      style={{ objectPosition: "70% center" }}
+      style={{ objectPosition: "center center" }}
+
     />
   );
 }

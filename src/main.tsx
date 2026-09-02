@@ -1,10 +1,28 @@
 import * as Sentry from "@sentry/react";
 import { ViteReactSSG } from "vite-react-ssg";
 import { routes } from "./routes";
+import { isNonPrerenderedPath } from "./lib/prerender";
 import "@fontsource/plus-jakarta-sans/400.css";
 import "@fontsource/plus-jakarta-sans/600.css";
 import "@fontsource/plus-jakarta-sans/700.css";
 import "./index.css";
+
+// Le aree private (/admin, /area-riservata, /insegnante, ...) non sono prerenderate:
+// l'hosting statico le serve con il fallback index.html, che però contiene l'HTML
+// della HOME prerenderata (con data-server-rendered=true). vite-react-ssg vedrebbe
+// quel marker e tenterebbe hydrateRoot() del markup della home mentre il router
+// costruisce la pagina privata -> "Hydration failed" (eventi Sentry).
+// Qui azzeriamo marker + markup così la libreria fa un render client pulito.
+if (!import.meta.env.SSR && typeof document !== "undefined") {
+  if (isNonPrerenderedPath(window.location.pathname)) {
+    document
+      .querySelectorAll("[data-server-rendered]")
+      .forEach((el) => el.removeAttribute("data-server-rendered"));
+    const root = document.getElementById("root");
+    if (root) root.innerHTML = "";
+  }
+}
+
 
 // Guardia SSR: durante il prerendering (Node + jsdom mock, vedi ssgOptions.mock
 // in vite.config.ts) non c'è un vero browser, quindi Sentry va inizializzato

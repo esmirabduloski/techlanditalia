@@ -74,31 +74,16 @@ export function HeroSection() {
             </div>
           </ScrollReveal>
 
-          {/* Hero Image */}
-          <div className="relative hidden lg:block">
+          {/* Hero Video (scrub con il mouse) */}
+          <div className="relative hidden lg:block lg:-mr-8 xl:-mr-16">
             <div className="relative z-10 animate-float">
-              <div className="aspect-square max-w-lg mx-auto rounded-3xl bg-gradient-hero p-1">
+              <div className="aspect-square max-w-xl mx-auto rounded-3xl bg-gradient-hero p-1">
                 <div className="w-full h-full rounded-3xl bg-card flex items-center justify-center overflow-hidden">
-                  <picture>
-                    <source
-                      type="image/webp"
-                      srcSet="/images/home_page_techland-mobile.webp 504w, /images/home_page_techland.webp 1008w"
-                      sizes="504px"
-                    />
-                    <img
-                      src="/images/home_page_techland.webp"
-                      alt="Bambini che imparano programmazione con corsi di Roblox, Minecraft, Scratch, Python e Web Development su TECHLAND"
-                      className="w-full h-full object-cover"
-                      width={504}
-                      height={504}
-                      loading="eager"
-                      fetchPriority="high"
-                      decoding="async"
-                    />
-                  </picture>
+                  <HeroScrubVideo />
                 </div>
               </div>
             </div>
+
 
             {/* Floating elements - positioned in front, away from main image */}
             {/* Roblox - top right corner */}

@@ -45,6 +45,20 @@ const FORBIDDEN_DIRS = ['admin', 'area-riservata', 'insegnante', 'auth', 'lp'];
 const errors = [];
 const warn = [];
 
+// --- Guardia anti-regressione: la lista condivisa (src/lib/prerender.ts) deve coprire
+// tutti i prefissi privati, altrimenti il fallback SPA riporta l'hydration error. ---
+const prerenderModule = 'src/lib/prerender.ts';
+if (!existsSync(prerenderModule)) {
+  errors.push(`${prerenderModule} mancante: vite.config.ts e main.tsx condividono NO_PRERENDER_PREFIXES da qui`);
+} else {
+  const src = readFileSync(prerenderModule, 'utf8');
+  for (const dir of [...FORBIDDEN_DIRS, '.lovable']) {
+    if (!src.includes(`"/${dir}"`) && !src.includes(`'/${dir}'`))
+      errors.push(`${prerenderModule}: manca il prefisso "/${dir}" in NO_PRERENDER_PREFIXES`);
+  }
+}
+
+
 function extractJsonLdTypes(html, route) {
   const types = [];
   const re = /<script[^>]*application\/ld\+json[^>]*>([\s\S]*?)<\/script>/g;

@@ -4,17 +4,10 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/supabase/vite";
 import type {} from "vite-react-ssg"; // augmentation di UserConfig.ssgOptions
-
-// Aree escluse dal prerendering: restano SPA pura (servite dal fallback index.html).
+// Fonte unica di verità, condivisa con src/main.tsx (guardia anti-hydration).
 // /lp/ escluse di proposito: sono noindex (keyword cannibalization, vedi SEO_AUDIT_2026.md SEO-006).
-const NO_PRERENDER_PREFIXES = [
-  "/admin",
-  "/area-riservata",
-  "/insegnante",
-  "/auth",
-  "/lp",
-  "/.lovable",
-];
+import { NO_PRERENDER_PREFIXES } from "./src/lib/prerender";
+
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode, isSsrBuild }) => ({

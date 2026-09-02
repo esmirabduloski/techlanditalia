@@ -1,8 +1,9 @@
 import { useEffect, useRef } from "react";
+import videoAsset from "@/assets/sinistra-destra.mp4.asset.json";
 
-const VIDEO_SRC =
-  "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260530_042513_df96a13b-6155-4f6e-8b93-c9dee66fba08.mp4";
+const VIDEO_SRC = videoAsset.url;
 const SENSITIVITY = 0.8;
+
 
 /**
  * Video che "scrubba" avanti/indietro seguendo il movimento orizzontale del mouse.
@@ -72,7 +73,8 @@ export function HeroScrubVideo() {
       preload="auto"
       aria-label="Bambini che imparano programmazione con TECHLAND"
       className="w-full h-full object-cover"
-      style={{ objectPosition: "70% center" }}
+      style={{ objectPosition: "center center" }}
+
     />
   );
 }

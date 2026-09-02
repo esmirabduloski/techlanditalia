@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Play, Sparkles, Users, Award, Shield } from "lucide-react";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
+import { HeroScrubVideo } from "@/components/sections/HeroScrubVideo";
+
 
 export function HeroSection() {
   return (
@@ -77,27 +79,12 @@ export function HeroSection() {
           {/* Hero Image */}
           <div className="relative hidden lg:block">
             <div className="relative z-10 animate-float">
-              <div className="aspect-square max-w-lg mx-auto rounded-3xl bg-gradient-hero p-1">
+              <div className="aspect-square max-w-lg lg:max-w-xl xl:max-w-2xl ml-auto mr-0 xl:-mr-8 rounded-3xl bg-gradient-hero p-1">
                 <div className="w-full h-full rounded-3xl bg-card flex items-center justify-center overflow-hidden">
-                  <picture>
-                    <source
-                      type="image/webp"
-                      srcSet="/images/home_page_techland-mobile.webp 504w, /images/home_page_techland.webp 1008w"
-                      sizes="504px"
-                    />
-                    <img
-                      src="/images/home_page_techland.webp"
-                      alt="Bambini che imparano programmazione con corsi di Roblox, Minecraft, Scratch, Python e Web Development su TECHLAND"
-                      className="w-full h-full object-cover"
-                      width={504}
-                      height={504}
-                      loading="eager"
-                      fetchPriority="high"
-                      decoding="async"
-                    />
-                  </picture>
+                  <HeroScrubVideo />
                 </div>
               </div>
+
             </div>
 
             {/* Floating elements - positioned in front, away from main image */}

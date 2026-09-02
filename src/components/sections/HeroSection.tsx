@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Play, Sparkles, Users, Award, Shield } from "lucide-react";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
+import { HeroScrubVideo } from "@/components/sections/HeroScrubVideo";
+
 
 export function HeroSection() {
   return (

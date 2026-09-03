@@ -14,10 +14,20 @@ export function HeroScrubVideo() {
   const targetTimeRef = useRef(0);
   const seekingRef = useRef(false);
   const prevXRef = useRef<number | null>(null);
+  // Il blocco hero è visibile solo da lg in su: non scarichiamo il video su mobile/tablet
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const mql = window.matchMedia("(min-width: 1024px)");
+    const onChange = () => setIsDesktop(mql.matches);
+    onChange();
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || !isDesktop) return;
 
     const seek = () => {
       if (seekingRef.current) return;

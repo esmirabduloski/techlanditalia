@@ -160,12 +160,33 @@ export function useCRMLeads() {
   };
 
   const createLead = async (lead: Partial<CrmLead>) => {
-    const { error } = await supabase.from("crm_leads" as any).upsert({
+    const email = (lead.email || "").toLowerCase();
+
+    // Evita di sovrascrivere un lead esistente con lo stesso indirizzo email
+    const { data: existing } = await supabase
+      .from("crm_leads" as any)
+      .select("id, deleted_at")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (existing) {
+      const trashed = !!(existing as any).deleted_at;
+      toast({
+        title: "Lead già esistente",
+        description: trashed
+          ? "Un lead con questa email è nel cestino: ripristinalo invece di ricrearlo."
+          : "Esiste già un lead con questa email. Modifica quello esistente.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    const { error } = await supabase.from("crm_leads" as any).insert({
       ...lead,
-      email: (lead.email || "").toLowerCase(),
+      email,
       source: lead.source ?? "manual",
       deleted_at: null,
-    } as any, { onConflict: "email" } as any);
+    } as any);
     if (error) {
       toast({ title: "Errore creazione lead", description: error.message, variant: "destructive" });
       return false;

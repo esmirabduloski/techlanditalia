@@ -72,7 +72,9 @@ export function HeroScrubVideo() {
       video.removeEventListener("loadedmetadata", onLoaded);
       window.removeEventListener("mousemove", onMouseMove);
     };
-  }, []);
+  }, [isDesktop]);
+
+  if (!isDesktop) return null;
 
   return (
     <video

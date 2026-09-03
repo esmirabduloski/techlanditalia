@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import videoAsset from "@/assets/sinistra-destra.mp4.asset.json";
 
 const VIDEO_SRC = videoAsset.url;

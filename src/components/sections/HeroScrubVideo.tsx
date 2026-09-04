@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import videoAsset from "@/assets/sinistra-destra.mp4.asset.json";
+import videoAsset from "@/assets/kids-4-direzioni.mp4.asset.json";
 
 const VIDEO_SRC = videoAsset.url;
-const SENSITIVITY = 0.8;
+// Sensibilità separate per asse: il video copre tutte e 4 le direzioni
+const SENSITIVITY_X = 0.8;
+const SENSITIVITY_Y = 0.8;
+
 
 
 /**

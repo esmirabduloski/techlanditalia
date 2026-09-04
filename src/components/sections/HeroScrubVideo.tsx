@@ -1,19 +1,18 @@
 import { useEffect, useRef, useState } from "react";
-import videoAsset from "@/assets/sinistra-destra.mp4.asset.json";
+import videoAsset from "@/assets/hero-360.mp4.asset.json";
 
 const VIDEO_SRC = videoAsset.url;
 const SENSITIVITY = 0.8;
 
-
 /**
- * Video che "scrubba" avanti/indietro seguendo il movimento orizzontale del mouse.
- * Non è fullscreen: riempie il contenitore in cui viene montato.
+ * Video che "scrubba" seguendo il movimento del mouse in tutte le direzioni
+ * (orizzontale + verticale). Non è fullscreen: riempie il contenitore.
  */
 export function HeroScrubVideo() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const targetTimeRef = useRef(0);
   const seekingRef = useRef(false);
-  const prevXRef = useRef<number | null>(null);
+  const prevRef = useRef<{ x: number; y: number } | null>(null);
   // Il blocco hero è visibile solo da lg in su: non scarichiamo il video su mobile/tablet
   const [isDesktop, setIsDesktop] = useState(false);
 
@@ -44,17 +43,24 @@ export function HeroScrubVideo() {
     const onMouseMove = (e: MouseEvent) => {
       const duration = video.duration;
       if (!duration || Number.isNaN(duration)) return;
-      if (prevXRef.current === null) {
-        prevXRef.current = e.clientX;
+      if (prevRef.current === null) {
+        prevRef.current = { x: e.clientX, y: e.clientY };
         return;
       }
-      const delta = e.clientX - prevXRef.current;
-      prevXRef.current = e.clientX;
-      const offset = (delta / window.innerWidth) * SENSITIVITY * duration;
-      targetTimeRef.current = Math.min(
-        Math.max(targetTimeRef.current + offset, 0),
-        duration
-      );
+      const dx = e.clientX - prevRef.current.x;
+      const dy = e.clientY - prevRef.current.y;
+      prevRef.current = { x: e.clientX, y: e.clientY };
+
+      // Combina movimento orizzontale e verticale: il video segue il mouse
+      // in tutte e 4 le direzioni (destra/sinistra e alto/basso).
+      const normalized =
+        dx / window.innerWidth + dy / window.innerHeight;
+      const offset = normalized * SENSITIVITY * duration;
+
+      // Loop continuo: il video è un giro completo a 360°
+      let next = (targetTimeRef.current + offset) % duration;
+      if (next < 0) next += duration;
+      targetTimeRef.current = next;
       seek();
     };
 
@@ -86,7 +92,6 @@ export function HeroScrubVideo() {
       aria-label="Bambini che imparano programmazione con TECHLAND"
       className="w-full h-full object-cover"
       style={{ objectPosition: "center center" }}
-
     />
   );
 }

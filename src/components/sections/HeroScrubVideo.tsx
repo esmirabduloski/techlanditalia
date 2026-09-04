@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import videoAsset from "@/assets/sinistra-destra.mp4.asset.json";
+import videoAsset from "@/assets/kids-4-direzioni.mp4.asset.json";
 
 const VIDEO_SRC = videoAsset.url;
-const SENSITIVITY = 0.8;
+// Sensibilità separate per asse: il video copre tutte e 4 le direzioni
+const SENSITIVITY_X = 0.8;
+const SENSITIVITY_Y = 0.8;
+
 
 
 /**
@@ -14,6 +17,7 @@ export function HeroScrubVideo() {
   const targetTimeRef = useRef(0);
   const seekingRef = useRef(false);
   const prevXRef = useRef<number | null>(null);
+  const prevYRef = useRef<number | null>(null);
   // Il blocco hero è visibile solo da lg in su: non scarichiamo il video su mobile/tablet
   const [isDesktop, setIsDesktop] = useState(false);
 
@@ -44,19 +48,26 @@ export function HeroScrubVideo() {
     const onMouseMove = (e: MouseEvent) => {
       const duration = video.duration;
       if (!duration || Number.isNaN(duration)) return;
-      if (prevXRef.current === null) {
+      if (prevXRef.current === null || prevYRef.current === null) {
         prevXRef.current = e.clientX;
+        prevYRef.current = e.clientY;
         return;
       }
-      const delta = e.clientX - prevXRef.current;
+      const deltaX = e.clientX - prevXRef.current;
+      const deltaY = e.clientY - prevYRef.current;
       prevXRef.current = e.clientX;
-      const offset = (delta / window.innerWidth) * SENSITIVITY * duration;
+      prevYRef.current = e.clientY;
+      const offset =
+        ((deltaX / window.innerWidth) * SENSITIVITY_X +
+          (deltaY / window.innerHeight) * SENSITIVITY_Y) *
+        duration;
       targetTimeRef.current = Math.min(
         Math.max(targetTimeRef.current + offset, 0),
         duration
       );
       seek();
     };
+
 
     const onLoaded = () => {
       targetTimeRef.current = 0;

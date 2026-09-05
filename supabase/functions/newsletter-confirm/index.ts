@@ -17,13 +17,13 @@ const handler = async (req: Request): Promise<Response> => {
     const token = url.searchParams.get("token");
 
     if (!token) {
-      return createHtmlResponse(siteUrl, false, "Token mancante");
+      return createHtmlResponse(corsHeaders, siteUrl, false, "Token mancante");
     }
 
     // Validate token format (UUID)
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(token)) {
-      return createHtmlResponse(siteUrl, false, "Token non valido");
+      return createHtmlResponse(corsHeaders, siteUrl, false, "Token non valido");
     }
 
     // Create Supabase client with service role
@@ -40,11 +40,11 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (fetchError || !subscriber) {
       console.error("Subscriber not found:", fetchError);
-      return createHtmlResponse(siteUrl, false, "Link non valido o scaduto");
+      return createHtmlResponse(corsHeaders, siteUrl, false, "Link non valido o scaduto");
     }
 
     if (subscriber.confirmed) {
-      return createHtmlResponse(siteUrl, true, "La tua iscrizione era già stata confermata!");
+      return createHtmlResponse(corsHeaders, siteUrl, true, "La tua iscrizione era già stata confermata!");
     }
 
     // Confirm subscription
@@ -58,19 +58,19 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (updateError) {
       console.error("Update error:", updateError);
-      return createHtmlResponse(siteUrl, false, "Errore durante la conferma. Riprova più tardi.");
+      return createHtmlResponse(corsHeaders, siteUrl, false, "Errore durante la conferma. Riprova più tardi.");
     }
 
     console.log(`Newsletter subscription confirmed: ${subscriber.email}`);
-    return createHtmlResponse(siteUrl, true, "Iscrizione confermata con successo!");
+    return createHtmlResponse(corsHeaders, siteUrl, true, "Iscrizione confermata con successo!");
 
   } catch (error: any) {
     console.error("Newsletter confirm error:", error);
-    return createHtmlResponse(siteUrl, false, "Errore interno del server");
+    return createHtmlResponse(corsHeaders, siteUrl, false, "Errore interno del server");
   }
 };
 
-function createHtmlResponse(siteUrl: string, success: boolean, message: string): Response {
+function createHtmlResponse(corsHeaders: Record<string, string>, siteUrl: string, success: boolean, message: string): Response {
   const html = `
     <!DOCTYPE html>
     <html lang="it">

@@ -30,11 +30,6 @@ type ServiceDeskRequestType = {
 };
 
 
-const jsonHeaders = {
-  ...corsHeaders,
-  "Content-Type": "application/json",
-};
-
 const normalizeProjectKey = (value: string) => {
   const trimmed = value.trim();
   if (!trimmed) return "";
@@ -88,6 +83,7 @@ const pickRequestType = (types: ServiceDeskRequestType[]) => {
 
 Deno.serve(async (req) => {
   const corsHeaders = corsHeadersFor(req);
+  const jsonHeaders = { ...corsHeaders, "Content-Type": "application/json" };
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }

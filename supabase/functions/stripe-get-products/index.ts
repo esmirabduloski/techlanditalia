@@ -1,11 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { corsHeadersFor } from "../_shared/cors.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, sentry-trace, baggage, x-supabase-api-version, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
-};
 
 serve(async (req) => {
+  const corsHeaders = corsHeadersFor(req);
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }

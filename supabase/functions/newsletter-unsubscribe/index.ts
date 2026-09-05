@@ -17,13 +17,13 @@ const handler = async (req: Request): Promise<Response> => {
     const token = url.searchParams.get("token");
 
     if (!token) {
-      return createHtmlResponse(siteUrl, false, "Token mancante");
+      return createHtmlResponse(corsHeaders, siteUrl, false, "Token mancante");
     }
 
     // Validate token format (UUID)
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(token)) {
-      return createHtmlResponse(siteUrl, false, "Token non valido");
+      return createHtmlResponse(corsHeaders, siteUrl, false, "Token non valido");
     }
 
     // Create Supabase client with service role
@@ -40,7 +40,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (fetchError || !subscriber) {
       console.error("Subscriber not found:", fetchError);
-      return createHtmlResponse(siteUrl, false, "Link non valido o già utilizzato");
+      return createHtmlResponse(corsHeaders, siteUrl, false, "Link non valido o già utilizzato");
     }
 
     // Delete subscriber
@@ -51,19 +51,19 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (deleteError) {
       console.error("Delete error:", deleteError);
-      return createHtmlResponse(siteUrl, false, "Errore durante la disiscrizione. Riprova più tardi.");
+      return createHtmlResponse(corsHeaders, siteUrl, false, "Errore durante la disiscrizione. Riprova più tardi.");
     }
 
     console.log(`Newsletter unsubscribed: ${subscriber.email}`);
-    return createHtmlResponse(siteUrl, true, "Ti sei disiscritto dalla newsletter");
+    return createHtmlResponse(corsHeaders, siteUrl, true, "Ti sei disiscritto dalla newsletter");
 
   } catch (error: any) {
     console.error("Newsletter unsubscribe error:", error);
-    return createHtmlResponse(siteUrl, false, "Errore interno del server");
+    return createHtmlResponse(corsHeaders, siteUrl, false, "Errore interno del server");
   }
 };
 
-function createHtmlResponse(siteUrl: string, success: boolean, message: string): Response {
+function createHtmlResponse(corsHeaders: Record<string, string>, siteUrl: string, success: boolean, message: string): Response {
   const html = `
     <!DOCTYPE html>
     <html lang="it">

@@ -12,6 +12,8 @@ import { ImpersonationBanner } from "@/components/admin/ImpersonationBanner";
 import { SkipToContent } from "@/components/accessibility/SkipToContent";
 import { RouteAnnouncer } from "@/components/accessibility/RouteAnnouncer";
 import ScrollToTop from "./components/ScrollToTop";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+
 
 const queryClient = new QueryClient();
 
@@ -44,8 +46,11 @@ const App = () => (
                   </div>
                 }
               >
-                <Outlet />
+                <ErrorBoundary>
+                  <Outlet />
+                </ErrorBoundary>
               </Suspense>
+
             </AnalyticsProvider>
           </TooltipProvider>
         </ImpersonationProvider>

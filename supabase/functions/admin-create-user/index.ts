@@ -1,16 +1,17 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { corsHeadersFor } from "../_shared/cors.ts";
+import { rateLimit } from "../_shared/ratelimit.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version, sentry-trace, baggage, x-supabase-api-version",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
 
 serve(async (req) => {
+  const corsHeaders = corsHeadersFor(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const limited = await rateLimit(req, { endpoint: "admin-create-user", maxRequests: 20, windowSeconds: 3600, corsHeaders });
+  if (limited) return limited;
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;

@@ -1,13 +1,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { corsHeadersFor } from "../_shared/cors.ts";
+import { rateLimit } from "../_shared/ratelimit.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, sentry-trace, baggage, x-supabase-api-version, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
 
 const ALLOWED_HOSTS = new Set([
   "techlanditalia.it",
@@ -115,12 +113,16 @@ interface PasswordResetRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  const corsHeaders = corsHeadersFor(req);
   console.log("Password reset function called");
   
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const limited = await rateLimit(req, { endpoint: "send-password-reset-email", maxRequests: 5, windowSeconds: 3600, corsHeaders });
+  if (limited) return limited;
 
   try {
     const { email, redirectUrl }: PasswordResetRequest = await req.json();

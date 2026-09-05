@@ -1,13 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
+import { corsHeadersFor } from "../_shared/cors.ts";
 
 declare const EdgeRuntime: { waitUntil?: (promise: Promise<unknown>) => void } | undefined;
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, sentry-trace, baggage, x-supabase-api-version, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
 
 // Zod schema with built-in honeypot + time-trap validation
 const BookingSchema = z.object({
@@ -78,6 +75,7 @@ function sendNotificationInBackground(payload: Record<string, unknown>) {
 }
 
 serve(async (req: Request): Promise<Response> => {
+  const corsHeaders = corsHeadersFor(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const ip = getClientIp(req);

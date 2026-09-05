@@ -44,8 +44,11 @@ const App = () => (
                   </div>
                 }
               >
-                <Outlet />
+                <ErrorBoundary>
+                  <Outlet />
+                </ErrorBoundary>
               </Suspense>
+
             </AnalyticsProvider>
           </TooltipProvider>
         </ImpersonationProvider>

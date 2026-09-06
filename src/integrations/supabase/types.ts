@@ -1809,6 +1809,75 @@ export type Database = {
           },
         ]
       }
+      push_devices: {
+        Row: {
+          created_at: string
+          id: string
+          last_seen_at: string
+          platform: string | null
+          token: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_seen_at?: string
+          platform?: string | null
+          token: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_seen_at?: string
+          platform?: string | null
+          token?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      push_notification_log: {
+        Row: {
+          body: string | null
+          created_at: string
+          failure_count: number
+          id: string
+          notification_type: string
+          schedule_id: string | null
+          success_count: number
+          title: string | null
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          failure_count?: number
+          id?: string
+          notification_type: string
+          schedule_id?: string | null
+          success_count?: number
+          title?: string | null
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          failure_count?: number
+          id?: string
+          notification_type?: string
+          schedule_id?: string | null
+          success_count?: number
+          title?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       rate_limits: {
         Row: {
           created_at: string

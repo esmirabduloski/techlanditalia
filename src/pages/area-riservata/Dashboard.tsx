@@ -38,6 +38,7 @@ import { BackgroundColorPicker } from '@/components/dashboard/BackgroundColorPic
 import { useBackgroundColor, LIGHT_COLORS, DARK_COLORS } from '@/hooks/useBackgroundColor';
 import { useTheme } from 'next-themes';
 import { supabase } from '@/integrations/supabase/client';
+import { PushNotificationsCard } from '@/components/notifications/PushNotificationsCard';
 
 interface CourseProgress {
   courseId: string;
@@ -314,6 +315,9 @@ export default function Dashboard() {
               </Button>
             </div>
           </div>
+
+          {/* Notifiche push promemoria lezioni - solo genitori */}
+          {effectiveIsParent && !isImpersonating && <PushNotificationsCard />}
 
           {/* Stats Cards - Hide for parents and teachers */}
           {!effectiveIsTeacher && !effectiveIsParent && (

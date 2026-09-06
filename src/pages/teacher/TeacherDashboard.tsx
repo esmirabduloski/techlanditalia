@@ -23,6 +23,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { BugReportButton } from '@/components/BugReportButton';
 import { TeacherWeeklyCalendar } from '@/components/teacher/TeacherWeeklyCalendar';
+import { PushNotificationsCard } from '@/components/notifications/PushNotificationsCard';
 
 interface AvailabilitySlot {
   day: string;
@@ -840,6 +841,8 @@ export default function TeacherDashboard() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
+        <PushNotificationsCard />
+
         <div className="mb-8">
           <h1 className="text-3xl font-bold flex items-center gap-3">
             <GraduationCap className="w-8 h-8 text-tech-teal" />

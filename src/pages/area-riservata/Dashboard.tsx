@@ -316,6 +316,9 @@ export default function Dashboard() {
             </div>
           </div>
 
+          {/* Notifiche push promemoria lezioni - solo genitori */}
+          {effectiveIsParent && !isImpersonating && <PushNotificationsCard />}
+
           {/* Stats Cards - Hide for parents and teachers */}
           {!effectiveIsTeacher && !effectiveIsParent && (
             <>

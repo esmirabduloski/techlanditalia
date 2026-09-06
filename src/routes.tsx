@@ -130,6 +130,7 @@ export const routes: RouteRecord[] = [
       { path: "admin/glossario", lazy: page(() => import("./pages/admin/AdminGlossary")) },
       { path: "admin/referral", lazy: page(() => import("./pages/admin/AdminReferrals")) },
       { path: "admin/sentry-log-error", lazy: page(() => import("./pages/admin/AdminSentryLogError")) },
+      { path: "admin/notifiche-push", lazy: page(() => import("./pages/admin/AdminPushNotifications")) },
 
       // === Area insegnanti (SPA pura, dietro auth) ===
       { path: "insegnante", lazy: page(() => import("./pages/teacher/TeacherDashboard")) },

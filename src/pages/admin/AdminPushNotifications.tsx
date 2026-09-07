@@ -13,6 +13,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { AdminHeader } from '@/components/admin/AdminHeader';
+import { AdminNav } from '@/components/admin/AdminNav';
 
 type DeviceRow = {
   user_id: string;
@@ -150,8 +152,11 @@ export default function AdminPushNotifications() {
     d ? new Date(d).toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' }) : '—';
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-background">
       <Helmet><title>Notifiche push | Admin TECHLAND</title></Helmet>
+      <AdminHeader />
+      <AdminNav />
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 space-y-6">
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
@@ -274,6 +279,7 @@ export default function AdminPushNotifications() {
           )}
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

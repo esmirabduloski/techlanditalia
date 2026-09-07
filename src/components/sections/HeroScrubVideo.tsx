@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import videoAsset from "@/assets/sinistra-destra.mp4.asset.json";
 
-const VIDEO_SRC = videoAsset.url;
+const VIDEO_SRC = "/videos/hero-scrub.mp4";
+const POSTER_SRC = "/videos/hero-scrub-poster.jpg";
 const SENSITIVITY = 0.8;
+
 
 
 /**
@@ -80,6 +81,7 @@ export function HeroScrubVideo() {
     <video
       ref={videoRef}
       src={VIDEO_SRC}
+      poster={POSTER_SRC}
       muted
       playsInline
       preload="auto"
@@ -88,5 +90,6 @@ export function HeroScrubVideo() {
       style={{ objectPosition: "center center" }}
 
     />
+
   );
 }

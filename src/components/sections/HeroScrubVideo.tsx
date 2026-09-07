@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import videoAsset from "@/assets/sinistra-destra.mp4.asset.json";
 
-const VIDEO_SRC = videoAsset.url;
+const VIDEO_SRC = "/videos/hero-scrub.mp4";
+const POSTER_SRC = "/videos/hero-scrub-poster.jpg";
 const SENSITIVITY = 0.8;
+
 
 
 /**

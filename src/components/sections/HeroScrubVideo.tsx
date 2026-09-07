@@ -81,6 +81,7 @@ export function HeroScrubVideo() {
     <video
       ref={videoRef}
       src={VIDEO_SRC}
+      poster={POSTER_SRC}
       muted
       playsInline
       preload="auto"
@@ -89,5 +90,6 @@ export function HeroScrubVideo() {
       style={{ objectPosition: "center center" }}
 
     />
+
   );
 }

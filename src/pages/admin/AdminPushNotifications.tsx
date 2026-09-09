@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Bell, Send, Smartphone, RefreshCw } from 'lucide-react';
+import { Bell, Send, Smartphone, RefreshCw, BookmarkPlus, Trash2, Users, GraduationCap, Clock, Inbox } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -231,6 +231,59 @@ export default function AdminPushNotifications() {
         <Button variant="outline" size="sm" onClick={load} disabled={loading}>
           <RefreshCw className="w-4 h-4 mr-2" /> Aggiorna
         </Button>
+      </div>
+
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+        {[
+          { label: 'Genitori con notifiche', value: parentsCount, icon: Users },
+          { label: 'Insegnanti con notifiche', value: teachersCount, icon: GraduationCap },
+          { label: 'Promemoria 24h inviati', value: stats.reminders24h, icon: Clock },
+          { label: 'Promemoria 1h inviati', value: stats.reminders1h, icon: Clock },
+        ].map((s) => (
+          <Card key={s.label}>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                <s.icon className="w-4 h-4" /> {s.label}
+              </div>
+              <p className="text-2xl font-bold mt-1">{s.value}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 text-muted-foreground text-xs">
+              <Send className="w-4 h-4" /> Avvisi manuali inviati
+            </div>
+            <p className="text-2xl font-bold mt-1">{stats.manual}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 text-muted-foreground text-xs">
+              <Inbox className="w-4 h-4" /> Avvisi nuovi contatti/prenotazioni
+            </div>
+            <p className="text-2xl font-bold mt-1">{stats.alerts}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 text-muted-foreground text-xs">
+              <Smartphone className="w-4 h-4" /> Dispositivi totali
+            </div>
+            <p className="text-2xl font-bold mt-1">{totalDevices}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 text-muted-foreground text-xs">
+              <Bell className="w-4 h-4" /> Persone attive
+            </div>
+            <p className="text-2xl font-bold mt-1">{people.length}</p>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>

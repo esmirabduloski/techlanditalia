@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { corsHeadersFor } from "../_shared/cors.ts";
+import { notifyAdmins } from "../_shared/adminpush.ts";
 
 declare const EdgeRuntime: { waitUntil?: (promise: Promise<unknown>) => void } | undefined;
 
@@ -167,6 +168,20 @@ serve(async (req: Request): Promise<Response> => {
       console.error("Database error:", dbError);
       return new Response(JSON.stringify({ error: "Errore nel salvataggio" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // Notifica push agli admin (non blocca la risposta)
+    const pushTask = notifyAdmins({
+      title: "Nuova prenotazione lezione gratuita",
+      body: `${data.parentName.trim()} (${data.email}) · interesse: ${data.interest || "non-so"}`,
+      path: "/admin/prenotazioni",
+      type: "new_lead_booking",
+    });
+    try {
+      // @ts-ignore EdgeRuntime è disponibile in Supabase Edge Functions
+      EdgeRuntime.waitUntil(pushTask);
+    } catch {
+      pushTask.catch(() => undefined);
     }
 
     // Send notification email server-to-server without blocking the user's confirmation UI.

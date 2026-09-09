@@ -296,6 +296,46 @@ export default function AdminPushNotifications() {
               <Input id="push-title" value={title} maxLength={80} onChange={(e) => setTitle(e.target.value)} />
             </div>
           </div>
+          {templates.length > 0 && (
+            <div className="space-y-2">
+              <Label>Messaggi predefiniti</Label>
+              <div className="flex flex-wrap items-center gap-2">
+                <Select
+                  value=""
+                  onValueChange={(id) => {
+                    const t = templates.find((x) => x.id === id);
+                    if (t) { setTitle(t.title); setBody(t.body); }
+                  }}
+                >
+                  <SelectTrigger className="sm:max-w-md">
+                    <SelectValue placeholder="Scegli un messaggio salvato" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {templates.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.title} — {t.body.slice(0, 40)}{t.body.length > 40 ? '…' : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-wrap gap-2 pt-1">
+                {templates.map((t) => (
+                  <Badge key={t.id} variant="secondary" className="flex items-center gap-1">
+                    {t.title}
+                    <button
+                      type="button"
+                      aria-label={`Elimina messaggio predefinito ${t.title}`}
+                      className="ml-1 text-muted-foreground hover:text-destructive"
+                      onClick={() => handleDeleteTemplate(t.id)}
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="push-body">Messaggio</Label>
             <Textarea
@@ -307,10 +347,16 @@ export default function AdminPushNotifications() {
               onChange={(e) => setBody(e.target.value)}
             />
           </div>
-          <Button onClick={handleSend} disabled={sending}>
-            <Send className="w-4 h-4 mr-2" />
-            {sending ? 'Invio…' : 'Invia notifica'}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={handleSend} disabled={sending}>
+              <Send className="w-4 h-4 mr-2" />
+              {sending ? 'Invio…' : 'Invia notifica'}
+            </Button>
+            <Button variant="outline" onClick={handleSaveTemplate}>
+              <BookmarkPlus className="w-4 h-4 mr-2" /> Salva come predefinito
+            </Button>
+          </div>
+
         </CardContent>
       </Card>
 

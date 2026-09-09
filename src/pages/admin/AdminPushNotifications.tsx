@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Bell, Send, Smartphone, RefreshCw } from 'lucide-react';
+import { Bell, Send, Smartphone, RefreshCw, BookmarkPlus, Trash2, Users, GraduationCap, Clock, Inbox } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -43,6 +43,16 @@ type LogRow = {
   created_at: string;
 };
 
+type TemplateRow = { id: string; title: string; body: string };
+
+type Stats = {
+  reminders24h: number;
+  reminders1h: number;
+  manual: number;
+  alerts: number;
+};
+
+
 export default function AdminPushNotifications() {
   const [people, setPeople] = useState<PersonRow[]>([]);
   const [logs, setLogs] = useState<LogRow[]>([]);
@@ -53,6 +63,16 @@ export default function AdminPushNotifications() {
   const [title, setTitle] = useState('Avviso TECHLAND');
   const [body, setBody] = useState('');
   const [sending, setSending] = useState(false);
+  const [templates, setTemplates] = useState<TemplateRow[]>([]);
+  const [stats, setStats] = useState<Stats>({ reminders24h: 0, reminders1h: 0, manual: 0, alerts: 0 });
+
+  const countLogs = async (type: string) => {
+    const { count } = await supabase
+      .from('push_notification_log')
+      .select('id', { count: 'exact', head: true })
+      .eq('notification_type', type);
+    return count ?? 0;
+  };
 
   const load = async () => {
     setLoading(true);
@@ -103,6 +123,17 @@ export default function AdminPushNotifications() {
       })
       .sort((a, b) => a.full_name.localeCompare(b.full_name));
 
+    const [r24, r1, manual, leadAlerts, contactAlerts, tplRes] = await Promise.all([
+      countLogs('lesson_reminder_24h'),
+      countLogs('lesson_reminder_1h'),
+      countLogs('manual_admin'),
+      countLogs('new_lead_booking'),
+      countLogs('new_contact_form'),
+      supabase.from('push_templates').select('id, title, body').order('created_at', { ascending: false }),
+    ]);
+
+    setStats({ reminders24h: r24, reminders1h: r1, manual, alerts: leadAlerts + contactAlerts });
+    setTemplates((tplRes.data ?? []) as TemplateRow[]);
     setNames(nameMap);
     setPeople(rows);
     setLogs(logRows);
@@ -112,6 +143,36 @@ export default function AdminPushNotifications() {
   useEffect(() => { load(); }, []);
 
   const totalDevices = useMemo(() => people.reduce((s, p) => s + p.devices, 0), [people]);
+  const parentsCount = useMemo(() => people.filter((p) => p.role === 'parent').length, [people]);
+  const teachersCount = useMemo(() => people.filter((p) => p.role === 'insegnante').length, [people]);
+
+  const handleSaveTemplate = async () => {
+    if (!body.trim()) {
+      toast.error('Scrivi prima il messaggio da salvare');
+      return;
+    }
+    const { data, error } = await supabase
+      .from('push_templates')
+      .insert({ title: title.trim() || 'Avviso TECHLAND', body: body.trim() })
+      .select('id, title, body')
+      .single();
+    if (error) {
+      toast.error('Salvataggio non riuscito: ' + error.message);
+      return;
+    }
+    setTemplates((prev) => [data as TemplateRow, ...prev]);
+    toast.success('Messaggio salvato nei predefiniti');
+  };
+
+  const handleDeleteTemplate = async (id: string) => {
+    const { error } = await supabase.from('push_templates').delete().eq('id', id);
+    if (error) {
+      toast.error('Eliminazione non riuscita: ' + error.message);
+      return;
+    }
+    setTemplates((prev) => prev.filter((t) => t.id !== id));
+  };
+
 
   const toggle = (id: string) => {
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -170,6 +231,59 @@ export default function AdminPushNotifications() {
         <Button variant="outline" size="sm" onClick={load} disabled={loading}>
           <RefreshCw className="w-4 h-4 mr-2" /> Aggiorna
         </Button>
+      </div>
+
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+        {[
+          { label: 'Genitori con notifiche', value: parentsCount, icon: Users },
+          { label: 'Insegnanti con notifiche', value: teachersCount, icon: GraduationCap },
+          { label: 'Promemoria 24h inviati', value: stats.reminders24h, icon: Clock },
+          { label: 'Promemoria 1h inviati', value: stats.reminders1h, icon: Clock },
+        ].map((s) => (
+          <Card key={s.label}>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                <s.icon className="w-4 h-4" /> {s.label}
+              </div>
+              <p className="text-2xl font-bold mt-1">{s.value}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 text-muted-foreground text-xs">
+              <Send className="w-4 h-4" /> Avvisi manuali inviati
+            </div>
+            <p className="text-2xl font-bold mt-1">{stats.manual}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 text-muted-foreground text-xs">
+              <Inbox className="w-4 h-4" /> Avvisi nuovi contatti/prenotazioni
+            </div>
+            <p className="text-2xl font-bold mt-1">{stats.alerts}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 text-muted-foreground text-xs">
+              <Smartphone className="w-4 h-4" /> Dispositivi totali
+            </div>
+            <p className="text-2xl font-bold mt-1">{totalDevices}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 text-muted-foreground text-xs">
+              <Bell className="w-4 h-4" /> Persone attive
+            </div>
+            <p className="text-2xl font-bold mt-1">{people.length}</p>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
@@ -235,6 +349,46 @@ export default function AdminPushNotifications() {
               <Input id="push-title" value={title} maxLength={80} onChange={(e) => setTitle(e.target.value)} />
             </div>
           </div>
+          {templates.length > 0 && (
+            <div className="space-y-2">
+              <Label>Messaggi predefiniti</Label>
+              <div className="flex flex-wrap items-center gap-2">
+                <Select
+                  value=""
+                  onValueChange={(id) => {
+                    const t = templates.find((x) => x.id === id);
+                    if (t) { setTitle(t.title); setBody(t.body); }
+                  }}
+                >
+                  <SelectTrigger className="sm:max-w-md">
+                    <SelectValue placeholder="Scegli un messaggio salvato" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {templates.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.title} — {t.body.slice(0, 40)}{t.body.length > 40 ? '…' : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-wrap gap-2 pt-1">
+                {templates.map((t) => (
+                  <Badge key={t.id} variant="secondary" className="flex items-center gap-1">
+                    {t.title}
+                    <button
+                      type="button"
+                      aria-label={`Elimina messaggio predefinito ${t.title}`}
+                      className="ml-1 text-muted-foreground hover:text-destructive"
+                      onClick={() => handleDeleteTemplate(t.id)}
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="push-body">Messaggio</Label>
             <Textarea
@@ -246,10 +400,16 @@ export default function AdminPushNotifications() {
               onChange={(e) => setBody(e.target.value)}
             />
           </div>
-          <Button onClick={handleSend} disabled={sending}>
-            <Send className="w-4 h-4 mr-2" />
-            {sending ? 'Invio…' : 'Invia notifica'}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={handleSend} disabled={sending}>
+              <Send className="w-4 h-4 mr-2" />
+              {sending ? 'Invio…' : 'Invia notifica'}
+            </Button>
+            <Button variant="outline" onClick={handleSaveTemplate}>
+              <BookmarkPlus className="w-4 h-4 mr-2" /> Salva come predefinito
+            </Button>
+          </div>
+
         </CardContent>
       </Card>
 

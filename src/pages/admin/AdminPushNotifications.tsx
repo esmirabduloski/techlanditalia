@@ -63,6 +63,16 @@ export default function AdminPushNotifications() {
   const [title, setTitle] = useState('Avviso TECHLAND');
   const [body, setBody] = useState('');
   const [sending, setSending] = useState(false);
+  const [templates, setTemplates] = useState<TemplateRow[]>([]);
+  const [stats, setStats] = useState<Stats>({ reminders24h: 0, reminders1h: 0, manual: 0, alerts: 0 });
+
+  const countLogs = async (type: string) => {
+    const { count } = await supabase
+      .from('push_notification_log')
+      .select('id', { count: 'exact', head: true })
+      .eq('notification_type', type);
+    return count ?? 0;
+  };
 
   const load = async () => {
     setLoading(true);

@@ -171,6 +171,13 @@ const handler = async (req: Request): Promise<Response> => {
       error_message: errorMessage,
     });
 
+    await notifyAdmins({
+      title: "Nuovo messaggio dal form contatti",
+      body: `${nome} (${email}) · ${oggetto}`,
+      path: "/admin/contatti",
+      type: "new_contact_form",
+    });
+
     if (!emailSent) {
       return new Response(JSON.stringify({ error: errorMessage || "Errore nell'invio email" }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } });

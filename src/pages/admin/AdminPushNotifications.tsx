@@ -123,6 +123,17 @@ export default function AdminPushNotifications() {
       })
       .sort((a, b) => a.full_name.localeCompare(b.full_name));
 
+    const [r24, r1, manual, leadAlerts, contactAlerts, tplRes] = await Promise.all([
+      countLogs('lesson_reminder_24h'),
+      countLogs('lesson_reminder_1h'),
+      countLogs('manual_admin'),
+      countLogs('new_lead_booking'),
+      countLogs('new_contact_form'),
+      supabase.from('push_templates').select('id, title, body').order('created_at', { ascending: false }),
+    ]);
+
+    setStats({ reminders24h: r24, reminders1h: r1, manual, alerts: leadAlerts + contactAlerts });
+    setTemplates((tplRes.data ?? []) as TemplateRow[]);
     setNames(nameMap);
     setPeople(rows);
     setLogs(logRows);
@@ -132,6 +143,36 @@ export default function AdminPushNotifications() {
   useEffect(() => { load(); }, []);
 
   const totalDevices = useMemo(() => people.reduce((s, p) => s + p.devices, 0), [people]);
+  const parentsCount = useMemo(() => people.filter((p) => p.role === 'parent').length, [people]);
+  const teachersCount = useMemo(() => people.filter((p) => p.role === 'insegnante').length, [people]);
+
+  const handleSaveTemplate = async () => {
+    if (!body.trim()) {
+      toast.error('Scrivi prima il messaggio da salvare');
+      return;
+    }
+    const { data, error } = await supabase
+      .from('push_templates')
+      .insert({ title: title.trim() || 'Avviso TECHLAND', body: body.trim() })
+      .select('id, title, body')
+      .single();
+    if (error) {
+      toast.error('Salvataggio non riuscito: ' + error.message);
+      return;
+    }
+    setTemplates((prev) => [data as TemplateRow, ...prev]);
+    toast.success('Messaggio salvato nei predefiniti');
+  };
+
+  const handleDeleteTemplate = async (id: string) => {
+    const { error } = await supabase.from('push_templates').delete().eq('id', id);
+    if (error) {
+      toast.error('Eliminazione non riuscita: ' + error.message);
+      return;
+    }
+    setTemplates((prev) => prev.filter((t) => t.id !== id));
+  };
+
 
   const toggle = (id: string) => {
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));

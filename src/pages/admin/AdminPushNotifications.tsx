@@ -43,6 +43,16 @@ type LogRow = {
   created_at: string;
 };
 
+type TemplateRow = { id: string; title: string; body: string };
+
+type Stats = {
+  reminders24h: number;
+  reminders1h: number;
+  manual: number;
+  alerts: number;
+};
+
+
 export default function AdminPushNotifications() {
   const [people, setPeople] = useState<PersonRow[]>([]);
   const [logs, setLogs] = useState<LogRow[]>([]);

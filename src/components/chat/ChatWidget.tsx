@@ -1,12 +1,20 @@
 import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Trash2 } from 'lucide-react';
+import { MessageCircle, X, Send, Trash2, Headset } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useParentChat } from '@/hooks/useParentChat';
 
 export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
-  const { messages, isLoading, sendMessage, clearChat } = useParentChat();
+  const {
+    messages,
+    isLoading,
+    sendMessage,
+    clearChat,
+    requestOperator,
+    operatorRequested,
+    operatorActive,
+  } = useParentChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -50,7 +58,13 @@ export function ChatWidget() {
               </div>
               <div>
                 <h3 className="font-semibold">Assistenza TECHLAND</h3>
-                <p className="text-xs opacity-80">Siamo qui per aiutarti</p>
+                <p className="text-xs opacity-80">
+                  {operatorActive
+                    ? 'Un operatore è in chat con te'
+                    : operatorRequested
+                      ? 'Operatore richiesto, attendi…'
+                      : 'Siamo qui per aiutarti'}
+                </p>
               </div>
             </div>
             <div className="flex gap-1">
@@ -82,9 +96,14 @@ export function ChatWidget() {
                   className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
                     msg.role === 'user'
                       ? 'bg-primary text-primary-foreground rounded-br-md'
-                      : 'bg-muted text-foreground rounded-bl-md'
+                      : msg.role === 'operator'
+                        ? 'bg-accent text-accent-foreground rounded-bl-md border border-primary/30'
+                        : 'bg-muted text-foreground rounded-bl-md'
                   }`}
                 >
+                  {msg.role === 'operator' && (
+                    <span className="mb-1 block text-xs font-semibold opacity-70">Operatore TECHLAND</span>
+                  )}
                   {msg.content}
                 </div>
               </div>
@@ -102,6 +121,19 @@ export function ChatWidget() {
             )}
             <div ref={messagesEndRef} />
           </div>
+
+          {/* Richiesta operatore */}
+          {!operatorRequested && (
+            <div className="border-t border-border px-3 pt-2">
+              <button
+                type="button"
+                onClick={requestOperator}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-primary/40 px-3 py-2 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+              >
+                <Headset className="h-4 w-4" /> Parla con un operatore
+              </button>
+            </div>
+          )}
 
           {/* Input */}
           <form onSubmit={handleSubmit} className="border-t border-border p-3">

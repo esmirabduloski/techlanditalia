@@ -242,6 +242,9 @@ serve(async (req) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let supabase: any = null;
 
+    let operatorActive = false;
+    let operatorRequested = false;
+
     if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY && sessionId) {
       supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
       try {
@@ -251,10 +254,46 @@ serve(async (req) => {
         if (lastUserMessage?.role === 'user') {
           await saveMessage(supabase, conversationId, 'user', lastUserMessage.content);
         }
+        await supabase
+          .from('chat_conversations')
+          .update({ last_message_at: new Date().toISOString() })
+          .eq('id', conversationId);
+
+        const { data: conv } = await supabase
+          .from('chat_conversations')
+          .select('operator_joined_at, operator_requested_at')
+          .eq('id', conversationId)
+          .maybeSingle();
+        operatorActive = Boolean(conv?.operator_joined_at);
+        operatorRequested = Boolean(conv?.operator_requested_at);
+
+        // Se il visitatore chiede una persona reale, avvisa gli admin
+        if (!operatorRequested && lastUserMessage?.role === 'user' && wantsOperator(lastUserMessage.content)) {
+          await requestOperator(supabase, conversationId, lastUserMessage.content);
+          operatorRequested = true;
+        }
       } catch (dbError) {
         console.error('DB error:', dbError);
       }
     }
+
+    // Con un operatore umano collegato l'AI resta zitta: risponde la persona.
+    if (operatorActive) {
+      return new Response(JSON.stringify({ operatorActive: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (operatorRequested && conversationId) {
+      const handoff =
+        'Ho avvisato il nostro team: un operatore ti risponderà qui in chat il prima possibile. ' +
+        'Nel frattempo puoi scrivere altri dettagli, oppure contattarci su /contatti. 👩‍💻';
+      await saveMessage(supabase, conversationId, 'assistant', handoff);
+      return new Response(JSON.stringify({ operatorRequested: true, message: handoff }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',

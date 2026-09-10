@@ -122,6 +122,19 @@ export function ChatWidget() {
             <div ref={messagesEndRef} />
           </div>
 
+          {/* Richiesta operatore */}
+          {!operatorRequested && (
+            <div className="border-t border-border px-3 pt-2">
+              <button
+                type="button"
+                onClick={requestOperator}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-primary/40 px-3 py-2 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+              >
+                <Headset className="h-4 w-4" /> Parla con un operatore
+              </button>
+            </div>
+          )}
+
           {/* Input */}
           <form onSubmit={handleSubmit} className="border-t border-border p-3">
             <div className="flex gap-2">

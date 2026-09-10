@@ -244,6 +244,7 @@ serve(async (req) => {
 
     let operatorActive = false;
     let operatorRequested = false;
+    let justRequested = false;
 
     if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY && sessionId) {
       supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -271,6 +272,7 @@ serve(async (req) => {
         if (!operatorRequested && lastUserMessage?.role === 'user' && wantsOperator(lastUserMessage.content)) {
           await requestOperator(supabase, conversationId, lastUserMessage.content);
           operatorRequested = true;
+          justRequested = true;
         }
       } catch (dbError) {
         console.error('DB error:', dbError);
@@ -284,7 +286,7 @@ serve(async (req) => {
       });
     }
 
-    if (operatorRequested && conversationId) {
+    if (justRequested && conversationId) {
       const handoff =
         'Ho avvisato il nostro team: un operatore ti risponderà qui in chat il prima possibile. ' +
         'Nel frattempo puoi scrivere altri dettagli, oppure contattarci su /contatti. 👩‍💻';

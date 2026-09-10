@@ -24,11 +24,12 @@ export function useAdminNotifications() {
         .from('contact_submissions')
         .select('id', { count: 'exact', head: true })
         .eq('email_sent', false),
-      // CRM: conta solo i lead ancora nello stage "new" (non ancora gestiti)
+      // CRM: conta solo i lead ancora nello stage "new" e non nel cestino
       supabase
         .from('crm_leads' as any)
         .select('id', { count: 'exact', head: true })
-        .eq('pipeline_stage', 'new'),
+        .eq('pipeline_stage', 'new')
+        .is('deleted_at', null),
     ]);
 
     setNotifications({

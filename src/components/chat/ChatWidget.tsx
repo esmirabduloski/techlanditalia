@@ -96,9 +96,14 @@ export function ChatWidget() {
                   className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
                     msg.role === 'user'
                       ? 'bg-primary text-primary-foreground rounded-br-md'
-                      : 'bg-muted text-foreground rounded-bl-md'
+                      : msg.role === 'operator'
+                        ? 'bg-accent text-accent-foreground rounded-bl-md border border-primary/30'
+                        : 'bg-muted text-foreground rounded-bl-md'
                   }`}
                 >
+                  {msg.role === 'operator' && (
+                    <span className="mb-1 block text-xs font-semibold opacity-70">Operatore TECHLAND</span>
+                  )}
                   {msg.content}
                 </div>
               </div>

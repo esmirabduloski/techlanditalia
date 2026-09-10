@@ -1,6 +1,48 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeadersFor } from "../_shared/cors.ts";
+import { notifyAdmins } from "../_shared/adminpush.ts";
+
+/** Frasi con cui un visitatore chiede di parlare con una persona reale. */
+const OPERATOR_PATTERNS = [
+  /operatore/i,
+  /operatrice/i,
+  /assistente umano/i,
+  /persona (reale|vera|fisica)/i,
+  /parlare con (qualcuno|una persona|un umano|un responsabile|esmir)/i,
+  /voglio un umano/i,
+  /passami/i,
+];
+
+function wantsOperator(text: string): boolean {
+  return OPERATOR_PATTERNS.some((re) => re.test(text));
+}
+
+async function requestOperator(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any,
+  conversationId: string,
+  lastQuestion: string,
+): Promise<void> {
+  const { data: conv } = await supabase
+    .from("chat_conversations")
+    .select("operator_requested_at")
+    .eq("id", conversationId)
+    .maybeSingle();
+  if (conv?.operator_requested_at) return;
+
+  await supabase
+    .from("chat_conversations")
+    .update({ operator_requested_at: new Date().toISOString() })
+    .eq("id", conversationId);
+
+  await notifyAdmins({
+    title: "Richiesta operatore in chat",
+    body: lastQuestion.slice(0, 160),
+    path: "/admin/chat-live",
+    type: "chat_operator_request",
+  });
+}
 
 
 // In-memory rate limiting (persists per function instance)

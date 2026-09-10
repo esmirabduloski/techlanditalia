@@ -50,3 +50,6 @@ verify_jwt = false
 
 [functions.blog-auto-publish]
 verify_jwt = false
+
+[functions.chat-operator]
+verify_jwt = false

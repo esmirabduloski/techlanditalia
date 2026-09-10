@@ -58,7 +58,13 @@ export function ChatWidget() {
               </div>
               <div>
                 <h3 className="font-semibold">Assistenza TECHLAND</h3>
-                <p className="text-xs opacity-80">Siamo qui per aiutarti</p>
+                <p className="text-xs opacity-80">
+                  {operatorActive
+                    ? 'Un operatore è in chat con te'
+                    : operatorRequested
+                      ? 'Operatore richiesto, attendi…'
+                      : 'Siamo qui per aiutarti'}
+                </p>
               </div>
             </div>
             <div className="flex gap-1">

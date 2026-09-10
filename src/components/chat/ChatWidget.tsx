@@ -1,12 +1,20 @@
 import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Trash2 } from 'lucide-react';
+import { MessageCircle, X, Send, Trash2, Headset } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useParentChat } from '@/hooks/useParentChat';
 
 export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
-  const { messages, isLoading, sendMessage, clearChat } = useParentChat();
+  const {
+    messages,
+    isLoading,
+    sendMessage,
+    clearChat,
+    requestOperator,
+    operatorRequested,
+    operatorActive,
+  } = useParentChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 

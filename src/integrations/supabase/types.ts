@@ -358,21 +358,33 @@ export type Database = {
         Row: {
           ended_at: string | null
           id: string
+          last_message_at: string
           metadata: Json | null
+          operator_id: string | null
+          operator_joined_at: string | null
+          operator_requested_at: string | null
           session_id: string
           started_at: string
         }
         Insert: {
           ended_at?: string | null
           id?: string
+          last_message_at?: string
           metadata?: Json | null
+          operator_id?: string | null
+          operator_joined_at?: string | null
+          operator_requested_at?: string | null
           session_id: string
           started_at?: string
         }
         Update: {
           ended_at?: string | null
           id?: string
+          last_message_at?: string
           metadata?: Json | null
+          operator_id?: string | null
+          operator_joined_at?: string | null
+          operator_requested_at?: string | null
           session_id?: string
           started_at?: string
         }
@@ -2714,6 +2726,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_chat_support: { Args: { _user_id: string }; Returns: boolean }
       is_email_blocked: { Args: { _email: string }; Returns: boolean }
       is_enrolled_for_homework: {
         Args: { _homework_id: string; _student_id: string }

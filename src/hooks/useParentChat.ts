@@ -158,9 +158,10 @@ export function useParentChat() {
     }
   }, [messages, operatorRequested]);
 
-  // Polling dei messaggi dell'operatore quando è stato richiesto
+  // Polling dei messaggi dell'operatore: attivo appena esiste una conversazione,
+  // così l'operatore può entrare in chat anche senza una richiesta esplicita.
   useEffect(() => {
-    if (!operatorRequested) return;
+    if (!operatorRequested && !operatorActive && !conversationStarted) return;
     let cancelled = false;
 
     const poll = async () => {

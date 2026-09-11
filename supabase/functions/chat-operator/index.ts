@@ -49,7 +49,7 @@ serve(async (req: Request): Promise<Response> => {
       { auth: { persistSession: false, autoRefreshToken: false } },
     );
 
-    const { data: conv } = await supabase
+    let { data: conv } = await supabase
       .from("chat_conversations")
       .select("id, operator_requested_at, operator_joined_at")
       .eq("session_id", sessionId)
@@ -60,7 +60,17 @@ serve(async (req: Request): Promise<Response> => {
 
     if (!conv) {
       if (action === "poll") return json({ operatorActive: false, operatorRequested: false, messages: [] });
-      return json({ error: "Conversazione non trovata" }, 404);
+      // Il visitatore può chiedere un operatore prima di scrivere: creiamo la conversazione.
+      const { data: created, error: createError } = await supabase
+        .from("chat_conversations")
+        .insert({ session_id: sessionId, last_message_at: new Date().toISOString() })
+        .select("id, operator_requested_at, operator_joined_at")
+        .single();
+      if (createError || !created) {
+        console.error("[chat-operator] create conversation", createError);
+        return json({ error: "Errore interno" }, 500);
+      }
+      conv = created;
     }
 
     if (action === "poll") {

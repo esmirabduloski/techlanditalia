@@ -200,7 +200,7 @@ export function useParentChat() {
       cancelled = true;
       clearInterval(id);
     };
-  }, [operatorRequested]);
+  }, [operatorRequested, operatorActive, conversationStarted]);
 
   const clearChat = useCallback(() => {
     // Generate new session ID for new conversation
@@ -208,6 +208,7 @@ export function useParentChat() {
     lastOperatorMsgRef.current = null;
     setOperatorRequested(false);
     setOperatorActive(false);
+    setConversationStarted(false);
     setMessages([{ role: 'assistant', content: WELCOME }]);
   }, []);
 

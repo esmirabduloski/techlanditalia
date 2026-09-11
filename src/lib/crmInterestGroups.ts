@@ -10,6 +10,7 @@ export interface InterestGroup {
 }
 
 const GROUPS: (InterestGroup & { match: RegExp })[] = [
+  { key: "roblox-pro", label: "Roblox PRO", emoji: "🚀", match: /roblox.*(avanz|pro)|avanzat[ao].*roblox/i },
   { key: "roblox", label: "Roblox", emoji: "🎮", match: /roblox/i },
   { key: "minecraft", label: "Minecraft", emoji: "⛏️", match: /minecraft/i },
   { key: "scratch", label: "Scratch", emoji: "🐱", match: /scratch|programmazione visiva/i },

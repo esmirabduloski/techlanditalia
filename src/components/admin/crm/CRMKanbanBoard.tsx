@@ -7,15 +7,18 @@ import { AlertCircle, Calendar, ChevronRight, Mail, Phone } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { it } from "date-fns/locale";
 import { groupByInterest } from "@/lib/crmInterestGroups";
+import { CRMCourseSelect } from "./CRMCourseSelect";
+import { GraduationCap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Props {
   leads: CrmLead[];
   onSelectLead: (lead: CrmLead) => void;
   onMoveLead: (leadId: string, newStage: PipelineStage) => void;
+  onSetInterest?: (leadId: string, interest: string | null) => void;
 }
 
-export function CRMKanbanBoard({ leads, onSelectLead, onMoveLead }: Props) {
+export function CRMKanbanBoard({ leads, onSelectLead, onMoveLead, onSetInterest }: Props) {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [overStage, setOverStage] = useState<PipelineStage | null>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
@@ -136,6 +139,30 @@ export function CRMKanbanBoard({ leads, onSelectLead, onMoveLead }: Props) {
                                   <Badge key={t} variant="secondary" className="text-[10px] py-0">{t}</Badge>
                                 ))}
                               </div>
+
+                              {onSetInterest && (
+                                <div
+                                  className="mt-2"
+                                  onClick={(e) => e.stopPropagation()}
+                                  draggable={false}
+                                  onDragStart={(e) => e.stopPropagation()}
+                                >
+                                  {lead.interest ? (
+                                    <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                                      <GraduationCap className="w-3 h-3 flex-shrink-0" />
+                                      <span className="truncate">{lead.interest}</span>
+                                    </div>
+                                  ) : (
+                                    <CRMCourseSelect
+                                      size="sm"
+                                      value={null}
+                                      allowNone={false}
+                                      placeholder="+ Assegna corso"
+                                      onChange={(v) => onSetInterest(lead.id, v)}
+                                    />
+                                  )}
+                                </div>
+                              )}
                               {lead.next_followup_at && (
                                 <div
                                   className={`mt-2 text-xs flex items-center gap-1 ${

@@ -15,6 +15,7 @@ import { CRMAnalytics } from "@/components/admin/crm/CRMAnalytics";
 import { CRMLeadDetailDrawer } from "@/components/admin/crm/CRMLeadDetailDrawer";
 import { CRMNotionSettings } from "@/components/admin/crm/CRMNotionSettings";
 import { CRMTrash } from "@/components/admin/crm/CRMTrash";
+import { CRMCourseSelect } from "@/components/admin/crm/CRMCourseSelect";
 import { Loader2, Plus, LogOut, KanbanSquare, List, BarChart3, Database } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -41,6 +42,7 @@ export default function AdminCRM() {
   const [newName, setNewName] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [newPhone, setNewPhone] = useState("");
+  const [newInterest, setNewInterest] = useState<string | null>(null);
 
   const handleSelectLead = (lead: CrmLead) => {
     setSelectedLead(lead);
@@ -55,10 +57,16 @@ export default function AdminCRM() {
       toast({ title: "Email obbligatoria", variant: "destructive" });
       return;
     }
-    const ok = await createLead({ full_name: newName, email: newEmail, phone: newPhone || null, source: "manual" });
+    const ok = await createLead({
+      full_name: newName,
+      email: newEmail,
+      phone: newPhone || null,
+      interest: newInterest,
+      source: "manual",
+    });
     if (ok) {
       setCreateOpen(false);
-      setNewName(""); setNewEmail(""); setNewPhone("");
+      setNewName(""); setNewEmail(""); setNewPhone(""); setNewInterest(null);
       toast({ title: "Lead creato" });
     }
   };
@@ -103,6 +111,10 @@ export default function AdminCRM() {
                 leads={leads}
                 onSelectLead={handleSelectLead}
                 onMoveLead={(id, stage) => updateLead(id, { pipeline_stage: stage })}
+                onSetInterest={async (id, interest) => {
+                  const ok = await updateLead(id, { interest });
+                  if (ok) toast({ title: "Corso assegnato al lead" });
+                }}
               />
             </TabsContent>
             <TabsContent value="list">
@@ -142,6 +154,10 @@ export default function AdminCRM() {
             <div><Label>Nome</Label><Input value={newName} onChange={(e) => setNewName(e.target.value)} /></div>
             <div><Label>Email *</Label><Input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} /></div>
             <div><Label>Telefono</Label><Input value={newPhone} onChange={(e) => setNewPhone(e.target.value)} /></div>
+            <div>
+              <Label>Corso di interesse</Label>
+              <CRMCourseSelect value={newInterest} onChange={setNewInterest} />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateOpen(false)}>Annulla</Button>

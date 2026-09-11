@@ -26,10 +26,13 @@ export function useParentChat() {
   const [isLoading, setIsLoading] = useState(false);
   const [operatorRequested, setOperatorRequested] = useState(false);
   const [operatorActive, setOperatorActive] = useState(false);
+  const [conversationStarted, setConversationStarted] = useState(false);
   const lastOperatorMsgRef = useRef<string | null>(null);
 
   const sendMessage = useCallback(async (input: string) => {
     if (!input.trim() || isLoading) return;
+    setConversationStarted(true);
+
 
     const userMessage: Message = { role: 'user', content: input.trim() };
     const newMessages = [...messages, userMessage];

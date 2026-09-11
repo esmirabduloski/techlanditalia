@@ -139,6 +139,30 @@ export function CRMKanbanBoard({ leads, onSelectLead, onMoveLead, onSetInterest 
                                   <Badge key={t} variant="secondary" className="text-[10px] py-0">{t}</Badge>
                                 ))}
                               </div>
+
+                              {onSetInterest && (
+                                <div
+                                  className="mt-2"
+                                  onClick={(e) => e.stopPropagation()}
+                                  draggable={false}
+                                  onDragStart={(e) => e.stopPropagation()}
+                                >
+                                  {lead.interest ? (
+                                    <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                                      <GraduationCap className="w-3 h-3 flex-shrink-0" />
+                                      <span className="truncate">{lead.interest}</span>
+                                    </div>
+                                  ) : (
+                                    <CRMCourseSelect
+                                      size="sm"
+                                      value={null}
+                                      allowNone={false}
+                                      placeholder="+ Assegna corso"
+                                      onChange={(v) => onSetInterest(lead.id, v)}
+                                    />
+                                  )}
+                                </div>
+                              )}
                               {lead.next_followup_at && (
                                 <div
                                   className={`mt-2 text-xs flex items-center gap-1 ${

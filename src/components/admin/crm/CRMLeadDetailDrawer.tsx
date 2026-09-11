@@ -16,8 +16,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   Mail, Phone, MessageCircle, FileText, Plus, Trash2, ExternalLink,
-  Calendar, Clock, User, Tag as TagIcon, FileSignature, X, Loader2,
+  Calendar, Clock, User, Tag as TagIcon, FileSignature, X, Loader2, GraduationCap,
 } from "lucide-react";
+import { CRMCourseSelect } from "./CRMCourseSelect";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 
@@ -210,11 +211,19 @@ export function CRMLeadDetailDrawer({ lead, open, onClose, onUpdate, onDelete }:
           />
         </div>
 
+        {/* Corso di interesse */}
+        <div className="space-y-2 mb-6">
+          <Label className="flex items-center gap-1"><GraduationCap className="w-3 h-3" /> Corso di interesse</Label>
+          <CRMCourseSelect
+            value={lead.interest}
+            onChange={(v) => onUpdate(lead.id, { interest: v })}
+          />
+        </div>
+
         {/* Lead origin info */}
-        {(lead.interest || lead.child_age || lead.original_message) && (
+        {(lead.child_age || lead.original_message) && (
           <div className="mb-6 p-3 bg-muted/30 rounded-lg space-y-1 text-sm">
             <div className="font-semibold text-xs text-muted-foreground mb-2">Dati origine</div>
-            {lead.interest && <div><strong>Interesse:</strong> {lead.interest}</div>}
             {lead.child_age && <div><strong>Età alunno:</strong> {lead.child_age} anni</div>}
             {lead.original_message && <div className="whitespace-pre-wrap"><strong>Messaggio:</strong> {lead.original_message}</div>}
           </div>

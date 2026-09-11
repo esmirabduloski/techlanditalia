@@ -7,15 +7,18 @@ import { AlertCircle, Calendar, ChevronRight, Mail, Phone } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { it } from "date-fns/locale";
 import { groupByInterest } from "@/lib/crmInterestGroups";
+import { CRMCourseSelect } from "./CRMCourseSelect";
+import { GraduationCap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Props {
   leads: CrmLead[];
   onSelectLead: (lead: CrmLead) => void;
   onMoveLead: (leadId: string, newStage: PipelineStage) => void;
+  onSetInterest?: (leadId: string, interest: string | null) => void;
 }
 
-export function CRMKanbanBoard({ leads, onSelectLead, onMoveLead }: Props) {
+export function CRMKanbanBoard({ leads, onSelectLead, onMoveLead, onSetInterest }: Props) {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [overStage, setOverStage] = useState<PipelineStage | null>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());

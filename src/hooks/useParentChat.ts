@@ -26,10 +26,13 @@ export function useParentChat() {
   const [isLoading, setIsLoading] = useState(false);
   const [operatorRequested, setOperatorRequested] = useState(false);
   const [operatorActive, setOperatorActive] = useState(false);
+  const [conversationStarted, setConversationStarted] = useState(false);
   const lastOperatorMsgRef = useRef<string | null>(null);
 
   const sendMessage = useCallback(async (input: string) => {
     if (!input.trim() || isLoading) return;
+    setConversationStarted(true);
+
 
     const userMessage: Message = { role: 'user', content: input.trim() };
     const newMessages = [...messages, userMessage];
@@ -158,9 +161,10 @@ export function useParentChat() {
     }
   }, [messages, operatorRequested]);
 
-  // Polling dei messaggi dell'operatore quando è stato richiesto
+  // Polling dei messaggi dell'operatore: attivo appena esiste una conversazione,
+  // così l'operatore può entrare in chat anche senza una richiesta esplicita.
   useEffect(() => {
-    if (!operatorRequested) return;
+    if (!operatorRequested && !operatorActive && !conversationStarted) return;
     let cancelled = false;
 
     const poll = async () => {
@@ -196,7 +200,7 @@ export function useParentChat() {
       cancelled = true;
       clearInterval(id);
     };
-  }, [operatorRequested]);
+  }, [operatorRequested, operatorActive, conversationStarted]);
 
   const clearChat = useCallback(() => {
     // Generate new session ID for new conversation
@@ -204,6 +208,7 @@ export function useParentChat() {
     lastOperatorMsgRef.current = null;
     setOperatorRequested(false);
     setOperatorActive(false);
+    setConversationStarted(false);
     setMessages([{ role: 'assistant', content: WELCOME }]);
   }, []);
 

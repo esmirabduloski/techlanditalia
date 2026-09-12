@@ -1,4 +1,3 @@
-import * as Sentry from "@sentry/react";
 import { ViteReactSSG } from "vite-react-ssg";
 import { routes } from "./routes";
 import { isNonPrerenderedPath } from "./lib/prerender";
@@ -27,18 +26,29 @@ if (!import.meta.env.SSR && typeof document !== "undefined") {
 // Guardia SSR: durante il prerendering (Node + jsdom mock, vedi ssgOptions.mock
 // in vite.config.ts) non c'è un vero browser, quindi Sentry va inizializzato
 // solo lato client.
-if (!import.meta.env.SSR) {
-  Sentry.init({
-    dsn: import.meta.env.VITE_SENTRY_DSN,
-    integrations: [Sentry.browserTracingIntegration(), Sentry.replayIntegration()],
-    tracesSampleRate: 1.0,
-    // IMPORTANTE: NON propagare i trace header (sentry-trace, baggage) verso
-    // domini terzi come Supabase: aggiungono header non previsti dal preflight
-    // CORS delle edge function e bloccherebbero login/chiamate API.
-    tracePropagationTargets: [/^\//],
-    replaysSessionSampleRate: 0.1,
-    replaysOnErrorSampleRate: 1.0,
-  });
+if (!import.meta.env.SSR && typeof window !== "undefined") {
+  // Sentry e Replay sono utili, ma non devono competere con la prima schermata
+  // sui telefoni. Li carichiamo solo dopo il load e durante un momento libero.
+  const initializeMonitoring = () => {
+    const idle = window.requestIdleCallback ?? ((callback: IdleRequestCallback) =>
+      window.setTimeout(() => callback({ didTimeout: false, timeRemaining: () => 0 }), 2000));
+
+    idle(async () => {
+      const Sentry = await import("@sentry/react");
+      Sentry.init({
+        dsn: import.meta.env.VITE_SENTRY_DSN,
+        integrations: [Sentry.browserTracingIntegration(), Sentry.replayIntegration()],
+        tracesSampleRate: 0.2,
+        // Non propagare header di tracing verso servizi esterni.
+        tracePropagationTargets: [/^\//],
+        replaysSessionSampleRate: 0.05,
+        replaysOnErrorSampleRate: 1.0,
+      });
+    }, { timeout: 4000 });
+  };
+
+  if (document.readyState === "complete") initializeMonitoring();
+  else window.addEventListener("load", initializeMonitoring, { once: true });
 }
 
 // Entry unico client + SSG: in build genera l'HTML statico delle route

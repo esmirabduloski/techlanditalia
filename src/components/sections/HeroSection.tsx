@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Play, Sparkles, Users, Award, Shield } from "lucide-react";
-import { ScrollReveal } from "@/components/animations/ScrollReveal";
 import { HeroScrubVideo } from "@/components/sections/HeroScrubVideo";
 
 
@@ -18,8 +17,7 @@ export function HeroSection() {
       <div className="tech-container relative">
         <div className="grid lg:grid-cols-2 gap-12 items-center lg:min-h-[calc(100vh-5rem)] pt-4 md:pt-8 pb-12">
           {/* Content */}
-          <ScrollReveal direction="up" distance={30} duration={0.6} delay={1.2}>
-            <div className="space-y-8">
+          <div className="space-y-8">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-tech-teal/10 text-tech-teal text-sm font-medium">
                 <Sparkles className="w-4 h-4" />
                 <span>La scuola di coding #1 per bambini in Italia</span>
@@ -73,8 +71,7 @@ export function HeroSection() {
                   <p className="text-sm text-muted-foreground">Ambiente sicuro</p>
                 </div>
               </div>
-            </div>
-          </ScrollReveal>
+          </div>
 
           {/* Hero Image */}
           <div className="relative hidden lg:block">

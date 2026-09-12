@@ -228,6 +228,8 @@
 
   .tech-section {
     @apply py-16 md:py-24 px-4;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 720px;
   }
 
   .tech-container {

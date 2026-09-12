@@ -25,7 +25,9 @@ export function CRMCourseSelect({
 
   // Se il valore salvato non corrisponde a un titolo esistente, lo mostriamo comunque.
   const known = courses.some((c) => c.title === value);
-  const current = value ? value : NONE;
+  // Radix mostra il placeholder solo con value undefined: senza opzione "Nessun corso"
+  // lasciavamo un value orfano e il trigger restava vuoto.
+  const current = value ? value : allowNone ? NONE : undefined;
 
   return (
     <Select

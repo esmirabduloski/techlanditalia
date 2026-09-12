@@ -1,4 +1,4 @@
-import { motion, type Variants, useReducedMotion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import type { ReactNode } from "react";
 
 export const staggerContainer: Variants = {
@@ -9,7 +9,6 @@ export const staggerContainer: Variants = {
 };
 
 export const staggerItem: Variants = {
-  hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,
     y: 0,
@@ -35,16 +34,10 @@ export function StaggerContainer({
     },
   };
 
-  const shouldReduceMotion = useReducedMotion();
-  if (shouldReduceMotion) {
-    return <div className={className}>{children}</div>;
-  }
-
   return (
     <motion.div
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, amount: 0.15 }}
+      initial={false}
+      animate="visible"
       variants={container}
       className={className}
     >
@@ -59,11 +52,6 @@ interface StaggerItemProps {
 }
 
 export function StaggerItem({ children, className }: StaggerItemProps) {
-  const shouldReduceMotion = useReducedMotion();
-  if (shouldReduceMotion) {
-    return <div className={className}>{children}</div>;
-  }
-
   return (
     <motion.div variants={staggerItem} className={className}>
       {children}

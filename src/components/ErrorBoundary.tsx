@@ -1,4 +1,3 @@
-import * as Sentry from "@sentry/react";
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Home } from "lucide-react";
@@ -24,8 +23,10 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    Sentry.captureException(error, {
-      extra: { componentStack: info.componentStack },
+    void import("@sentry/react").then((Sentry) => {
+      Sentry.captureException(error, {
+        extra: { componentStack: info.componentStack },
+      });
     });
   }
 

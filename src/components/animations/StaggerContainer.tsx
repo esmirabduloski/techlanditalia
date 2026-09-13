@@ -1,49 +1,15 @@
-import { motion, type Variants } from "framer-motion";
 import type { ReactNode } from "react";
-
-export const staggerContainer: Variants = {
-  hidden: {},
-  visible: {
-    transition: { staggerChildren: 0.1 },
-  },
-};
-
-export const staggerItem: Variants = {
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, ease: "easeOut" },
-  },
-};
 
 interface StaggerContainerProps {
   children: ReactNode;
   className?: string;
+  /** Mantenuto per compatibilità: oggi non produce animazione (vedi ScrollReveal). */
   staggerDelay?: number;
 }
 
-export function StaggerContainer({
-  children,
-  className,
-  staggerDelay = 0.1,
-}: StaggerContainerProps) {
-  const container: Variants = {
-    hidden: {},
-    visible: {
-      transition: { staggerChildren: staggerDelay },
-    },
-  };
-
-  return (
-    <motion.div
-      initial={false}
-      animate="visible"
-      variants={container}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
+/** Griglia/contenitore delle card: div semplice, stesso motivo di ScrollReveal. */
+export function StaggerContainer({ children, className }: StaggerContainerProps) {
+  return <div className={className}>{children}</div>;
 }
 
 interface StaggerItemProps {
@@ -52,9 +18,5 @@ interface StaggerItemProps {
 }
 
 export function StaggerItem({ children, className }: StaggerItemProps) {
-  return (
-    <motion.div variants={staggerItem} className={className}>
-      {children}
-    </motion.div>
-  );
+  return <div className={className}>{children}</div>;
 }

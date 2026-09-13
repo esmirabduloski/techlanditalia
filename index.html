@@ -9,7 +9,8 @@
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=(), payment=(self), usb=(), accelerometer=(), gyroscope=()" />
-    <meta http-equiv="X-Frame-Options" content="SAMEORIGIN" />
+    <!-- X-Frame-Options NON va messo in un <meta>: il browser lo ignora e logga un errore
+         (Lighthouse "errori in console"). L'header vero arriva già dall'hosting. -->
 
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />

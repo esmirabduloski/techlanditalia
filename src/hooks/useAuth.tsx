@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, startTransition, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -22,33 +22,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Set up auth state listener FIRST
+    // Gli aggiornamenti iniziali sono in startTransition: questo provider sta sopra
+    // tutta la pagina prerenderata e un setState urgente durante l'hydration fa
+    // scartare a React l'HTML del server (errore #421 -> schermo vuoto sui telefoni).
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
+        startTransition(() => {
+          setSession(session);
+          setUser(session?.user ?? null);
+        });
+
         // Check admin role with setTimeout to avoid deadlock
         if (session?.user) {
-          setIsLoading(true);
+          startTransition(() => setIsLoading(true));
           setTimeout(async () => {
             await checkAdminRole(session.user.id);
-            setIsLoading(false);
+            startTransition(() => setIsLoading(false));
           }, 0);
         } else {
-          setIsAdmin(false);
-          setIsLoading(false);
+          startTransition(() => {
+            setIsAdmin(false);
+            setIsLoading(false);
+          });
         }
       }
     );
 
     // THEN check for existing session (attendi il controllo ruolo prima di sbloccare le guard)
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+      startTransition(() => {
+        setSession(session);
+        setUser(session?.user ?? null);
+      });
       if (session?.user) {
         await checkAdminRole(session.user.id);
       }
-      setIsLoading(false);
+      startTransition(() => setIsLoading(false));
     });
 
     return () => subscription.unsubscribe();

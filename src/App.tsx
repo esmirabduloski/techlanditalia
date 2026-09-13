@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { Outlet } from "react-router-dom";
 import { Head } from "vite-react-ssg";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -36,22 +35,15 @@ const App = () => (
               <ScrollToTop />
               <RouteAnnouncer />
               <PushNavigationListener />
-              <Suspense
-                fallback={
-                  <div
-                    role="status"
-                    aria-busy="true"
-                    aria-label="Caricamento pagina"
-                    className="min-h-screen flex items-center justify-center"
-                  >
-                    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                  </div>
-                }
-              >
-                <ErrorBoundary>
-                  <Outlet />
-                </ErrorBoundary>
-              </Suspense>
+              {/* Nessun <Suspense> qui: il caricamento lazy delle route è gestito dal
+                  data router di React Router. Un boundary a questo livello avvolgeva
+                  tutta la pagina prerenderata e, appena un provider sopra aggiornava lo
+                  stato durante l'hydration, React scartava l'HTML del server e
+                  ri-renderizzava tutto lato client (errore #421): schermo vuoto per
+                  secondi sui telefoni. */}
+              <ErrorBoundary>
+                <Outlet />
+              </ErrorBoundary>
 
             </AnalyticsProvider>
           </TooltipProvider>

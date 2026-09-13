@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { getSupabase } from '@/integrations/supabase/lazyClient';
 import { useAuth } from '@/hooks/useAuth';
 
 // Session ID management
@@ -73,6 +73,7 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
     };
 
     try {
+      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('page_views')
         .insert(pageViewData)
@@ -96,6 +97,7 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
     const timeOnPage = Math.floor((Date.now() - pageEnteredAt.current) / 1000);
 
     try {
+      const supabase = await getSupabase();
       await supabase
         .from('page_views')
         .update({
@@ -214,6 +216,7 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
                           ctaElement.closest('a')?.getAttribute('href') || '';
 
         try {
+          const supabase = await getSupabase();
           await supabase.from('analytics_events').insert({
             event_type: 'cta_click',
             event_category: 'cta_click',
@@ -240,6 +243,7 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
         const isInteractive = target.closest('a, button, [role="button"], input, select, textarea, [onclick]');
         if (isInteractive) {
           try {
+            const supabase = await getSupabase();
             await supabase.from('analytics_events').insert({
               event_type: 'element_click',
               event_category: 'engagement',

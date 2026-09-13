@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { getSupabase } from '@/integrations/supabase/lazyClient';
 import { useAuth } from "@/hooks/useAuth";
 
 export function useHasEnrollments() {
@@ -16,6 +16,7 @@ export function useHasEnrollments() {
       }
 
       try {
+        const supabase = await getSupabase();
         const { data, error } = await supabase
           .from("enrollments")
           .select("id")

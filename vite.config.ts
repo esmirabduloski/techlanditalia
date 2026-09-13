@@ -51,6 +51,10 @@ export default defineConfig(({ mode, isSsrBuild }) => ({
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           'vendor-supabase': ['@supabase/supabase-js'],
+          // tslib è condiviso da supabase-js e da Radix (react-remove-scroll): senza un
+          // chunk proprio Rollup lo mette in vendor-supabase e vendor-ui finisce per
+          // importare tutto Supabase anche sulle pagine pubbliche che non lo usano.
+          'vendor-tslib': ['tslib'],
           'vendor-query': ['@tanstack/react-query'],
           'vendor-ui': ['@radix-ui/react-dialog', '@radix-ui/react-popover', '@radix-ui/react-tooltip', '@radix-ui/react-dropdown-menu', '@radix-ui/react-navigation-menu', '@radix-ui/react-toast', '@radix-ui/react-accordion', '@radix-ui/react-tabs'],
         },

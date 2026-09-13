@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { getSupabase } from '@/integrations/supabase/lazyClient';
 import { useAuth } from './useAuth';
 
 export function useStudentRole() {
@@ -15,6 +15,7 @@ export function useStudentRole() {
         return;
       }
 
+      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('profiles')
         .select('role')

@@ -30,8 +30,14 @@ if (!import.meta.env.SSR && typeof window !== "undefined") {
   // Sentry e Replay sono utili, ma non devono competere con la prima schermata
   // sui telefoni. Li carichiamo solo dopo il load e durante un momento libero.
   const initializeMonitoring = () => {
-    const idle = window.requestIdleCallback ?? ((callback: IdleRequestCallback) =>
-      window.setTimeout(() => callback({ didTimeout: false, timeRemaining: () => 0 }), 2000));
+    const idle: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number =
+      typeof window.requestIdleCallback === "function"
+        ? (callback, options) => window.requestIdleCallback(callback, options)
+        : (callback) =>
+            window.setTimeout(
+              () => callback({ didTimeout: false, timeRemaining: () => 0 }),
+              2000,
+            );
 
     idle(async () => {
       const Sentry = await import("@sentry/react");

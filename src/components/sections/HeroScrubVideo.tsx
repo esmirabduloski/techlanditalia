@@ -1,24 +1,24 @@
 import { useEffect, useRef, useState } from "react";
-// Video nel repo (src/assets -> /assets/hero-360-<hash>.mp4, cache immutable),
-// rimuxato in fast-start (moov in testa) così durata e seek sono disponibili
-// prima di aver scaricato tutto il file. In precedenza era un asset dello
-// storage Lovable, che un "revert" del 7/9 aveva sostituito con un puntatore a
-// un file cancellato (404 -> riquadro nero).
-import heroVideo from "@/assets/hero-360.mp4";
+// Clip "sinistra-destra" (1280x720, 1,56 s): i bambini spostano lo sguardo da
+// sinistra a destra seguendo il mouse. Vive nel repo (src/assets ->
+// /assets/sinistra-destra-<hash>.mp4, cache immutable) ed è rimuxata in
+// fast-start (moov in testa) così durata e seek sono pronti subito.
+// Prima puntava a un asset dello storage Lovable che era stato cancellato (404).
+import sinistraDestraVideo from "@/assets/sinistra-destra.mp4";
 
-const VIDEO_SRC = heroVideo;
+const VIDEO_SRC = sinistraDestraVideo;
 const SENSITIVITY = 0.8;
 
+
 /**
- * Video che "scrubba" seguendo il movimento del mouse in tutte le direzioni
- * (orizzontale + verticale): i bambini spostano lo sguardo verso il puntatore.
- * Non è fullscreen: riempie il contenitore.
+ * Video che "scrubba" avanti/indietro seguendo il movimento orizzontale del mouse.
+ * Non è fullscreen: riempie il contenitore in cui viene montato.
  */
 export function HeroScrubVideo() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const targetTimeRef = useRef(0);
   const seekingRef = useRef(false);
-  const prevRef = useRef<{ x: number; y: number } | null>(null);
+  const prevXRef = useRef<number | null>(null);
   // Il blocco hero è visibile solo da lg in su: non scarichiamo il video su mobile/tablet
   const [isDesktop, setIsDesktop] = useState(false);
 
@@ -49,24 +49,17 @@ export function HeroScrubVideo() {
     const onMouseMove = (e: MouseEvent) => {
       const duration = video.duration;
       if (!duration || Number.isNaN(duration)) return;
-      if (prevRef.current === null) {
-        prevRef.current = { x: e.clientX, y: e.clientY };
+      if (prevXRef.current === null) {
+        prevXRef.current = e.clientX;
         return;
       }
-      const dx = e.clientX - prevRef.current.x;
-      const dy = e.clientY - prevRef.current.y;
-      prevRef.current = { x: e.clientX, y: e.clientY };
-
-      // Combina movimento orizzontale e verticale: il video segue il mouse
-      // in tutte e 4 le direzioni (destra/sinistra e alto/basso).
-      const normalized =
-        dx / window.innerWidth + dy / window.innerHeight;
-      const offset = normalized * SENSITIVITY * duration;
-
-      // Loop continuo: il video è un giro completo a 360°
-      let next = (targetTimeRef.current + offset) % duration;
-      if (next < 0) next += duration;
-      targetTimeRef.current = next;
+      const delta = e.clientX - prevXRef.current;
+      prevXRef.current = e.clientX;
+      const offset = (delta / window.innerWidth) * SENSITIVITY * duration;
+      targetTimeRef.current = Math.min(
+        Math.max(targetTimeRef.current + offset, 0),
+        duration
+      );
       seek();
     };
 
@@ -98,6 +91,7 @@ export function HeroScrubVideo() {
       aria-label="Bambini che imparano programmazione con TECHLAND"
       className="w-full h-full object-cover"
       style={{ objectPosition: "center center" }}
+
     />
   );
 }

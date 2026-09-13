@@ -1,3 +1,5 @@
+import { minecraftLogo, pythonLogo, robloxLogo, scratchLogo } from '@/assets/logos';
+
 interface CourseEmojiProps {
   emoji: string;
   className?: string;
@@ -19,14 +21,14 @@ const textSizeMap = {
 };
 
 const logoMap: Record<string, { src: string; alt: string }> = {
-  '⛏️': { src: '/images/minecraft-logo.webp', alt: 'Minecraft' },
-  '🐍': { src: '/images/python-logo.webp', alt: 'Python' },
-  '🤖': { src: '/images/python-logo.webp', alt: 'Python PRO & AI' },
-  '🧩': { src: '/images/scratch-logo.svg', alt: 'Scratch' },
-  '🐱': { src: '/images/scratch-logo.svg', alt: 'Scratch' },
-  '🏗️': { src: '/images/roblox-logo.webp', alt: 'Roblox' },
-  '🎮': { src: '/images/roblox-logo.webp', alt: 'Roblox' },
-  '🚀': { src: '/images/roblox-logo.webp', alt: 'Roblox Avanzato' },
+  '⛏️': { src: minecraftLogo, alt: 'Minecraft' },
+  '🐍': { src: pythonLogo, alt: 'Python' },
+  '🤖': { src: pythonLogo, alt: 'Python PRO & AI' },
+  '🧩': { src: scratchLogo, alt: 'Scratch' },
+  '🐱': { src: scratchLogo, alt: 'Scratch' },
+  '🏗️': { src: robloxLogo, alt: 'Roblox' },
+  '🎮': { src: robloxLogo, alt: 'Roblox' },
+  '🚀': { src: robloxLogo, alt: 'Roblox Avanzato' },
 };
 
 export function CourseEmoji({ emoji, className = '', size = 'md' }: CourseEmojiProps) {

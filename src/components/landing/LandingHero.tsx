@@ -1,3 +1,4 @@
+import { scratchLogo } from '@/assets/logos';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { MessageCircle, Sparkles, Clock } from 'lucide-react';
@@ -64,7 +65,7 @@ export function LandingHero({ title, subtitle, ctaText, spotsRemaining, whatsapp
             ) : courseEmoji ? (
               <span className="text-lg">{courseEmoji}</span>
             ) : (
-              <img src="/images/scratch-logo.svg" alt="Scratch" className="w-6 h-6" />
+              <img src={scratchLogo} alt="Scratch" className="w-6 h-6" />
             )}
             <span className="text-sm font-bold text-white">{courseName || 'Corso di Scratch'}</span>
           </div>

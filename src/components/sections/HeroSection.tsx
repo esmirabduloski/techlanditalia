@@ -1,3 +1,4 @@
+import { minecraftLogo, pythonLogo, robloxLogo, scratchLogo } from '@/assets/logos';
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Play, Sparkles, Users, Award, Shield } from "lucide-react";
@@ -92,7 +93,7 @@ export function HeroSection() {
             >
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-red-500/20 flex items-center justify-center">
-                  <img src="/images/roblox-logo.webp" alt="" className="w-7 h-7 object-contain" aria-hidden="true" loading="lazy" decoding="async" />
+                  <img src={robloxLogo} alt="" className="w-7 h-7 object-contain" aria-hidden="true" loading="lazy" decoding="async" />
                 </div>
                 <div>
                   <p className="font-semibold text-sm">Roblox</p>
@@ -108,7 +109,7 @@ export function HeroSection() {
             >
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-orange-500/20 flex items-center justify-center">
-                  <img src="/images/scratch-logo.svg" alt="" className="w-7 h-7 object-contain" aria-hidden="true" />
+                  <img src={scratchLogo} alt="" className="w-7 h-7 object-contain" aria-hidden="true" />
                 </div>
                 <div>
                   <p className="font-semibold text-sm">Scratch</p>
@@ -124,7 +125,7 @@ export function HeroSection() {
             >
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-blue-500/20 flex items-center justify-center">
-                  <img src="/images/python-logo.webp" alt="" className="w-7 h-7 object-contain" aria-hidden="true" loading="lazy" decoding="async" />
+                  <img src={pythonLogo} alt="" className="w-7 h-7 object-contain" aria-hidden="true" loading="lazy" decoding="async" />
                 </div>
                 <div>
                   <p className="font-semibold text-sm">Python</p>
@@ -156,7 +157,7 @@ export function HeroSection() {
             >
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-green-600/20 flex items-center justify-center">
-                  <img src="/images/minecraft-logo.webp" alt="" className="w-7 h-7 object-contain" aria-hidden="true" loading="lazy" decoding="async" />
+                  <img src={minecraftLogo} alt="" className="w-7 h-7 object-contain" aria-hidden="true" loading="lazy" decoding="async" />
                 </div>
                 <div>
                   <p className="font-semibold text-sm">Minecraft</p>

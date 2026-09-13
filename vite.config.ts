@@ -43,6 +43,9 @@ export default defineConfig(({ mode, isSsrBuild }) => ({
   },
   build: {
     sourcemap: true,
+    // I loghi dei corsi (src/assets/logos) sono piccoli ma ripetuti molte volte
+    // nell'HTML prerenderato: meglio un file cacheable che un data URI duplicato.
+    assetsInlineLimit: (filePath) => (filePath.includes("/assets/logos/") ? false : undefined),
     rollupOptions: {
       output: isSsrBuild ? {} : {
         manualChunks: {

@@ -27,8 +27,8 @@ if (!import.meta.env.SSR && typeof document !== "undefined") {
 // in vite.config.ts) non c'è un vero browser, quindi Sentry va inizializzato
 // solo lato client.
 if (!import.meta.env.SSR && typeof window !== "undefined") {
-  // Sentry e Replay sono utili, ma non devono competere con la prima schermata
-  // sui telefoni. Li carichiamo solo dopo il load e durante un momento libero.
+  // Sentry è utile, ma non deve competere con la prima schermata sui telefoni:
+  // lo carichiamo solo dopo il load e durante un momento libero.
   const initializeMonitoring = () => {
     const idle: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number =
       typeof window.requestIdleCallback === "function"
@@ -40,16 +40,9 @@ if (!import.meta.env.SSR && typeof window !== "undefined") {
             );
 
     idle(async () => {
-      const Sentry = await import("@sentry/react");
-      Sentry.init({
-        dsn: import.meta.env.VITE_SENTRY_DSN,
-        integrations: [Sentry.browserTracingIntegration(), Sentry.replayIntegration()],
-        tracesSampleRate: 0.2,
-        // Non propagare header di tracing verso servizi esterni.
-        tracePropagationTargets: [/^\//],
-        replaysSessionSampleRate: 0.05,
-        replaysOnErrorSampleRate: 1.0,
-      });
+      // Import nominali via src/lib/sentry: il namespace intero non è tree-shakabile.
+      const { initSentry } = await import("./lib/sentry");
+      initSentry();
     }, { timeout: 4000 });
   };
 

@@ -23,10 +23,8 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    void import("@sentry/react").then((Sentry) => {
-      Sentry.captureException(error, {
-        extra: { componentStack: info.componentStack },
-      });
+    void import("@/lib/sentry").then(({ reportError }) => {
+      reportError(error, { componentStack: info.componentStack });
     });
   }
 

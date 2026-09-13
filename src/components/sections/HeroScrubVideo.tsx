@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import videoAsset from "@/assets/sinistra-destra.mp4.asset.json";
+// Video nel repo (src/assets -> /assets/hero-scrub-<hash>.mp4, cache immutable).
+// Prima puntava a un asset dello storage Lovable (sinistra-destra.mp4) che dopo
+// un "revert" da Lovable era stato cancellato: il player restava nero (404).
+import heroScrubVideo from "@/assets/hero-scrub.mp4";
 
-const VIDEO_SRC = videoAsset.url;
+const VIDEO_SRC = heroScrubVideo;
 const SENSITIVITY = 0.8;
 
 

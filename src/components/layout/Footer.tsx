@@ -153,11 +153,13 @@ export function Footer() {
                 target="_blank" 
                 rel="noopener noreferrer" 
                 title="Contattaci su WhatsApp"
-                aria-label="Contattaci su WhatsApp (si apre in una nuova finestra)"
                 className="flex items-center gap-2 text-background/70 hover:text-background text-sm"
               >
                 <WhatsAppIcon />
                 +39 350 581 3140 (WhatsApp)
+                {/* Il nome accessibile deve contenere il testo visibile: niente aria-label
+                    che lo sostituisce, l'avviso "nuova finestra" va in testo solo per screen reader */}
+                <span className="sr-only"> - si apre in una nuova finestra</span>
               </a>
             </div>
           </nav>

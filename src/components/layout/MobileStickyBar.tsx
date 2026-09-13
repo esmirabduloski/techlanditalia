@@ -33,8 +33,15 @@ export function MobileStickyBar() {
     return null;
   }
 
+  // Quando è nascosta va tolta anche dall'ordine di tabulazione, non solo dallo
+  // screen reader: `aria-hidden` da solo lasciava un link focusabile invisibile
+  // (Lighthouse: "[aria-hidden=true] contiene discendenti focusabili").
+  // `inert` non è ancora tipizzato in React 18: lo passiamo come attributo grezzo.
+  const inertProps = visible ? {} : ({ inert: "" } as Record<string, string>);
+
   return (
     <div
+      {...inertProps}
       className={`md:hidden fixed bottom-0 inset-x-0 z-40 px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 bg-background/95 backdrop-blur border-t border-border shadow-[0_-4px_16px_rgba(0,0,0,0.08)] transition-all duration-300 ${visible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 pointer-events-none"}`}
       role="complementary"
       aria-label="Prenotazione rapida"
@@ -42,6 +49,7 @@ export function MobileStickyBar() {
     >
       <Link
         to="/prenota"
+        tabIndex={visible ? undefined : -1}
         data-track-cta="mobile_sticky_prenota"
         data-track-label="Prima lezione gratuita"
         className="flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-gradient-cta text-primary-foreground font-semibold text-base shadow-tech-glow active:scale-[0.98] transition-transform"

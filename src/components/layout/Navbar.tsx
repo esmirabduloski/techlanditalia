@@ -36,14 +36,17 @@ export function Navbar() {
       <div className="tech-container">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2" aria-label="TECHLAND - Torna alla homepage">
-            <div className="w-10 h-10 rounded-xl bg-gradient-hero flex items-center justify-center">
+          {/* Niente aria-label: il nome accessibile deve contenere il testo visibile
+              ("TECH LAND"), quindi il monogramma è decorativo e il contesto va in sr-only. */}
+          <Link to="/" className="flex items-center gap-2">
+            <div className="w-10 h-10 rounded-xl bg-gradient-hero flex items-center justify-center" aria-hidden="true">
               <span className="text-primary-foreground font-bold text-xl">T</span>
             </div>
             <span className="text-2xl font-bold">
               <span className="text-primary">TECH</span>
               <span className="text-tech-cyan">LAND</span>
             </span>
+            <span className="sr-only"> - Torna alla homepage</span>
           </Link>
 
           {/* Desktop Navigation */}

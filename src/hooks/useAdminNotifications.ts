@@ -5,6 +5,8 @@ interface AdminNotifications {
   newBookings: number;
   newContacts: number;
   newCrmLeads: number;
+  /** Pulizie dati (privacy) in attesa di approvazione */
+  pendingRetention: number;
 }
 
 export function useAdminNotifications() {
@@ -12,10 +14,11 @@ export function useAdminNotifications() {
     newBookings: 0,
     newContacts: 0,
     newCrmLeads: 0,
+    pendingRetention: 0,
   });
 
   const fetchCounts = async () => {
-    const [bookingsResult, contactsResult, leadsResult] = await Promise.all([
+    const [bookingsResult, contactsResult, leadsResult, retentionResult] = await Promise.all([
       supabase
         .from('trial_bookings')
         .select('id', { count: 'exact', head: true })
@@ -30,12 +33,18 @@ export function useAdminNotifications() {
         .select('id', { count: 'exact', head: true })
         .eq('pipeline_stage', 'new')
         .is('deleted_at', null),
+      // Tabella non ancora nei tipi generati da Lovable (vedi migration data_retention_runs)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      supabase.from('data_retention_runs' as any)
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'pending'),
     ]);
 
     setNotifications({
       newBookings: bookingsResult.count || 0,
       newContacts: contactsResult.count || 0,
       newCrmLeads: leadsResult.count || 0,
+      pendingRetention: retentionResult.count || 0,
     });
   };
 
@@ -69,10 +78,20 @@ export function useAdminNotifications() {
       )
       .subscribe();
 
+    const retentionChannel = supabase
+      .channel('admin-retention-count')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'data_retention_runs' },
+        () => fetchCounts()
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(bookingsChannel);
       supabase.removeChannel(contactsChannel);
       supabase.removeChannel(leadsChannel);
+      supabase.removeChannel(retentionChannel);
     };
   }, []);
 

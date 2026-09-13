@@ -306,7 +306,7 @@ export default function LavoraConNoi() {
               <p className="text-xs text-muted-foreground text-center">
                 Inviando la candidatura dichiari di aver letto la{" "}
                 <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>: i tuoi dati saranno usati
-                solo per valutare la candidatura e conservati per 12 mesi.
+                solo per valutare la candidatura e conservati per 24 mesi.
               </p>
             </form>
           </div>

@@ -3,7 +3,7 @@ import { useRef, useState, useEffect } from 'react';
 import { 
   FileText, GraduationCap, BookOpen, Mail, User, BarChart3, 
   Award, Calendar, ClipboardCheck, Users, Newspaper, UsersRound, CalendarClock, Link as LinkIcon,
-  ChevronLeft, ChevronRight, Menu, X, Database, ClipboardList, BookText, Megaphone, Briefcase, Shield, Settings, Gift, Bug, Bell, Headset
+  ChevronLeft, ChevronRight, Menu, X, Database, ClipboardList, BookText, Megaphone, Briefcase, Shield, Settings, Gift, Bug, Bell, Headset, ShieldCheck
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,7 @@ interface NavItem {
   to: string;
   label: string;
   icon: React.ElementType;
-  notificationKey?: 'newBookings' | 'newContacts' | 'newCrmLeads';
+  notificationKey?: 'newBookings' | 'newContacts' | 'newCrmLeads' | 'pendingRetention';
 }
 
 const navItems: NavItem[] = [
@@ -46,6 +46,7 @@ const navItems: NavItem[] = [
   { to: '/admin/referral', label: 'Referral', icon: Gift },
   { to: '/admin/notifiche-push', label: 'Notifiche', icon: Bell },
   { to: '/admin/chat-live', label: 'Chat live', icon: Headset },
+  { to: '/admin/privacy', label: 'Privacy', icon: ShieldCheck, notificationKey: 'pendingRetention' },
   { to: '/admin/impostazioni', label: 'Impostazioni', icon: Settings },
   { to: '/admin/sentry-log-error', label: 'Sentry Log error', icon: Bug },
 ];
@@ -117,12 +118,12 @@ export function AdminNav() {
     }
   };
 
-  const getNotificationCount = (key?: 'newBookings' | 'newContacts' | 'newCrmLeads') => {
+  const getNotificationCount = (key?: 'newBookings' | 'newContacts' | 'newCrmLeads' | 'pendingRetention') => {
     if (!key) return 0;
     return notifications[key];
   };
 
-  const totalNotifications = notifications.newBookings + notifications.newContacts + notifications.newCrmLeads;
+  const totalNotifications = notifications.newBookings + notifications.newContacts + notifications.newCrmLeads + notifications.pendingRetention;
 
   // Find current active item for mobile label
   const activeItem = navItems.find(item => isActive(item.to));

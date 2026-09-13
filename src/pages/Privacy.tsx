@@ -88,8 +88,8 @@ export default function Privacy() {
                     <strong>Chat con assistente virtuale:</strong> le domande poste nella chat del sito ricevono una prima
                     risposta da un assistente basato su intelligenza artificiale (modello Google Gemini, erogato tramite Lovable
                     AI Gateway) e, se lo chiedi, da un operatore umano. I messaggi sono conservati per gestire la richiesta e
-                    migliorare il servizio per un massimo di 12 mesi. Ti chiediamo di non inserire in chat dati sensibili (es.
-                    salute).
+                    migliorare il servizio per un massimo di 24 mesi dall&apos;ultimo messaggio. Ti chiediamo di non inserire in chat
+                    dati sensibili (es. salute).
                   </li>
                 </UL>
 
@@ -129,9 +129,9 @@ export default function Privacy() {
                     cancellazione in ogni momento.
                   </li>
                   <li>
-                    <strong>Conservazione:</strong> per tutta la durata dell&apos;iscrizione e per i 24 mesi successivi (per
-                    consentire la ripresa dei corsi e il rilascio degli attestati), poi cancellazione o anonimizzazione; i dati
-                    contabili e fiscali per 10 anni come previsto dalla legge.
+                    <strong>Conservazione:</strong> per tutta la durata dell&apos;iscrizione e per i 10 anni successivi, termine
+                    della prescrizione ordinaria e degli obblighi contabili e fiscali (artt. 2220 e 2946 c.c.); in qualsiasi
+                    momento il genitore può chiedere la cancellazione anticipata dei dati didattici non necessari a tali fini.
                   </li>
                 </UL>
 
@@ -151,8 +151,9 @@ export default function Privacy() {
 
                 <h3 className="text-xl font-semibold mt-6 mb-2">2.6 Candidature ("Lavora con noi")</h3>
                 <P>
-                  Nome, email, telefono e quanto ci scrivi di te vengono usati solo per valutare la candidatura (misure
-                  precontrattuali, art. 6.1.b) e conservati per 12 mesi, salvo assunzione.
+                  Nome, email, telefono e quanto ci scrivi di te vengono usati solo per valutare la candidatura e per
+                  eventuali posizioni analoghe (misure precontrattuali, art. 6.1.b) e conservati per 24 mesi, salvo
+                  assunzione.
                 </P>
 
                 <h3 className="text-xl font-semibold mt-6 mb-2">2.7 Dati tecnici, sicurezza e statistiche</h3>
@@ -252,6 +253,7 @@ export default function Privacy() {
                   <li>
                     <strong>Cancellazione ("diritto all&apos;oblio"):</strong> ottenere la cancellazione dei dati tuoi e di tuo
                     figlio, inclusa la chiusura degli account, salvo i dati che dobbiamo conservare per legge (es. fatture).
+                    I genitori possono farlo in autonomia dalla propria area riservata (Profilo → Elimina account).
                   </li>
                   <li>
                     <strong>Limitazione e opposizione:</strong> limitare il trattamento o opporti, in particolare alle

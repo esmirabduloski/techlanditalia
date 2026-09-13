@@ -53,3 +53,12 @@ verify_jwt = false
 
 [functions.chat-operator]
 verify_jwt = false
+
+# Pulizia dati: "scan" arriva dal cron con la chiave anon (non cancella nulla),
+# "approve"/"reject" verificano il JWT admin dentro la funzione.
+[functions.data-retention]
+verify_jwt = false
+
+# Cancellazione account self-service: richiede l'utente autenticato.
+[functions.delete-my-account]
+verify_jwt = true

@@ -28,6 +28,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { SEOHead, generateCourseSchema, generateBreadcrumbSchema } from "@/components/seo/SEOHead";
 import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
+import { TrialReassurance } from "@/components/sections/TrialReassurance";
+import { WhatsAppCta } from "@/components/sections/WhatsAppCta";
 
 // Course data based on Kodland content
 const coursesData: Record<string, {
@@ -695,6 +697,17 @@ function CorsoDettaglio() {
   });
   const { formOpenedAt, honeypotProps, honeypotValue } = useFormAntiSpam();
 
+  // Le CTA della pagina portano al form in fondo alla stessa pagina (niente
+  // cambio pagina, campo "interesse" già impostato sul corso).
+  const scrollToBooking = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const target = document.getElementById("prenota");
+    if (!target) return; // fallback: il browser segue l'ancora #prenota
+    e.preventDefault();
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    target.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+    window.setTimeout(() => target.querySelector<HTMLInputElement>("input[name='name']")?.focus({ preventScroll: true }), reduceMotion ? 0 : 600);
+  };
+
   const onSubmit = async (data: TrialFormData) => {
     if (!course) return;
     setIsSubmitting(true);
@@ -852,6 +865,16 @@ function CorsoDettaglio() {
                 <span>{course.duration}</span>
               </div>
             </div>
+
+            {/* CTA sopra la piega: prima il form era solo in fondo, dopo 6 sezioni */}
+            <div className="mt-8 pt-8 border-t border-border/60 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <Button variant="hero" size="xl" asChild data-track-cta="course_hero_booking" data-track-label={course.title}>
+                  <a href="#prenota" onClick={scrollToBooking}>Prenota la lezione di prova gratuita</a>
+                </Button>
+              </div>
+              <TrialReassurance className="sm:max-w-xs" />
+            </div>
           </div>
         </div>
       </section>
@@ -889,6 +912,23 @@ function CorsoDettaglio() {
         </div>
       </section>
       )}
+
+      {/* Richiamo a metà pagina, leggero: card con bordo, non un altro blocco a tutta larghezza */}
+      <section className="tech-section pt-0">
+        <div className="tech-container">
+          <div className="tech-card p-6 md:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6 border-primary/30">
+            <div>
+              <h2 className="text-xl md:text-2xl font-bold mb-2">Vuoi vedere se {course.title} piace a tuo figlio?</h2>
+              <p className="text-muted-foreground">
+                La prima lezione è gratuita: fino a 60 minuti online con un insegnante, senza impegno. Ti ricontattiamo entro 24 ore.
+              </p>
+            </div>
+            <Button variant="cta" size="lg" asChild className="shrink-0" data-track-cta="course_mid_booking" data-track-label={course.title}>
+              <a href="#prenota" onClick={scrollToBooking}>Prenota la prova gratuita</a>
+            </Button>
+          </div>
+        </div>
+      </section>
 
       {/* Project examples */}
       {showSection("projectExamples") && (
@@ -1036,15 +1076,16 @@ function CorsoDettaglio() {
       )}
 
       {/* CTA with Form */}
-      <section className="py-20 md:py-32 bg-gradient-hero">
+      <section id="prenota" className="py-20 md:py-32 bg-gradient-hero scroll-mt-16">
         <div className="tech-container">
           <div className="max-w-2xl mx-auto text-center mb-12">
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-primary-foreground mb-4">
               Prenota una lezione di prova gratuita!
             </h2>
             <p className="text-lg text-primary-foreground/80">
-              Inizia il tuo viaggio nel mondo del coding con {course.title}. Compila il form e ti contatteremo entro 24 ore.
+              Scopri se {course.title} è il percorso giusto per tuo figlio: compila il form e ti contatteremo entro 24 ore.
             </p>
+            <TrialReassurance onDark align="center" className="mt-5" />
           </div>
 
           <div className="max-w-xl mx-auto">
@@ -1142,6 +1183,7 @@ function CorsoDettaglio() {
                   >
                     {isSubmitting ? "Invio in corso..." : "Prenota lezione gratuita"}
                   </Button>
+                  <WhatsAppCta trackId="course_form_whatsapp" courseTitle={course.title} className="text-center" />
                 </form>
               </Form>
             </div>

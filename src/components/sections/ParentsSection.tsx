@@ -52,8 +52,9 @@ export function ParentsSection() {
               <p className="text-lg text-muted-foreground mb-8">
                 Sappiamo quanto sia importante per te sapere cosa fa tuo figlio online. Con TECHLAND hai il controllo completo e la tranquillità che meriti.
               </p>
-              <Button variant="cta" size="lg" asChild>
-                <Link to="/prenota">Scopri di più</Link>
+              {/* Il link porta già a /prenota: il testo deve dirlo */}
+              <Button variant="cta" size="lg" asChild data-track-cta="parents_section_booking">
+                <Link to="/prenota">Prenota la prova gratuita</Link>
               </Button>
             </div>
           </ScrollReveal>

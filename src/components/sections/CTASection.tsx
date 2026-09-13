@@ -4,6 +4,7 @@ import { Sparkles, ArrowRight, BookOpen } from "lucide-react";
 import { useHasEnrollments } from "@/hooks/useHasEnrollments";
 import { useAuth } from "@/hooks/useAuth";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
+import { TrialReassurance } from "@/components/sections/TrialReassurance";
 
 export function CTASection() {
   const { user } = useAuth();
@@ -55,6 +56,8 @@ export function CTASection() {
                   <Link to="/corsi">Esplora i corsi</Link>
                 </Button>
               </div>
+
+              <TrialReassurance onDark align="center" className="mt-6" />
             </>
           ) : (
             <>

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Play, Sparkles, Users, Award, Shield } from "lucide-react";
 import { HeroScrubVideo } from "@/components/sections/HeroScrubVideo";
+import { TrialReassurance } from "@/components/sections/TrialReassurance";
 
 
 export function HeroSection() {
@@ -47,6 +48,9 @@ export function HeroSection() {
                   </Link>
                 </Button>
               </div>
+
+              {/* Cosa succede dopo il click: toglie i dubbi al genitore prima di prenotare */}
+              <TrialReassurance lead="Scopri se il coding piace a tuo figlio, senza rischi:" />
 
               {/* Stats */}
               <div className="grid grid-cols-3 gap-6 pt-8 border-t border-border/50">

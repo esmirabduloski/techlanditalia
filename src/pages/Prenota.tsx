@@ -22,6 +22,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { CheckCircle2, Calendar, Video, Shield, Instagram } from "lucide-react";
+import { TrialReassurance } from "@/components/sections/TrialReassurance";
+import { WhatsAppCta } from "@/components/sections/WhatsAppCta";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -37,8 +39,8 @@ const fallbackInterests = [
 
 
 const benefits = [
-  { icon: Calendar, text: "Ti contatteremo entro 24h" },
-  { icon: Video, text: "Lezione 1:1 con un docente" },
+  { icon: Calendar, text: "Ti contatteremo entro 24 ore" },
+  { icon: Video, text: "Lezione 1:1 con un docente, fino a 60 minuti online" },
   { icon: Shield, text: "Nessun impegno, zero costi" },
 ];
 
@@ -527,6 +529,12 @@ export default function Prenota() {
                   >
                     {isSubmitting ? "Invio in corso..." : "Prenota lezione gratuita"}
                   </Button>
+                  {/* Riassicurazione accanto al bottone, dove si decide: non solo nell'hero */}
+                  <TrialReassurance align="center" />
+                  <p className="text-center text-xs text-muted-foreground">
+                    Già scelta da <strong className="text-foreground">1.200+ studenti</strong> e dalle loro famiglie.
+                  </p>
+                  <WhatsAppCta trackId="prenota_form_whatsapp" className="text-center" />
                 </form>
               </Form>
             </div>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
+import { Head } from 'vite-react-ssg';
 import { Bell, Send, Smartphone, RefreshCw, BookmarkPlus, Trash2, Users, GraduationCap, Clock, Inbox } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -214,7 +214,7 @@ export default function AdminPushNotifications() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Helmet><title>Notifiche push | Admin TECHLAND</title></Helmet>
+      <Head><title>Notifiche push | Admin TECHLAND</title></Head>
       <AdminHeader />
       <AdminNav />
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 space-y-6">

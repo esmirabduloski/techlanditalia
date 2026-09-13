@@ -3,6 +3,7 @@
  *
  * POST { action: "request", sessionId, lastQuestion? }  -> segna la richiesta e avvisa gli admin
  * POST { action: "poll", sessionId, since? }            -> restituisce i messaggi dell'operatore
+ *                                                          (+ `ended: true` se l'operatore ha chiuso la chat)
  */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -49,22 +50,37 @@ serve(async (req: Request): Promise<Response> => {
       { auth: { persistSession: false, autoRefreshToken: false } },
     );
 
+    const CONV_FIELDS = "id, operator_requested_at, operator_joined_at, ended_at";
+
     let { data: conv } = await supabase
       .from("chat_conversations")
-      .select("id, operator_requested_at, operator_joined_at")
+      .select(CONV_FIELDS)
       .eq("session_id", sessionId)
       .is("ended_at", null)
       .order("started_at", { ascending: false })
       .limit(1)
       .maybeSingle();
 
+    if (!conv && action === "poll") {
+      // Nessuna chat aperta: se l'ultima è stata chiusa dall'operatore restituiamo comunque
+      // i suoi messaggi finali (es. il saluto) e segnaliamo al widget che la chat è terminata.
+      const { data: lastConv } = await supabase
+        .from("chat_conversations")
+        .select(CONV_FIELDS)
+        .eq("session_id", sessionId)
+        .order("started_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!lastConv) return json({ operatorActive: false, operatorRequested: false, ended: false, messages: [] });
+      conv = lastConv;
+    }
+
     if (!conv) {
-      if (action === "poll") return json({ operatorActive: false, operatorRequested: false, messages: [] });
       // Il visitatore può chiedere un operatore prima di scrivere: creiamo la conversazione.
       const { data: created, error: createError } = await supabase
         .from("chat_conversations")
         .insert({ session_id: sessionId, last_message_at: new Date().toISOString() })
-        .select("id, operator_requested_at, operator_joined_at")
+        .select(CONV_FIELDS)
         .single();
       if (createError || !created) {
         console.error("[chat-operator] create conversation", createError);
@@ -83,9 +99,11 @@ serve(async (req: Request): Promise<Response> => {
         .limit(100);
       if (since) query = query.gt("created_at", since);
       const { data: messages } = await query;
+      const ended = Boolean(conv.ended_at);
       return json({
-        operatorActive: Boolean(conv.operator_joined_at),
-        operatorRequested: Boolean(conv.operator_requested_at),
+        operatorActive: !ended && Boolean(conv.operator_joined_at),
+        operatorRequested: !ended && Boolean(conv.operator_requested_at),
+        ended,
         messages: messages ?? [],
       });
     }
@@ -100,8 +118,10 @@ serve(async (req: Request): Promise<Response> => {
       const task = notifyAdmins({
         title: "Richiesta operatore in chat",
         body: lastQuestion?.slice(0, 160) || "Un visitatore vuole parlare con un operatore.",
-        path: "/admin/chat-live",
+        // Il click sulla notifica apre direttamente questa conversazione nell'admin
+        path: `/admin/chat-live?conversation=${conv.id}`,
         type: "chat_operator_request",
+        tag: `chat-${conv.id}`,
       });
       try {
         // @ts-ignore EdgeRuntime disponibile su Supabase Edge Functions

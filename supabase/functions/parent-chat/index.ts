@@ -39,8 +39,10 @@ async function requestOperator(
   await notifyAdmins({
     title: "Richiesta operatore in chat",
     body: lastQuestion.slice(0, 160),
-    path: "/admin/chat-live",
+    // Il click sulla notifica apre direttamente questa conversazione nell'admin
+    path: `/admin/chat-live?conversation=${conversationId}`,
     type: "chat_operator_request",
+    tag: `chat-${conversationId}`,
   });
 }
 

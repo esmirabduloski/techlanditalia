@@ -5,12 +5,16 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/firebase_messaging";
+const SITE_URL = (Deno.env.get("SITE_URL") || "https://techlanditalia.it").replace(/\/$/, "");
 
 export async function notifyAdmins(opts: {
   title: string;
   body: string;
+  /** Percorso del sito da aprire al click sulla notifica (es. /admin/chat-live?conversation=…). */
   path?: string;
   type?: string;
+  /** Notifiche con lo stesso tag si sostituiscono a vicenda invece di accumularsi. */
+  tag?: string;
 }): Promise<void> {
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -39,6 +43,9 @@ export async function notifyAdmins(opts: {
       .in("user_id", adminIds);
     if (!devices || devices.length === 0) return;
 
+    const path = opts.path ?? "/admin/crm";
+    const link = `${SITE_URL}${path.startsWith("/") ? path : `/${path}`}`;
+
     const perUser = new Map<string, { ok: number; ko: number }>();
 
     for (const device of devices) {
@@ -55,7 +62,17 @@ export async function notifyAdmins(opts: {
           message: {
             token: device.token,
             notification: { title: opts.title, body: opts.body },
-            data: { path: opts.path ?? "/admin/crm" },
+            // `path` viene letto dal service worker (public/firebase-messaging-sw.js)
+            // e dalla pagina in primo piano per aprire la sezione giusta dell'admin.
+            data: { path, link, type: opts.type ?? "admin_alert" },
+            webpush: {
+              notification: {
+                icon: `${SITE_URL}/favicon.png`,
+                ...(opts.tag ? { tag: opts.tag } : {}),
+              },
+              // Fallback usato dall'SDK Firebase se il nostro handler non intercetta il click.
+              fcm_options: { link },
+            },
           },
         }),
       });

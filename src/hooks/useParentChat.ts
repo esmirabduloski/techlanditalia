@@ -28,6 +28,8 @@ export function useParentChat() {
   const [operatorActive, setOperatorActive] = useState(false);
   const [conversationStarted, setConversationStarted] = useState(false);
   const lastOperatorMsgRef = useRef<string | null>(null);
+  // Per mostrare l'avviso "l'operatore ha terminato la chat" una volta sola
+  const operatorWasActiveRef = useRef(false);
 
   const sendMessage = useCallback(async (input: string) => {
     if (!input.trim() || isLoading) return;
@@ -180,13 +182,32 @@ export function useParentChat() {
         });
         if (!resp.ok || cancelled) return;
         const data = await resp.json();
-        if (data.operatorActive) setOperatorActive(true);
+        if (data.operatorActive) {
+          setOperatorActive(true);
+          operatorWasActiveRef.current = true;
+        }
         const incoming = (data.messages ?? []) as { content: string; created_at: string }[];
         if (incoming.length > 0) {
           lastOperatorMsgRef.current = incoming[incoming.length - 1].created_at;
           setMessages((prev) => [
             ...prev,
             ...incoming.map((m) => ({ role: 'operator' as const, content: m.content })),
+          ]);
+        }
+        // L'operatore ha chiuso la chat: si torna all'assistente AI e si può richiedere di nuovo un operatore
+        if (data.ended && (operatorWasActiveRef.current || operatorRequested)) {
+          const wasActive = operatorWasActiveRef.current;
+          operatorWasActiveRef.current = false;
+          setOperatorActive(false);
+          setOperatorRequested(false);
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: 'assistant',
+              content: wasActive
+                ? "L'operatore ha terminato la chat. Grazie per averci scritto! Se hai altre domande sono di nuovo qui io, oppure puoi richiedere ancora un operatore. 👋"
+                : 'La richiesta di operatore è stata chiusa. Puoi continuare con me oppure richiedere di nuovo un operatore quando vuoi. 🙏',
+            },
           ]);
         }
       } catch {
@@ -206,6 +227,7 @@ export function useParentChat() {
     // Generate new session ID for new conversation
     sessionIdRef.current = generateSessionId();
     lastOperatorMsgRef.current = null;
+    operatorWasActiveRef.current = false;
     setOperatorRequested(false);
     setOperatorActive(false);
     setConversationStarted(false);

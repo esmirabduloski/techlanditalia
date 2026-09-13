@@ -11,6 +11,7 @@ import { ImpersonationProvider } from "@/contexts/ImpersonationContext";
 import { ImpersonationBanner } from "@/components/admin/ImpersonationBanner";
 import { SkipToContent } from "@/components/accessibility/SkipToContent";
 import { RouteAnnouncer } from "@/components/accessibility/RouteAnnouncer";
+import { PushNavigationListener } from "@/components/notifications/PushNavigationListener";
 import ScrollToTop from "./components/ScrollToTop";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
@@ -34,6 +35,7 @@ const App = () => (
             <AnalyticsProvider>
               <ScrollToTop />
               <RouteAnnouncer />
+              <PushNavigationListener />
               <Suspense
                 fallback={
                   <div

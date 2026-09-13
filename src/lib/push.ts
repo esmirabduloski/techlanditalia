@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getMessaging, getToken, isSupported } from 'firebase/messaging';
+import { getMessaging, getToken, isSupported, onMessage } from 'firebase/messaging';
 import { supabase } from '@/integrations/supabase/client';
 
 const appId = import.meta.env.VITE_LOVABLE_CONNECTOR_FIREBASE_MESSAGING_APP_ID as string | undefined;
@@ -102,6 +102,47 @@ export async function enablePush(): Promise<PushResult> {
     return { status: 'registered', token };
   } catch (e) {
     return { status: 'error', message: e instanceof Error ? e.message : 'Errore sconosciuto' };
+  }
+}
+
+export type ForegroundPush = { title: string; body: string; path: string | null };
+
+/**
+ * Notifiche ricevute mentre il sito è aperto e visibile: in quel caso l'SDK Firebase
+ * NON mostra la notifica di sistema ma la consegna alla pagina, che deve gestirla da sé.
+ * Richiede il permesso già concesso (non lo chiede mai). Restituisce la funzione di cleanup.
+ */
+export async function listenForegroundPush(
+  handler: (push: ForegroundPush) => void
+): Promise<() => void> {
+  const noop = () => undefined;
+  try {
+    if (!isPushConfigured() || typeof window === 'undefined') return noop;
+    if (!('Notification' in window) || Notification.permission !== 'granted') return noop;
+    if (!('serviceWorker' in navigator) || !(await isSupported())) return noop;
+
+    const app = getApps().length ? getApp() : initializeApp(firebaseConfig as Record<string, string>);
+    const messaging = getMessaging(app);
+    return onMessage(messaging, (payload) => {
+      const data = (payload.data ?? {}) as Record<string, string | undefined>;
+      const raw = data.path ?? data.link ?? payload.fcmOptions?.link ?? null;
+      let path: string | null = null;
+      if (raw) {
+        try {
+          const url = new URL(raw, window.location.origin);
+          if (url.origin === window.location.origin) path = url.pathname + url.search + url.hash;
+        } catch {
+          path = null;
+        }
+      }
+      handler({
+        title: payload.notification?.title ?? 'Nuova notifica',
+        body: payload.notification?.body ?? '',
+        path,
+      });
+    });
+  } catch {
+    return noop;
   }
 }
 

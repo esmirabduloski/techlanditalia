@@ -54,7 +54,7 @@ const bookingSchema = z.object({
 type BookingFormData = z.infer<typeof bookingSchema>;
 
 // Admin email - change this to your actual email
-const ADMIN_EMAIL = "info@techland.it";
+const ADMIN_EMAIL = "info@techlanditalia.it";
 
 export default function Prenota() {
   const { toast } = useToast();
@@ -513,7 +513,7 @@ export default function Prenota() {
                       <p className="font-semibold mb-1">Errore nell'invio</p>
                       <p>{submitError}</p>
                       <p className="mt-2 text-xs text-destructive/80">
-                        Se il problema persiste, scrivici su WhatsApp o a info@techland.it
+                        Se il problema persiste, scrivici su WhatsApp o a info@techlanditalia.it
                       </p>
                     </div>
                   )}

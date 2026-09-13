@@ -10,6 +10,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
+import { Link } from "react-router-dom";
 import { useFormAntiSpam } from "@/hooks/useFormAntiSpam";
 
 // Validation schema
@@ -287,6 +288,12 @@ export default function Contatti() {
               <Button type="submit" variant="cta" className="w-full" disabled={isSubmitting}>
                 {isSubmitting ? "Invio in corso..." : "Invia messaggio"}
               </Button>
+              {/* Informativa breve (art. 13 GDPR): i dati servono solo a rispondere alla richiesta */}
+              <p className="text-xs text-muted-foreground text-center">
+                Inviando il messaggio dichiari di aver letto la{" "}
+                <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>. Useremo i tuoi dati solo
+                per risponderti.
+              </p>
             </form>
           </div>
         </div>

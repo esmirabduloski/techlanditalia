@@ -765,6 +765,12 @@ export default function Blog() {
                 </button>
               </form>
             )}
+            {/* Informativa breve newsletter: consenso via double opt-in, revoca dal link in ogni email */}
+            <p className="mt-4 text-xs text-muted-foreground">
+              Riceverai un&apos;email per confermare l&apos;iscrizione. Potrai disiscriverti in ogni momento dal link in fondo a
+              ogni newsletter. Trattiamo la tua email come descritto nella{" "}
+              <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
+            </p>
           </div>
         </div>
       </section>

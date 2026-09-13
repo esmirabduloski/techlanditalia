@@ -21,7 +21,7 @@ export default function Termini() {
             />
             <h1 className="text-4xl font-bold mb-8">Termini e Condizioni</h1>
             <p className="text-muted-foreground mb-8">
-              Ultimo aggiornamento: {new Date().toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })}
+              Ultimo aggiornamento: 13 settembre 2026
             </p>
 
             <div className="prose prose-lg dark:prose-invert max-w-none space-y-8">
@@ -66,7 +66,7 @@ export default function Termini() {
                 <h2 className="text-2xl font-semibold mb-4">4. Lezioni di Prova Gratuite</h2>
                 <p className="text-muted-foreground">
                   TECHLAND offre una lezione di prova gratuita senza alcun obbligo di acquisto. 
-                  La lezione di prova ha una durata di 30-45 minuti e serve a valutare il livello 
+                  La lezione di prova ha una durata massima di 60 minuti e serve a valutare il livello 
                   dello studente e presentare i nostri metodi didattici. Non è richiesto alcun 
                   pagamento per la lezione di prova.
                 </p>

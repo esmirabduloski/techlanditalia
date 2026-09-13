@@ -4,6 +4,7 @@ import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Link } from "react-router-dom";
 import { Label } from "@/components/ui/label";
 import { Briefcase, Heart, Rocket, Users, CheckCircle } from "lucide-react";
 import { useState } from "react";
@@ -301,6 +302,12 @@ export default function LavoraConNoi() {
               <Button type="submit" variant="cta" className="w-full" disabled={isSubmitting}>
                 {isSubmitting ? "Invio in corso..." : "Invia candidatura"}
               </Button>
+              {/* Informativa breve per i candidati (art. 13 GDPR) */}
+              <p className="text-xs text-muted-foreground text-center">
+                Inviando la candidatura dichiari di aver letto la{" "}
+                <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>: i tuoi dati saranno usati
+                solo per valutare la candidatura e conservati per 12 mesi.
+              </p>
             </form>
           </div>
         </div>

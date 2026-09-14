@@ -66,7 +66,12 @@ export default function AuthPage() {
           window.location.href = next;
           return;
         }
-        if (isAdmin) return;
+        // Gli admin vanno subito al pannello: senza questo redirect la pagina
+        // restava bloccata su "Accesso in corso..." al primo login.
+        if (isAdmin) {
+          navigate("/admin");
+          return;
+        }
 
         const { data: teacherRole } = await supabase
           .from("user_roles")
@@ -81,6 +86,7 @@ export default function AuthPage() {
           navigate("/area-riservata");
         }
       }
+
     };
 
     checkRoleAndRedirect();

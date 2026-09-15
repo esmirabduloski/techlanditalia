@@ -35,7 +35,7 @@ serve(async (req: Request): Promise<Response> => {
   try {
     const parsed = BodySchema.safeParse(await req.json());
     if (!parsed.success) return json({ error: parsed.error.flatten().fieldErrors }, 400);
-    const { action, sessionId, lastQuestion, since } = parsed.data;
+    const { action, sessionId, lastQuestion, since, contact, contactType } = parsed.data;
 
     if (action === "request") {
       const limited = await rateLimit(req, {

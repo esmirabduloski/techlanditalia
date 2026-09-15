@@ -395,6 +395,21 @@ export default function AdminLiveChat() {
               )}
             </CardHeader>
             <CardContent className="space-y-4">
+              {active?.metadata?.contact && (
+                <div className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/40 bg-primary/5 px-3 py-2 text-sm">
+                  <span className="text-muted-foreground">Recapito lasciato dal visitatore:</span>
+                  <a
+                    href={
+                      active.metadata.contact.includes('@')
+                        ? `mailto:${active.metadata.contact}`
+                        : `tel:${active.metadata.contact.replace(/\s/g, '')}`
+                    }
+                    className="font-medium text-primary underline"
+                  >
+                    {active.metadata.contact}
+                  </a>
+                </div>
+              )}
               {active && activeStatus === 'waiting' && (
                 <div className="flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm">
                   <Clock className="w-4 h-4 text-destructive shrink-0" />

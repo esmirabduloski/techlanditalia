@@ -57,7 +57,7 @@ type ConversationStatus = 'waiting' | 'live' | 'ended' | 'ai';
 type ListFilter = 'open' | 'waiting' | 'ended' | 'all';
 
 const CONVERSATION_FIELDS =
-  'id, session_id, started_at, last_message_at, operator_requested_at, operator_joined_at, ended_at';
+  'id, session_id, started_at, last_message_at, operator_requested_at, operator_joined_at, ended_at, metadata';
 
 const fmt = (iso: string | null) =>
   iso ? new Date(iso).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';

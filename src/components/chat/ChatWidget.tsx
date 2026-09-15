@@ -6,6 +6,10 @@ import { useParentChat } from '@/hooks/useParentChat';
 export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
+  const [showContactForm, setShowContactForm] = useState(false);
+  const [contact, setContact] = useState('');
+  const [contactError, setContactError] = useState<string | null>(null);
+  const contactRef = useRef<HTMLInputElement>(null);
   const {
     messages,
     isLoading,

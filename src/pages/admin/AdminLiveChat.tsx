@@ -43,6 +43,7 @@ type Conversation = {
   operator_requested_at: string | null;
   operator_joined_at: string | null;
   ended_at: string | null;
+  metadata: { contact?: string; contact_type?: string } | null;
 };
 
 type ChatMessage = {

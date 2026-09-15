@@ -112,6 +112,22 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     // action === "request"
+    // Il recapito lasciato dal visitatore viene salvato subito, anche se la richiesta era già stata inviata
+    if (contact) {
+      const currentMeta = (conv.metadata ?? {}) as Record<string, unknown>;
+      await supabase
+        .from("chat_conversations")
+        .update({
+          metadata: {
+            ...currentMeta,
+            contact,
+            contact_type: contactType ?? (contact.includes("@") ? "email" : "phone"),
+            contact_at: new Date().toISOString(),
+          },
+        })
+        .eq("id", conv.id);
+    }
+
     if (!conv.operator_requested_at) {
       await supabase
         .from("chat_conversations")
@@ -120,7 +136,9 @@ serve(async (req: Request): Promise<Response> => {
 
       const task = notifyAdmins({
         title: "Richiesta operatore in chat",
-        body: lastQuestion?.slice(0, 160) || "Un visitatore vuole parlare con un operatore.",
+        body: [contact ? `Recapito: ${contact}` : null, lastQuestion?.slice(0, 120)]
+          .filter(Boolean)
+          .join(" — ") || "Un visitatore vuole parlare con un operatore.",
         // Il click sulla notifica apre direttamente questa conversazione nell'admin
         path: `/admin/chat-live?conversation=${conv.id}`,
         type: "chat_operator_request",

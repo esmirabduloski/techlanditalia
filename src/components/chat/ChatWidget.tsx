@@ -97,7 +97,12 @@ export function ChatWidget() {
             </div>
             <div className="flex gap-1">
               <button
-                onClick={clearChat}
+                onClick={() => {
+                  setShowContactForm(false);
+                  setContact('');
+                  setContactError(null);
+                  clearChat();
+                }}
                 className="rounded-lg p-2 transition-colors hover:bg-primary-foreground/20"
                 aria-label="Nuova chat"
               >

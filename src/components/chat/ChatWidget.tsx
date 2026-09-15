@@ -125,13 +125,56 @@ export function ChatWidget() {
           {/* Richiesta operatore */}
           {!operatorRequested && (
             <div className="border-t border-border px-3 pt-2">
-              <button
-                type="button"
-                onClick={requestOperator}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-primary/40 px-3 py-2 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
-              >
-                <Headset className="h-4 w-4" /> Parla con un operatore
-              </button>
+              {showContactForm ? (
+                <form onSubmit={handleOperatorRequest} className="space-y-2 pb-1">
+                  <label htmlFor="chat-contact" className="block text-xs text-muted-foreground">
+                    Lasciaci una email o un numero di telefono: se nessun operatore è disponibile ti ricontattiamo al più presto.
+                  </label>
+                  <input
+                    id="chat-contact"
+                    ref={contactRef}
+                    type="text"
+                    value={contact}
+                    onChange={(e) => {
+                      setContact(e.target.value);
+                      setContactError(null);
+                    }}
+                    placeholder="email@esempio.it oppure 333 1234567"
+                    maxLength={120}
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                  {contactError && (
+                    <p role="alert" className="text-xs text-destructive">
+                      {contactError}
+                    </p>
+                  )}
+                  <div className="flex gap-2">
+                    <Button type="submit" size="sm" className="flex-1 rounded-xl text-xs">
+                      <Headset className="mr-2 h-4 w-4" /> Invia richiesta
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="rounded-xl text-xs"
+                      onClick={() => {
+                        setShowContactForm(false);
+                        setContactError(null);
+                      }}
+                    >
+                      Annulla
+                    </Button>
+                  </div>
+                </form>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowContactForm(true)}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-primary/40 px-3 py-2 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+                >
+                  <Headset className="h-4 w-4" /> Parla con un operatore
+                </button>
+              )}
             </div>
           )}
 

@@ -40,6 +40,30 @@ export function ChatWidget() {
     }
   };
 
+  useEffect(() => {
+    if (showContactForm) contactRef.current?.focus();
+  }, [showContactForm]);
+
+  const isValidContact = (value: string) => {
+    const v = value.trim();
+    if (/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(v)) return true;
+    const digits = v.replace(/[^\d]/g, '');
+    return /^[\d\s+().-]+$/.test(v) && digits.length >= 8 && digits.length <= 15;
+  };
+
+  const handleOperatorRequest = (e: React.FormEvent) => {
+    e.preventDefault();
+    const value = contact.trim();
+    if (!isValidContact(value)) {
+      setContactError('Inserisci una email valida o un numero di telefono (almeno 8 cifre).');
+      return;
+    }
+    setContactError(null);
+    setShowContactForm(false);
+    requestOperator(value);
+    setContact('');
+  };
+
   return (
     <>
       {/* Chat Button */}

@@ -17,6 +17,9 @@ const BodySchema = z.object({
   sessionId: z.string().min(8).max(120),
   lastQuestion: z.string().max(1000).optional(),
   since: z.string().max(40).optional(),
+  // Recapito lasciato dal visitatore per essere ricontattato se nessun operatore è disponibile
+  contact: z.string().trim().min(5).max(120).optional(),
+  contactType: z.enum(["email", "phone"]).optional(),
 });
 
 serve(async (req: Request): Promise<Response> => {

@@ -125,11 +125,13 @@ export function useParentChat() {
     }
   }, [messages, isLoading]);
 
-  /** Chiede esplicitamente di parlare con un operatore umano. */
-  const requestOperator = useCallback(async () => {
+  /** Chiede esplicitamente di parlare con un operatore umano, lasciando un recapito. */
+  const requestOperator = useCallback(async (contact?: string) => {
     if (operatorRequested) return;
     setOperatorRequested(true);
     const lastUser = [...messages].reverse().find((m) => m.role === 'user');
+    const trimmed = contact?.trim();
+    const contactType = trimmed ? (trimmed.includes('@') ? 'email' : 'phone') : undefined;
     try {
       const resp = await fetch(OPERATOR_URL, {
         method: 'POST',
@@ -138,6 +140,8 @@ export function useParentChat() {
           action: 'request',
           sessionId: sessionIdRef.current,
           lastQuestion: lastUser?.content?.slice(0, 500),
+          contact: trimmed || undefined,
+          contactType,
         }),
       });
       if (!resp.ok) throw new Error('request failed');
@@ -145,8 +149,9 @@ export function useParentChat() {
         ...prev,
         {
           role: 'assistant',
-          content:
-            'Ho avvisato il nostro team ✅ Un operatore ti risponderà qui in chat il prima possibile. Resta su questa pagina!',
+          content: trimmed
+            ? `Ho avvisato il nostro team ✅ Un operatore ti risponderà qui in chat il prima possibile. Se nessuno è disponibile ora, ti ricontattiamo a ${trimmed}.`
+            : 'Ho avvisato il nostro team ✅ Un operatore ti risponderà qui in chat il prima possibile. Resta su questa pagina!',
         },
       ]);
     } catch (e) {

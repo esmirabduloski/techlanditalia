@@ -17,6 +17,9 @@ const BodySchema = z.object({
   sessionId: z.string().min(8).max(120),
   lastQuestion: z.string().max(1000).optional(),
   since: z.string().max(40).optional(),
+  // Recapito lasciato dal visitatore per essere ricontattato se nessun operatore è disponibile
+  contact: z.string().trim().min(5).max(120).optional(),
+  contactType: z.enum(["email", "phone"]).optional(),
 });
 
 serve(async (req: Request): Promise<Response> => {
@@ -32,7 +35,7 @@ serve(async (req: Request): Promise<Response> => {
   try {
     const parsed = BodySchema.safeParse(await req.json());
     if (!parsed.success) return json({ error: parsed.error.flatten().fieldErrors }, 400);
-    const { action, sessionId, lastQuestion, since } = parsed.data;
+    const { action, sessionId, lastQuestion, since, contact, contactType } = parsed.data;
 
     if (action === "request") {
       const limited = await rateLimit(req, {
@@ -50,7 +53,7 @@ serve(async (req: Request): Promise<Response> => {
       { auth: { persistSession: false, autoRefreshToken: false } },
     );
 
-    const CONV_FIELDS = "id, operator_requested_at, operator_joined_at, ended_at";
+    const CONV_FIELDS = "id, operator_requested_at, operator_joined_at, ended_at, metadata";
 
     let { data: conv } = await supabase
       .from("chat_conversations")
@@ -109,6 +112,22 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     // action === "request"
+    // Il recapito lasciato dal visitatore viene salvato subito, anche se la richiesta era già stata inviata
+    if (contact) {
+      const currentMeta = (conv.metadata ?? {}) as Record<string, unknown>;
+      await supabase
+        .from("chat_conversations")
+        .update({
+          metadata: {
+            ...currentMeta,
+            contact,
+            contact_type: contactType ?? (contact.includes("@") ? "email" : "phone"),
+            contact_at: new Date().toISOString(),
+          },
+        })
+        .eq("id", conv.id);
+    }
+
     if (!conv.operator_requested_at) {
       await supabase
         .from("chat_conversations")
@@ -117,7 +136,9 @@ serve(async (req: Request): Promise<Response> => {
 
       const task = notifyAdmins({
         title: "Richiesta operatore in chat",
-        body: lastQuestion?.slice(0, 160) || "Un visitatore vuole parlare con un operatore.",
+        body: [contact ? `Recapito: ${contact}` : null, lastQuestion?.slice(0, 120)]
+          .filter(Boolean)
+          .join(" — ") || "Un visitatore vuole parlare con un operatore.",
         // Il click sulla notifica apre direttamente questa conversazione nell'admin
         path: `/admin/chat-live?conversation=${conv.id}`,
         type: "chat_operator_request",

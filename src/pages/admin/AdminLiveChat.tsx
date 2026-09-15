@@ -43,6 +43,7 @@ type Conversation = {
   operator_requested_at: string | null;
   operator_joined_at: string | null;
   ended_at: string | null;
+  metadata: { contact?: string; contact_type?: string } | null;
 };
 
 type ChatMessage = {
@@ -56,7 +57,7 @@ type ConversationStatus = 'waiting' | 'live' | 'ended' | 'ai';
 type ListFilter = 'open' | 'waiting' | 'ended' | 'all';
 
 const CONVERSATION_FIELDS =
-  'id, session_id, started_at, last_message_at, operator_requested_at, operator_joined_at, ended_at';
+  'id, session_id, started_at, last_message_at, operator_requested_at, operator_joined_at, ended_at, metadata';
 
 const fmt = (iso: string | null) =>
   iso ? new Date(iso).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
@@ -394,6 +395,21 @@ export default function AdminLiveChat() {
               )}
             </CardHeader>
             <CardContent className="space-y-4">
+              {active?.metadata?.contact && (
+                <div className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/40 bg-primary/5 px-3 py-2 text-sm">
+                  <span className="text-muted-foreground">Recapito lasciato dal visitatore:</span>
+                  <a
+                    href={
+                      active.metadata.contact.includes('@')
+                        ? `mailto:${active.metadata.contact}`
+                        : `tel:${active.metadata.contact.replace(/\s/g, '')}`
+                    }
+                    className="font-medium text-primary underline"
+                  >
+                    {active.metadata.contact}
+                  </a>
+                </div>
+              )}
               {active && activeStatus === 'waiting' && (
                 <div className="flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm">
                   <Clock className="w-4 h-4 text-destructive shrink-0" />

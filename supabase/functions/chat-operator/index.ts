@@ -53,7 +53,7 @@ serve(async (req: Request): Promise<Response> => {
       { auth: { persistSession: false, autoRefreshToken: false } },
     );
 
-    const CONV_FIELDS = "id, operator_requested_at, operator_joined_at, ended_at";
+    const CONV_FIELDS = "id, operator_requested_at, operator_joined_at, ended_at, metadata";
 
     let { data: conv } = await supabase
       .from("chat_conversations")

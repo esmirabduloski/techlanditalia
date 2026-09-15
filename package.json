@@ -10,7 +10,8 @@
     "build:spa": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "verify:prerender": "node scripts/verify-prerender.mjs"
+    "verify:prerender": "node scripts/verify-prerender.mjs",
+    "indexnow": "node scripts/indexnow-submit.mjs"
   },
   "dependencies": {
     "@fontsource/plus-jakarta-sans": "^5.2.8",

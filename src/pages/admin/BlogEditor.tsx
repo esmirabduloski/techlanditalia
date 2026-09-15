@@ -225,6 +225,13 @@ export default function BlogEditor() {
         title: 'Successo',
         description: isEditing ? 'Articolo aggiornato' : 'Articolo creato',
       });
+      // Articolo online (nuovo o aggiornato): avvisa IndexNow (Bing & co.) senza bloccare l'UI
+      if (published) {
+        supabase.functions
+          .invoke('indexnow-submit', { body: { urls: ['/blog', `/blog/${slug}`] } })
+          .then(({ error }) => error && console.warn('IndexNow non raggiungibile:', error))
+          .catch((e) => console.warn('IndexNow non raggiungibile:', e));
+      }
       navigate('/admin');
     }
   };

@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeadersFor } from "../_shared/cors.ts";
+import { submitToIndexNow } from "../_shared/indexnow.ts";
 
 
 Deno.serve(async (req) => {
@@ -19,11 +20,12 @@ Deno.serve(async (req) => {
 
   const now = new Date().toISOString();
   const published: string[] = [];
+  const publishedSlugs: string[] = [];
 
   // 1) Publish posts with scheduled_publish_at <= now
   const { data: scheduled } = await supabase
     .from('blog_posts')
-    .select('id, title')
+    .select('id, title, slug')
     .eq('published', false)
     .not('scheduled_publish_at', 'is', null)
     .lte('scheduled_publish_at', now);
@@ -33,7 +35,10 @@ Deno.serve(async (req) => {
       .from('blog_posts')
       .update({ published: true })
       .eq('id', post.id);
-    if (!error) published.push(`scheduled: ${post.title}`);
+    if (!error) {
+      published.push(`scheduled: ${post.title}`);
+      publishedSlugs.push(post.slug);
+    }
   }
 
   // 2) Auto-publish queue: 1 per day at configured hour
@@ -55,7 +60,7 @@ Deno.serve(async (req) => {
     if (currentHour >= targetHour && lastPubDay !== today) {
       const { data: next } = await supabase
         .from('blog_posts')
-        .select('id, title')
+        .select('id, title, slug')
         .eq('published', false)
         .eq('auto_publish_queue', true)
         .order('queue_order', { ascending: true, nullsFirst: false })
@@ -70,6 +75,7 @@ Deno.serve(async (req) => {
           .eq('id', next.id);
         if (!error) {
           published.push(`queue: ${next.title}`);
+          publishedSlugs.push(next.slug);
           await supabase
             .from('blog_settings')
             .update({ last_auto_publish_at: now })
@@ -77,6 +83,12 @@ Deno.serve(async (req) => {
         }
       }
     }
+  }
+
+  // Notifica IndexNow (Bing & co.) dei nuovi articoli + indice blog. Best effort,
+  // non blocca la risposta.
+  if (publishedSlugs.length) {
+    await submitToIndexNow(['/blog', ...publishedSlugs.map((slug) => `/blog/${slug}`)]);
   }
 
   return new Response(JSON.stringify({ published, count: published.length }), {

@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "next-themes";
 import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
+import { ClarityGuard } from "@/components/analytics/ClarityGuard";
 import { ImpersonationProvider } from "@/contexts/ImpersonationContext";
 import { ImpersonationBanner } from "@/components/admin/ImpersonationBanner";
 import { SkipToContent } from "@/components/accessibility/SkipToContent";
@@ -35,6 +36,7 @@ const App = () => (
               <ScrollToTop />
               <RouteAnnouncer />
               <PushNavigationListener />
+              <ClarityGuard />
               {/* Nessun <Suspense> qui: il caricamento lazy delle route è gestito dal
                   data router di React Router. Un boundary a questo livello avvolgeva
                   tutta la pagina prerenderata e, appena un provider sopra aggiornava lo

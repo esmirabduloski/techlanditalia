@@ -12,7 +12,7 @@ import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
  * pagamenti Stripe, statistiche di prima parte e log di sicurezza. Se aggiungi un
  * fornitore o un nuovo trattamento, aggiorna anche questa pagina e la data.
  */
-const LAST_UPDATE = "13 settembre 2026";
+const LAST_UPDATE = "16 settembre 2026";
 const PRIVACY_EMAIL = "info@techlanditalia.it";
 
 const H2 = ({ children }: { children: React.ReactNode }) => (
@@ -212,6 +212,11 @@ export default function Privacy() {
                     <strong>Stripe</strong> — pagamenti.
                   </li>
                   <li>
+                    <strong>Microsoft</strong> — Clarity, statistiche d&apos;uso delle sole pagine pubbliche (mappe di calore e
+                    riproduzioni anonime della navigazione, senza cookie e con i campi dei moduli mascherati); mai attivo
+                    nell&apos;area riservata.
+                  </li>
+                  <li>
                     <strong>Notion</strong> — gestione interna dei contatti commerciali (CRM).
                   </li>
                   <li>
@@ -234,7 +239,7 @@ export default function Privacy() {
               <section>
                 <H2>5. Trasferimenti fuori dall&apos;Unione Europea</H2>
                 <P>
-                  Alcuni fornitori (Google, Resend, Stripe, Notion, Sentry, Meta) hanno sede o server negli Stati Uniti. I
+                  Alcuni fornitori (Google, Microsoft, Resend, Stripe, Notion, Sentry, Meta) hanno sede o server negli Stati Uniti. I
                   trasferimenti avvengono con le garanzie previste dal Capo V del GDPR: adesione al Data Privacy Framework
                   UE-USA e/o Clausole Contrattuali Standard approvate dalla Commissione Europea.
                 </P>

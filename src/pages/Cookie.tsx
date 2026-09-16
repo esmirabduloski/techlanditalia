@@ -6,10 +6,12 @@ import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
 /**
  * Cookie Policy: elenco REALE di cookie e memorizzazioni usate dal sito.
  * Non ci sono cookie di profilazione né Google Analytics/Meta Pixel; le
- * statistiche sono di prima parte, senza IP. Se aggiungi uno script di terze
- * parti (tag manager, pixel, chat esterna) va aggiunto qui e valutato il banner.
+ * statistiche sono di prima parte, senza IP. Unico script di terze parti sulle
+ * pagine pubbliche: Microsoft Clarity in modalità senza consenso (nessun cookie,
+ * vedi src/lib/clarity.ts). Se aggiungi altro (tag manager, pixel, chat esterna)
+ * va aggiunto qui e valutato il banner.
  */
-const LAST_UPDATE = "13 settembre 2026";
+const LAST_UPDATE = "16 settembre 2026";
 
 type Row = { name: string; type: string; purpose: string; duration: string };
 
@@ -70,6 +72,13 @@ const STATS: Row[] = [
 ];
 
 const THIRD_PARTIES = [
+  {
+    name: "Microsoft Clarity",
+    where: "Solo nelle pagine pubbliche del sito, mai nell'area riservata né nel login",
+    note:
+      "Ci mostra come vengono usate le pagine (click, scorrimento, movimenti del mouse) tramite mappe di calore e riproduzioni anonime della navigazione. Il testo digitato nei moduli è mascherato. Funziona in modalità senza consenso: non imposta cookie e non collega tra loro visite diverse.",
+    link: "https://privacy.microsoft.com/it-it/privacystatement",
+  },
   {
     name: "Stripe",
     where: "Solo durante il pagamento di un corso",
@@ -145,10 +154,11 @@ export default function Cookie() {
                 <p className="text-muted-foreground">
                   Questo sito usa solo <strong>cookie e memorizzazioni tecniche</strong> (per farti restare connesso e
                   ricordare le tue preferenze) e <strong>statistiche di prima parte</strong> che non registrano l&apos;indirizzo IP
-                  e non ti seguono su altri siti. <strong>Non</strong> usiamo cookie di profilazione pubblicitaria, Google
-                  Analytics, pixel di social network né pulsanti di condivisione che tracciano la navigazione. Per questo
-                  motivo, in linea con le Linee guida del Garante privacy del 10 giugno 2021, non ti chiediamo un consenso
-                  tramite banner.
+                  e non ti seguono su altri siti. Sulle pagine pubbliche usiamo anche Microsoft Clarity per capire come
+                  vengono usate le pagine, <strong>senza cookie</strong> e senza collegare visite diverse. <strong>Non</strong>{" "}
+                  usiamo cookie di profilazione pubblicitaria, Google Analytics, pixel di social network né pulsanti di
+                  condivisione che tracciano la navigazione. Per questo motivo, in linea con le Linee guida del Garante privacy
+                  del 10 giugno 2021, non ti chiediamo un consenso tramite banner.
                 </p>
               </section>
 
@@ -184,8 +194,9 @@ export default function Cookie() {
               <section className="space-y-4">
                 <h2 className="text-2xl font-semibold">Servizi di terze parti (solo in aree specifiche)</h2>
                 <p className="text-muted-foreground">
-                  Nelle pagine pubbliche non è caricato alcuno script di terze parti. I seguenti servizi intervengono solo nei
-                  contesti indicati e possono impostare cookie propri, regolati dalle rispettive informative:
+                  Nelle pagine pubbliche l&apos;unico script di terze parti è Microsoft Clarity, in modalità senza cookie. Gli
+                  altri servizi intervengono solo nei contesti indicati e possono impostare cookie propri, regolati dalle
+                  rispettive informative:
                 </p>
                 <ul className="list-disc pl-6 space-y-3 text-muted-foreground">
                   {THIRD_PARTIES.map((t) => (

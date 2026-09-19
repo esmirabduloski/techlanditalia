@@ -32,6 +32,18 @@
     <script type="text/javascript" src="//cdn.iubenda.com/cs/gpp/stub.js"></script>
     <script type="text/javascript" src="//cdn.iubenda.com/cs/iubenda_cs.js" charset="UTF-8" async></script>
 
+    <!-- Google Tag Manager. Caricato DOPO iubenda: così il blocco dei tracker e
+         Google Consent Mode sono già registrati quando il container viene scaricato.
+         Il container di per sé non imposta cookie: sono i tag al suo interno a farlo,
+         e vanno legati al consenso (Consent Mode). -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-TWTS4C7Z');</script>
+    <!-- End Google Tag Manager -->
+
+
     <!-- Microsoft Clarity: SOLO pagine pubbliche. Le aree riservate (studenti minorenni,
          genitori, insegnanti, admin) e il login non vengono mai registrate — stessa
          lista di src/lib/clarity.ts; ClarityGuard.tsx copre la navigazione SPA.
@@ -150,7 +162,12 @@
   </head>
 
   <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TWTS4C7Z"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
     <div id="root"></div>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

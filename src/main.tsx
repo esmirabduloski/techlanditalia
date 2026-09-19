@@ -44,6 +44,12 @@ if (!import.meta.env.SSR && typeof window !== "undefined") {
       const { initSentry } = await import("./lib/sentry");
       initSentry();
     }, { timeout: 4000 });
+
+    // Google Analytics: anche questo differito per non pesare sul primo paint.
+    idle(async () => {
+      const { initGA } = await import("./lib/googleAnalytics");
+      initGA();
+    }, { timeout: 3000 });
   };
 
   if (document.readyState === "complete") initializeMonitoring();

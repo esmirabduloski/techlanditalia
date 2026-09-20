@@ -6,6 +6,10 @@ const measurementId = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_ANALYTICS_AP
   | string
   | undefined;
 
+// Google Ads tag (AW-...): stesso gtag.js di GA4, basta un config aggiuntivo.
+// NON incollare lo snippet completo di Google Ads: creerebbe un doppio tag.
+const adsId = "AW-18464577415";
+
 declare global {
   interface Window {
     dataLayer: unknown[];

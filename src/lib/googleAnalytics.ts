@@ -6,6 +6,10 @@ const measurementId = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_ANALYTICS_AP
   | string
   | undefined;
 
+// Google Ads tag (AW-...): stesso gtag.js di GA4, basta un config aggiuntivo.
+// NON incollare lo snippet completo di Google Ads: creerebbe un doppio tag.
+const adsId = "AW-18464577415";
+
 declare global {
   interface Window {
     dataLayer: unknown[];
@@ -36,6 +40,8 @@ export function initGA(): void {
   window.gtag("js", new Date());
   // send_page_view manuale: le page_view le inviamo noi a ogni cambio route SPA
   window.gtag("config", measurementId, { send_page_view: false });
+  // Collega l'account Google Ads allo stesso tag (conversioni + remarketing)
+  window.gtag("config", adsId);
 }
 
 export function trackGAPageView(path: string): void {

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { trackAdsConversion } from '@/lib/googleAnalytics';
 
 // Generate a unique session ID that persists across page loads but not browser sessions
 const getSessionId = (): string => {
@@ -206,6 +207,9 @@ export function useAnalytics(): AnalyticsHook {
 
     // Also track in conversion funnel
     await trackFunnelStep('booking_funnel', 4, 'booking_complete', true);
+
+    // Segnala la conversione a Google Ads/GTM (vedi trackAdsConversion)
+    trackAdsConversion('booking_conversion', { value: 1, currency: 'EUR' });
   }, [trackEvent]);
 
   // Track lesson interactions

@@ -60,3 +60,26 @@ export function trackGAEvent(
   if (!initialized || typeof window.gtag !== "function") return;
   window.gtag("event", eventName, params);
 }
+
+// Segnala una conversione Google Ads. Finché non esiste un'etichetta di
+// conversione (creata in Google Ads > Conversioni), l'evento viene solo
+// spinto sul dataLayer: basta un trigger "Evento personalizzato" in GTM
+// per collegarlo al tag di conversione Ads, senza toccare altro codice.
+// Con l'etichetta (AW-18464577415/XXXXXXXXXX), passarla qui per inviare
+// anche la conversione diretta via gtag.
+export function trackAdsConversion(
+  eventName: string,
+  params?: Record<string, unknown>,
+  conversionLabel?: string,
+): void {
+  if (typeof window === "undefined") return;
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({ event: eventName, ...params });
+
+  if (conversionLabel && typeof window.gtag === "function") {
+    window.gtag("event", "conversion", {
+      send_to: `${adsId}/${conversionLabel}`,
+      ...params,
+    });
+  }
+}

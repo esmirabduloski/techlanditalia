@@ -40,6 +40,8 @@ export function initGA(): void {
   window.gtag("js", new Date());
   // send_page_view manuale: le page_view le inviamo noi a ogni cambio route SPA
   window.gtag("config", measurementId, { send_page_view: false });
+  // Collega l'account Google Ads allo stesso tag (conversioni + remarketing)
+  window.gtag("config", adsId);
 }
 
 export function trackGAPageView(path: string): void {

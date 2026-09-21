@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Download, AlertCircle } from "lucide-react";
+import { Search, Download, AlertCircle, Gift } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 
@@ -33,17 +33,20 @@ export function CRMLeadList({ leads, onSelectLead }: Props) {
         (l.full_name || "").toLowerCase().includes(q) ||
         (l.phone || "").toLowerCase().includes(q) ||
         (l.notes || "").toLowerCase().includes(q) ||
+        (l.referral_code || "").toLowerCase().includes(q) ||
+        (l.referrer_email || "").toLowerCase().includes(q) ||
         l.tags.some((t) => t.toLowerCase().includes(q))
       );
     });
   }, [leads, search, sourceFilter, stageFilter, overdueOnly]);
 
   const exportCSV = () => {
-    const header = ["Nome", "Email", "Telefono", "Sorgente", "Stage", "Tag", "Follow-up", "Note", "Creato"];
+    const header = ["Nome", "Email", "Telefono", "Sorgente", "Stage", "Tag", "Codice referral", "Invitato da", "Follow-up", "Note", "Creato"];
     const rows = filtered.map((l) => [
       l.full_name, l.email, l.phone ?? "", SOURCE_LABELS[l.source],
       PIPELINE_STAGES.find(s => s.value === l.pipeline_stage)?.label ?? l.pipeline_stage,
-      l.tags.join("; "), l.next_followup_at ?? "", (l.notes ?? "").replace(/\n/g, " "),
+      l.tags.join("; "), l.referral_code ?? "", l.referrer_email ?? "",
+      l.next_followup_at ?? "", (l.notes ?? "").replace(/\n/g, " "),
       format(new Date(l.created_at), "yyyy-MM-dd HH:mm"),
     ]);
     const csv = [header, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
@@ -61,7 +64,7 @@ export function CRMLeadList({ leads, onSelectLead }: Props) {
       <div className="flex flex-wrap gap-2 items-center">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Cerca per nome, email, tag..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input placeholder="Cerca per nome, email, tag, codice referral..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
         <Select value={sourceFilter} onValueChange={(v) => setSourceFilter(v as any)}>
           <SelectTrigger className="w-[180px]"><SelectValue placeholder="Sorgente" /></SelectTrigger>
@@ -101,6 +104,7 @@ export function CRMLeadList({ leads, onSelectLead }: Props) {
                 <th className="text-left p-3 font-medium hidden md:table-cell">Telefono</th>
                 <th className="text-left p-3 font-medium hidden lg:table-cell">Sorgente</th>
                 <th className="text-left p-3 font-medium">Stage</th>
+                <th className="text-left p-3 font-medium hidden lg:table-cell">Referral</th>
                 <th className="text-left p-3 font-medium hidden lg:table-cell">Follow-up</th>
                 <th className="text-left p-3 font-medium hidden xl:table-cell">Creato</th>
               </tr>
@@ -121,6 +125,18 @@ export function CRMLeadList({ leads, onSelectLead }: Props) {
                         <span>{stage.label}</span>
                       </div>
                     </td>
+                    <td className="p-3 hidden lg:table-cell">
+                      {l.referral_code ? (
+                        <Badge
+                          title={l.referrer_email ? `Invitato da: ${l.referrer_email}` : undefined}
+                          className="gap-1 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-0 hover:bg-emerald-500/15"
+                        >
+                          <Gift className="w-3 h-3" /> {l.referral_code}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </td>
                     <td className={`p-3 hidden lg:table-cell ${overdue ? "text-red-500 font-medium" : "text-muted-foreground"}`}>
                       {l.next_followup_at ? format(new Date(l.next_followup_at), "dd MMM HH:mm", { locale: it }) : "—"}
                     </td>
@@ -131,7 +147,7 @@ export function CRMLeadList({ leads, onSelectLead }: Props) {
                 );
               })}
               {filtered.length === 0 && (
-                <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">Nessun lead trovato</td></tr>
+                <tr><td colSpan={8} className="p-8 text-center text-muted-foreground">Nessun lead trovato</td></tr>
               )}
             </tbody>
           </table>

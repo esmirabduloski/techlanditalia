@@ -8,7 +8,7 @@ import { formatDistanceToNow, format } from "date-fns";
 import { it } from "date-fns/locale";
 import { groupByInterest } from "@/lib/crmInterestGroups";
 import { CRMCourseSelect } from "./CRMCourseSelect";
-import { GraduationCap } from "lucide-react";
+import { GraduationCap, Gift } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Props {

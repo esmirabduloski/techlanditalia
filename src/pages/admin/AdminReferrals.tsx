@@ -23,6 +23,7 @@ import {
 import { Gift, Loader2, Check, X, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useSearchParams } from "react-router-dom";
 
 interface ReferralRow {
   id: string;
@@ -44,8 +45,10 @@ export default function AdminReferrals() {
   const { toast } = useToast();
   const [rows, setRows] = useState<ReferralRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState("pending");
-  const [query, setQuery] = useState("");
+  const [searchParams] = useSearchParams();
+  const initialQuery = searchParams.get("q") ?? "";
+  const [tab, setTab] = useState(initialQuery ? "all" : "pending");
+  const [query, setQuery] = useState(initialQuery);
   const [rewardOpen, setRewardOpen] = useState(false);
   const [target, setTarget] = useState<ReferralRow | null>(null);
   const [credits, setCredits] = useState(1);

@@ -32,6 +32,9 @@ export interface CrmLead {
   notion_last_sync_at?: string | null;
   notion_sync_error?: string | null;
   deleted_at?: string | null;
+  referral_code?: string | null;
+  referrer_email?: string | null;
+  referrer_id?: string | null;
 }
 
 export interface CrmInteraction {

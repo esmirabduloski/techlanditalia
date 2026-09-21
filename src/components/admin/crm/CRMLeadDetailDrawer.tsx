@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CrmLead, PIPELINE_STAGES, PipelineStage, SOURCE_LABELS, useCRMInteractions, InteractionType } from "@/hooks/useCRM";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   Mail, Phone, MessageCircle, FileText, Plus, Trash2, ExternalLink,
-  Calendar, Clock, User, Tag as TagIcon, FileSignature, X, Loader2, GraduationCap, UserPlus,
+  Calendar, Clock, User, Tag as TagIcon, FileSignature, X, Loader2, GraduationCap, UserPlus, Gift,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { CRMCourseSelect } from "./CRMCourseSelect";
@@ -52,6 +52,7 @@ export function CRMLeadDetailDrawer({ lead, open, onClose, onUpdate, onDelete }:
   const { interactions, addInteraction } = useCRMInteractions(lead?.id ?? null);
   const [savingQuote, setSavingQuote] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [referralStatus, setReferralStatus] = useState<string | null>(null);
 
   // local form state for new interaction
   const [intType, setIntType] = useState<InteractionType>("note");
@@ -60,6 +61,25 @@ export function CRMLeadDetailDrawer({ lead, open, onClose, onUpdate, onDelete }:
 
   // local edit state
   const [tagInput, setTagInput] = useState("");
+
+  const leadId = lead?.id ?? null;
+  const hasReferral = !!lead?.referral_code;
+
+  useEffect(() => {
+    if (!leadId || !hasReferral) { setReferralStatus(null); return; }
+    let active = true;
+    (async () => {
+      const { data } = await supabase
+        .from("referrals")
+        .select("status")
+        .eq("referred_lead_id", leadId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (active) setReferralStatus((data as any)?.status ?? null);
+    })();
+    return () => { active = false; };
+  }, [leadId, hasReferral]);
 
   if (!lead) return null;
 
@@ -269,6 +289,41 @@ export function CRMLeadDetailDrawer({ lead, open, onClose, onUpdate, onDelete }:
             onChange={(v) => onUpdate(lead.id, { interest: v })}
           />
         </div>
+
+        {/* Invito referral */}
+        {lead.referral_code && (
+          <div className="mb-6 p-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 space-y-2 text-sm">
+            <div className="font-semibold flex items-center gap-2">
+              <Gift className="w-4 h-4 text-emerald-600" /> Invito Referral
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-muted-foreground">Codice usato:</span>
+              <code className="px-2 py-0.5 rounded bg-background border font-mono text-xs tracking-wider">
+                {lead.referral_code}
+              </code>
+              {referralStatus && (
+                <Badge variant={referralStatus === "rewarded" ? "default" : "secondary"}>
+                  {referralStatus === "rewarded" ? "Premiato" : "In attesa"}
+                </Badge>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-muted-foreground">Invitato da:</span>
+              {lead.referrer_email ? (
+                <a href={`mailto:${lead.referrer_email}`} className="text-primary underline">
+                  {lead.referrer_email}
+                </a>
+              ) : (
+                <span>—</span>
+              )}
+            </div>
+            <Button size="sm" variant="outline" asChild>
+              <Link to={`/admin/referral?q=${encodeURIComponent(lead.referrer_email || lead.referral_code)}`}>
+                <Gift className="w-4 h-4 mr-1" /> Gestisci nei Referral
+              </Link>
+            </Button>
+          </div>
+        )}
 
         {/* Lead origin info */}
         {(lead.child_age || lead.original_message) && (

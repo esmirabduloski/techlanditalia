@@ -28,6 +28,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Link, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { captureReferralFromUrl, clearStoredReferralCode, getStoredReferralCode, normalizeReferralCode } from "@/lib/referral";
 import { SEOHead } from "@/components/seo/SEOHead";
 import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
 import { useAnalytics } from "@/hooks/useAnalytics";
@@ -68,12 +69,10 @@ export default function Prenota() {
   const formStartTracked = useRef(false);
   const { formOpenedAt, honeypotProps, honeypotValue } = useFormAntiSpam();
   const [searchParams] = useSearchParams();
-  const refCode = (searchParams.get("ref") || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 16);
+  const refCode = normalizeReferralCode(searchParams.get("ref"));
 
   useEffect(() => {
-    if (refCode) {
-      try { sessionStorage.setItem("referral_code", refCode); } catch {}
-    }
+    captureReferralFromUrl();
   }, [refCode]);
 
   const form = useForm<BookingFormData>({
@@ -143,6 +142,7 @@ export default function Prenota() {
           phone: data.phone,
           childAge: data.childAge ? parseInt(data.childAge) : null,
           interest: data.interest || null,
+          referralCode: refCode || getStoredReferralCode() || undefined,
           adminEmail: ADMIN_EMAIL,
           website: honeypotValue,
           formOpenedAt,
@@ -189,23 +189,8 @@ export default function Prenota() {
         child_age: data.childAge,
       });
 
-      // Track referral if a ref code was provided
-      const storedRef = refCode || (typeof sessionStorage !== "undefined" ? sessionStorage.getItem("referral_code") : null);
-      if (storedRef) {
-        try {
-          await supabase.from("referrals").insert({
-            referrer_code: storedRef,
-            // referrer_id is filled by BEFORE INSERT trigger from referrer_code
-            referrer_id: "00000000-0000-0000-0000-000000000000",
-            referred_email: data.email,
-            source_url: typeof window !== "undefined" ? window.location.href : null,
-            notes: `Da prenotazione lezione gratuita${data.interest ? ` - ${data.interest}` : ""}`,
-          } as any);
-          try { sessionStorage.removeItem("referral_code"); } catch {}
-        } catch (e) {
-          console.warn("Referral insert failed (silently ignored):", e);
-        }
-      }
+      // Il referral viene registrato lato server dentro submit-booking
+      clearStoredReferralCode();
 
       setIsSubmitted(true);
     } catch (error: any) {

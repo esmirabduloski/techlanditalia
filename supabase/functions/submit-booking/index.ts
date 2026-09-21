@@ -17,6 +17,7 @@ const BookingSchema = z.object({
   childAge: z.number().int().min(5).max(20).nullable().optional(),
   interest: z.string().max(100).nullable().optional(),
   availability: z.enum(["mattina","pomeriggio","sera","weekend","qualsiasi"]).optional(),
+  referralCode: z.string().trim().toUpperCase().regex(/^[A-Z0-9]{4,16}$/).optional(),
   message: z.string().max(1000).optional(),
   adminEmail: z.string().email().optional(),
   // Honeypot: deve restare vuoto
@@ -168,6 +169,18 @@ serve(async (req: Request): Promise<Response> => {
       console.error("Database error:", dbError);
       return new Response(JSON.stringify({ error: "Errore nel salvataggio" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // Registra il referral (il trigger risolve il genitore e collega il lead CRM)
+    if (data.referralCode) {
+      const { error: refError } = await supabase.from("referrals").insert({
+        referrer_code: data.referralCode,
+        referrer_id: "00000000-0000-0000-0000-000000000000",
+        referred_email: data.email,
+        source_url: null,
+        notes: `Da prenotazione lezione gratuita${data.interest ? ` - ${data.interest}` : ""}`,
+      });
+      if (refError) console.warn("[submit-booking] referral insert failed:", refError.message);
     }
 
     // Notifica push agli admin (non blocca la risposta)

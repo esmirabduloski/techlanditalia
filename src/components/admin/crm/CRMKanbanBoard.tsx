@@ -8,7 +8,7 @@ import { formatDistanceToNow, format } from "date-fns";
 import { it } from "date-fns/locale";
 import { groupByInterest } from "@/lib/crmInterestGroups";
 import { CRMCourseSelect } from "./CRMCourseSelect";
-import { GraduationCap } from "lucide-react";
+import { GraduationCap, Gift } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -135,7 +135,15 @@ export function CRMKanbanBoard({ leads, onSelectLead, onMoveLead, onSetInterest 
                                 <Badge variant="outline" className="text-[10px] py-0">
                                   {SOURCE_LABELS[lead.source]}
                                 </Badge>
-                                {lead.tags.slice(0, 2).map((t) => (
+                                {lead.referral_code && (
+                                  <Badge
+                                    title={lead.referrer_email ? `Invitato da: ${lead.referrer_email}` : undefined}
+                                    className="text-[10px] py-0 gap-1 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-0 hover:bg-emerald-500/15"
+                                  >
+                                    <Gift className="w-3 h-3" /> Ref: {lead.referral_code}
+                                  </Badge>
+                                )}
+                                {lead.tags.filter((t) => !t.startsWith("Ref: ")).slice(0, 2).map((t) => (
                                   <Badge key={t} variant="secondary" className="text-[10px] py-0">{t}</Badge>
                                 ))}
                               </div>

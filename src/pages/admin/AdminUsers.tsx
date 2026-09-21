@@ -173,11 +173,12 @@ export default function AdminUsers() {
   }, [searchParams, courses]);
 
   const generatePassword = () => {
-    const chars = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const chars = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%&*?';
     let pwd = '';
-    for (let i = 0; i < 10; i++) pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+    for (let i = 0; i < 14; i++) pwd += chars.charAt(Math.floor(Math.random() * chars.length));
     setCreateForm(prev => ({ ...prev, password: pwd }));
   };
+
 
   const handleCreateUser = async () => {
     const { role, fullName, email, password, childName, childUsername, courseId } = createForm;

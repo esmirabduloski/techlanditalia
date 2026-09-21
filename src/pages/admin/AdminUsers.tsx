@@ -173,11 +173,12 @@ export default function AdminUsers() {
   }, [searchParams, courses]);
 
   const generatePassword = () => {
-    const chars = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const chars = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%&*?';
     let pwd = '';
-    for (let i = 0; i < 10; i++) pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+    for (let i = 0; i < 14; i++) pwd += chars.charAt(Math.floor(Math.random() * chars.length));
     setCreateForm(prev => ({ ...prev, password: pwd }));
   };
+
 
   const handleCreateUser = async () => {
     const { role, fullName, email, password, childName, childUsername, courseId } = createForm;
@@ -225,9 +226,22 @@ export default function AdminUsers() {
       }
       const { data, error } = await supabase.functions.invoke('admin-create-user', { body });
       if (error || data?.error) {
-        toast({ variant: 'destructive', title: 'Errore', description: data?.error || error?.message || "Impossibile creare l'account" });
+        // Read the real message from the edge function response (non-2xx responses land in error.context)
+        let description = data?.error as string | undefined;
+        if (!description && error) {
+          const ctx = (error as { context?: Response }).context;
+          if (ctx && typeof ctx.json === 'function') {
+            try {
+              const payload = await ctx.clone().json();
+              if (payload?.error) description = payload.error as string;
+            } catch { /* ignore parse errors */ }
+          }
+          if (!description) description = error.message;
+        }
+        toast({ variant: 'destructive', title: 'Errore', description: description || "Impossibile creare l'account" });
         return;
       }
+
       toast({ title: 'Account creato!', description: role === 'parent' ? 'Genitore + figlio creati con successo.' : 'Insegnante creato con successo.' });
       setCreateDialogOpen(false);
       setCreateForm({ role: 'parent', fullName: '', email: '', password: '', childName: '', childUsername: '', courseId: 'none' });

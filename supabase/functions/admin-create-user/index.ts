@@ -109,14 +109,18 @@ serve(async (req) => {
 
     if (createError) {
       console.error("Error creating user:", createError);
-      const msg = createError.message.includes("already been registered")
-        ? "Questa email è già registrata"
-        : "Impossibile creare l'account";
+      let msg = "Impossibile creare l'account";
+      if (createError.message.includes("already been registered")) {
+        msg = "Questa email è già registrata";
+      } else if ((createError as { code?: string }).code === "weak_password" || createError.message.toLowerCase().includes("weak")) {
+        msg = "Password troppo debole o già comparsa in fughe di dati. Usa una password diversa (almeno 8 caratteri, con lettere, numeri e un simbolo) o premi 'Genera'.";
+      }
       return new Response(JSON.stringify({ error: msg }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
 
     const newUserId = authData.user.id;
 

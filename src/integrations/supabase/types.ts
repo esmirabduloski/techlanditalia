@@ -633,6 +633,9 @@ export type Database = {
           phone: string | null
           pipeline_stage: Database["public"]["Enums"]["crm_pipeline_stage"]
           quote_genie_client_id: string | null
+          referral_code: string | null
+          referrer_email: string | null
+          referrer_id: string | null
           source: Database["public"]["Enums"]["crm_lead_source"]
           source_record_id: string | null
           tags: string[]
@@ -660,6 +663,9 @@ export type Database = {
           phone?: string | null
           pipeline_stage?: Database["public"]["Enums"]["crm_pipeline_stage"]
           quote_genie_client_id?: string | null
+          referral_code?: string | null
+          referrer_email?: string | null
+          referrer_id?: string | null
           source?: Database["public"]["Enums"]["crm_lead_source"]
           source_record_id?: string | null
           tags?: string[]
@@ -687,12 +693,23 @@ export type Database = {
           phone?: string | null
           pipeline_stage?: Database["public"]["Enums"]["crm_pipeline_stage"]
           quote_genie_client_id?: string | null
+          referral_code?: string | null
+          referrer_email?: string | null
+          referrer_id?: string | null
           source?: Database["public"]["Enums"]["crm_lead_source"]
           source_record_id?: string | null
           tags?: string[]
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "crm_leads_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       crm_notion_settings: {
         Row: {

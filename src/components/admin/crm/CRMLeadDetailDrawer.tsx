@@ -151,6 +151,48 @@ export function CRMLeadDetailDrawer({ lead, open, onClose, onUpdate, onDelete }:
           </Button>
         </div>
 
+        {/* Dati anagrafici modificabili */}
+        <div className="space-y-3 mb-6 p-3 border rounded-lg">
+          <Label className="text-base font-semibold">Dati lead</Label>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Nome</Label>
+              <Input
+                key={`name-${lead.id}`}
+                defaultValue={lead.full_name}
+                onBlur={(e) => {
+                  const v = e.target.value.trim();
+                  if (v && v !== lead.full_name) onUpdate(lead.id, { full_name: v });
+                }}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Telefono</Label>
+              <Input
+                key={`phone-${lead.id}`}
+                defaultValue={lead.phone ?? ""}
+                placeholder="+39 ..."
+                onBlur={(e) => {
+                  const v = e.target.value.trim() || null;
+                  if (v !== lead.phone) onUpdate(lead.id, { phone: v });
+                }}
+              />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Email</Label>
+            <Input
+              key={`email-${lead.id}`}
+              type="email"
+              defaultValue={lead.email}
+              onBlur={(e) => {
+                const v = e.target.value.trim().toLowerCase();
+                if (v && v !== lead.email) onUpdate(lead.id, { email: v });
+              }}
+            />
+          </div>
+        </div>
+
         {/* Pipeline stage */}
         <div className="space-y-3 mb-6">
           <Label>Stage pipeline</Label>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -145,6 +145,32 @@ export default function AdminUsers() {
     courseId: string;
   }>({ role: 'parent', fullName: '', email: '', password: '', childName: '', childUsername: '', courseId: 'none' });
   const [creatingUser, setCreatingUser] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Precompilazione dalla scheda lead del CRM (?create=1&email=..&name=..&course=..)
+  useEffect(() => {
+    if (searchParams.get('create') !== '1') return;
+    if (courses.length === 0) return; // attende i corsi per abbinare l'interesse
+    const email = searchParams.get('email') ?? '';
+    const name = searchParams.get('name') ?? '';
+    const course = (searchParams.get('course') ?? '').trim().toLowerCase();
+    const matched = course
+      ? courses.find(c => c.title.trim().toLowerCase() === course) ||
+        courses.find(c => course.includes(c.title.trim().toLowerCase()) || c.title.trim().toLowerCase().includes(course))
+      : undefined;
+    setCreateForm(prev => ({
+      ...prev,
+      role: 'parent',
+      fullName: name,
+      email,
+      courseId: matched ? matched.id : 'none',
+    }));
+    setCreateDialogOpen(true);
+    const next = new URLSearchParams(searchParams);
+    ['create', 'email', 'name', 'course'].forEach(k => next.delete(k));
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, courses]);
 
   const generatePassword = () => {
     const chars = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';

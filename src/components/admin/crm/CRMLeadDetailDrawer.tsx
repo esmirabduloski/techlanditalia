@@ -16,8 +16,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   Mail, Phone, MessageCircle, FileText, Plus, Trash2, ExternalLink,
-  Calendar, Clock, User, Tag as TagIcon, FileSignature, X, Loader2, GraduationCap,
+  Calendar, Clock, User, Tag as TagIcon, FileSignature, X, Loader2, GraduationCap, UserPlus,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { CRMCourseSelect } from "./CRMCourseSelect";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -135,6 +136,13 @@ export function CRMLeadDetailDrawer({ lead, open, onClose, onUpdate, onDelete }:
           <Button size="sm" variant="default" onClick={handleQuoteGenie} disabled={savingQuote}>
             {savingQuote ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <FileSignature className="w-4 h-4 mr-1" />}
             Crea Preventivo
+          </Button>
+          <Button size="sm" variant="secondary" asChild>
+            <Link
+              to={`/admin/utenti?create=1&email=${encodeURIComponent(lead.email ?? "")}&name=${encodeURIComponent(lead.full_name ?? "")}&course=${encodeURIComponent(lead.interest ?? "")}`}
+            >
+              <UserPlus className="w-4 h-4 mr-1" /> Crea utente
+            </Link>
           </Button>
           <Button size="sm" variant="outline" asChild>
             <a href={mailLink}><Mail className="w-4 h-4 mr-1" /> Email</a>

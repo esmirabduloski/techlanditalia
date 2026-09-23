@@ -24,6 +24,8 @@ import { Gift, Loader2, Check, X, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from "react-router-dom";
+import { useSiteSetting } from "@/hooks/useSiteSetting";
+import { DEFAULT_REFERRAL_REWARD_TEXT } from "@/components/dashboard/ReferralCard";
 
 interface ReferralRow {
   id: string;
@@ -54,6 +56,31 @@ export default function AdminReferrals() {
   const [credits, setCredits] = useState(1);
   const [reason, setReason] = useState("Iscrizione confermata");
   const [busy, setBusy] = useState(false);
+  const { value: rewardText, isLoading: rewardLoading } = useSiteSetting<string>(
+    "referral_reward_text",
+    DEFAULT_REFERRAL_REWARD_TEXT
+  );
+  const [rewardDraft, setRewardDraft] = useState<string | null>(null);
+  const [savingReward, setSavingReward] = useState(false);
+
+  const saveRewardText = async () => {
+    const text = (rewardDraft ?? rewardText).trim();
+    if (!text) {
+      toast({ title: "Il testo del premio non può essere vuoto", variant: "destructive" });
+      return;
+    }
+    setSavingReward(true);
+    const { error } = await supabase
+      .from("site_settings")
+      .upsert({ key: "referral_reward_text", value: text as any, is_public: true }, { onConflict: "key" });
+    setSavingReward(false);
+    if (error) {
+      toast({ title: "Errore", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Testo del premio aggiornato" });
+    setRewardDraft(null);
+  };
 
   const load = async () => {
     setLoading(true);
@@ -153,6 +180,31 @@ export default function AdminReferrals() {
             />
           </div>
         </div>
+
+        <Card className="p-4 mb-6">
+          <Label htmlFor="reward-text" className="font-semibold">
+            Testo del premio mostrato ai genitori
+          </Label>
+          <p className="text-xs text-muted-foreground mb-2">
+            Questa frase appare nella card "Invita un amico" dell'area riservata dei genitori.
+          </p>
+          <Textarea
+            id="reward-text"
+            rows={3}
+            value={rewardDraft ?? rewardText}
+            onChange={(e) => setRewardDraft(e.target.value)}
+            disabled={rewardLoading}
+          />
+          <div className="flex justify-end mt-2">
+            <Button
+              size="sm"
+              onClick={saveRewardText}
+              disabled={savingReward || rewardDraft === null || rewardDraft === rewardText}
+            >
+              {savingReward ? <Loader2 className="w-4 h-4 animate-spin" /> : "Salva testo premio"}
+            </Button>
+          </div>
+        </Card>
 
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList>

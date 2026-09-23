@@ -5,6 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Copy, Gift, Share2, Loader2 } from "lucide-react";
+import { useSiteSetting } from "@/hooks/useSiteSetting";
+
+export const DEFAULT_REFERRAL_REWARD_TEXT =
+  "Per ogni famiglia che si iscrive con il tuo codice, tu e loro ricevete 1 lezione gratis. L'accredito viene effettuato manualmente dall'admin dopo il primo pagamento.";
 
 interface ReferralRow {
   id: string;
@@ -19,6 +23,7 @@ export function ReferralCard() {
   const [code, setCode] = useState<string | null>(null);
   const [rows, setRows] = useState<ReferralRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const { value: rewardText } = useSiteSetting<string>("referral_reward_text", DEFAULT_REFERRAL_REWARD_TEXT);
 
   useEffect(() => {
     const load = async () => {
@@ -80,10 +85,7 @@ export function ReferralCard() {
         <Gift className="w-5 h-5 text-primary" />
         <h3 className="text-lg font-semibold">Invita un amico, vincete entrambi 🎁</h3>
       </div>
-      <p className="text-sm text-muted-foreground mb-4">
-        Per ogni famiglia che si iscrive con il tuo codice, <strong>tu e loro ricevete 1 lezione gratis</strong>.
-        L'accredito viene effettuato manualmente dall'admin dopo il primo pagamento.
-      </p>
+      <p className="text-sm text-muted-foreground mb-4">{rewardText}</p>
 
       <div className="grid sm:grid-cols-2 gap-3 mb-4">
         <div className="bg-background rounded-lg p-3 border">

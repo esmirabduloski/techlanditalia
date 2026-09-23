@@ -181,6 +181,31 @@ export default function AdminReferrals() {
           </div>
         </div>
 
+        <Card className="p-4 mb-6">
+          <Label htmlFor="reward-text" className="font-semibold">
+            Testo del premio mostrato ai genitori
+          </Label>
+          <p className="text-xs text-muted-foreground mb-2">
+            Questa frase appare nella card "Invita un amico" dell'area riservata dei genitori.
+          </p>
+          <Textarea
+            id="reward-text"
+            rows={3}
+            value={rewardDraft ?? rewardText}
+            onChange={(e) => setRewardDraft(e.target.value)}
+            disabled={rewardLoading}
+          />
+          <div className="flex justify-end mt-2">
+            <Button
+              size="sm"
+              onClick={saveRewardText}
+              disabled={savingReward || rewardDraft === null || rewardDraft === rewardText}
+            >
+              {savingReward ? <Loader2 className="w-4 h-4 animate-spin" /> : "Salva testo premio"}
+            </Button>
+          </div>
+        </Card>
+
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList>
             <TabsTrigger value="pending">In attesa ({counts.pending})</TabsTrigger>

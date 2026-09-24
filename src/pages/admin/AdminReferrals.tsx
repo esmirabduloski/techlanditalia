@@ -79,6 +79,7 @@ export default function AdminReferrals() {
       toast({ title: "Errore", description: error.message, variant: "destructive" });
       return;
     }
+    setRewardText(text);
     toast({ title: "Testo del premio aggiornato" });
     setRewardDraft(null);
   };

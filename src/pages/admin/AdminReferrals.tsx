@@ -56,10 +56,11 @@ export default function AdminReferrals() {
   const [credits, setCredits] = useState(1);
   const [reason, setReason] = useState("Iscrizione confermata");
   const [busy, setBusy] = useState(false);
-  const { value: rewardText, isLoading: rewardLoading } = useSiteSetting<string>(
-    "referral_reward_text",
-    DEFAULT_REFERRAL_REWARD_TEXT
-  );
+  const {
+    value: rewardText,
+    isLoading: rewardLoading,
+    setValue: setRewardText,
+  } = useSiteSetting<string>("referral_reward_text", DEFAULT_REFERRAL_REWARD_TEXT);
   const [rewardDraft, setRewardDraft] = useState<string | null>(null);
   const [savingReward, setSavingReward] = useState(false);
 
@@ -78,6 +79,7 @@ export default function AdminReferrals() {
       toast({ title: "Errore", description: error.message, variant: "destructive" });
       return;
     }
+    setRewardText(text);
     toast({ title: "Testo del premio aggiornato" });
     setRewardDraft(null);
   };

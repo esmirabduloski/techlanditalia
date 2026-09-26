@@ -26,8 +26,8 @@ export function HeroSection() {
               </div>
 
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-                Corsi di programmazione per bambini e ragazzi{" "}
-                <span className="tech-gradient-text">online</span>
+                TECHLAND: <span className="tech-gradient-text">coding per bambini</span>{" "}
+                e ragazzi online
               </h1>
 
               <p className="text-lg md:text-xl text-muted-foreground max-w-xl">

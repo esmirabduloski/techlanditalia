@@ -8,6 +8,13 @@
       "when": 1790027446387,
       "tag": "0000_crm_referral_tracking",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790463212354,
+      "tag": "0001_restrict_public_read_policies",
+      "breakpoints": true
     }
   ]
 }

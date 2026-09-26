@@ -13,8 +13,8 @@ const Index = () => {
   return (
     <Layout>
       <SEOHead
-        title="Corsi di Coding per Bambini Online 6-18 | TECHLAND"
-        description="Corsi di coding online per bambini e ragazzi: Scratch, Roblox, Minecraft, Python. Lezioni live in piccoli gruppi. Prima lezione gratis!"
+        title="TECHLAND | Coding per Bambini e Ragazzi Online 6-18 anni"
+        description="Coding per bambini e ragazzi 6-18 anni: corsi online live in piccoli gruppi con Scratch, Roblox, Minecraft e Python. Prima lezione gratis!"
         canonical="/"
       />
       <HeroSection />

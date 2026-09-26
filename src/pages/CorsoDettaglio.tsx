@@ -779,22 +779,26 @@ function CorsoDettaglio() {
   // (tampone in attesa della matrice età unica — FASE 2 dell'audit SEO).
   const getSEOTitle = () => {
     const titleMap: Record<string, string> = {
-      "roblox": "Corso Roblox Online per Bambini 8+ anni | TECHLAND",
-      "roblox-avanzato": "Corso Roblox Avanzato per Ragazzi 10-14 anni | TECHLAND",
-      "web-development": "Corso di Web Development per Ragazzi 13+ anni | TECHLAND",
-      "python-base": "Corso Python per Ragazzi 13+ anni | TECHLAND",
-      "python-ai": "Corso Python e AI per Ragazzi 13+ anni | TECHLAND"
+      "scratch": "TECHLAND | Corso Scratch: Coding per Bambini 6-10 anni",
+      "minecraft": "TECHLAND | Corso Minecraft: Coding per Bambini Online",
+      "roblox": "TECHLAND | Corso Roblox: Coding per Bambini 8+ anni",
+      "roblox-avanzato": "TECHLAND | Corso Roblox Avanzato: Coding per Ragazzi",
+      "web-development": "TECHLAND | Web Development: Coding per Ragazzi 13+",
+      "python-base": "TECHLAND | Corso Python: Coding per Ragazzi 13+ anni",
+      "python-ai": "TECHLAND | Python e AI: Coding per Ragazzi 13+ anni"
     };
-    return seoOverrides.title || titleMap[id!] || `Corso ${course?.title} | TECHLAND`;
+    return seoOverrides.title || titleMap[id!] || `TECHLAND | ${course?.title}: Coding per Bambini e Ragazzi`;
   };
 
   const getSEODescription = () => {
     const descMap: Record<string, string> = {
-      "roblox": "Corso Roblox per bambini online (dagli 8 anni). Crea videogiochi con Roblox Studio e Lua. Lezioni live in piccoli gruppi. Prima lezione gratis!",
-      "roblox-avanzato": "Corso Roblox avanzato per ragazzi online (10-14 anni). Script Lua complessi, multiplayer, monetizzazione. Diventa un pro developer Roblox!",
-      "web-development": "Corso di Web Development per ragazzi online (dai 13 anni). HTML, CSS, JavaScript da zero. Crea il tuo sito web. Prima lezione gratuita!",
-      "python-base": "Corso di Python per ragazzi online (dai 13 anni). Il linguaggio di programmazione più richiesto. Progetti pratici. Prima lezione gratuita!",
-      "python-ai": "Corso Python e Intelligenza Artificiale per ragazzi online (dai 13 anni). Machine learning con scikit-learn, AI e LLM. Lezione di prova gratis!"
+      "scratch": "Corso di coding per bambini con Scratch, online e live in piccoli gruppi. Il primo passo nella programmazione, giocando. Prima lezione gratis!",
+      "minecraft": "Coding per bambini con Minecraft: imparano a programmare costruendo mondi. Lezioni online live in piccoli gruppi. Prima lezione gratuita!",
+      "roblox": "Coding per bambini con Roblox (dagli 8 anni): crea videogiochi con Roblox Studio e Lua. Lezioni live in piccoli gruppi. Prima lezione gratis!",
+      "roblox-avanzato": "Corso di coding Roblox avanzato per ragazzi 10-14 anni: script Lua, multiplayer, giochi completi. Online in piccoli gruppi. Prova gratis!",
+      "web-development": "Corso di coding per ragazzi dai 13 anni: HTML, CSS e JavaScript da zero per creare il proprio sito. Online in piccoli gruppi. Prova gratis!",
+      "python-base": "Corso di coding Python per ragazzi dai 13 anni: il linguaggio più richiesto, con progetti pratici. Lezioni live online. Prima lezione gratis!",
+      "python-ai": "Coding per ragazzi con Python e Intelligenza Artificiale (dai 13 anni): machine learning, AI e LLM. Lezioni live online. Prova gratis!"
     };
     return seoOverrides.description || descMap[id!] || course?.description || "";
   };
@@ -844,7 +848,10 @@ function CorsoDettaglio() {
                 <CourseEmoji emoji={course.emoji} size="xl" />
               </div>
               <div>
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-2">{course.title}</h1>
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-2">
+                  <span className="block text-sm md:text-base font-semibold uppercase tracking-wide text-primary mb-2">TECHLAND · Coding per bambini e ragazzi</span>
+                  {course.title}
+                </h1>
                 <p className="text-lg text-muted-foreground">{course.description}</p>
               </div>
             </div>

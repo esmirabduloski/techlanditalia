@@ -104,8 +104,8 @@ export default function Corsi() {
   // statico generato a build-time, quando il fetch client-side non è ancora partito.
   const seoHead = (
     <SEOHead
-      title="Corsi di Coding per Bambini e Ragazzi 6-18 | TECHLAND"
-      description="Corso di coding per bambini e ragazzi online: Scratch, Roblox, Minecraft, Python, Web Development, AI. Piccoli gruppi, docenti esperti. Prima lezione gratuita!"
+      title="TECHLAND | Corsi di Coding per Bambini e Ragazzi 6-18"
+      description="Tutti i corsi di coding per bambini e ragazzi online: Scratch, Roblox, Minecraft, Python, Web e AI. Piccoli gruppi, docenti esperti. Prima lezione gratis!"
       canonical="/corsi"
       structuredData={[breadcrumbSchema, coursesListSchema]}
     />
@@ -135,7 +135,7 @@ export default function Corsi() {
           />
           <div className="text-center max-w-3xl mx-auto">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-              Corso di <span className="tech-gradient-text">Coding per Bambini</span> e Ragazzi Online
+              TECHLAND: corsi di <span className="tech-gradient-text">coding per bambini</span> e ragazzi online
             </h1>
             <p className="text-lg text-muted-foreground">
               Tutti i nostri <strong>corsi di coding online per bambini e ragazzi</strong> dai 6 ai 18 anni:

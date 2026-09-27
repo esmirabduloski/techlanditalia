@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { notifyAdmins } from "../_shared/adminpush.ts";
+import { rateLimit } from "../_shared/ratelimit.ts";
 
 /** Frasi con cui un visitatore chiede di parlare con una persona reale. */
 const OPERATOR_PATTERNS = [
@@ -202,8 +203,19 @@ serve(async (req) => {
     );
   }
 
+  // Limite persistente (per IP) per contenere i costi AI della chat pubblica
+  const limited = await rateLimit(req, { endpoint: 'parent-chat', maxRequests: 40, windowSeconds: 3600, corsHeaders });
+  if (limited) return limited;
+
   try {
     const { messages, sessionId } = await req.json();
+    // sessionId deve essere un UUID casuale (non indovinabile): funge da segreto della conversazione
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (typeof sessionId !== 'string' || !UUID_RE.test(sessionId)) {
+      return new Response(JSON.stringify({ error: 'Sessione non valida' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -248,12 +260,13 @@ serve(async (req) => {
     let operatorRequested = false;
     let justRequested = false;
 
-    if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY && sessionId) {
+    if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
       supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
       try {
         conversationId = await getOrCreateConversation(supabase, sessionId);
         // Save the latest user message
         const lastUserMessage = messages[messages.length - 1];
+        if (lastUserMessage?.role !== 'user') throw new Error('last message must be from user');
         if (lastUserMessage?.role === 'user') {
           await saveMessage(supabase, conversationId, 'user', lastUserMessage.content);
         }
@@ -299,6 +312,24 @@ serve(async (req) => {
     }
 
 
+    if (!supabase || !conversationId) {
+      return new Response(JSON.stringify({ error: 'Errore interno del server' }), {
+        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    // La cronologia inviata al modello è quella salvata sul server: le risposte
+    // "assistant" fornite dal client vengono ignorate.
+    const { data: history } = await supabase
+      .from('chat_messages')
+      .select('role, content, created_at')
+      .eq('conversation_id', conversationId)
+      .in('role', ['user', 'assistant'])
+      .order('created_at', { ascending: false })
+      .limit(MAX_MESSAGES);
+    const modelMessages = ((history ?? []) as { role: string; content: string }[])
+      .reverse()
+      .map((m) => ({ role: m.role, content: String(m.content).slice(0, MAX_MSG_CHARS) }));
+
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -309,7 +340,7 @@ serve(async (req) => {
         model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
-          ...messages,
+          ...modelMessages,
         ],
         stream: true,
       }),

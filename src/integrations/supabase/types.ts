@@ -1310,6 +1310,24 @@ export type Database = {
           },
         ]
       }
+      internal_cron_tokens: {
+        Row: {
+          created_at: string
+          name: string
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          name: string
+          token?: string
+        }
+        Update: {
+          created_at?: string
+          name?: string
+          token?: string
+        }
+        Relationships: []
+      }
       job_applications: {
         Row: {
           created_at: string
@@ -2808,6 +2826,10 @@ export type Database = {
       use_my_streak_freeze: {
         Args: { _freeze_type: string; _reason?: string; _student_id: string }
         Returns: Json
+      }
+      verify_cron_token: {
+        Args: { _name: string; _token: string }
+        Returns: boolean
       }
     }
     Enums: {

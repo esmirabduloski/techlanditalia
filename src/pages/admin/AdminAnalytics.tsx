@@ -26,18 +26,8 @@ const convertToCSV = (data: Record<string, unknown>[], filename: string) => {
   const headers = Object.keys(data[0]);
   const csvRows = [
     headers.join(','),
-    ...data.map(row => 
-      headers.map(header => {
-        const value = row[header];
-        // Handle objects, arrays, and values with commas/quotes
-        if (value === null || value === undefined) return '';
-        if (typeof value === 'object') return `"${JSON.stringify(value).replace(/"/g, '""')}"`;
-        const stringValue = String(value);
-        if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
-          return `"${stringValue.replace(/"/g, '""')}"`;
-        }
-        return stringValue;
-      }).join(',')
+    ...data.map(row =>
+      headers.map(header => csvCell(row[header])).join(',')
     )
   ];
 

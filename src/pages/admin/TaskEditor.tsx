@@ -18,6 +18,8 @@ import { TaskAttachmentUpload } from '@/components/admin/TaskAttachmentUpload';
 import { useTaskEditorDraft } from '@/hooks/useTaskEditorDraft';
 import { useAutoBackup } from '@/hooks/useAutoBackup';
 import { Switch } from '@/components/ui/switch';
+import { QuizTaskEditor } from '@/components/admin/QuizTaskEditor';
+import { parseQuizContent } from '@/lib/quiz';
 interface Attachment {
   name: string;
   url: string;
@@ -178,7 +180,7 @@ export default function TaskEditor() {
           slides_url: taskData.slides_url || '',
           scratch_url: (taskData as any).scratch_url || '',
           points_reward: taskData.points_reward || 10,
-          task_number: taskData.task_number || 1,
+          task_number: taskData.task_number ?? 1,
           default_python_code: pythonCode,
           default_html_code: (taskData as any).default_html_code || '',
           default_css_code: (taskData as any).default_css_code || '',
@@ -231,6 +233,14 @@ export default function TaskEditor() {
     if (!formData.title.trim()) {
       toast({ title: 'Errore', description: 'Il titolo è obbligatorio', variant: 'destructive' });
       return;
+    }
+
+    if (formData.content_type === 'quiz') {
+      const parsed = parseQuizContent(formData.content);
+      if (parsed.kind === 'error') {
+        toast({ title: 'Quiz non valido', description: parsed.message, variant: 'destructive' });
+        return;
+      }
     }
 
     setIsSaving(true);
@@ -367,9 +377,12 @@ export default function TaskEditor() {
                     <Input
                       id="task_number"
                       type="number"
-                      min={1}
+                      min={0}
                       value={formData.task_number}
-                      onChange={(e) => setFormData(prev => ({ ...prev, task_number: parseInt(e.target.value) || 1 }))}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value);
+                        setFormData(prev => ({ ...prev, task_number: Number.isNaN(value) ? 1 : Math.max(0, value) }));
+                      }}
                     />
                   </div>
                   <div className="space-y-2">
@@ -425,21 +438,31 @@ export default function TaskEditor() {
                     <SelectItem value="slides">Presentazione</SelectItem>
                     <SelectItem value="mixed">Misto (Compilatore)</SelectItem>
                     <SelectItem value="scratch">Scratch (Gioco)</SelectItem>
+                    <SelectItem value="quiz">Quiz (domande a risposta)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              {/* Content - WYSIWYG Editor */}
-              <div className="space-y-2">
-                <Label>Contenuto</Label>
-                <RichTextEditor
-                  content={formData.content}
-                  onChange={(html) => setFormData(prev => ({ ...prev, content: html }))}
+              {/* Content - WYSIWYG Editor (il quiz usa un editor dedicato) */}
+              {formData.content_type === 'quiz' ? (
+                <QuizTaskEditor
+                  value={formData.content}
+                  onChange={(content) => setFormData(prev => ({ ...prev, content }))}
+                  courseId={courseId!}
+                  currentTaskId={taskId}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Usa la toolbar per formattare il testo, inserire immagini e video YouTube.
-                </p>
-              </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label>Contenuto</Label>
+                  <RichTextEditor
+                    content={formData.content}
+                    onChange={(html) => setFormData(prev => ({ ...prev, content: html }))}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Usa la toolbar per formattare il testo, inserire immagini e video YouTube.
+                  </p>
+                </div>
+              )}
 
               {/* Slides URL - solo per tipo Presentazione */}
               {formData.content_type === 'slides' && (

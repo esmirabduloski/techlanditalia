@@ -12,6 +12,7 @@ import { PythonCompiler } from '@/components/lesson/PythonCompiler';
 import { TurtleCompiler } from '@/components/lesson/TurtleCompiler';
 import { PgzeroCompiler } from '@/components/lesson/PgzeroCompiler';
 import { WebCompiler } from '@/components/lesson/WebCompiler';
+import { QuizTask } from '@/components/lesson/QuizTask';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { Loader2, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -125,11 +126,11 @@ export default function TaskView() {
         // If the requested task is hidden or missing, jump to next visible one (or back to course)
         if (!visibleNumbers.includes(requestedNumber)) {
           const nextVisible = visibleNumbers.find(n => n > requestedNumber) ?? visibleNumbers[visibleNumbers.length - 1];
-          if (nextVisible && nextVisible !== requestedNumber) {
+          if (nextVisible !== undefined && nextVisible !== requestedNumber) {
             navigate(`/area-riservata/corso/${courseId}/lezione/${lessonNumber}/task/${nextVisible}`, { replace: true });
             return;
           }
-          if (!nextVisible) {
+          if (nextVisible === undefined) {
             navigate(`/area-riservata/corso/${courseId}`, { replace: true });
             return;
           }
@@ -221,6 +222,7 @@ export default function TaskView() {
   const isScratchType = task.content_type === 'scratch';
   const showCompiler = (isPythonCourse || isWebCourse) && isMixedType;
   const showScratch = isScratchType && task.scratch_url;
+  const isQuizType = task.content_type === 'quiz';
 
   // Helper function to extract proper Scratch embed URL
   const getScratchEmbedUrl = (url: string): string => {
@@ -428,12 +430,17 @@ export default function TaskView() {
           title={task.title}
           lessonTitle={lesson.title}
           description={task.description}
-          content={task.content}
+          content={isQuizType ? null : task.content}
           contentType={task.content_type || 'text'}
           videoUrl={null}
-          slidesUrl={task.slides_url}
+          slidesUrl={isQuizType ? null : task.slides_url}
           images={[]}
         />
+        {isQuizType && (
+          <div className="px-2 sm:px-6 pb-6">
+            <QuizTask content={task.content} storageKey={task.id} onFinish={() => completeTask(task.id)} />
+          </div>
+        )}
         {taskCompleted && (
           <Badge variant="outline" className="mb-4 text-primary border-primary">
             <CheckCircle2 className="w-4 h-4 mr-1" />

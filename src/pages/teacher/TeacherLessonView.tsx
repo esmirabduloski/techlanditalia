@@ -86,13 +86,16 @@ export default function TeacherLessonView() {
         .maybeSingle();
 
       if (lessonData) {
-        const { count } = await supabase
+        const { data: firstTask } = await supabase
           .from('lesson_tasks')
-          .select('*', { count: 'exact', head: true })
-          .eq('lesson_id', lessonData.id);
+          .select('task_number')
+          .eq('lesson_id', lessonData.id)
+          .order('task_number')
+          .limit(1)
+          .maybeSingle();
 
-        if (count && count > 0) {
-          navigate(`/insegnante/corso/${courseSlug}/lezione/${lessonNumber}/task/1`, { replace: true });
+        if (firstTask) {
+          navigate(`/insegnante/corso/${courseSlug}/lezione/${lessonNumber}/task/${firstTask.task_number}`, { replace: true });
           return;
         }
 

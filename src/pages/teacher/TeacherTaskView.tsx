@@ -10,6 +10,7 @@
  import { TurtleCompiler } from '@/components/lesson/TurtleCompiler';
  import { PgzeroCompiler } from '@/components/lesson/PgzeroCompiler';
  import { WebCompiler } from '@/components/lesson/WebCompiler';
+import { QuizTask } from '@/components/lesson/QuizTask';
  import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -63,7 +64,7 @@ import { Loader2, ArrowLeft } from 'lucide-react';
    const [course, setCourse] = useState<Course | null>(null);
    const [lesson, setLesson] = useState<Lesson | null>(null);
    const [task, setTask] = useState<Task | null>(null);
-   const [totalTasks, setTotalTasks] = useState(0);
+   const [taskNumbers, setTaskNumbers] = useState<number[]>([]);
    const [isLoading, setIsLoading] = useState(true);
  
    useEffect(() => {
@@ -108,12 +109,13 @@ import { Loader2, ArrowLeft } from 'lucide-react';
        if (lessonData) {
          setLesson(lessonData);
  
-         const { count } = await supabase
+         const { data: numbersData } = await supabase
            .from('lesson_tasks')
-           .select('*', { count: 'exact', head: true })
-           .eq('lesson_id', lessonData.id);
+           .select('task_number')
+           .eq('lesson_id', lessonData.id)
+           .order('task_number');
  
-         setTotalTasks(count || 0);
+         setTaskNumbers((numbersData || []).map((t) => t.task_number));
  
          const { data: taskData } = await supabase
            .from('lesson_tasks')
@@ -179,6 +181,14 @@ import { Loader2, ArrowLeft } from 'lucide-react';
    const isScratchType = task.content_type === 'scratch';
    const showCompiler = (isPythonCourse || isWebCourse) && isMixedType;
    const showScratch = isScratchType && task.scratch_url;
+   const isQuizType = task.content_type === 'quiz';
+
+   // Navigazione per posizione: le task possono partire da 0 (es. quiz di ripasso)
+   const currentIndex = taskNumbers.indexOf(task.task_number);
+   const previousTaskNumber = currentIndex > 0 ? taskNumbers[currentIndex - 1] : undefined;
+   const nextTaskNumber = currentIndex >= 0 && currentIndex < taskNumbers.length - 1 ? taskNumbers[currentIndex + 1] : undefined;
+   const displayPosition = currentIndex >= 0 ? currentIndex + 1 : 1;
+   const totalTasks = taskNumbers.length || 1;
  
    const getScratchEmbedUrl = (url: string): string => {
      if (url.includes('/embed')) {
@@ -227,10 +237,10 @@ import { Loader2, ArrowLeft } from 'lucide-react';
                  <TaskNavigation
                    courseId={course.id}
                    lessonNumber={lesson.lesson_number}
-                   currentTaskNumber={task.task_number}
+                   currentTaskNumber={displayPosition}
                    totalTasks={totalTasks}
-                   onPrevious={task.task_number > 1 ? () => navigateToTask(task.task_number - 1) : undefined}
-                   onNext={task.task_number < totalTasks ? () => navigateToTask(task.task_number + 1) : undefined}
+                   onPrevious={previousTaskNumber !== undefined ? () => navigateToTask(previousTaskNumber) : undefined}
+                   onNext={nextTaskNumber !== undefined ? () => navigateToTask(nextTaskNumber) : undefined}
                    onComplete={handleNavigateToCourse}
                   basePath={`/insegnante/corso/${courseSlug}`}
                  />
@@ -301,10 +311,10 @@ import { Loader2, ArrowLeft } from 'lucide-react';
                  <TaskNavigation
                    courseId={course.id}
                    lessonNumber={lesson.lesson_number}
-                   currentTaskNumber={task.task_number}
+                   currentTaskNumber={displayPosition}
                    totalTasks={totalTasks}
-                   onPrevious={task.task_number > 1 ? () => navigateToTask(task.task_number - 1) : undefined}
-                   onNext={task.task_number < totalTasks ? () => navigateToTask(task.task_number + 1) : undefined}
+                   onPrevious={previousTaskNumber !== undefined ? () => navigateToTask(previousTaskNumber) : undefined}
+                   onNext={nextTaskNumber !== undefined ? () => navigateToTask(nextTaskNumber) : undefined}
                    onComplete={handleNavigateToCourse}
                   basePath={`/insegnante/corso/${courseSlug}`}
                  />
@@ -350,19 +360,24 @@ import { Loader2, ArrowLeft } from 'lucide-react';
             title={task.title}
             lessonTitle={lesson.title}
             description={task.description}
-            content={task.content}
+            content={isQuizType ? null : task.content}
             contentType={task.content_type || 'text'}
             videoUrl={null}
-            slidesUrl={task.slides_url}
+            slidesUrl={isQuizType ? null : task.slides_url}
             images={[]}
           />
+          {isQuizType && (
+            <div className="px-2 sm:px-6 pb-6">
+              <QuizTask content={task.content} storageKey={`teacher:${task.id}`} teacherMode />
+            </div>
+          )}
          <TaskNavigation
            courseId={course.id}
            lessonNumber={lesson.lesson_number}
-           currentTaskNumber={task.task_number}
+           currentTaskNumber={displayPosition}
            totalTasks={totalTasks}
-           onPrevious={task.task_number > 1 ? () => navigateToTask(task.task_number - 1) : undefined}
-           onNext={task.task_number < totalTasks ? () => navigateToTask(task.task_number + 1) : undefined}
+           onPrevious={previousTaskNumber !== undefined ? () => navigateToTask(previousTaskNumber) : undefined}
+           onNext={nextTaskNumber !== undefined ? () => navigateToTask(nextTaskNumber) : undefined}
            onComplete={handleNavigateToCourse}
           basePath={`/insegnante/corso/${courseSlug}`}
          />

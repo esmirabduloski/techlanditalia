@@ -18,7 +18,7 @@ const WELCOME =
   'Ciao! 👋 Sono l\'assistente di TECHLAND. Come posso aiutarti oggi? Posso rispondere a domande sui nostri corsi di coding per bambini e ragazzi.';
 
 // Generate a unique session ID for this chat session
-const generateSessionId = () => `session_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+const generateSessionId = () => crypto.randomUUID();
 
 export function useParentChat() {
   const sessionIdRef = useRef(generateSessionId());

@@ -1,3 +1,4 @@
+import { csvCell } from "@/lib/csv";
 import { useMemo, useState } from "react";
 import { CrmLead, PIPELINE_STAGES, SOURCE_LABELS, LeadSource, PipelineStage } from "@/hooks/useCRM";
 import { Input } from "@/components/ui/input";
@@ -49,7 +50,7 @@ export function CRMLeadList({ leads, onSelectLead }: Props) {
       l.next_followup_at ?? "", (l.notes ?? "").replace(/\n/g, " "),
       format(new Date(l.created_at), "yyyy-MM-dd HH:mm"),
     ]);
-    const csv = [header, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const csv = [header, ...rows].map((r) => r.map((c) => csvCell(c)).join(",")).join("\n");
     const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

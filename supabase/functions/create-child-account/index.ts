@@ -58,7 +58,19 @@ serve(async (req) => {
       });
     }
 
-    console.log(`Creating child account for parent ${parentId}: ${childName} (${childUsername})`);
+    // Solo i genitori (o gli admin) possono creare account alunno
+    const [{ data: callerProfile }, { data: adminRole }] = await Promise.all([
+      supabaseAdmin.from('profiles').select('role').eq('id', authenticatedUserId).maybeSingle(),
+      supabaseAdmin.from('user_roles').select('role').eq('user_id', authenticatedUserId).eq('role', 'admin').maybeSingle(),
+    ]);
+    if (callerProfile?.role !== 'parent' && !adminRole) {
+      return new Response(JSON.stringify({ error: "Solo i genitori possono creare account alunno" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    console.log(`Creating child account for parent ${parentId}`);
 
     // Check if username already exists
     const { data: existingUser } = await supabaseAdmin

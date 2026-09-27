@@ -140,24 +140,8 @@ const handler = async (req: Request): Promise<Response> => {
         `Nuovo messaggio\n\nNome: ${nome}\nEmail: ${email}\nOggetto: ${oggetto}\n\nMessaggio:\n${messaggio}`
       );
 
-      await sendEmail(
-        [email],
-        "Abbiamo ricevuto il tuo messaggio!",
-        `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #0ea5e9;">Grazie per averci contattato, ${safeNome}!</h2>
-          <p>Abbiamo ricevuto il tuo messaggio e ti risponderemo il prima possibile.</p>
-          <div style="background: #f4f4f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <p><strong>Oggetto:</strong> ${safeOggetto}</p>
-            <p><strong>Messaggio:</strong></p>
-            <p style="white-space: pre-wrap;">${safeMessaggio}</p>
-          </div>
-          <p>Nel frattempo, puoi anche contattarci su <a href="https://wa.me/message/KHFBHZDEY3S7H1" style="color: #0ea5e9;">WhatsApp</a>.</p>
-          <hr style="margin: 30px 0; border: none; border-top: 1px solid #e4e4e7;">
-          <p style="color: #71717a; font-size: 12px;">TechLand Italia - Corsi di programmazione per ragazzi e ragazze</p>
-        </div>`,
-        undefined,
-        `Grazie ${nome}!\n\nMessaggio ricevuto.\n\nOggetto: ${oggetto}\nMessaggio:\n${messaggio}`
-      );
+      // Nessuna email automatica all'indirizzo inserito dal visitatore:
+      // eviterebbe che il form venga usato per inviare messaggi a terzi.
 
       emailSent = true;
     } catch (emailError: any) {

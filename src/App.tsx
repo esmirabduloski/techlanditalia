@@ -31,6 +31,9 @@ const App = () => (
               <meta name="application-name" content="TECHLAND" />
             </Head>
             <Sonner />
+            {/* Toaster del sistema use-toast: senza di questo i toast di molte pagine
+                (es. errori di login in AuthPage) non apparivano mai a schermo. */}
+            <Toaster />
             <SkipToContent />
             <ImpersonationBanner />
             <AnalyticsProvider>

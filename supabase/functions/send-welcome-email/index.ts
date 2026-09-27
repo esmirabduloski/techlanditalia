@@ -115,7 +115,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { email, fullName, role, childName, childUsername, setupLink }: WelcomeEmailRequest = await req.json();
 
-    console.log(`Sending welcome email to ${email} (${role})`);
+    console.log(`Sending welcome email (${role})`);
 
     const safeFullName = escapeHtml(fullName || "");
     const safeChildName = escapeHtml(childName || "");

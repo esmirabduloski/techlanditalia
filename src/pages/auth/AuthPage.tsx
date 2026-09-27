@@ -53,8 +53,14 @@ export default function AuthPage() {
   const resolveNext = (): string | null => {
     const raw = searchParams.get("next");
     if (!raw) return null;
-    if (!raw.startsWith("/") || raw.startsWith("//")) return null;
-    return raw;
+    if (!raw.startsWith("/") || raw.startsWith("//") || raw.includes("\\")) return null;
+    try {
+      const url = new URL(raw, window.location.origin);
+      if (url.origin !== window.location.origin) return null;
+      return url.pathname + url.search + url.hash;
+    } catch {
+      return null;
+    }
   };
 
   // Redirect authenticated non-admin users

@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
     let qgClientId: string | null = null;
     let qgError: string | null = null;
 
-    console.log("[QG] Calling crm-import-client", { qgUrl, lead_id: lead.id, email: lead.email });
+    console.log("[QG] Calling crm-import-client", { qgUrl, lead_id: lead.id });
 
     try {
       const qgRes = await fetch(qgUrl, {

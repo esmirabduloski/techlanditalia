@@ -58,6 +58,25 @@ serve(async (req: Request): Promise<Response> => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
+  // Solo il cron (token interno) o un admin autenticato possono avviare il job
+  const cronToken = req.headers.get("x-cron-token") ?? "";
+  let authorized = false;
+  if (cronToken) {
+    const { data: ok } = await supabase.rpc("verify_cron_token", { _name: "send-lesson-reminders", _token: cronToken });
+    authorized = ok === true;
+  }
+  if (!authorized) {
+    const auth = req.headers.get("Authorization");
+    if (auth?.startsWith("Bearer ")) {
+      const { data: { user } } = await supabase.auth.getUser(auth.slice(7));
+      if (user) {
+        const { data: role } = await supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
+        authorized = Boolean(role);
+      }
+    }
+  }
+  if (!authorized) return json({ error: "Non autorizzato" }, 401);
+
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   const CONNECTION_KEY = Deno.env.get("FIREBASE_MESSAGING_API_KEY");
   if (!LOVABLE_API_KEY || !CONNECTION_KEY) {

@@ -181,6 +181,10 @@ serve(async (req: Request): Promise<Response> => {
       { auth: { persistSession: false, autoRefreshToken: false } },
     );
 
+    // Tutte le azioni (anche "scan") richiedono un admin autenticato
+    const admin = await requireAdmin(db, req);
+    if (admin instanceof Response) return admin;
+
     if (action === "scan") {
       const trigger = parsed.data.trigger ?? "manual";
       const summary = await buildSummary(db);
@@ -226,9 +230,7 @@ serve(async (req: Request): Promise<Response> => {
       return json({ ok: true, total, run: { id, summary, notified: shouldNotify } });
     }
 
-    // approve / reject: solo admin autenticato
-    const admin = await requireAdmin(db, req);
-    if (admin instanceof Response) return admin;
+    // approve / reject: admin già verificato sopra
     if (!runId) return json({ error: "runId mancante" }, 400);
 
     const { data: run } = await db.from("data_retention_runs").select("id, status, summary").eq("id", runId).maybeSingle();

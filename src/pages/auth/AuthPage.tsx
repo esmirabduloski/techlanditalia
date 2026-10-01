@@ -118,7 +118,7 @@ export default function AuthPage() {
       const hashType = hashParams.get("type");
       const queryType = searchParams.get("type");
 
-      if ((hashType === "recovery" && accessToken) || queryType === "recovery") {
+      if ((hashType === "recovery" && accessToken) || queryType === "recovery" || searchParams.get("reset") === "true") {
         setShowNewPasswordForm(true);
         window.history.replaceState(null, "", "/auth?reset=true");
       }

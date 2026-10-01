@@ -3,6 +3,30 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { rateLimit } from "../_shared/ratelimit.ts";
 
+// Il link "Imposta la tua password" deve puntare alla pagina con il form di nuova
+// password, non alla homepage. Stessa allowlist usata da send-password-reset-email.
+const ALLOWED_HOSTS = new Set([
+  "techlanditalia.it",
+  "www.techlanditalia.it",
+  "techlanditalia.lovable.app",
+]);
+
+function resolveSetupRedirect(req: Request): string {
+  const fallback = "https://techlanditalia.it/auth?reset=true";
+  const origin = req.headers.get("origin");
+  if (!origin) return fallback;
+  try {
+    const u = new URL(origin);
+    if (u.protocol !== "https:" && u.protocol !== "http:") return fallback;
+    if (ALLOWED_HOSTS.has(u.hostname) || u.hostname.endsWith(".lovable.app")) {
+      return `${u.origin}/auth?reset=true`;
+    }
+    return fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 
 serve(async (req) => {
   const corsHeaders = corsHeadersFor(req);
@@ -239,11 +263,14 @@ serve(async (req) => {
         welcomeBody.childUsername = childUsername.trim();
       }
 
-      // Generate a one-time recovery link so the user can set their own password
+      // Generate a one-time recovery link so the user can set their own password.
+      // Senza redirectTo il link cadeva sul Site URL (la homepage) e il form di
+      // nuova password non veniva mai mostrato.
       try {
         const { data: linkData } = await supabaseAdmin.auth.admin.generateLink({
           type: "recovery",
           email: email.trim().toLowerCase(),
+          options: { redirectTo: resolveSetupRedirect(req) },
         });
         const actionLink = linkData?.properties?.action_link;
         if (actionLink) {

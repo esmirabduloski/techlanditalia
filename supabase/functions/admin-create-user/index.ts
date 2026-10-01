@@ -263,11 +263,14 @@ serve(async (req) => {
         welcomeBody.childUsername = childUsername.trim();
       }
 
-      // Generate a one-time recovery link so the user can set their own password
+      // Generate a one-time recovery link so the user can set their own password.
+      // Senza redirectTo il link cadeva sul Site URL (la homepage) e il form di
+      // nuova password non veniva mai mostrato.
       try {
         const { data: linkData } = await supabaseAdmin.auth.admin.generateLink({
           type: "recovery",
           email: email.trim().toLowerCase(),
+          options: { redirectTo: resolveSetupRedirect(req) },
         });
         const actionLink = linkData?.properties?.action_link;
         if (actionLink) {

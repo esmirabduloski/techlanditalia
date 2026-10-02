@@ -483,7 +483,7 @@ export default function HomeworkEditor() {
                           </SelectContent>
                         </Select>
                         <p className="text-xs text-muted-foreground">
-                          {formData.python_env === 'turtle' && 'Usa Trinket per eseguire codice con import turtle'}
+                          {formData.python_env === 'turtle' && 'Disegno con la tartaruga direttamente nella pagina'}
                           {formData.python_env === 'pgzero' && 'Lo studente copierà il codice e lo incollerà in Replit'}
                           {formData.python_env === 'standard' && 'Compilatore Python standard per codice base'}
                         </p>

@@ -241,7 +241,7 @@ export function TurtleCompiler({ defaultCode }: TurtleCompilerProps) {
                 <div
                   ref={targetRef}
                   aria-label="Area di disegno della tartaruga"
-                  className="relative bg-white shadow-sm rounded-sm overflow-hidden [&_canvas]:!absolute [&_canvas]:left-0 [&_canvas]:top-0"
+                  className="relative bg-white shadow-sm rounded-sm overflow-hidden"
                   style={{
                     width: CANVAS_W,
                     height: CANVAS_H,

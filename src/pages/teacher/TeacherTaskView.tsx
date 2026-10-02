@@ -326,7 +326,7 @@ import { Loader2, ArrowLeft } from 'lucide-react';
  
            <ResizablePanel defaultSize={50} minSize={30}>
              {isPythonCourse && (
-               task.python_env === 'turtle' ? (
+               (task.python_env === 'turtle' || /^\s*(import turtle|from turtle)/m.test(task.default_python_code || '')) ? (
                  <TurtleCompiler defaultCode={task.default_python_code || undefined} />
                ) : task.python_env === 'pgzero' ? (
                  <PgzeroCompiler defaultCode={task.default_python_code || undefined} replitUrl={task.replit_url || undefined} />

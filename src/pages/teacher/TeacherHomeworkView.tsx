@@ -264,7 +264,7 @@
  
            <ResizablePanel defaultSize={50} minSize={30}>
              {isPythonCourse && (
-               homework.python_env === 'turtle' ? (
+               (homework.python_env === 'turtle' || /^\s*(import turtle|from turtle)/m.test(homework.default_python_code || '')) ? (
                  <TurtleCompiler defaultCode={homework.default_python_code || undefined} />
                ) : homework.python_env === 'pgzero' ? (
                  <PgzeroCompiler defaultCode={homework.default_python_code || undefined} replitUrl={homework.replit_url || undefined} />

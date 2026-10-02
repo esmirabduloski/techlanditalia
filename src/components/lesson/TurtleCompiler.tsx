@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Play, RotateCcw, Square, Loader2 } from 'lucide-react';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
+import { Play, RotateCcw, Square, Loader2, ZoomIn, ZoomOut, Maximize } from 'lucide-react';
+import { CodeEditor } from './CodeEditor';
 
 interface TurtleCompilerProps {
   defaultCode?: string;
@@ -18,6 +19,12 @@ for _ in range(4):
     t.right(90)
 
 turtle.done()`;
+
+// Fixed logical drawing area (like Trinket): origin (0,0) at the center.
+const CANVAS_W = 800;
+const CANVAS_H = 600;
+const MIN_ZOOM = 0.2;
+const MAX_ZOOM = 4;
 
 const SKULPT_URLS = [
   'https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js',
@@ -48,6 +55,8 @@ function loadSkulpt() {
   return skulptPromise;
 }
 
+const clamp = (v: number) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, v));
+
 export function TurtleCompiler({ defaultCode }: TurtleCompilerProps) {
   const initial = defaultCode || FALLBACK_CODE;
   const [code, setCode] = useState(initial);
@@ -55,12 +64,13 @@ export function TurtleCompiler({ defaultCode }: TurtleCompilerProps) {
   const [running, setRunning] = useState(false);
   const [ready, setReady] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const canvasRef = useRef<HTMLDivElement>(null);
+  const [zoom, setZoom] = useState(1);
+  const [autoFit, setAutoFit] = useState(true);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const targetRef = useRef<HTMLDivElement>(null);
   const stopRef = useRef(false);
 
-  useEffect(() => {
-    setCode(initial);
-  }, [initial]);
+  useEffect(() => setCode(initial), [initial]);
 
   useEffect(() => {
     loadSkulpt()
@@ -68,15 +78,55 @@ export function TurtleCompiler({ defaultCode }: TurtleCompilerProps) {
       .catch((e) => setLoadError(e.message));
   }, []);
 
+  const fitZoom = useCallback(() => {
+    const el = viewportRef.current;
+    if (!el) return 1;
+    const pad = 16;
+    return clamp(Math.min((el.clientWidth - pad) / CANVAS_W, (el.clientHeight - pad) / CANVAS_H));
+  }, []);
+
+  // Keep the drawing fitted to the panel while auto-fit is on
+  useEffect(() => {
+    const el = viewportRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      if (autoFit) setZoom(fitZoom());
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [autoFit, fitZoom]);
+
+  // Ctrl/⌘ + wheel or trackpad pinch to zoom
+  useEffect(() => {
+    const el = viewportRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 100 : 1);
+      setAutoFit(false);
+      setZoom((z) => clamp(z * Math.exp(-dy * 0.002)));
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, []);
+
+  const zoomBy = (f: number) => {
+    setAutoFit(false);
+    setZoom((z) => clamp(z * f));
+  };
+  const fit = () => {
+    setAutoFit(true);
+    setZoom(fitZoom());
+  };
+
   const run = async () => {
     const Sk = (window as any).Sk;
-    if (!Sk || !canvasRef.current) return;
-    canvasRef.current.innerHTML = '';
+    if (!Sk || !targetRef.current) return;
+    targetRef.current.innerHTML = '';
     setOutput('');
     stopRef.current = false;
     setRunning(true);
-    const width = Math.max(300, canvasRef.current.clientWidth - 4);
-    const height = Math.max(300, canvasRef.current.clientHeight - 4);
 
     Sk.configure({
       output: (text: string) => setOutput((prev) => prev + text),
@@ -92,9 +142,7 @@ export function TurtleCompiler({ defaultCode }: TurtleCompilerProps) {
       killableWhile: true,
       killableFor: true,
     });
-    (Sk.TurtleGraphics ||= {}).target = canvasRef.current;
-    Sk.TurtleGraphics.width = width;
-    Sk.TurtleGraphics.height = height;
+    Sk.TurtleGraphics = { target: targetRef.current, width: CANVAS_W, height: CANVAS_H };
 
     try {
       await Sk.misceval.asyncToPromise(
@@ -120,36 +168,33 @@ export function TurtleCompiler({ defaultCode }: TurtleCompilerProps) {
     stop();
     setCode(initial);
     setOutput('');
-    if (canvasRef.current) canvasRef.current.innerHTML = '';
+    if (targetRef.current) targetRef.current.innerHTML = '';
   };
 
   return (
     <div className="flex flex-col h-full bg-card border-l border-border">
-      <div className="flex items-center justify-between gap-2 px-4 py-3 border-b bg-background">
-        <div>
-          <h3 className="font-semibold">🐢 Python Turtle</h3>
-          <p className="text-sm text-muted-foreground">Scrivi il codice e premi Esegui</p>
-        </div>
-        <div className="flex items-center gap-2">
-          {running ? (
-            <Button size="sm" variant="destructive" onClick={stop} className="min-h-[44px]">
-              <Square className="w-4 h-4 mr-1" /> Stop
-            </Button>
-          ) : (
-            <Button size="sm" onClick={run} disabled={!ready} className="min-h-[44px]">
-              {ready ? <Play className="w-4 h-4 mr-1" /> : <Loader2 className="w-4 h-4 mr-1 animate-spin" />}
-              Esegui
-            </Button>
-          )}
+      <div className="flex items-center justify-between gap-2 px-4 py-2 border-b bg-muted/50">
+        <span className="text-sm font-medium text-foreground">🐢 Python Turtle</span>
+        <div className="flex items-center gap-1">
           <Button
             size="sm"
             variant="ghost"
             onClick={reset}
             aria-label="Ripristina codice originale"
-            className="min-h-[44px] min-w-[44px]"
+            title="Ripristina codice"
           >
             <RotateCcw className="w-4 h-4" />
           </Button>
+          {running ? (
+            <Button size="sm" variant="destructive" onClick={stop}>
+              <Square className="w-4 h-4 mr-1" /> Stop
+            </Button>
+          ) : (
+            <Button size="sm" onClick={run} disabled={!ready}>
+              {ready ? <Play className="w-4 h-4 mr-1" /> : <Loader2 className="w-4 h-4 mr-1 animate-spin" />}
+              Esegui
+            </Button>
+          )}
         </div>
       </div>
 
@@ -159,38 +204,65 @@ export function TurtleCompiler({ defaultCode }: TurtleCompilerProps) {
         </p>
       )}
 
-      <div className="flex-1 min-h-0 flex flex-col">
-        <Textarea
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          spellCheck={false}
-          aria-label="Codice Python"
-          className="font-mono text-sm min-h-[180px] h-[35%] resize-none rounded-none border-0 border-b"
-          onKeyDown={(e) => {
-            if (e.key === 'Tab') {
-              e.preventDefault();
-              const el = e.currentTarget;
-              const { selectionStart: s, selectionEnd: en } = el;
-              const next = code.slice(0, s) + '    ' + code.slice(en);
-              setCode(next);
-              requestAnimationFrame(() => el.setSelectionRange(s + 4, s + 4));
-            }
-          }}
-        />
-        <div
-          ref={canvasRef}
-          className="flex-1 min-h-[300px] bg-background overflow-hidden flex items-center justify-center [&_canvas]:bg-white"
-          aria-label="Area di disegno della tartaruga"
-        />
-        {output && (
-          <pre
-            aria-live="polite"
-            className="max-h-32 overflow-auto px-4 py-2 text-xs font-mono border-t bg-muted text-foreground whitespace-pre-wrap"
-          >
-            {output}
-          </pre>
-        )}
-      </div>
+      <ResizablePanelGroup direction="vertical" className="flex-1">
+        <ResizablePanel defaultSize={40} minSize={15}>
+          <div className="h-full bg-muted overflow-hidden">
+            <CodeEditor code={code} onChange={setCode} language="python" className="h-full" />
+          </div>
+        </ResizablePanel>
+
+        <ResizableHandle withHandle />
+
+        <ResizablePanel defaultSize={60} minSize={20}>
+          <div className="h-full flex flex-col">
+            <div className="flex items-center justify-between px-3 py-1 border-b bg-muted/50">
+              <span className="text-xs font-medium text-muted-foreground">Disegno</span>
+              <div className="flex items-center gap-1" role="group" aria-label="Zoom del disegno">
+                <Button size="sm" variant="ghost" onClick={() => zoomBy(1 / 1.25)} aria-label="Rimpicciolisci">
+                  <ZoomOut className="w-4 h-4" />
+                </Button>
+                <span className="text-xs tabular-nums w-12 text-center text-muted-foreground" aria-live="polite">
+                  {Math.round(zoom * 100)}%
+                </span>
+                <Button size="sm" variant="ghost" onClick={() => zoomBy(1.25)} aria-label="Ingrandisci">
+                  <ZoomIn className="w-4 h-4" />
+                </Button>
+                <Button size="sm" variant="ghost" onClick={fit} aria-label="Adatta alla finestra" title="Adatta">
+                  <Maximize className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+
+            <div ref={viewportRef} className="flex-1 min-h-0 overflow-auto bg-muted/40">
+              <div
+                className="mx-auto my-2"
+                style={{ width: CANVAS_W * zoom, height: CANVAS_H * zoom }}
+              >
+                <div
+                  ref={targetRef}
+                  aria-label="Area di disegno della tartaruga"
+                  className="relative bg-white shadow-sm rounded-sm overflow-hidden [&_canvas]:!absolute [&_canvas]:left-0 [&_canvas]:top-0"
+                  style={{
+                    width: CANVAS_W,
+                    height: CANVAS_H,
+                    transform: `scale(${zoom})`,
+                    transformOrigin: '0 0',
+                  }}
+                />
+              </div>
+            </div>
+
+            {output && (
+              <pre
+                aria-live="polite"
+                className="max-h-28 overflow-auto px-4 py-2 text-xs font-mono border-t bg-muted text-foreground whitespace-pre-wrap"
+              >
+                {output}
+              </pre>
+            )}
+          </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 }

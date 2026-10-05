@@ -793,6 +793,8 @@ export type Database = {
           lead_id: string
           method: string | null
           notes: string | null
+          overdue_reminder_count: number
+          last_overdue_reminder_at: string | null
           paid_at: string | null
           plan_id: string | null
           remind_admin: boolean
@@ -816,6 +818,8 @@ export type Database = {
           lead_id: string
           method?: string | null
           notes?: string | null
+          overdue_reminder_count?: number
+          last_overdue_reminder_at?: string | null
           paid_at?: string | null
           plan_id?: string | null
           remind_admin?: boolean
@@ -839,6 +843,8 @@ export type Database = {
           lead_id?: string
           method?: string | null
           notes?: string | null
+          overdue_reminder_count?: number
+          last_overdue_reminder_at?: string | null
           paid_at?: string | null
           plan_id?: string | null
           remind_admin?: boolean

@@ -8,13 +8,32 @@ import { notifyAdmins } from "../_shared/adminpush.ts";
  * - Job giornaliero (cron con x-cron-token): per le rate da incassare con
  *   reminder_date <= oggi invia una push agli admin ("chiedi il pagamento") e,
  *   se attivato, una push al cliente ("rata in scadenza").
- * - Admin autenticato con { paymentId }: invia subito il promemoria al cliente.
+ * - Stesso job: solleciti delle rate scadute e non pagate, secondo le regole in
+ *   site_settings.crm_payment_dunning (dopo quanti giorni, ogni quanti, quante volte).
+ * - Admin autenticato con { paymentId }: invia subito il promemoria al cliente
+ *   (testo di sollecito se la rata è già scaduta).
  */
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/firebase_messaging";
 const SITE_URL = (Deno.env.get("SITE_URL") || "https://techlanditalia.it").replace(/\/$/, "");
 // Al cliente non mandiamo promemoria troppo vecchi (es. rate create con date già passate)
 const CLIENT_MAX_DELAY_DAYS = 3;
+
+type DunningSettings = {
+  enabled: boolean;
+  first_after_days: number;
+  repeat_every_days: number;
+  max_reminders: number;
+  notify_client: boolean;
+};
+
+const DEFAULT_DUNNING: DunningSettings = {
+  enabled: true,
+  first_after_days: 3,
+  repeat_every_days: 7,
+  max_reminders: 3,
+  notify_client: false,
+};
 
 type PaymentRow = {
   id: string;
@@ -29,6 +48,8 @@ type PaymentRow = {
   remind_client: boolean;
   admin_reminder_sent_at: string | null;
   client_reminder_sent_at: string | null;
+  overdue_reminder_count: number;
+  last_overdue_reminder_at: string | null;
   crm_leads: { full_name: string | null; linked_profile_id: string | null } | null;
 };
 
@@ -47,10 +68,16 @@ function daysBetween(fromIso: string, toIso: string): number {
   return Math.round((Date.parse(`${toIso}T00:00:00Z`) - Date.parse(`${fromIso}T00:00:00Z`)) / 86_400_000);
 }
 
-function installmentLabel(p: PaymentRow): string {
-  if (p.installment_number && p.installment_total) return `rata ${p.installment_number}/${p.installment_total}`;
-  return p.description?.trim() || "pagamento";
+/** "la rata 3/10 (Corso Python Base)", "il pagamento per Corso Scratch", "il pagamento". */
+function paymentPhrase(p: PaymentRow): string {
+  const desc = p.description?.trim();
+  if (p.installment_number && p.installment_total) {
+    return `la rata ${p.installment_number}/${p.installment_total}${desc ? ` (${desc})` : ""}`;
+  }
+  return desc ? `il pagamento per ${desc}` : "il pagamento";
 }
+
+const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
 serve(async (req: Request): Promise<Response> => {
   const corsHeaders = corsHeadersFor(req);
@@ -102,8 +129,14 @@ serve(async (req: Request): Promise<Response> => {
     return json({ error: "Firebase Cloud Messaging non collegato al progetto" }, 503);
   }
 
-  /** Push al cliente: restituisce l'esito da salvare in client_reminder_result. */
-  const sendToClient = async (p: PaymentRow): Promise<"sent" | "no_account" | "no_devices" | "failed"> => {
+  /**
+   * Push al cliente: restituisce l'esito da salvare in client_reminder_result.
+   * `overdue` = sollecito di una rata già scaduta.
+   */
+  const sendToClient = async (
+    p: PaymentRow,
+    kind: "reminder" | "overdue" = "reminder",
+  ): Promise<"sent" | "no_account" | "no_devices" | "failed"> => {
     const userId = p.crm_leads?.linked_profile_id;
     if (!userId) return "no_account";
 
@@ -111,9 +144,11 @@ serve(async (req: Request): Promise<Response> => {
     if (!devices || devices.length === 0) return "no_devices";
 
     const firstName = p.crm_leads?.full_name?.trim().split(/\s+/)[0] ?? "";
-    const title = "Promemoria pagamento";
-    const dueText = p.due_date ? ` in scadenza il ${shortDate(p.due_date)}` : "";
-    const text = `${firstName ? `Ciao ${firstName}, ti` : "Ti"} ricordiamo la ${installmentLabel(p)} di ${euro(p.amount_cents)}${dueText}. Grazie!`;
+    const greeting = firstName ? `Ciao ${firstName}, ` : "";
+    const title = kind === "overdue" ? "Pagamento da saldare" : "Promemoria pagamento";
+    const text = kind === "overdue"
+      ? `${greeting}risulta ancora da saldare ${paymentPhrase(p)} di ${euro(p.amount_cents)}${p.due_date ? `, con scadenza il ${shortDate(p.due_date)}` : ""}. Se hai già pagato, ignora questo messaggio. Grazie!`
+      : `${greeting}${firstName ? "ti" : "Ti"} ricordiamo ${paymentPhrase(p)} di ${euro(p.amount_cents)}${p.due_date ? ` in scadenza il ${shortDate(p.due_date)}` : ""}. Grazie!`;
     const path = "/area-riservata/acquisti";
     const link = `${SITE_URL}${path}`;
 
@@ -131,7 +166,7 @@ serve(async (req: Request): Promise<Response> => {
           message: {
             token: device.token,
             notification: { title, body: text },
-            data: { path, link, type: "payment_reminder" },
+            data: { path, link, type: kind === "overdue" ? "payment_overdue" : "payment_reminder" },
             webpush: {
               notification: { icon: `${SITE_URL}/favicon.png`, tag: `payment-${p.id}` },
               fcm_options: { link },
@@ -153,7 +188,7 @@ serve(async (req: Request): Promise<Response> => {
 
     await supabase.from("push_notification_log").insert({
       user_id: userId,
-      notification_type: "payment_reminder",
+      notification_type: kind === "overdue" ? "payment_overdue" : "payment_reminder",
       title,
       body: text,
       success_count: ok,
@@ -163,7 +198,79 @@ serve(async (req: Request): Promise<Response> => {
   };
 
   const select =
-    "id, lead_id, amount_cents, description, due_date, reminder_date, installment_number, installment_total, remind_admin, remind_client, admin_reminder_sent_at, client_reminder_sent_at, crm_leads(full_name, linked_profile_id)";
+    "id, lead_id, amount_cents, description, due_date, reminder_date, installment_number, installment_total, remind_admin, remind_client, admin_reminder_sent_at, client_reminder_sent_at, overdue_reminder_count, last_overdue_reminder_at, crm_leads(full_name, linked_profile_id)";
+
+  /** Solleciti delle rate scadute e non pagate. */
+  const runDunning = async (today: string) => {
+    const { data: setting } = await supabase
+      .from("site_settings").select("value").eq("key", "crm_payment_dunning").maybeSingle();
+    const rules: DunningSettings = { ...DEFAULT_DUNNING, ...((setting?.value as Partial<DunningSettings>) ?? {}) };
+    if (!rules.enabled || rules.max_reminders <= 0) return { enabled: false, sent: 0 };
+
+    const firstAfter = Math.max(0, rules.first_after_days);
+    const repeatEvery = Math.max(1, rules.repeat_every_days);
+    const latestDue = new Date(Date.parse(`${today}T00:00:00Z`) - firstAfter * 86_400_000).toISOString().slice(0, 10);
+
+    const { data: overdueRows, error } = await supabase
+      .from("crm_payments")
+      .select(select)
+      .eq("status", "scheduled")
+      .lte("due_date", latestDue)
+      .lt("overdue_reminder_count", rules.max_reminders);
+    if (error) throw error;
+
+    const due = ((overdueRows ?? []) as unknown as PaymentRow[]).filter((p) => {
+      if (!p.last_overdue_reminder_at) return true;
+      const last = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Rome" }).format(new Date(p.last_overdue_reminder_at));
+      return daysBetween(last, today) >= repeatEvery;
+    });
+    if (due.length === 0) return { enabled: true, sent: 0 };
+
+    const total = due.reduce((s, p) => s + p.amount_cents, 0);
+    const describe = (p: PaymentRow) =>
+      `${p.crm_leads?.full_name || "Cliente"} ${euro(p.amount_cents)}${p.due_date ? ` (da ${daysBetween(p.due_date, today)} gg)` : ""}`;
+    await notifyAdmins(
+      due.length === 1
+        ? {
+          title: `⚠️ Rata scaduta: ${due[0].crm_leads?.full_name || "un cliente"}`,
+          body: `${capitalize(paymentPhrase(due[0]))} di ${euro(due[0].amount_cents)} risulta ancora da pagare${due[0].due_date ? `, con scadenza il ${shortDate(due[0].due_date)}` : ""}`,
+          path: `/admin/crm?lead=${due[0].lead_id}`,
+          type: "payment_overdue_admin",
+          tag: "payment-overdue",
+        }
+        : {
+          title: `⚠️ ${due.length} rate scadute da sollecitare (${euro(total)})`,
+          body: due.slice(0, 4).map(describe).join(" · ") + (due.length > 4 ? ` · +${due.length - 4}` : ""),
+          path: "/admin/crm?tab=scadenziario",
+          type: "payment_overdue_admin",
+          tag: "payment-overdue",
+        },
+    );
+
+    const now = new Date().toISOString();
+    let clientSent = 0;
+    for (const p of due) {
+      let clientResult: string | null = null;
+      if (rules.notify_client && p.remind_client) {
+        clientResult = await sendToClient(p, "overdue");
+        if (clientResult === "sent") clientSent++;
+      }
+      const count = p.overdue_reminder_count + 1;
+      await supabase.from("crm_payments")
+        .update({ overdue_reminder_count: count, last_overdue_reminder_at: now })
+        .eq("id", p.id);
+      // Traccia nella timeline del cliente
+      await supabase.from("crm_interactions").insert({
+        lead_id: p.lead_id,
+        type: "note",
+        subject: `Sollecito automatico ${count}/${rules.max_reminders}`,
+        content: `${capitalize(paymentPhrase(p))} di ${euro(p.amount_cents)}, scadenza ${shortDate(p.due_date)}.` +
+          (clientResult === "sent" ? " Notifica inviata anche al cliente." : ""),
+        metadata: { payment_id: p.id, automatic: true, client_result: clientResult },
+      });
+    }
+    return { enabled: true, sent: due.length, clientSent };
+  };
 
   try {
     // Invio manuale dall'admin: promemoria immediato al cliente per una rata
@@ -172,7 +279,9 @@ serve(async (req: Request): Promise<Response> => {
       const { data: payment } = await supabase
         .from("crm_payments").select(select).eq("id", body.paymentId).maybeSingle();
       if (!payment) return json({ error: "Pagamento non trovato" }, 404);
-      const result = await sendToClient(payment as unknown as PaymentRow);
+      const row = payment as unknown as PaymentRow;
+      const kind = row.due_date && row.due_date < todayRome() ? "overdue" : "reminder";
+      const result = await sendToClient(row, kind);
       await supabase.from("crm_payments")
         .update({ client_reminder_sent_at: new Date().toISOString(), client_reminder_result: result })
         .eq("id", body.paymentId);
@@ -201,7 +310,7 @@ serve(async (req: Request): Promise<Response> => {
         forAdmin.length === 1
           ? {
             title: `💶 Chiedi il pagamento a ${single.crm_leads?.full_name || "un cliente"}`,
-            body: `${installmentLabel(single)} di ${euro(single.amount_cents)}${single.due_date ? ` (scadenza ${shortDate(single.due_date)})` : ""}`,
+            body: `${capitalize(paymentPhrase(single))} di ${euro(single.amount_cents)}${single.due_date ? ` (scadenza ${shortDate(single.due_date)})` : ""}`,
             path: `/admin/crm?lead=${single.lead_id}`,
             type: "payment_reminder_admin",
             tag: "payment-reminders",
@@ -230,7 +339,9 @@ serve(async (req: Request): Promise<Response> => {
         .eq("id", p.id);
     }
 
-    return json({ success: true, today, adminReminders: forAdmin.length, clientSent });
+    const dunning = await runDunning(today);
+
+    return json({ success: true, today, adminReminders: forAdmin.length, clientSent, dunning });
   } catch (error) {
     console.error("[send-payment-reminders]", error);
     return json({ error: error instanceof Error ? error.message : "Errore interno" }, 500);

@@ -23,6 +23,8 @@ export interface CrmPayment {
   client_reminder_sent_at: string | null;
   client_reminder_result: ClientReminderResult | null;
   notes: string | null;
+  overdue_reminder_count: number;
+  last_overdue_reminder_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -103,6 +105,18 @@ export function planInstallments(
   });
 }
 
+/**
+ * Come chiamare il pagamento in un messaggio al cliente:
+ * "la rata 3/10 (Corso Python Base)", "il pagamento per Corso Scratch", "il pagamento".
+ */
+export function paymentPhrase(p: Pick<CrmPayment, 'installment_number' | 'installment_total' | 'description'>) {
+  const desc = p.description?.trim();
+  if (p.installment_number && p.installment_total) {
+    return `la rata ${p.installment_number}/${p.installment_total}${desc ? ` (${desc})` : ''}`;
+  }
+  return desc ? `il pagamento per ${desc}` : 'il pagamento';
+}
+
 /** Etichetta di una rata, es. "Rata 2/10 · Corso Python". */
 export function paymentLabel(p: Pick<CrmPayment, 'installment_number' | 'installment_total' | 'description'>) {
   const parts: string[] = [];
@@ -110,3 +124,30 @@ export function paymentLabel(p: Pick<CrmPayment, 'installment_number' | 'install
   if (p.description) parts.push(p.description);
   return parts.join(' · ') || 'Pagamento';
 }
+
+/** Regole dei solleciti automatici (site_settings, chiave crm_payment_dunning). */
+export interface DunningSettings {
+  enabled: boolean;
+  /** Primo sollecito: giorni dopo la scadenza */
+  first_after_days: number;
+  /** Solleciti successivi: ogni quanti giorni */
+  repeat_every_days: number;
+  /** Numero massimo di solleciti per rata */
+  max_reminders: number;
+  /** Manda il sollecito anche al cliente (solo per le rate con notifica al cliente attiva) */
+  notify_client: boolean;
+}
+
+export const DUNNING_SETTINGS_KEY = 'crm_payment_dunning';
+
+export const DEFAULT_DUNNING_SETTINGS: DunningSettings = {
+  enabled: true,
+  first_after_days: 3,
+  repeat_every_days: 7,
+  max_reminders: 3,
+  notify_client: false,
+};
+
+/** Giorni tra due date YYYY-MM-DD (positivo se `toIso` è dopo `fromIso`). */
+export const daysBetween = (fromIso: string, toIso: string) =>
+  Math.round((Date.parse(`${toIso}T00:00:00Z`) - Date.parse(`${fromIso}T00:00:00Z`)) / 86_400_000);

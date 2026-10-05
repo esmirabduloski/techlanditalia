@@ -16,7 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useCRMPayments, useClientPushStatus } from '@/hooks/useCRMPayments';
 import type { CrmInteraction, CrmLead } from '@/hooks/useCRM';
 import {
-  formatDate, formatEuro, methodLabel, paymentLabel, todayIso, type CrmPayment,
+  daysBetween, formatDate, formatEuro, methodLabel, paymentLabel, todayIso, type CrmPayment,
 } from '@/lib/payments';
 import { cn } from '@/lib/utils';
 import { PaymentFormDialog, type PaymentFormMode, type PaymentFormValues } from './PaymentFormDialog';
@@ -263,7 +263,7 @@ export function CRMPaymentsSection({ lead, addInteraction }: Props) {
                       <div className="text-muted-foreground truncate">
                         {paymentLabel(p)}
                         {p.due_date && p.paid_at && p.paid_at > p.due_date && (
-                          <span className="text-amber-600"> · in ritardo di {daysLate(p.due_date, p.paid_at)} gg</span>
+                          <span className="text-amber-600"> · in ritardo di {daysBetween(p.due_date, p.paid_at)} gg</span>
                         )}
                       </div>
                       {p.notes && <div className="text-xs text-muted-foreground truncate">{p.notes}</div>}
@@ -340,10 +340,6 @@ export function CRMPaymentsSection({ lead, addInteraction }: Props) {
       </AlertDialog>
     </section>
   );
-}
-
-function daysLate(dueIso: string, paidIso: string) {
-  return Math.round((Date.parse(paidIso) - Date.parse(dueIso)) / 86_400_000);
 }
 
 /** Stato dei promemoria di una rata: a me e al cliente. */

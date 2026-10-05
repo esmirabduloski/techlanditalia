@@ -102,3 +102,59 @@ export function useClientPushStatus(profileId: string | null) {
 
   return hasDevices;
 }
+
+export interface ScheduledPaymentWithLead extends CrmPayment {
+  crm_leads: {
+    full_name: string | null;
+    email: string;
+    phone: string | null;
+    linked_profile_id: string | null;
+    deleted_at: string | null;
+  } | null;
+}
+
+/** Tutte le rate da incassare di tutti i clienti (Scadenziario). */
+export function useAllScheduledPayments() {
+  const [payments, setPayments] = useState<ScheduledPaymentWithLead[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const load = useCallback(async () => {
+    const { data, error } = await table()
+      .select('*, crm_leads(full_name, email, phone, linked_profile_id, deleted_at)')
+      .eq('status', 'scheduled')
+      .order('due_date', { ascending: true });
+    if (error) {
+      setLoadError(error.message);
+    } else {
+      setLoadError(null);
+      // Le rate dei lead nel cestino non vanno sollecitate
+      setPayments(((data ?? []) as unknown as ScheduledPaymentWithLead[]).filter(p => !p.crm_leads?.deleted_at));
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const updatePayment = async (id: string, patch: Partial<CrmPayment>) => {
+    const { error } = await table().update(patch).eq('id', id);
+    if (error) {
+      toast({ title: 'Errore aggiornamento pagamento', description: error.message, variant: 'destructive' });
+      return false;
+    }
+    await load();
+    return true;
+  };
+
+  const sendClientReminderNow = async (id: string) => {
+    const { data, error } = await supabase.functions.invoke('send-payment-reminders', { body: { paymentId: id } });
+    await load();
+    if (error) return { ok: false, result: error.message };
+    return { ok: Boolean(data?.success), result: data?.result as string | undefined };
+  };
+
+  return { payments, loading, loadError, reload: load, updatePayment, sendClientReminderNow };
+}

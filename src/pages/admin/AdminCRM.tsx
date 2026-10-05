@@ -16,7 +16,10 @@ import { CRMLeadDetailDrawer } from "@/components/admin/crm/CRMLeadDetailDrawer"
 import { CRMNotionSettings } from "@/components/admin/crm/CRMNotionSettings";
 import { CRMTrash } from "@/components/admin/crm/CRMTrash";
 import { CRMCourseSelect } from "@/components/admin/crm/CRMCourseSelect";
-import { Loader2, Plus, LogOut, KanbanSquare, List, BarChart3, Database } from "lucide-react";
+import { CRMPaymentsSchedule } from "@/components/admin/crm/payments/CRMPaymentsSchedule";
+import { useAllScheduledPayments } from "@/hooks/useCRMPayments";
+import { todayIso } from "@/lib/payments";
+import { Loader2, Plus, LogOut, KanbanSquare, List, BarChart3, Database, CalendarClock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function AdminCRM() {
@@ -52,6 +55,17 @@ export default function AdminCRM() {
   // ?lead=<id> (es. dalla notifica push di un pagamento) apre direttamente la scheda
   const [searchParams, setSearchParams] = useSearchParams();
   const leadParam = searchParams.get("lead");
+  // ?tab=scadenziario (dalla notifica dei solleciti) apre lo Scadenziario
+  const [tab, setTab] = useState(searchParams.get("tab") ?? "kanban");
+  const schedule = useAllScheduledPayments();
+  const today = todayIso();
+  const overdueCount = schedule.payments.filter(p => p.due_date && p.due_date < today).length;
+
+  const openLeadById = (leadId: string) => {
+    const lead = leads.find(l => l.id === leadId);
+    if (lead) handleSelectLead(lead);
+    else toast({ title: "Cliente non trovato", description: "Potrebbe essere nel cestino.", variant: "destructive" });
+  };
   useEffect(() => {
     if (!leadParam || loading) return;
     const lead = leads.find(l => l.id === leadParam);
@@ -114,10 +128,21 @@ export default function AdminCRM() {
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         ) : (
-          <Tabs defaultValue="kanban">
-            <TabsList className="mb-4">
+          <Tabs value={tab} onValueChange={setTab}>
+            <TabsList className="mb-4 h-auto flex-wrap">
               <TabsTrigger value="kanban"><KanbanSquare className="w-4 h-4 mr-1" /> Pipeline</TabsTrigger>
               <TabsTrigger value="list"><List className="w-4 h-4 mr-1" /> Lista</TabsTrigger>
+              <TabsTrigger value="scadenziario">
+                <CalendarClock className="w-4 h-4 mr-1" /> Scadenziario
+                {overdueCount > 0 && (
+                  <span
+                    className="ml-1.5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 min-w-[1.25rem] leading-5"
+                    aria-label={`${overdueCount} rate scadute`}
+                  >
+                    {overdueCount}
+                  </span>
+                )}
+              </TabsTrigger>
               <TabsTrigger value="analytics"><BarChart3 className="w-4 h-4 mr-1" /> Analytics</TabsTrigger>
               <TabsTrigger value="notion"><Database className="w-4 h-4 mr-1" /> Notion</TabsTrigger>
             </TabsList>
@@ -134,6 +159,9 @@ export default function AdminCRM() {
             </TabsContent>
             <TabsContent value="list">
               <CRMLeadList leads={leads} onSelectLead={handleSelectLead} />
+            </TabsContent>
+            <TabsContent value="scadenziario">
+              <CRMPaymentsSchedule schedule={schedule} onOpenLead={openLeadById} />
             </TabsContent>
             <TabsContent value="analytics">
               <CRMAnalytics leads={leads} />
@@ -157,7 +185,11 @@ export default function AdminCRM() {
       <CRMLeadDetailDrawer
         lead={liveSelected}
         open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
+        onClose={() => {
+          setDrawerOpen(false);
+          // I pagamenti modificati nella scheda si riflettono nello scadenziario
+          schedule.reload();
+        }}
         onUpdate={updateLead}
         onDelete={deleteLead}
       />

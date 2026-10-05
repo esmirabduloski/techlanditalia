@@ -16,12 +16,15 @@ import { PythonCompiler } from '@/components/lesson/PythonCompiler';
 import { WebCompiler } from '@/components/lesson/WebCompiler';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Loader2 } from 'lucide-react';
+import { LessonPageSkeleton } from '@/components/lesson/LessonPageSkeleton';
+import { getCourseThemeClass } from '@/lib/lessonTheme';
+import { cn } from '@/lib/utils';
 
 interface Course {
   id: string;
   slug: string;
   title: string;
+  emoji: string;
   total_lessons: number;
 }
 
@@ -87,7 +90,7 @@ export default function LessonView() {
       // Fetch course
       const { data: courseData } = await supabase
         .from('courses')
-        .select('id, slug, title, total_lessons')
+        .select('id, slug, title, emoji, total_lessons')
         .eq('id', courseId)
         .maybeSingle();
       if (!isCurrent()) return;
@@ -185,9 +188,7 @@ export default function LessonView() {
   if (authLoading || (isLoading && !lesson)) {
     return (
       <Layout>
-        <div className="min-h-screen flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
+        <LessonPageSkeleton />
       </Layout>
     );
   }
@@ -205,10 +206,12 @@ export default function LessonView() {
   const isSplitLayout = SPLIT_LAYOUT_COURSES.includes(course.slug);
   const isPythonCourse = PYTHON_COURSES.includes(course.slug);
   const isWebCourse = WEB_COURSES.includes(course.slug);
+  const themeClass = getCourseThemeClass(course.slug);
 
   const header = (
     <LessonHeader
       courseTitle={course.title}
+      courseEmoji={course.emoji}
       lessonNumber={lesson.lesson_number}
       lessonTitle={lesson.title}
       onBack={() => navigate(`/area-riservata/corso/${courseId}`)}
@@ -265,13 +268,14 @@ export default function LessonView() {
       isTaskCompleted={isTaskCompleted}
       onSelectLesson={navigateToLesson}
       onSelectTask={(taskNumber) => navigate(`/area-riservata/corso/${courseId}/lezione/${lesson.lesson_number}/task/${taskNumber}`)}
+      className={themeClass}
     />
   );
 
   // Split layout for Python and Web courses
   if (isSplitLayout) {
     return (
-      <div className="h-screen flex flex-col bg-background">
+      <div className={cn('h-screen flex flex-col bg-background', themeClass)}>
         {header}
         <ResizablePanelGroup direction="horizontal" className="flex-1">
           {/* Left Panel - Lesson Content */}
@@ -299,7 +303,7 @@ export default function LessonView() {
   // Normal layout for other courses
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className={cn('max-w-4xl mx-auto px-4 py-8', themeClass)}>
         <div className="rounded-xl border border-border overflow-hidden shadow-sm">
           {header}
         </div>

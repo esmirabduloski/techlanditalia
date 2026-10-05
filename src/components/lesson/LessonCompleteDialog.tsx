@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import type { LessonAccess } from '@/hooks/useCourseOutline';
+import { cn } from '@/lib/utils';
 
 interface LessonCompleteDialogProps {
   open: boolean;
@@ -23,6 +24,8 @@ interface LessonCompleteDialogProps {
   nextLesson?: { lesson_number: number; title: string; access?: LessonAccess };
   onGoToLesson: (lessonNumber: number) => void;
   onGoToCourse: () => void;
+  /** Classe tema del corso (il dialog è in un portal, fuori dalla pagina) */
+  className?: string;
 }
 
 export function LessonCompleteDialog({
@@ -36,6 +39,7 @@ export function LessonCompleteDialog({
   nextLesson,
   onGoToLesson,
   onGoToCourse,
+  className,
 }: LessonCompleteDialogProps) {
   const [isCompleting, setIsCompleting] = useState(false);
   const [completeFailed, setCompleteFailed] = useState(false);
@@ -54,7 +58,7 @@ export function LessonCompleteDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md text-center">
+      <DialogContent className={cn('sm:max-w-md text-center', className)}>
         <DialogHeader className="items-center text-center sm:text-center">
           <div className="text-5xl mb-2" aria-hidden="true">🎉</div>
           <DialogTitle className="text-2xl">

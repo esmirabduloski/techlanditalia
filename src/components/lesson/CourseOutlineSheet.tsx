@@ -2,6 +2,7 @@ import { Check, CheckCircle2, Circle, Lock } from 'lucide-react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import type { LessonAccess, OutlineLesson } from '@/hooks/useCourseOutline';
+import { getTaskTypeMeta } from '@/lib/lessonTheme';
 
 interface CourseOutlineSheetProps {
   open: boolean;
@@ -14,6 +15,8 @@ interface CourseOutlineSheetProps {
   isTaskCompleted: (taskId: string) => boolean;
   onSelectLesson: (lessonNumber: number) => void;
   onSelectTask: (taskNumber: number) => void;
+  /** Classe tema del corso (il contenuto è in un portal, fuori dalla pagina) */
+  className?: string;
 }
 
 export function CourseOutlineSheet({
@@ -27,10 +30,11 @@ export function CourseOutlineSheet({
   isTaskCompleted,
   onSelectLesson,
   onSelectTask,
+  className,
 }: CourseOutlineSheetProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className="w-full sm:max-w-md overflow-y-auto">
+      <SheetContent side="left" className={cn('w-full sm:max-w-md overflow-y-auto', className)}>
         <SheetHeader className="text-left">
           <SheetTitle>Sommario</SheetTitle>
           <SheetDescription>{courseTitle}</SheetDescription>
@@ -118,6 +122,9 @@ export function CourseOutlineSheet({
                             )}
                             <span className="truncate">
                               {index + 1}. {task.title}
+                            </span>
+                            <span className="ml-auto shrink-0" title={getTaskTypeMeta(task.content_type).label} aria-hidden="true">
+                              {getTaskTypeMeta(task.content_type).emoji}
                             </span>
                           </button>
                         </li>

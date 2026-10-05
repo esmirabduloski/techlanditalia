@@ -20,13 +20,17 @@ import { WebCompiler } from '@/components/lesson/WebCompiler';
 import { QuizTask } from '@/components/lesson/QuizTask';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Loader2, CheckCircle2 } from 'lucide-react';
+import { LessonPageSkeleton } from '@/components/lesson/LessonPageSkeleton';
+import { getCourseThemeClass } from '@/lib/lessonTheme';
+import { cn } from '@/lib/utils';
+import { CheckCircle2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface Course {
   id: string;
   slug: string;
   title: string;
+  emoji: string;
 }
 
 interface Lesson {
@@ -40,6 +44,7 @@ interface VisibleTask {
   id: string;
   task_number: number;
   title: string;
+  content_type: string | null;
 }
 
 interface TaskAttachment {
@@ -85,7 +90,7 @@ function ContentSkeleton() {
 export default function TaskView() {
   const { courseId, lessonNumber, taskNumber } = useParams<{ courseId: string; lessonNumber: string; taskNumber: string }>();
   const { user, isLoading: authLoading } = useAuth();
-  const { isTaskCompleted, completeTask, completeLesson, lessonProgress, effectiveUserId } = useStudentProgress();
+  const { isTaskCompleted, completeTask, completeLesson, lessonProgress, effectiveUserId, isLoading: progressLoading } = useStudentProgress();
   const { isBookmarked, toggleBookmark } = useBookmarks();
   const { lessons: outlineLessons, schedule } = useCourseOutline(courseId, effectiveUserId);
   const { toast } = useToast();
@@ -99,6 +104,7 @@ export default function TaskView() {
   const [loadedKey, setLoadedKey] = useState<string | null>(null);
   const [outlineOpen, setOutlineOpen] = useState(false);
   const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
+  const [pointsGained, setPointsGained] = useState<{ id: number; points: number } | null>(null);
   const contentScrollRef = useRef<HTMLDivElement>(null);
 
   // Il componente resta montato passando da un task all'altro: teniamo traccia
@@ -136,7 +142,7 @@ export default function TaskView() {
       // Fetch course
       const { data: courseData } = await supabase
         .from('courses')
-        .select('id, slug, title')
+        .select('id, slug, title, emoji')
         .eq('id', courseId)
         .maybeSingle();
       if (!isCurrent()) return;
@@ -163,7 +169,7 @@ export default function TaskView() {
       // Fetch visible tasks for navigation and the stepper
       const { data: visibleTasksData } = await supabase
         .from('lesson_tasks')
-        .select('id, task_number, title')
+        .select('id, task_number, title, content_type')
         .eq('lesson_id', lessonData.id)
         .eq('is_visible', true)
         .order('task_number');
@@ -226,11 +232,27 @@ export default function TaskView() {
     }
   };
 
+  /**
+   * Segna il task come completato e, se è la prima volta, mostra i punti guadagnati:
+   * "+N" animato nell'intestazione, oppure un toast se lo stepper non è visibile.
+   */
+  const completeWithFeedback = async (target: Task, feedback: 'pop' | 'toast') => {
+    // Finché i progressi non sono caricati non sappiamo se il task era già fatto
+    const isFirstCompletion = !progressLoading && !isTaskCompleted(target.id);
+    const ok = await completeTask(target.id);
+    if (!ok || !isFirstCompletion || !target.points_reward) return;
+    if (feedback === 'pop' && visibleTasks.length > 1) {
+      setPointsGained({ id: Date.now(), points: target.points_reward });
+    } else {
+      toast({ title: `+${target.points_reward} punti ⚡`, description: `Task completato: ${target.title}` });
+    }
+  };
+
   const goToTask = (newTaskNumber: number) => {
     // Andando avanti il task corrente viene segnato come completato.
     // Non blocchiamo la navigazione in attesa del salvataggio.
     if (task && newTaskNumber > task.task_number) {
-      void completeTask(task.id);
+      void completeWithFeedback(task, 'pop');
     }
     navigate(`/area-riservata/corso/${courseId}/lezione/${lessonNumber}/task/${newTaskNumber}`);
   };
@@ -250,7 +272,7 @@ export default function TaskView() {
 
   const handleFinishLesson = () => {
     if (task) {
-      void completeTask(task.id);
+      void completeWithFeedback(task, 'toast');
     }
     setCompleteDialogOpen(true);
   };
@@ -265,9 +287,7 @@ export default function TaskView() {
   if (authLoading || (isLoading && !task)) {
     return (
       <Layout>
-        <div className="min-h-screen flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
+        <LessonPageSkeleton />
       </Layout>
     );
   }
@@ -299,6 +319,7 @@ export default function TaskView() {
   const showScratch = isScratchType && task.scratch_url;
   const isQuizType = task.content_type === 'quiz';
 
+  const themeClass = getCourseThemeClass(course.slug);
   const outlineIndex = outlineLessons.findIndex(l => l.id === lesson.id);
   const nextOutlineLesson = outlineIndex >= 0 ? outlineLessons[outlineIndex + 1] : undefined;
 
@@ -319,15 +340,19 @@ export default function TaskView() {
   const header = (
     <LessonHeader
       courseTitle={course.title}
+      courseEmoji={course.emoji}
       lessonNumber={lesson.lesson_number}
       lessonTitle={lesson.title}
       taskTitle={task.title}
       taskPosition={displayPosition}
+      taskType={task.content_type}
+      pointsGained={pointsGained}
       steps={visibleTasks.map(t => ({
         key: t.id,
         title: t.title,
         completed: isTaskCompleted(t.id),
         current: t.task_number === task.task_number,
+        contentType: t.content_type,
         onSelect: () => goToTask(t.task_number),
       }))}
       onBack={handleNavigateToCourse}
@@ -377,6 +402,7 @@ export default function TaskView() {
         isTaskCompleted={isTaskCompleted}
         onSelectLesson={goToLesson}
         onSelectTask={goToTask}
+        className={themeClass}
       />
       <LessonCompleteDialog
         open={completeDialogOpen}
@@ -402,6 +428,7 @@ export default function TaskView() {
         }}
         onGoToLesson={goToLesson}
         onGoToCourse={() => navigate(`/area-riservata/corso/${courseId}`)}
+        className={themeClass}
       />
     </>
   );
@@ -425,7 +452,7 @@ export default function TaskView() {
   // Split layout for Scratch games or for "misto" tasks in courses with a compiler
   if (showScratch || showCompiler) {
     return (
-      <div className="h-screen flex flex-col bg-background">
+      <div className={cn('h-screen flex flex-col bg-background', themeClass)}>
         {header}
 
         <ResizablePanelGroup direction="horizontal" className="flex-1">
@@ -494,7 +521,7 @@ export default function TaskView() {
   // Normal layout for other courses
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className={cn('max-w-4xl mx-auto px-4 py-8', themeClass)}>
         <div className="rounded-xl border border-border overflow-hidden shadow-sm">
           {header}
         </div>
@@ -514,7 +541,7 @@ export default function TaskView() {
                   hideHeading
                 />
                 <div className="px-2 sm:px-6 pb-6">
-                  <QuizTask key={task.id} content={task.content} storageKey={task.id} onFinish={() => completeTask(task.id)} />
+                  <QuizTask key={task.id} content={task.content} storageKey={task.id} onFinish={() => completeWithFeedback(task, 'pop')} />
                 </div>
               </>
             )}

@@ -27,7 +27,9 @@ import {
   Code,
   Video,
   Loader2,
-  FolderOpen
+  FolderOpen,
+  SquareCode,
+  MessageSquareWarning
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
@@ -47,6 +49,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+// Riquadri delle lezioni: un blockquote che inizia con l'emoji viene colorato
+// automaticamente nella pagina lezione (vedi LessonContent)
+const CALLOUT_PRESETS = [
+  { emoji: '💡', label: 'Suggerimento' },
+  { emoji: '⚠️', label: 'Attenzione' },
+  { emoji: '🎯', label: 'Obiettivo' },
+  { emoji: 'ℹ️', label: 'Info' },
+];
 
 // All available storage buckets for upload
 const STORAGE_BUCKETS = [
@@ -512,6 +529,46 @@ export default function RichTextEditor({ content, onChange }: RichTextEditorProp
         >
           <Quote className="w-4 h-4" />
         </Button>
+        <Button
+          type="button"
+          variant={editor.isActive('codeBlock') ? 'secondary' : 'ghost'}
+          size="sm"
+          onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+          title="Blocco di codice"
+          aria-label="Blocco di codice"
+        >
+          <SquareCode className="w-4 h-4" />
+        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button type="button" variant="ghost" size="sm" title="Riquadro" aria-label="Inserisci riquadro">
+              <MessageSquareWarning className="w-4 h-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            {CALLOUT_PRESETS.map(preset => (
+              <DropdownMenuItem
+                key={preset.label}
+                onSelect={() => {
+                  editor.chain().focus().insertContent({
+                    type: 'blockquote',
+                    content: [{
+                      type: 'paragraph',
+                      content: [
+                        { type: 'text', text: `${preset.emoji} ` },
+                        { type: 'text', marks: [{ type: 'bold' }], text: `${preset.label}:` },
+                        { type: 'text', text: ' ' },
+                      ],
+                    }],
+                  }).run();
+                }}
+              >
+                <span aria-hidden="true" className="mr-2">{preset.emoji}</span>
+                {preset.label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <div className="w-px h-6 bg-border mx-1" />
 

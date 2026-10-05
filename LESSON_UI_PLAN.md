@@ -28,12 +28,14 @@ File coinvolti: `src/pages/area-riservata/TaskView.tsx`, `src/pages/area-riserva
 
 ## 🟡 P2 — Più carine e motivanti
 
-- [ ] **Feedback quando si completa un task**: toast o piccola animazione "+{points_reward} punti" (il campo `points_reward` esiste ma non viene mostrato).
-- [ ] Badge "Task completato" spostato nell'header/stepper invece che in fondo, dove nessuno lo vede.
-- [ ] **Colore per corso** (Python, Web, Scratch…) usato in header, stepper e pulsanti, così ogni corso ha la sua identità.
-- [ ] **Icona per tipo di task**: 📖 teoria, 💻 codice, ❓ quiz, 🐱 Scratch — nello stepper e nell'header.
-- [ ] **Stile del contenuto**: box "💡 Suggerimento" / "⚠️ Attenzione" / "🎯 Obiettivo", blocchi di codice con pulsante "Copia", immagini con didascalia e zoom al click.
-- [ ] **Skeleton** al posto dello spinner a tutto schermo durante il caricamento.
+> Nota: le lezioni usano ora la classe `.lesson-prose` (in `index.css`). Il plugin `@tailwindcss/typography` è installato ma non attivo, quindi le classi `prose` altrove (blog, privacy…) non hanno effetto.
+
+- [x] **Feedback quando si completa un task**: toast o piccola animazione "+{points_reward} punti" (il campo `points_reward` esiste ma non viene mostrato).
+- [x] Badge "Task completato" spostato nell'header/stepper invece che in fondo, dove nessuno lo vede.
+- [x] **Colore per corso** (Python, Web, Scratch…) usato in header, stepper e pulsanti, così ogni corso ha la sua identità.
+- [x] **Icona per tipo di task**: 📖 teoria, 💻 codice, ❓ quiz, 🐱 Scratch — nello stepper e nell'header.
+- [x] **Stile del contenuto**: box "💡 Suggerimento" / "⚠️ Attenzione" / "🎯 Obiettivo", blocchi di codice con pulsante "Copia", immagini con didascalia e zoom al click.
+- [x] **Skeleton** al posto dello spinner a tutto schermo durante il caricamento.
 - [ ] Rinominare "Task" in "Esercizio" / "Missione" (più chiaro per i ragazzi) — da decidere.
 
 ## 🟢 P3 — Funzionalità e rifinitura

@@ -13,16 +13,13 @@ import { TaskNavigation } from '@/components/lesson/TaskNavigation';
 import { CourseOutlineSheet } from '@/components/lesson/CourseOutlineSheet';
 import { LessonCompleteDialog } from '@/components/lesson/LessonCompleteDialog';
 import { BookmarkButton } from '@/components/dashboard/BookmarkButton';
-import { PythonCompiler } from '@/components/lesson/PythonCompiler';
-import { TurtleCompiler } from '@/components/lesson/TurtleCompiler';
-import { PgzeroCompiler } from '@/components/lesson/PgzeroCompiler';
-import { WebCompiler } from '@/components/lesson/WebCompiler';
+import { LessonWorkspace } from '@/components/lesson/LessonWorkspace';
+import { getTaskSidePanel, type TaskAttachment } from '@/components/lesson/taskSidePanel';
+import { useLessonKeyboardNav } from '@/hooks/useLessonKeyboardNav';
 import { QuizTask } from '@/components/lesson/QuizTask';
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { Skeleton } from '@/components/ui/skeleton';
 import { LessonPageSkeleton } from '@/components/lesson/LessonPageSkeleton';
 import { getCourseThemeClass } from '@/lib/lessonTheme';
-import { cn } from '@/lib/utils';
 import { CheckCircle2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
@@ -47,12 +44,6 @@ interface VisibleTask {
   content_type: string | null;
 }
 
-interface TaskAttachment {
-  name: string;
-  url: string;
-  type: 'image' | 'css' | 'js' | 'html';
-}
-
 interface Task {
   id: string;
   task_number: number;
@@ -72,8 +63,6 @@ interface Task {
   attachments: TaskAttachment[];
 }
 
-const PYTHON_COURSES = ['python-base', 'python-ai', 'python-avanzato'];
-const WEB_COURSES = ['web-development'];
 
 function ContentSkeleton() {
   return (
@@ -105,7 +94,6 @@ export default function TaskView() {
   const [outlineOpen, setOutlineOpen] = useState(false);
   const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
   const [pointsGained, setPointsGained] = useState<{ id: number; points: number } | null>(null);
-  const contentScrollRef = useRef<HTMLDivElement>(null);
 
   // Il componente resta montato passando da un task all'altro: teniamo traccia
   // della richiesta più recente per ignorare risposte arrivate in ritardo e
@@ -125,12 +113,6 @@ export default function TaskView() {
       fetchData();
     }
   }, [courseId, lessonNumber, taskNumber]);
-
-  // Nel layout diviso il testo scorre dentro il pannello, non nella finestra:
-  // riportarlo in cima a ogni cambio task.
-  useEffect(() => {
-    contentScrollRef.current?.scrollTo({ top: 0 });
-  }, [task?.id]);
 
   const fetchData = async () => {
     if (!courseId || !lessonNumber || !taskNumber) return;
@@ -284,6 +266,16 @@ export default function TaskView() {
 
   const taskCompleted = task ? isTaskCompleted(task.id) : false;
 
+  // Frecce ← → tra i task visibili (calcolate qui: gli hook vanno prima dei return)
+  const keyboardIndex = task ? visibleTasks.findIndex(t => t.task_number === task.task_number) : -1;
+  useLessonKeyboardNav({
+    enabled: !!task && !isStale,
+    onPrevious: keyboardIndex > 0 ? () => goToTask(visibleTasks[keyboardIndex - 1].task_number) : undefined,
+    onNext: keyboardIndex >= 0 && keyboardIndex < visibleTasks.length - 1
+      ? () => goToTask(visibleTasks[keyboardIndex + 1].task_number)
+      : undefined,
+  });
+
   if (authLoading || (isLoading && !task)) {
     return (
       <Layout>
@@ -302,9 +294,6 @@ export default function TaskView() {
     );
   }
 
-  const isPythonCourse = PYTHON_COURSES.includes(course.slug);
-  const isWebCourse = WEB_COURSES.includes(course.slug);
-
   // Navigation among visible tasks only
   const currentIndex = visibleTasks.findIndex(t => t.task_number === task.task_number);
   const previousTaskNumber = currentIndex > 0 ? visibleTasks[currentIndex - 1].task_number : undefined;
@@ -313,29 +302,12 @@ export default function TaskView() {
     : undefined;
   const displayPosition = currentIndex >= 0 ? currentIndex + 1 : 1;
   const totalTasks = visibleTasks.length || 1;
-  const isMixedType = task.content_type === 'mixed';
-  const isScratchType = task.content_type === 'scratch';
-  const showCompiler = (isPythonCourse || isWebCourse) && isMixedType;
-  const showScratch = isScratchType && task.scratch_url;
+  const showScratch = task.content_type === 'scratch' && !!task.scratch_url;
   const isQuizType = task.content_type === 'quiz';
 
   const themeClass = getCourseThemeClass(course.slug);
   const outlineIndex = outlineLessons.findIndex(l => l.id === lesson.id);
   const nextOutlineLesson = outlineIndex >= 0 ? outlineLessons[outlineIndex + 1] : undefined;
-
-  // Helper function to extract proper Scratch embed URL
-  const getScratchEmbedUrl = (url: string): string => {
-    // If already an embed URL, return as-is
-    if (url.includes('/embed')) {
-      return url;
-    }
-    // Extract project ID and create embed URL
-    const match = url.match(/scratch\.mit\.edu\/projects\/(\d+)/);
-    if (match) {
-      return `https://scratch.mit.edu/projects/${match[1]}/embed`;
-    }
-    return url;
-  };
 
   const header = (
     <LessonHeader
@@ -433,125 +405,41 @@ export default function TaskView() {
     </>
   );
 
-  const taskContent = (slidesUrl: string | null) => isStale ? (
+  const sidePanel = getTaskSidePanel(course.slug, task, { saveDrafts: true });
+
+  const content = isStale ? (
     <ContentSkeleton />
   ) : (
-    <LessonContent
-      title={task.title}
-      lessonTitle={lesson.title}
-      description={task.description}
-      content={task.content}
-      contentType={task.content_type || 'text'}
-      videoUrl={null}
-      slidesUrl={slidesUrl}
-      images={[]}
-      hideHeading
-    />
+    <>
+      <LessonContent
+        title={task.title}
+        lessonTitle={lesson.title}
+        description={task.description}
+        content={isQuizType ? null : task.content}
+        contentType={task.content_type || 'text'}
+        videoUrl={null}
+        slidesUrl={isQuizType || showScratch ? null : task.slides_url}
+        images={[]}
+        hideHeading
+      />
+      {isQuizType && (
+        <div className="px-2 sm:px-6 pb-6">
+          <QuizTask key={task.id} content={task.content} storageKey={task.id} onFinish={() => completeWithFeedback(task, 'pop')} />
+        </div>
+      )}
+    </>
   );
 
-  // Split layout for Scratch games or for "misto" tasks in courses with a compiler
-  if (showScratch || showCompiler) {
-    return (
-      <div className={cn('h-screen flex flex-col bg-background', themeClass)}>
-        {header}
-
-        <ResizablePanelGroup direction="horizontal" className="flex-1">
-          {/* Left Panel - Task Content */}
-          <ResizablePanel defaultSize={showScratch ? 40 : 50} minSize={showScratch ? 25 : 30}>
-            <div ref={contentScrollRef} className="h-full overflow-y-auto">
-              {taskContent(showScratch ? null : task.slides_url)}
-              {navigation('px-6 mt-0')}
-            </div>
-          </ResizablePanel>
-
-          {/* Resize Handle */}
-          <ResizableHandle withHandle />
-
-          {showScratch ? (
-            /* Right Panel - Scratch Game */
-            <ResizablePanel defaultSize={60} minSize={30}>
-              <div className="h-full flex flex-col bg-muted/30">
-                <div className="p-4 border-b bg-background">
-                  <h3 className="font-semibold flex items-center gap-2">
-                    🐱 Scratch - Gioca e Impara
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Clicca sulla bandierina verde per iniziare il gioco!
-                  </p>
-                </div>
-                <div className="flex-1 p-4">
-                  <iframe
-                    src={getScratchEmbedUrl(task.scratch_url!)}
-                    className="w-full h-full rounded-lg border shadow-sm"
-                    allowFullScreen
-                    title="Scratch Game"
-                  />
-                </div>
-              </div>
-            </ResizablePanel>
-          ) : (
-            /* Right Panel - Compiler */
-            <ResizablePanel defaultSize={50} minSize={30}>
-              {isPythonCourse && (
-                task.python_env === 'turtle' ? (
-                  <TurtleCompiler defaultCode={task.default_python_code || undefined} />
-                ) : task.python_env === 'pgzero' ? (
-                  <PgzeroCompiler defaultCode={task.default_python_code || undefined} replitUrl={task.replit_url || undefined} />
-                ) : (
-                  <PythonCompiler defaultCode={task.default_python_code || undefined} taskId={task.id} />
-                )
-              )}
-              {isWebCourse && (
-                <WebCompiler
-                  defaultHtmlCode={task.default_html_code || undefined}
-                  defaultCssCode={task.default_css_code || undefined}
-                  defaultJsCode={task.default_js_code || undefined}
-                  taskId={task.id}
-                  taskAttachments={task.attachments}
-                />
-              )}
-            </ResizablePanel>
-          )}
-        </ResizablePanelGroup>
-        {overlays}
-      </div>
-    );
-  }
-
-  // Normal layout for other courses
   return (
-    <Layout>
-      <div className={cn('max-w-4xl mx-auto px-4 py-8', themeClass)}>
-        <div className="rounded-xl border border-border overflow-hidden shadow-sm">
-          {header}
-        </div>
-        {isQuizType ? (
-          <>
-            {isStale ? <ContentSkeleton /> : (
-              <>
-                <LessonContent
-                  title={task.title}
-                  lessonTitle={lesson.title}
-                  description={task.description}
-                  content={null}
-                  contentType={task.content_type || 'text'}
-                  videoUrl={null}
-                  slidesUrl={null}
-                  images={[]}
-                  hideHeading
-                />
-                <div className="px-2 sm:px-6 pb-6">
-                  <QuizTask key={task.id} content={task.content} storageKey={task.id} onFinish={() => completeWithFeedback(task, 'pop')} />
-                </div>
-              </>
-            )}
-          </>
-        ) : (
-          taskContent(task.slides_url)
-        )}
-        {navigation()}
-      </div>
-      {overlays}
-    </Layout>
+    <LessonWorkspace
+      header={header}
+      content={content}
+      renderNavigation={variant => navigation(variant === 'split' ? 'px-6 mt-0' : undefined)}
+      sidePanel={sidePanel}
+      layoutId={`lesson-split-${showScratch ? 'scratch' : 'code'}`}
+      resetKey={task.id}
+      themeClass={themeClass}
+      overlays={overlays}
+    />
   );
 }

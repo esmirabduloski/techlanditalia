@@ -39,7 +39,7 @@ export function LessonNavigation({
     >
       <div className="justify-self-start">
         {hasPrevious && (
-          <Button variant="outline" onClick={onPrevious} asChild={!onPrevious} aria-label="Lezione precedente">
+          <Button variant="outline" onClick={onPrevious} asChild={!onPrevious} aria-label="Lezione precedente" title="Lezione precedente (tasto ←)">
             {onPrevious ? (
               <>
                 <ChevronLeft className="w-4 h-4 sm:mr-1" />
@@ -61,7 +61,7 @@ export function LessonNavigation({
 
       <div className="justify-self-end">
         {hasNext ? (
-          <Button size="lg" onClick={onNext} asChild={!onNext} className="px-4 sm:px-6" aria-label="Lezione successiva">
+          <Button size="lg" onClick={onNext} asChild={!onNext} className="px-4 sm:px-6" aria-label="Lezione successiva" title="Lezione successiva (tasto →)">
             {onNext ? (
               <>
                 <span className="hidden sm:inline">Lezione successiva</span>

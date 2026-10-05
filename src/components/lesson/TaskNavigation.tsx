@@ -48,7 +48,7 @@ export function TaskNavigation({
     >
       <div className="justify-self-start">
         {hasPrevious && (
-          <Button variant="outline" onClick={onPrevious} asChild={!onPrevious} disabled={disabled} aria-label="Task precedente">
+          <Button variant="outline" onClick={onPrevious} asChild={!onPrevious} disabled={disabled} aria-label="Task precedente" title="Task precedente (tasto ←)">
             {onPrevious ? (
               <>
                 <ChevronLeft className="w-4 h-4 sm:mr-1" />
@@ -73,7 +73,7 @@ export function TaskNavigation({
 
       <div className="justify-self-end">
         {hasNext ? (
-          <Button size="lg" onClick={onNext} asChild={!onNext} disabled={disabled} className="px-4 sm:px-6" aria-label="Task successivo">
+          <Button size="lg" onClick={onNext} asChild={!onNext} disabled={disabled} className="px-4 sm:px-6" aria-label="Task successivo" title="Task successivo (tasto →)">
             {onNext ? (
               <>
                 <span className="hidden sm:inline">Successivo</span>

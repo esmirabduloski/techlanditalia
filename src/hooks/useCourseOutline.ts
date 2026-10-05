@@ -32,7 +32,11 @@ export interface LessonAccess {
  * Struttura del corso (lezioni + task visibili) e calendario del gruppo dello studente.
  * Usata dal sommario laterale e dalla schermata di fine lezione.
  */
-export function useCourseOutline(courseId: string | undefined, userId: string | null | undefined) {
+export function useCourseOutline(
+  courseId: string | undefined,
+  userId: string | null | undefined,
+  { includeHiddenTasks = false }: { includeHiddenTasks?: boolean } = {},
+) {
   const [lessons, setLessons] = useState<OutlineLesson[]>([]);
   const [schedule, setSchedule] = useState<Record<number, string>>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -51,12 +55,14 @@ export function useCourseOutline(courseId: string | undefined, userId: string | 
       const lessonIds = (lessonsData || []).map(l => l.id);
       let tasksData: OutlineTask[] = [];
       if (lessonIds.length > 0) {
-        const { data } = await supabase
+        let query = supabase
           .from('lesson_tasks')
           .select('id, lesson_id, task_number, title, content_type')
           .in('lesson_id', lessonIds)
-          .eq('is_visible', true)
           .order('task_number');
+        // L'insegnante vede anche i task nascosti agli studenti
+        if (!includeHiddenTasks) query = query.eq('is_visible', true);
+        const { data } = await query;
         tasksData = (data || []) as OutlineTask[];
       }
 
@@ -70,7 +76,7 @@ export function useCourseOutline(courseId: string | undefined, userId: string | 
 
     fetchOutline();
     return () => { cancelled = true; };
-  }, [courseId]);
+  }, [courseId, includeHiddenTasks]);
 
   useEffect(() => {
     if (!courseId || !userId) return;

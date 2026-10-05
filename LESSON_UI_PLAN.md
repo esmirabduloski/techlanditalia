@@ -40,12 +40,12 @@ File coinvolti: `src/pages/area-riservata/TaskView.tsx`, `src/pages/area-riserva
 
 ## 🟢 P3 — Funzionalità e rifinitura
 
-- [ ] **Mobile**: il layout diviso orizzontale (testo | compilatore) è inutilizzabile sul telefono → sotto `md` usare tab `📖 Spiegazione` / `💻 Codice`.
-- [ ] **Scorciatoie da tastiera**: `←` / `→` per task precedente/successivo (disattivate quando il focus è nell'editor).
-- [ ] **Pannello ridimensionabile**: ricordare la larghezza scelta (`autoSaveId` di `ResizablePanelGroup`).
-- [ ] Pulsante "Ricomincia codice" ben visibile nel compilatore.
-- [ ] Accessibilità: `aria-current="step"` nello stepper, focus visibile sui pulsanti, annuncio del cambio task.
-- [ ] Allineare anche le viste insegnante (`TeacherLessonView`, `TeacherTaskView`) agli stessi componenti.
+- [x] **Mobile**: il layout diviso orizzontale (testo | compilatore) è inutilizzabile sul telefono → sotto `md` usare tab `📖 Spiegazione` / `💻 Codice`.
+- [x] **Scorciatoie da tastiera**: `←` / `→` per task precedente/successivo (disattivate quando il focus è nell'editor).
+- [x] **Pannello ridimensionabile**: ricordare la larghezza scelta (`autoSaveId` di `ResizablePanelGroup`).
+- [x] Pulsante "Ricomincia codice" ben visibile nel compilatore. — già presente nei compilatori (icona ↺ "Resetta codice"), non modificato
+- [x] Accessibilità: `aria-current="step"` nello stepper, focus visibile sui pulsanti, annuncio del cambio task.
+- [x] Allineare anche le viste insegnante (`TeacherLessonView`, `TeacherTaskView`) agli stessi componenti.
 
 ---
 

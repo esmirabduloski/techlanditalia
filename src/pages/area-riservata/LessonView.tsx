@@ -12,13 +12,12 @@ import { LessonNavigation } from '@/components/lesson/LessonNavigation';
 import { LessonHeader } from '@/components/lesson/LessonHeader';
 import { CourseOutlineSheet } from '@/components/lesson/CourseOutlineSheet';
 import { BookmarkButton } from '@/components/dashboard/BookmarkButton';
-import { PythonCompiler } from '@/components/lesson/PythonCompiler';
-import { WebCompiler } from '@/components/lesson/WebCompiler';
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
+import { LessonWorkspace } from '@/components/lesson/LessonWorkspace';
+import { getLessonSidePanel } from '@/components/lesson/taskSidePanel';
+import { useLessonKeyboardNav } from '@/hooks/useLessonKeyboardNav';
 import { Skeleton } from '@/components/ui/skeleton';
 import { LessonPageSkeleton } from '@/components/lesson/LessonPageSkeleton';
 import { getCourseThemeClass } from '@/lib/lessonTheme';
-import { cn } from '@/lib/utils';
 
 interface Course {
   id: string;
@@ -41,9 +40,6 @@ interface Lesson {
   points_reward: number;
 }
 
-const PYTHON_COURSES = ['python-base', 'python-ai', 'python-avanzato'];
-const WEB_COURSES = ['web-development'];
-const SPLIT_LAYOUT_COURSES = [...PYTHON_COURSES, ...WEB_COURSES];
 
 export default function LessonView() {
   const { courseId, lessonNumber } = useParams<{ courseId: string; lessonNumber: string }>();
@@ -60,7 +56,6 @@ export default function LessonView() {
   const [loadedKey, setLoadedKey] = useState<string | null>(null);
   const [outlineOpen, setOutlineOpen] = useState(false);
   const lessonTracked = useRef(false);
-  const contentScrollRef = useRef<HTMLDivElement>(null);
 
   // Il componente resta montato passando da una lezione all'altra: ignoriamo le
   // risposte in ritardo e non mostriamo la lezione precedente mentre carica.
@@ -143,10 +138,6 @@ export default function LessonView() {
     }
   };
 
-  useEffect(() => {
-    contentScrollRef.current?.scrollTo({ top: 0 });
-  }, [lesson?.id]);
-
   const lessonAccess = useMemo(
     () => computeLessonAccess(outlineLessons, new Set(lessonProgress.map(p => p.lesson_id)), schedule),
     [outlineLessons, lessonProgress, schedule],
@@ -185,6 +176,15 @@ export default function LessonView() {
     navigate(`/area-riservata/corso/${courseId}/lezione/${newLessonNumber}`);
   };
 
+  // Frecce ← → tra le lezioni (gli hook vanno prima dei return)
+  useLessonKeyboardNav({
+    enabled: !!lesson && !!course && !isStale,
+    onPrevious: lesson && lesson.lesson_number > 1 ? () => navigateToLesson(lesson.lesson_number - 1) : undefined,
+    onNext: lesson && course && lesson.lesson_number < course.total_lessons
+      ? () => navigateToLesson(lesson.lesson_number + 1)
+      : undefined,
+  });
+
   if (authLoading || (isLoading && !lesson)) {
     return (
       <Layout>
@@ -203,9 +203,6 @@ export default function LessonView() {
     );
   }
 
-  const isSplitLayout = SPLIT_LAYOUT_COURSES.includes(course.slug);
-  const isPythonCourse = PYTHON_COURSES.includes(course.slug);
-  const isWebCourse = WEB_COURSES.includes(course.slug);
   const themeClass = getCourseThemeClass(course.slug);
 
   const header = (
@@ -272,45 +269,16 @@ export default function LessonView() {
     />
   );
 
-  // Split layout for Python and Web courses
-  if (isSplitLayout) {
-    return (
-      <div className={cn('h-screen flex flex-col bg-background', themeClass)}>
-        {header}
-        <ResizablePanelGroup direction="horizontal" className="flex-1">
-          {/* Left Panel - Lesson Content */}
-          <ResizablePanel defaultSize={50} minSize={30}>
-            <div ref={contentScrollRef} className="h-full overflow-y-auto">
-              {content}
-              {navigation('px-6 mt-0')}
-            </div>
-          </ResizablePanel>
-
-          {/* Resize Handle */}
-          <ResizableHandle withHandle />
-
-          {/* Right Panel - Compiler */}
-          <ResizablePanel defaultSize={50} minSize={30}>
-            {isPythonCourse && <PythonCompiler />}
-            {isWebCourse && <WebCompiler />}
-          </ResizablePanel>
-        </ResizablePanelGroup>
-        {outline}
-      </div>
-    );
-  }
-
-  // Normal layout for other courses
   return (
-    <Layout>
-      <div className={cn('max-w-4xl mx-auto px-4 py-8', themeClass)}>
-        <div className="rounded-xl border border-border overflow-hidden shadow-sm">
-          {header}
-        </div>
-        {content}
-        {navigation()}
-      </div>
-      {outline}
-    </Layout>
+    <LessonWorkspace
+      header={header}
+      content={content}
+      renderNavigation={variant => navigation(variant === 'split' ? 'px-6 mt-0' : undefined)}
+      sidePanel={getLessonSidePanel(course.slug)}
+      layoutId="lesson-split-code"
+      resetKey={lesson.id}
+      themeClass={themeClass}
+      overlays={outline}
+    />
   );
 }

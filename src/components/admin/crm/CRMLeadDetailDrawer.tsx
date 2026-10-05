@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { CRMCourseSelect } from "./CRMCourseSelect";
+import { CRMPaymentsSection } from "./payments/CRMPaymentsSection";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 
@@ -340,6 +341,11 @@ export function CRMLeadDetailDrawer({ lead, open, onClose, onUpdate, onDelete }:
             <span>Cliente registrato sulla piattaforma</span>
           </div>
         )}
+
+        <Separator className="my-6" />
+
+        {/* Pagamenti: storico, rate pianificate e promemoria */}
+        <CRMPaymentsSection lead={lead} addInteraction={addInteraction} />
 
         <Separator className="my-6" />
 

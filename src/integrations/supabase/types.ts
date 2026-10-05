@@ -777,6 +777,86 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_payments: {
+        Row: {
+          admin_reminder_sent_at: string | null
+          amount_cents: number
+          client_reminder_result: string | null
+          client_reminder_sent_at: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          installment_number: number | null
+          installment_total: number | null
+          lead_id: string
+          method: string | null
+          notes: string | null
+          paid_at: string | null
+          plan_id: string | null
+          remind_admin: boolean
+          remind_client: boolean
+          reminder_date: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_reminder_sent_at?: string | null
+          amount_cents: number
+          client_reminder_result?: string | null
+          client_reminder_sent_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          installment_number?: number | null
+          installment_total?: number | null
+          lead_id: string
+          method?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          plan_id?: string | null
+          remind_admin?: boolean
+          remind_client?: boolean
+          reminder_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_reminder_sent_at?: string | null
+          amount_cents?: number
+          client_reminder_result?: string | null
+          client_reminder_sent_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          installment_number?: number | null
+          installment_total?: number | null
+          lead_id?: string
+          method?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          plan_id?: string | null
+          remind_admin?: boolean
+          remind_client?: boolean
+          reminder_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_payments_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_tags: {
         Row: {
           color: string

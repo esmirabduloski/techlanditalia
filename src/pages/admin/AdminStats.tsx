@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { StatsFiltersBar, type StatsFilters } from '@/components/admin/StatsFilters';
+import { RevenueChart } from '@/components/admin/RevenueChart';
 import { 
   LogOut, Loader2, BookOpen, Users, GraduationCap,
   Calendar, MessageSquare, TrendingUp
@@ -232,6 +233,8 @@ export default function AdminStats() {
             </div>
           </CardContent>
         </Card>
+
+        <RevenueChart dateFrom={filters.dateFrom} dateTo={filters.dateTo} />
       </main>
     </div>
   );

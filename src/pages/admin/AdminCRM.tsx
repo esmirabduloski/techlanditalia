@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { AdminHeader } from "@/components/admin/AdminHeader";
@@ -48,6 +48,21 @@ export default function AdminCRM() {
     setSelectedLead(lead);
     setDrawerOpen(true);
   };
+
+  // ?lead=<id> (es. dalla notifica push di un pagamento) apre direttamente la scheda
+  const [searchParams, setSearchParams] = useSearchParams();
+  const leadParam = searchParams.get("lead");
+  useEffect(() => {
+    if (!leadParam || loading) return;
+    const lead = leads.find(l => l.id === leadParam);
+    if (lead) handleSelectLead(lead);
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.delete("lead");
+      return next;
+    }, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leadParam, loading, leads]);
 
   // when leads list refreshes, sync currently-selected lead
   const liveSelected = selectedLead ? leads.find(l => l.id === selectedLead.id) ?? selectedLead : null;

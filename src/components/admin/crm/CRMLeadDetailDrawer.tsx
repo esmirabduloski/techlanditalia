@@ -21,6 +21,7 @@ import {
 import { Link } from "react-router-dom";
 import { CRMCourseSelect } from "./CRMCourseSelect";
 import { CRMPaymentsSection } from "./payments/CRMPaymentsSection";
+import { CRMLinkedAccount } from "./CRMLinkedAccount";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 
@@ -335,12 +336,8 @@ export function CRMLeadDetailDrawer({ lead, open, onClose, onUpdate, onDelete }:
           </div>
         )}
 
-        {lead.linked_profile_id && (
-          <div className="mb-6 p-3 bg-green-500/10 rounded-lg text-sm flex items-center gap-2">
-            <User className="w-4 h-4 text-green-600" />
-            <span>Cliente registrato sulla piattaforma</span>
-          </div>
-        )}
+        {/* Account collegato: serve per le notifiche push al cliente */}
+        <CRMLinkedAccount lead={lead} onUpdate={onUpdate} />
 
         <Separator className="my-6" />
 

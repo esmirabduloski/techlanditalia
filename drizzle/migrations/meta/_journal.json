@@ -43,6 +43,13 @@
       "when": 1791236100777,
       "tag": "0005_crm_payment_dunning",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791238025923,
+      "tag": "0006_crm_payments",
+      "breakpoints": true
     }
   ]
 }

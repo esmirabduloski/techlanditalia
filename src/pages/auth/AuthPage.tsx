@@ -31,7 +31,18 @@ export default function AuthPage() {
   const [courses, setCourses] = useState<{ id: string; title: string; emoji: string }[]>([]);
 
   const [showResetPassword, setShowResetPassword] = useState(false);
-  const [showNewPasswordForm, setShowNewPasswordForm] = useState(false);
+  // Inizializzato subito: se l'URL è di recupero password il form deve comparire
+  // al primo render, altrimenti il redirect automatico porta via dalla pagina.
+  const [showNewPasswordForm, setShowNewPasswordForm] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const search = new URLSearchParams(window.location.search);
+    return (
+      search.get("reset") === "true" ||
+      search.get("type") === "recovery" ||
+      hashParams.get("type") === "recovery"
+    );
+  });
   const [resetEmail, setResetEmail] = useState("");
 
   const navigate = useNavigate();
@@ -107,7 +118,7 @@ export default function AuthPage() {
       const hashType = hashParams.get("type");
       const queryType = searchParams.get("type");
 
-      if ((hashType === "recovery" && accessToken) || queryType === "recovery") {
+      if ((hashType === "recovery" && accessToken) || queryType === "recovery" || searchParams.get("reset") === "true") {
         setShowNewPasswordForm(true);
         window.history.replaceState(null, "", "/auth?reset=true");
       }

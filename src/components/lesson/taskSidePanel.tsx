@@ -69,7 +69,9 @@ export function getTaskSidePanel(
   const taskId = saveDrafts ? task.id : undefined;
 
   if (PYTHON_COURSES.includes(courseSlug)) {
-    const node = task.python_env === 'turtle' ? (
+    // Turtle anche quando l'ambiente non è impostato ma il codice di partenza importa turtle
+    const usesTurtle = task.python_env === 'turtle' || /^\s*(import turtle|from turtle)/m.test(task.default_python_code || '');
+    const node = usesTurtle ? (
       <TurtleCompiler defaultCode={task.default_python_code || undefined} />
     ) : task.python_env === 'pgzero' ? (
       <PgzeroCompiler defaultCode={task.default_python_code || undefined} replitUrl={task.replit_url || undefined} />

@@ -1,6 +1,7 @@
 import { Outlet } from "react-router-dom";
 import { Head } from "vite-react-ssg";
 import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/hooks/useAuth";
@@ -30,6 +31,9 @@ const App = () => (
               <meta name="application-name" content="TECHLAND" />
             </Head>
             <Sonner />
+            {/* Toaster del sistema use-toast: senza di questo i toast di molte pagine
+                (es. errori di login in AuthPage) non apparivano mai a schermo. */}
+            <Toaster />
             <SkipToContent />
             <ImpersonationBanner />
             <AnalyticsProvider>

@@ -1,16 +1,21 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useBookmarks } from '@/hooks/useBookmarks';
+import { useStudentProgress } from '@/hooks/useStudentProgress';
+import { computeLessonAccess, useCourseOutline } from '@/hooks/useCourseOutline';
 import { supabase } from '@/integrations/supabase/client';
 import { Layout } from '@/components/layout/Layout';
 import { LessonContent } from '@/components/lesson/LessonContent';
 import { LessonNavigation } from '@/components/lesson/LessonNavigation';
+import { LessonHeader } from '@/components/lesson/LessonHeader';
+import { CourseOutlineSheet } from '@/components/lesson/CourseOutlineSheet';
 import { BookmarkButton } from '@/components/dashboard/BookmarkButton';
 import { PythonCompiler } from '@/components/lesson/PythonCompiler';
 import { WebCompiler } from '@/components/lesson/WebCompiler';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Loader2 } from 'lucide-react';
 
 interface Course {
@@ -42,12 +47,23 @@ export default function LessonView() {
   const { user, isLoading: authLoading } = useAuth();
   const { trackLessonStart, trackLessonComplete, startLessonTimer, getLessonTime } = useAnalytics();
   const { isBookmarked, toggleBookmark } = useBookmarks();
+  const { isTaskCompleted, lessonProgress, effectiveUserId } = useStudentProgress();
+  const { lessons: outlineLessons, schedule } = useCourseOutline(courseId, effectiveUserId);
   const navigate = useNavigate();
   
   const [course, setCourse] = useState<Course | null>(null);
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  const [outlineOpen, setOutlineOpen] = useState(false);
   const lessonTracked = useRef(false);
+  const contentScrollRef = useRef<HTMLDivElement>(null);
+
+  // Il componente resta montato passando da una lezione all'altra: ignoriamo le
+  // risposte in ritardo e non mostriamo la lezione precedente mentre carica.
+  const requestKey = `${courseId}/${lessonNumber}`;
+  const latestRequest = useRef(requestKey);
+  const isStale = loadedKey !== requestKey;
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -63,6 +79,9 @@ export default function LessonView() {
 
   const fetchData = async () => {
     if (!courseId || !lessonNumber) return;
+    const key = `${courseId}/${lessonNumber}`;
+    latestRequest.current = key;
+    const isCurrent = () => latestRequest.current === key;
 
     try {
       // Fetch course
@@ -71,6 +90,7 @@ export default function LessonView() {
         .select('id, slug, title, total_lessons')
         .eq('id', courseId)
         .maybeSingle();
+      if (!isCurrent()) return;
 
       if (courseData) {
         setCourse(courseData);
@@ -83,8 +103,11 @@ export default function LessonView() {
         .eq('course_id', courseId)
         .eq('lesson_number', parseInt(lessonNumber))
         .maybeSingle();
+      if (!isCurrent()) return;
 
-      if (lessonData) {
+      if (!lessonData) {
+        setLesson(null);
+      } else {
         // Check if lesson has visible tasks
         const { data: visibleTasks } = await supabase
           .from('lesson_tasks')
@@ -93,6 +116,7 @@ export default function LessonView() {
           .eq('is_visible', true)
           .order('task_number')
           .limit(1);
+        if (!isCurrent()) return;
 
         // If lesson has visible tasks, redirect to the first visible one
         if (visibleTasks && visibleTasks.length > 0) {
@@ -109,9 +133,21 @@ export default function LessonView() {
     } catch (error) {
       console.error('Error fetching lesson:', error);
     } finally {
-      setIsLoading(false);
+      if (isCurrent()) {
+        setIsLoading(false);
+        setLoadedKey(key);
+      }
     }
   };
+
+  useEffect(() => {
+    contentScrollRef.current?.scrollTo({ top: 0 });
+  }, [lesson?.id]);
+
+  const lessonAccess = useMemo(
+    () => computeLessonAccess(outlineLessons, new Set(lessonProgress.map(p => p.lesson_id)), schedule),
+    [outlineLessons, lessonProgress, schedule],
+  );
 
   // Track lesson start
   useEffect(() => {
@@ -146,7 +182,7 @@ export default function LessonView() {
     navigate(`/area-riservata/corso/${courseId}/lezione/${newLessonNumber}`);
   };
 
-  if (authLoading || isLoading) {
+  if (authLoading || (isLoading && !lesson)) {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
@@ -170,38 +206,79 @@ export default function LessonView() {
   const isPythonCourse = PYTHON_COURSES.includes(course.slug);
   const isWebCourse = WEB_COURSES.includes(course.slug);
 
+  const header = (
+    <LessonHeader
+      courseTitle={course.title}
+      lessonNumber={lesson.lesson_number}
+      lessonTitle={lesson.title}
+      onBack={() => navigate(`/area-riservata/corso/${courseId}`)}
+      onOpenOutline={outlineLessons.length > 0 ? () => setOutlineOpen(true) : undefined}
+      actions={
+        <BookmarkButton
+          isBookmarked={isBookmarked('lesson', lesson.id)}
+          onToggle={() => toggleBookmark('lesson', lesson.id, course.id)}
+          size="sm"
+        />
+      }
+    />
+  );
+
+  const content = isStale ? (
+    <div className="p-6 space-y-4" aria-busy="true" aria-label="Caricamento lezione">
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-5/6" />
+      <Skeleton className="h-40 w-full" />
+    </div>
+  ) : (
+    <LessonContent
+      title={lesson.title}
+      description={lesson.description}
+      content={lesson.content}
+      contentType={lesson.content_type || 'text'}
+      videoUrl={lesson.video_url}
+      slidesUrl={lesson.slides_url}
+      images={lesson.images || []}
+      hideHeading
+    />
+  );
+
+  const navigation = (className?: string) => (
+    <LessonNavigation
+      courseId={course.id}
+      currentLessonNumber={lesson.lesson_number}
+      totalLessons={course.total_lessons}
+      onPrevious={lesson.lesson_number > 1 ? () => navigateToLesson(lesson.lesson_number - 1) : undefined}
+      onNext={lesson.lesson_number < course.total_lessons ? () => navigateToLesson(lesson.lesson_number + 1) : undefined}
+      className={className}
+    />
+  );
+
+  const outline = (
+    <CourseOutlineSheet
+      open={outlineOpen}
+      onOpenChange={setOutlineOpen}
+      courseTitle={course.title}
+      lessons={outlineLessons}
+      access={lessonAccess}
+      currentLessonId={lesson.id}
+      isTaskCompleted={isTaskCompleted}
+      onSelectLesson={navigateToLesson}
+      onSelectTask={(taskNumber) => navigate(`/area-riservata/corso/${courseId}/lezione/${lesson.lesson_number}/task/${taskNumber}`)}
+    />
+  );
+
   // Split layout for Python and Web courses
   if (isSplitLayout) {
     return (
       <div className="h-screen flex flex-col bg-background">
+        {header}
         <ResizablePanelGroup direction="horizontal" className="flex-1">
           {/* Left Panel - Lesson Content */}
           <ResizablePanel defaultSize={50} minSize={30}>
-            <div className="h-full overflow-y-auto">
-              <div className="flex justify-end px-6 pt-4">
-                <BookmarkButton
-                  isBookmarked={isBookmarked('lesson', lesson.id)}
-                  onToggle={() => toggleBookmark('lesson', lesson.id, course.id)}
-                />
-              </div>
-              <LessonContent
-                title={lesson.title}
-                description={lesson.description}
-                content={lesson.content}
-                contentType={lesson.content_type || 'text'}
-                videoUrl={lesson.video_url}
-                slidesUrl={lesson.slides_url}
-                images={lesson.images || []}
-              />
-              <div className="px-6 pb-6">
-                <LessonNavigation
-                  courseId={course.id}
-                  currentLessonNumber={lesson.lesson_number}
-                  totalLessons={course.total_lessons}
-                  onPrevious={lesson.lesson_number > 1 ? () => navigateToLesson(lesson.lesson_number - 1) : undefined}
-                  onNext={lesson.lesson_number < course.total_lessons ? () => navigateToLesson(lesson.lesson_number + 1) : undefined}
-                />
-              </div>
+            <div ref={contentScrollRef} className="h-full overflow-y-auto">
+              {content}
+              {navigation('px-6 mt-0')}
             </div>
           </ResizablePanel>
 
@@ -214,6 +291,7 @@ export default function LessonView() {
             {isWebCourse && <WebCompiler />}
           </ResizablePanel>
         </ResizablePanelGroup>
+        {outline}
       </div>
     );
   }
@@ -222,29 +300,13 @@ export default function LessonView() {
   return (
     <Layout>
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="flex justify-end mb-2">
-          <BookmarkButton
-            isBookmarked={isBookmarked('lesson', lesson.id)}
-            onToggle={() => toggleBookmark('lesson', lesson.id, course.id)}
-          />
+        <div className="rounded-xl border border-border overflow-hidden shadow-sm">
+          {header}
         </div>
-        <LessonContent
-          title={lesson.title}
-          description={lesson.description}
-          content={lesson.content}
-          contentType={lesson.content_type || 'text'}
-          videoUrl={lesson.video_url}
-          slidesUrl={lesson.slides_url}
-          images={lesson.images || []}
-        />
-        <LessonNavigation
-          courseId={course.id}
-          currentLessonNumber={lesson.lesson_number}
-          totalLessons={course.total_lessons}
-          onPrevious={lesson.lesson_number > 1 ? () => navigateToLesson(lesson.lesson_number - 1) : undefined}
-          onNext={lesson.lesson_number < course.total_lessons ? () => navigateToLesson(lesson.lesson_number + 1) : undefined}
-        />
+        {content}
+        {navigation()}
       </div>
+      {outline}
     </Layout>
   );
 }

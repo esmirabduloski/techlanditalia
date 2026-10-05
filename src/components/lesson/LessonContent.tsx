@@ -11,6 +11,8 @@ interface LessonContentProps {
   videoUrl?: string | null;
   slidesUrl?: string | null;
   images?: string[];
+  /** Nasconde titolo e titolo lezione quando sono già mostrati da LessonHeader */
+  hideHeading?: boolean;
 }
 
 export function LessonContent({
@@ -22,6 +24,7 @@ export function LessonContent({
   videoUrl,
   slidesUrl,
   images = [],
+  hideHeading = false,
 }: LessonContentProps) {
   const getVideoEmbedUrl = (url: string): string => {
     // YouTube
@@ -97,16 +100,18 @@ export function LessonContent({
   return (
     <div className="p-6">
       {/* Lesson Title */}
-      {lessonTitle && (
+      {!hideHeading && lessonTitle && (
         <p className="text-sm font-medium text-muted-foreground mb-1">
           📖 {lessonTitle}
         </p>
       )}
 
       {/* Title */}
-      <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-        {title}
-      </h1>
+      {!hideHeading && (
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+          {title}
+        </h1>
+      )}
 
       {/* Description */}
       {description && (

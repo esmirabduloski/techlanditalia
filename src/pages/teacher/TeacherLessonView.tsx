@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useTeacherCourseAccess } from '@/hooks/useTeacherCourseAccess';
@@ -6,17 +6,21 @@ import { supabase } from '@/integrations/supabase/client';
 import { Layout } from '@/components/layout/Layout';
 import { LessonContent } from '@/components/lesson/LessonContent';
 import { LessonNavigation } from '@/components/lesson/LessonNavigation';
-import { PythonCompiler } from '@/components/lesson/PythonCompiler';
-import { WebCompiler } from '@/components/lesson/WebCompiler';
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
-import { Button } from '@/components/ui/button';
+import { LessonHeader } from '@/components/lesson/LessonHeader';
+import { LessonWorkspace } from '@/components/lesson/LessonWorkspace';
+import { LessonPageSkeleton } from '@/components/lesson/LessonPageSkeleton';
+import { CourseOutlineSheet } from '@/components/lesson/CourseOutlineSheet';
+import { getLessonSidePanel } from '@/components/lesson/taskSidePanel';
+import { useCourseOutline, type LessonAccess } from '@/hooks/useCourseOutline';
+import { useLessonKeyboardNav } from '@/hooks/useLessonKeyboardNav';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { getCourseThemeClass } from '@/lib/lessonTheme';
 
 interface Course {
   id: string;
   slug: string;
   title: string;
+  emoji: string;
   total_lessons: number;
 }
 
@@ -32,19 +36,19 @@ interface Lesson {
   images: string[] | null;
 }
 
-const PYTHON_COURSES = ['python-base', 'python-ai', 'python-avanzato'];
-const WEB_COURSES = ['web-development'];
-const SPLIT_LAYOUT_COURSES = [...PYTHON_COURSES, ...WEB_COURSES];
+const TEACHER_ACCESS: LessonAccess = { completed: false, isNext: false, canComplete: false, accessible: true };
 
 export default function TeacherLessonView() {
   const { courseSlug, lessonNumber } = useParams<{ courseSlug: string; lessonNumber: string }>();
   const { user, isLoading: authLoading } = useAuth();
   const { hasAccess, isLoading: accessLoading, courseId } = useTeacherCourseAccess(courseSlug);
+  const { lessons: outlineLessons } = useCourseOutline(courseId ?? undefined, null, { includeHiddenTasks: true });
   const navigate = useNavigate();
   
   const [course, setCourse] = useState<Course | null>(null);
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [outlineOpen, setOutlineOpen] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -70,7 +74,7 @@ export default function TeacherLessonView() {
     try {
       const { data: courseData } = await supabase
         .from('courses')
-        .select('id, slug, title, total_lessons')
+        .select('id, slug, title, emoji, total_lessons')
         .eq('id', courseId)
         .maybeSingle();
 
@@ -115,12 +119,23 @@ export default function TeacherLessonView() {
     navigate(`/insegnante/corso/${courseSlug}/lezione/${newLessonNumber}`);
   };
 
-  if (authLoading || accessLoading || isLoading) {
+  useLessonKeyboardNav({
+    enabled: !!lesson && !!course,
+    onPrevious: lesson && lesson.lesson_number > 1 ? () => navigateToLesson(lesson.lesson_number - 1) : undefined,
+    onNext: lesson && course && lesson.lesson_number < course.total_lessons
+      ? () => navigateToLesson(lesson.lesson_number + 1)
+      : undefined,
+  });
+
+  const outlineAccess = useMemo(
+    () => Object.fromEntries(outlineLessons.map(l => [l.id, TEACHER_ACCESS])),
+    [outlineLessons],
+  );
+
+  if (authLoading || accessLoading || (isLoading && !lesson)) {
     return (
       <Layout>
-        <div className="min-h-screen flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
+        <LessonPageSkeleton />
       </Layout>
     );
   }
@@ -135,71 +150,23 @@ export default function TeacherLessonView() {
     );
   }
 
-  const isSplitLayout = SPLIT_LAYOUT_COURSES.includes(course.slug);
-  const isPythonCourse = PYTHON_COURSES.includes(course.slug);
-  const isWebCourse = WEB_COURSES.includes(course.slug);
-
-  if (isSplitLayout) {
-    return (
-      <div className="h-screen flex flex-col bg-background">
-        {/* Header with back button */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b bg-background">
-          <Button variant="ghost" size="icon" onClick={() => navigate(`/insegnante/corso/${courseSlug}`)}>
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>{course.title}</span>
-              <Badge variant="outline">Vista Insegnante</Badge>
-            </div>
-            <h1 className="font-semibold">Lezione {lesson.lesson_number}: {lesson.title}</h1>
-          </div>
-        </div>
-
-        <ResizablePanelGroup direction="horizontal" className="flex-1">
-          <ResizablePanel defaultSize={50} minSize={30}>
-            <div className="h-full overflow-y-auto">
-              <LessonContent
-                title={lesson.title}
-                description={lesson.description}
-                content={lesson.content}
-                contentType={lesson.content_type || 'text'}
-                videoUrl={lesson.video_url}
-                slidesUrl={lesson.slides_url}
-                images={lesson.images || []}
-              />
-              <div className="px-6 pb-6">
-                <LessonNavigation
-                  courseId={course.id}
-                  currentLessonNumber={lesson.lesson_number}
-                  totalLessons={course.total_lessons}
-                  onPrevious={lesson.lesson_number > 1 ? () => navigateToLesson(lesson.lesson_number - 1) : undefined}
-                  onNext={lesson.lesson_number < course.total_lessons ? () => navigateToLesson(lesson.lesson_number + 1) : undefined}
-                  basePath={`/insegnante/corso/${courseSlug}`}
-                />
-              </div>
-            </div>
-          </ResizablePanel>
-
-          <ResizableHandle withHandle />
-
-          <ResizablePanel defaultSize={50} minSize={30}>
-            {isPythonCourse && <PythonCompiler />}
-            {isWebCourse && <WebCompiler />}
-          </ResizablePanel>
-        </ResizablePanelGroup>
-      </div>
-    );
-  }
+  const themeClass = getCourseThemeClass(course.slug);
+  const basePath = `/insegnante/corso/${courseSlug}`;
 
   return (
-    <Layout>
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <Button variant="ghost" onClick={() => navigate(`/insegnante/corso/${courseSlug}`)} className="mb-4">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Torna al corso
-        </Button>
-        <Badge variant="outline" className="mb-4">Vista Insegnante</Badge>
+    <LessonWorkspace
+      header={
+        <LessonHeader
+          courseTitle={course.title}
+          courseEmoji={course.emoji}
+          lessonNumber={lesson.lesson_number}
+          lessonTitle={lesson.title}
+          onBack={() => navigate(basePath)}
+          onOpenOutline={outlineLessons.length > 0 ? () => setOutlineOpen(true) : undefined}
+          actions={<Badge variant="outline" className="hidden sm:inline-flex mr-1">Vista Insegnante</Badge>}
+        />
+      }
+      content={
         <LessonContent
           title={lesson.title}
           description={lesson.description}
@@ -208,16 +175,38 @@ export default function TeacherLessonView() {
           videoUrl={lesson.video_url}
           slidesUrl={lesson.slides_url}
           images={lesson.images || []}
+          hideHeading
         />
+      }
+      renderNavigation={variant => (
         <LessonNavigation
           courseId={course.id}
           currentLessonNumber={lesson.lesson_number}
           totalLessons={course.total_lessons}
           onPrevious={lesson.lesson_number > 1 ? () => navigateToLesson(lesson.lesson_number - 1) : undefined}
           onNext={lesson.lesson_number < course.total_lessons ? () => navigateToLesson(lesson.lesson_number + 1) : undefined}
-          basePath={`/insegnante/corso/${courseSlug}`}
+          basePath={basePath}
+          className={variant === 'split' ? 'px-6 mt-0' : undefined}
         />
-      </div>
-    </Layout>
+      )}
+      sidePanel={getLessonSidePanel(course.slug)}
+      layoutId="teacher-split-code"
+      resetKey={lesson.id}
+      themeClass={themeClass}
+      overlays={
+        <CourseOutlineSheet
+          open={outlineOpen}
+          onOpenChange={setOutlineOpen}
+          courseTitle={course.title}
+          lessons={outlineLessons}
+          access={outlineAccess}
+          currentLessonId={lesson.id}
+          isTaskCompleted={() => false}
+          onSelectLesson={navigateToLesson}
+          onSelectTask={taskNumber => navigate(`${basePath}/lezione/${lesson.lesson_number}/task/${taskNumber}`)}
+          className={themeClass}
+        />
+      }
+    />
   );
 }

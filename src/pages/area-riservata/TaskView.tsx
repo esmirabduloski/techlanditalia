@@ -1,39 +1,47 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useStudentProgress } from '@/hooks/useStudentProgress';
 import { useBookmarks } from '@/hooks/useBookmarks';
+import { computeLessonAccess, useCourseOutline } from '@/hooks/useCourseOutline';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Layout } from '@/components/layout/Layout';
 import { LessonContent } from '@/components/lesson/LessonContent';
+import { LessonHeader } from '@/components/lesson/LessonHeader';
 import { TaskNavigation } from '@/components/lesson/TaskNavigation';
+import { CourseOutlineSheet } from '@/components/lesson/CourseOutlineSheet';
+import { LessonCompleteDialog } from '@/components/lesson/LessonCompleteDialog';
 import { BookmarkButton } from '@/components/dashboard/BookmarkButton';
-import { PythonCompiler } from '@/components/lesson/PythonCompiler';
-import { TurtleCompiler } from '@/components/lesson/TurtleCompiler';
-import { PgzeroCompiler } from '@/components/lesson/PgzeroCompiler';
-import { WebCompiler } from '@/components/lesson/WebCompiler';
+import { LessonWorkspace } from '@/components/lesson/LessonWorkspace';
+import { getTaskSidePanel, type TaskAttachment } from '@/components/lesson/taskSidePanel';
+import { useLessonKeyboardNav } from '@/hooks/useLessonKeyboardNav';
 import { QuizTask } from '@/components/lesson/QuizTask';
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
-import { Loader2, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { LessonPageSkeleton } from '@/components/lesson/LessonPageSkeleton';
+import { getCourseThemeClass } from '@/lib/lessonTheme';
+import { CheckCircle2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 
 interface Course {
   id: string;
   slug: string;
   title: string;
+  emoji: string;
 }
 
 interface Lesson {
   id: string;
   lesson_number: number;
   title: string;
+  points_reward: number;
 }
 
-interface TaskAttachment {
-  name: string;
-  url: string;
-  type: 'image' | 'css' | 'js' | 'html';
+interface VisibleTask {
+  id: string;
+  task_number: number;
+  title: string;
+  content_type: string | null;
 }
 
 interface Task {
@@ -55,22 +63,44 @@ interface Task {
   attachments: TaskAttachment[];
 }
 
-const PYTHON_COURSES = ['python-base', 'python-ai', 'python-avanzato'];
-const WEB_COURSES = ['web-development'];
-const SPLIT_LAYOUT_COURSES = [...PYTHON_COURSES, ...WEB_COURSES];
+
+function ContentSkeleton() {
+  return (
+    <div className="p-6 space-y-4" aria-busy="true" aria-label="Caricamento task">
+      <Skeleton className="h-5 w-2/3" />
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-5/6" />
+      <Skeleton className="h-40 w-full" />
+    </div>
+  );
+}
 
 export default function TaskView() {
   const { courseId, lessonNumber, taskNumber } = useParams<{ courseId: string; lessonNumber: string; taskNumber: string }>();
   const { user, isLoading: authLoading } = useAuth();
-  const { isTaskCompleted, completeTask } = useStudentProgress();
+  const { isTaskCompleted, completeTask, completeLesson, lessonProgress, effectiveUserId, isLoading: progressLoading } = useStudentProgress();
   const { isBookmarked, toggleBookmark } = useBookmarks();
+  const { lessons: outlineLessons, schedule } = useCourseOutline(courseId, effectiveUserId);
+  const { toast } = useToast();
   const navigate = useNavigate();
-  
+
   const [course, setCourse] = useState<Course | null>(null);
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [task, setTask] = useState<Task | null>(null);
-  const [visibleTaskNumbers, setVisibleTaskNumbers] = useState<number[]>([]);
+  const [visibleTasks, setVisibleTasks] = useState<VisibleTask[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  const [outlineOpen, setOutlineOpen] = useState(false);
+  const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
+  const [pointsGained, setPointsGained] = useState<{ id: number; points: number } | null>(null);
+
+  // Il componente resta montato passando da un task all'altro: teniamo traccia
+  // della richiesta più recente per ignorare risposte arrivate in ritardo e
+  // per non mostrare il contenuto del task precedente mentre carica il nuovo.
+  const requestKey = `${courseId}/${lessonNumber}/${taskNumber}`;
+  const latestRequest = useRef(requestKey);
+  const isStale = loadedKey !== requestKey;
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -86,14 +116,18 @@ export default function TaskView() {
 
   const fetchData = async () => {
     if (!courseId || !lessonNumber || !taskNumber) return;
+    const key = `${courseId}/${lessonNumber}/${taskNumber}`;
+    latestRequest.current = key;
+    const isCurrent = () => latestRequest.current === key;
 
     try {
       // Fetch course
       const { data: courseData } = await supabase
         .from('courses')
-        .select('id, slug, title')
+        .select('id, slug, title, emoji')
         .eq('id', courseId)
         .maybeSingle();
+      if (!isCurrent()) return;
 
       if (courseData) {
         setCourse(courseData);
@@ -102,79 +136,112 @@ export default function TaskView() {
       // Fetch lesson by lesson_number
       const { data: lessonData } = await supabase
         .from('lessons')
-        .select('id, lesson_number, title')
+        .select('id, lesson_number, title, points_reward')
         .eq('course_id', courseId)
         .eq('lesson_number', parseInt(lessonNumber))
         .maybeSingle();
+      if (!isCurrent()) return;
 
-      if (lessonData) {
-        setLesson(lessonData);
+      setLesson(lessonData);
+      if (!lessonData) {
+        setTask(null);
+        return;
+      }
 
-        // Fetch visible task numbers for navigation
-        const { data: visibleTasksData } = await supabase
-          .from('lesson_tasks')
-          .select('task_number')
-          .eq('lesson_id', lessonData.id)
-          .eq('is_visible', true)
-          .order('task_number');
+      // Fetch visible tasks for navigation and the stepper
+      const { data: visibleTasksData } = await supabase
+        .from('lesson_tasks')
+        .select('id, task_number, title, content_type')
+        .eq('lesson_id', lessonData.id)
+        .eq('is_visible', true)
+        .order('task_number');
+      if (!isCurrent()) return;
 
-        const visibleNumbers = (visibleTasksData || []).map((t: any) => t.task_number);
-        setVisibleTaskNumbers(visibleNumbers);
+      const visible = (visibleTasksData || []) as VisibleTask[];
+      setVisibleTasks(visible);
+      const visibleNumbers = visible.map(t => t.task_number);
 
-        const requestedNumber = parseInt(taskNumber);
+      const requestedNumber = parseInt(taskNumber);
 
-        // If the requested task is hidden or missing, jump to next visible one (or back to course)
-        if (!visibleNumbers.includes(requestedNumber)) {
-          const nextVisible = visibleNumbers.find(n => n > requestedNumber) ?? visibleNumbers[visibleNumbers.length - 1];
-          if (nextVisible !== undefined && nextVisible !== requestedNumber) {
-            navigate(`/area-riservata/corso/${courseId}/lezione/${lessonNumber}/task/${nextVisible}`, { replace: true });
-            return;
+      // If the requested task is hidden or missing, jump to next visible one (or back to course)
+      if (!visibleNumbers.includes(requestedNumber)) {
+        const nextVisible = visibleNumbers.find(n => n > requestedNumber) ?? visibleNumbers[visibleNumbers.length - 1];
+        if (nextVisible !== undefined && nextVisible !== requestedNumber) {
+          navigate(`/area-riservata/corso/${courseId}/lezione/${lessonNumber}/task/${nextVisible}`, { replace: true });
+          return;
+        }
+        if (nextVisible === undefined) {
+          navigate(`/area-riservata/corso/${courseId}`, { replace: true });
+          return;
+        }
+      }
+
+      // Fetch the specific task (only if visible)
+      const { data: taskData } = await supabase
+        .from('lesson_tasks')
+        .select('*')
+        .eq('lesson_id', lessonData.id)
+        .eq('task_number', requestedNumber)
+        .eq('is_visible', true)
+        .maybeSingle();
+      if (!isCurrent()) return;
+
+      if (taskData) {
+        // Parse attachments from JSONB
+        let attachments: TaskAttachment[] = [];
+        try {
+          const rawAttachments = (taskData as any).attachments;
+          if (Array.isArray(rawAttachments)) {
+            attachments = rawAttachments;
+          } else if (typeof rawAttachments === 'string') {
+            attachments = JSON.parse(rawAttachments);
           }
-          if (nextVisible === undefined) {
-            navigate(`/area-riservata/corso/${courseId}`, { replace: true });
-            return;
-          }
+        } catch (e) {
+          console.error('Error parsing attachments:', e);
         }
 
-        // Fetch the specific task (only if visible)
-        const { data: taskData } = await supabase
-          .from('lesson_tasks')
-          .select('*')
-          .eq('lesson_id', lessonData.id)
-          .eq('task_number', requestedNumber)
-          .eq('is_visible', true)
-          .maybeSingle();
-
-        if (taskData) {
-          // Parse attachments from JSONB
-          let attachments: TaskAttachment[] = [];
-          try {
-            const rawAttachments = (taskData as any).attachments;
-            if (Array.isArray(rawAttachments)) {
-              attachments = rawAttachments;
-            } else if (typeof rawAttachments === 'string') {
-              attachments = JSON.parse(rawAttachments);
-            }
-          } catch (e) {
-            console.error('Error parsing attachments:', e);
-          }
-          
-          setTask({ ...taskData, attachments });
-        }
+        setTask({ ...taskData, attachments });
+      } else {
+        setTask(null);
       }
     } catch (error) {
       console.error('Error fetching task:', error);
     } finally {
-      setIsLoading(false);
+      if (isCurrent()) {
+        setIsLoading(false);
+        setLoadedKey(key);
+      }
     }
   };
 
-  const navigateToTask = async (newTaskNumber: number) => {
-    // Mark current task as completed when navigating to next
+  /**
+   * Segna il task come completato e, se è la prima volta, mostra i punti guadagnati:
+   * "+N" animato nell'intestazione, oppure un toast se lo stepper non è visibile.
+   */
+  const completeWithFeedback = async (target: Task, feedback: 'pop' | 'toast') => {
+    // Finché i progressi non sono caricati non sappiamo se il task era già fatto
+    const isFirstCompletion = !progressLoading && !isTaskCompleted(target.id);
+    const ok = await completeTask(target.id);
+    if (!ok || !isFirstCompletion || !target.points_reward) return;
+    if (feedback === 'pop' && visibleTasks.length > 1) {
+      setPointsGained({ id: Date.now(), points: target.points_reward });
+    } else {
+      toast({ title: `+${target.points_reward} punti ⚡`, description: `Task completato: ${target.title}` });
+    }
+  };
+
+  const goToTask = (newTaskNumber: number) => {
+    // Andando avanti il task corrente viene segnato come completato.
+    // Non blocchiamo la navigazione in attesa del salvataggio.
     if (task && newTaskNumber > task.task_number) {
-      await completeTask(task.id);
+      void completeWithFeedback(task, 'pop');
     }
     navigate(`/area-riservata/corso/${courseId}/lezione/${lessonNumber}/task/${newTaskNumber}`);
+  };
+
+  const goToLesson = (newLessonNumber: number) => {
+    setCompleteDialogOpen(false);
+    navigate(`/area-riservata/corso/${courseId}/lezione/${newLessonNumber}`);
   };
 
   const handleNavigateToCourse = async () => {
@@ -185,14 +252,34 @@ export default function TaskView() {
     navigate(`/area-riservata/corso/${courseId}`);
   };
 
+  const handleFinishLesson = () => {
+    if (task) {
+      void completeWithFeedback(task, 'toast');
+    }
+    setCompleteDialogOpen(true);
+  };
+
+  const lessonAccess = useMemo(
+    () => computeLessonAccess(outlineLessons, new Set(lessonProgress.map(p => p.lesson_id)), schedule),
+    [outlineLessons, lessonProgress, schedule],
+  );
+
   const taskCompleted = task ? isTaskCompleted(task.id) : false;
 
-  if (authLoading || isLoading) {
+  // Frecce ← → tra i task visibili (calcolate qui: gli hook vanno prima dei return)
+  const keyboardIndex = task ? visibleTasks.findIndex(t => t.task_number === task.task_number) : -1;
+  useLessonKeyboardNav({
+    enabled: !!task && !isStale,
+    onPrevious: keyboardIndex > 0 ? () => goToTask(visibleTasks[keyboardIndex - 1].task_number) : undefined,
+    onNext: keyboardIndex >= 0 && keyboardIndex < visibleTasks.length - 1
+      ? () => goToTask(visibleTasks[keyboardIndex + 1].task_number)
+      : undefined,
+  });
+
+  if (authLoading || (isLoading && !task)) {
     return (
       <Layout>
-        <div className="min-h-screen flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
+        <LessonPageSkeleton />
       </Layout>
     );
   }
@@ -207,256 +294,152 @@ export default function TaskView() {
     );
   }
 
-  const isPythonCourse = PYTHON_COURSES.includes(course.slug);
-  const isWebCourse = WEB_COURSES.includes(course.slug);
-
   // Navigation among visible tasks only
-  const currentIndex = visibleTaskNumbers.indexOf(task.task_number);
-  const previousTaskNumber = currentIndex > 0 ? visibleTaskNumbers[currentIndex - 1] : undefined;
-  const nextTaskNumber = currentIndex >= 0 && currentIndex < visibleTaskNumbers.length - 1
-    ? visibleTaskNumbers[currentIndex + 1]
+  const currentIndex = visibleTasks.findIndex(t => t.task_number === task.task_number);
+  const previousTaskNumber = currentIndex > 0 ? visibleTasks[currentIndex - 1].task_number : undefined;
+  const nextTaskNumber = currentIndex >= 0 && currentIndex < visibleTasks.length - 1
+    ? visibleTasks[currentIndex + 1].task_number
     : undefined;
   const displayPosition = currentIndex >= 0 ? currentIndex + 1 : 1;
-  const totalTasks = visibleTaskNumbers.length || 1;
-  const isMixedType = task.content_type === 'mixed';
-  const isScratchType = task.content_type === 'scratch';
-  const showCompiler = (isPythonCourse || isWebCourse) && isMixedType;
-  const showScratch = isScratchType && task.scratch_url;
+  const totalTasks = visibleTasks.length || 1;
+  const showScratch = task.content_type === 'scratch' && !!task.scratch_url;
   const isQuizType = task.content_type === 'quiz';
 
-  // Helper function to extract proper Scratch embed URL
-  const getScratchEmbedUrl = (url: string): string => {
-    // If already an embed URL, return as-is
-    if (url.includes('/embed')) {
-      return url;
-    }
-    // Extract project ID and create embed URL
-    const match = url.match(/scratch\.mit\.edu\/projects\/(\d+)/);
-    if (match) {
-      return `https://scratch.mit.edu/projects/${match[1]}/embed`;
-    }
-    return url;
-  };
+  const themeClass = getCourseThemeClass(course.slug);
+  const outlineIndex = outlineLessons.findIndex(l => l.id === lesson.id);
+  const nextOutlineLesson = outlineIndex >= 0 ? outlineLessons[outlineIndex + 1] : undefined;
 
-  // Split layout for Scratch games
-  if (showScratch) {
-    return (
-      <div className="h-screen flex flex-col bg-background">
-        {/* Header with back button */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b bg-background">
-          <Button variant="ghost" size="icon" onClick={handleNavigateToCourse}>
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div className="flex-1">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>{course.title}</span>
-              <span>·</span>
-              <span>Lezione {lesson.lesson_number}</span>
-            </div>
-            <h1 className="font-semibold">Task {task.task_number}: {task.title}</h1>
-          </div>
+  const header = (
+    <LessonHeader
+      courseTitle={course.title}
+      courseEmoji={course.emoji}
+      lessonNumber={lesson.lesson_number}
+      lessonTitle={lesson.title}
+      taskTitle={task.title}
+      taskPosition={displayPosition}
+      taskType={task.content_type}
+      pointsGained={pointsGained}
+      steps={visibleTasks.map(t => ({
+        key: t.id,
+        title: t.title,
+        completed: isTaskCompleted(t.id),
+        current: t.task_number === task.task_number,
+        contentType: t.content_type,
+        onSelect: () => goToTask(t.task_number),
+      }))}
+      onBack={handleNavigateToCourse}
+      onOpenOutline={outlineLessons.length > 0 ? () => setOutlineOpen(true) : undefined}
+      actions={
+        <>
+          {taskCompleted && (
+            <Badge variant="outline" className="hidden sm:inline-flex text-primary border-primary mr-1">
+              <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+              Completato
+            </Badge>
+          )}
           <BookmarkButton
             isBookmarked={isBookmarked('task', task.id)}
             onToggle={() => toggleBookmark('task', task.id, course.id)}
             size="sm"
           />
+        </>
+      }
+    />
+  );
+
+  const navigation = (className?: string) => (
+    <TaskNavigation
+      courseId={course.id}
+      lessonNumber={lesson.lesson_number}
+      currentTaskNumber={displayPosition}
+      totalTasks={totalTasks}
+      onPrevious={previousTaskNumber !== undefined ? () => goToTask(previousTaskNumber) : undefined}
+      onNext={nextTaskNumber !== undefined ? () => goToTask(nextTaskNumber) : undefined}
+      onComplete={handleFinishLesson}
+      disabled={isStale}
+      className={className}
+    />
+  );
+
+  const overlays = (
+    <>
+      <CourseOutlineSheet
+        open={outlineOpen}
+        onOpenChange={setOutlineOpen}
+        courseTitle={course.title}
+        lessons={outlineLessons}
+        access={lessonAccess}
+        currentLessonId={lesson.id}
+        currentTaskId={task.id}
+        isTaskCompleted={isTaskCompleted}
+        onSelectLesson={goToLesson}
+        onSelectTask={goToTask}
+        className={themeClass}
+      />
+      <LessonCompleteDialog
+        open={completeDialogOpen}
+        onOpenChange={setCompleteDialogOpen}
+        lessonNumber={lesson.lesson_number}
+        lessonTitle={lesson.title}
+        pointsReward={lesson.points_reward}
+        lessonAccess={lessonAccess[lesson.id]}
+        onCompleteLesson={async () => {
+          const ok = await completeLesson(lesson.id);
+          if (ok) {
+            toast({
+              title: '🎉 Lezione completata!',
+              description: `Hai guadagnato ${lesson.points_reward} punti!`,
+            });
+          }
+          return ok;
+        }}
+        nextLesson={nextOutlineLesson && {
+          lesson_number: nextOutlineLesson.lesson_number,
+          title: nextOutlineLesson.title,
+          access: lessonAccess[nextOutlineLesson.id],
+        }}
+        onGoToLesson={goToLesson}
+        onGoToCourse={() => navigate(`/area-riservata/corso/${courseId}`)}
+        className={themeClass}
+      />
+    </>
+  );
+
+  const sidePanel = getTaskSidePanel(course.slug, task, { saveDrafts: true });
+
+  const content = isStale ? (
+    <ContentSkeleton />
+  ) : (
+    <>
+      <LessonContent
+        title={task.title}
+        lessonTitle={lesson.title}
+        description={task.description}
+        content={isQuizType ? null : task.content}
+        contentType={task.content_type || 'text'}
+        videoUrl={null}
+        slidesUrl={isQuizType || showScratch ? null : task.slides_url}
+        images={[]}
+        hideHeading
+      />
+      {isQuizType && (
+        <div className="px-2 sm:px-6 pb-6">
+          <QuizTask key={task.id} content={task.content} storageKey={task.id} onFinish={() => completeWithFeedback(task, 'pop')} />
         </div>
+      )}
+    </>
+  );
 
-        <ResizablePanelGroup direction="horizontal" className="flex-1">
-          {/* Left Panel - Task Content */}
-          <ResizablePanel defaultSize={40} minSize={25}>
-            <div className="h-full overflow-y-auto">
-                <LessonContent
-                  title={task.title}
-                  lessonTitle={lesson.title}
-                  description={task.description}
-                  content={task.content}
-                  contentType={task.content_type || 'text'}
-                  videoUrl={null}
-                  slidesUrl={null}
-                  images={[]}
-                />
-              <div className="px-6 pb-6">
-                {taskCompleted && (
-                  <Badge variant="outline" className="mb-4 text-primary border-primary">
-                    <CheckCircle2 className="w-4 h-4 mr-1" />
-                    Task completato
-                  </Badge>
-                )}
-                <TaskNavigation
-                  courseId={course.id}
-                  lessonNumber={lesson.lesson_number}
-                  currentTaskNumber={displayPosition}
-                  totalTasks={totalTasks}
-                  onPrevious={previousTaskNumber !== undefined ? () => navigateToTask(previousTaskNumber) : undefined}
-                  onNext={nextTaskNumber !== undefined ? () => navigateToTask(nextTaskNumber) : undefined}
-                  onComplete={handleNavigateToCourse}
-                />
-              </div>
-            </div>
-          </ResizablePanel>
-
-          {/* Resize Handle */}
-          <ResizableHandle withHandle />
-
-          {/* Right Panel - Scratch Game */}
-          <ResizablePanel defaultSize={60} minSize={30}>
-            <div className="h-full flex flex-col bg-muted/30">
-              <div className="p-4 border-b bg-background">
-                <h3 className="font-semibold flex items-center gap-2">
-                  🐱 Scratch - Gioca e Impara
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Clicca sulla bandierina verde per iniziare il gioco!
-                </p>
-              </div>
-              <div className="flex-1 p-4">
-                <iframe
-                  src={getScratchEmbedUrl(task.scratch_url!)}
-                  className="w-full h-full rounded-lg border shadow-sm"
-                  allowFullScreen
-                  title="Scratch Game"
-                />
-              </div>
-            </div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
-      </div>
-    );
-  }
-
-  // Split layout only when task is of type "misto" and course supports compiler
-  if (showCompiler) {
-    return (
-      <div className="h-screen flex flex-col bg-background">
-        {/* Header with back button */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b bg-background">
-          <Button variant="ghost" size="icon" onClick={handleNavigateToCourse}>
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div className="flex-1">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>{course.title}</span>
-              <span>·</span>
-              <span>Lezione {lesson.lesson_number}</span>
-            </div>
-            <h1 className="font-semibold">Task {task.task_number}: {task.title}</h1>
-          </div>
-          <BookmarkButton
-            isBookmarked={isBookmarked('task', task.id)}
-            onToggle={() => toggleBookmark('task', task.id, course.id)}
-            size="sm"
-          />
-        </div>
-
-        <ResizablePanelGroup direction="horizontal" className="flex-1">
-          {/* Left Panel - Task Content */}
-          <ResizablePanel defaultSize={50} minSize={30}>
-            <div className="h-full overflow-y-auto">
-                <LessonContent
-                  title={task.title}
-                  lessonTitle={lesson.title}
-                  description={task.description}
-                  content={task.content}
-                  contentType={task.content_type || 'text'}
-                  videoUrl={null}
-                  slidesUrl={task.slides_url}
-                  images={[]}
-                />
-              <div className="px-6 pb-6">
-                {taskCompleted && (
-                  <Badge variant="outline" className="mb-4 text-primary border-primary">
-                    <CheckCircle2 className="w-4 h-4 mr-1" />
-                    Task completato
-                  </Badge>
-                )}
-                <TaskNavigation
-                  courseId={course.id}
-                  lessonNumber={lesson.lesson_number}
-                  currentTaskNumber={displayPosition}
-                  totalTasks={totalTasks}
-                  onPrevious={previousTaskNumber !== undefined ? () => navigateToTask(previousTaskNumber) : undefined}
-                  onNext={nextTaskNumber !== undefined ? () => navigateToTask(nextTaskNumber) : undefined}
-                  onComplete={handleNavigateToCourse}
-                />
-              </div>
-            </div>
-          </ResizablePanel>
-
-          {/* Resize Handle */}
-          <ResizableHandle withHandle />
-
-          {/* Right Panel - Compiler */}
-          <ResizablePanel defaultSize={50} minSize={30}>
-            {isPythonCourse && (
-              (task.python_env === 'turtle' || /^\s*(import turtle|from turtle)/m.test(task.default_python_code || '')) ? (
-                <TurtleCompiler defaultCode={task.default_python_code || undefined} />
-              ) : task.python_env === 'pgzero' ? (
-                <PgzeroCompiler defaultCode={task.default_python_code || undefined} replitUrl={task.replit_url || undefined} />
-              ) : (
-                <PythonCompiler defaultCode={task.default_python_code || undefined} taskId={task.id} />
-              )
-            )}
-            {isWebCourse && (
-              <WebCompiler 
-                defaultHtmlCode={task.default_html_code || undefined}
-                defaultCssCode={task.default_css_code || undefined}
-                defaultJsCode={task.default_js_code || undefined}
-                taskId={task.id}
-                taskAttachments={task.attachments}
-              />
-            )}
-          </ResizablePanel>
-        </ResizablePanelGroup>
-      </div>
-    );
-  }
-
-  // Normal layout for other courses
   return (
-    <Layout>
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-4">
-          <Button variant="ghost" onClick={handleNavigateToCourse}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Torna al corso
-          </Button>
-          <BookmarkButton
-            isBookmarked={isBookmarked('task', task.id)}
-            onToggle={() => toggleBookmark('task', task.id, course.id)}
-          />
-        </div>
-        <LessonContent
-          title={task.title}
-          lessonTitle={lesson.title}
-          description={task.description}
-          content={isQuizType ? null : task.content}
-          contentType={task.content_type || 'text'}
-          videoUrl={null}
-          slidesUrl={isQuizType ? null : task.slides_url}
-          images={[]}
-        />
-        {isQuizType && (
-          <div className="px-2 sm:px-6 pb-6">
-            <QuizTask content={task.content} storageKey={task.id} onFinish={() => completeTask(task.id)} />
-          </div>
-        )}
-        {taskCompleted && (
-          <Badge variant="outline" className="mb-4 text-primary border-primary">
-            <CheckCircle2 className="w-4 h-4 mr-1" />
-            Task completato
-          </Badge>
-        )}
-        <TaskNavigation
-          courseId={course.id}
-          lessonNumber={lesson.lesson_number}
-          currentTaskNumber={displayPosition}
-          totalTasks={totalTasks}
-          onPrevious={previousTaskNumber !== undefined ? () => navigateToTask(previousTaskNumber) : undefined}
-          onNext={nextTaskNumber !== undefined ? () => navigateToTask(nextTaskNumber) : undefined}
-          onComplete={handleNavigateToCourse}
-        />
-      </div>
-    </Layout>
+    <LessonWorkspace
+      header={header}
+      content={content}
+      renderNavigation={variant => navigation(variant === 'split' ? 'px-6 mt-0' : undefined)}
+      sidePanel={sidePanel}
+      layoutId={`lesson-split-${showScratch ? 'scratch' : 'code'}`}
+      resetKey={task.id}
+      themeClass={themeClass}
+      overlays={overlays}
+    />
   );
 }

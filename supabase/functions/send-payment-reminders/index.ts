@@ -12,6 +12,8 @@ import { notifyAdmins } from "../_shared/adminpush.ts";
  *   site_settings.crm_payment_dunning (dopo quanti giorni, ogni quanti, quante volte).
  * - Admin autenticato con { paymentId }: invia subito il promemoria al cliente
  *   (testo di sollecito se la rata è già scaduta).
+ * Al cliente: notifica push se ha l'app con le notifiche attive, altrimenti email
+ * (Resend) all'indirizzo del lead.
  */
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/firebase_messaging";
@@ -25,6 +27,8 @@ type DunningSettings = {
   repeat_every_days: number;
   max_reminders: number;
   notify_client: boolean;
+  /** Testo aggiunto alle email al cliente, es. IBAN o modalità di pagamento */
+  payment_instructions?: string;
 };
 
 const DEFAULT_DUNNING: DunningSettings = {
@@ -50,7 +54,7 @@ type PaymentRow = {
   client_reminder_sent_at: string | null;
   overdue_reminder_count: number;
   last_overdue_reminder_at: string | null;
-  crm_leads: { full_name: string | null; linked_profile_id: string | null } | null;
+  crm_leads: { full_name: string | null; email: string | null; linked_profile_id: string | null } | null;
 };
 
 const euro = (cents: number) =>
@@ -58,6 +62,12 @@ const euro = (cents: number) =>
 
 const shortDate = (iso: string | null) =>
   iso ? new Date(`${iso}T12:00:00Z`).toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit" }) : "";
+
+const longDate = (iso: string) =>
+  new Date(`${iso}T12:00:00Z`).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
+
+const escapeHtml = (value: string) =>
+  value.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
 
 /** Data di oggi (YYYY-MM-DD) nel fuso di Roma. */
 function todayRome(): string {
@@ -123,32 +133,105 @@ serve(async (req: Request): Promise<Response> => {
     // corpo vuoto: esecuzione del job giornaliero
   }
 
+  // Push e email sono indipendenti: se manca Firebase si usa solo l'email e viceversa
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   const CONNECTION_KEY = Deno.env.get("FIREBASE_MESSAGING_API_KEY");
-  if (!LOVABLE_API_KEY || !CONNECTION_KEY) {
-    return json({ error: "Firebase Cloud Messaging non collegato al progetto" }, 503);
-  }
+  const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
-  /**
-   * Push al cliente: restituisce l'esito da salvare in client_reminder_result.
-   * `overdue` = sollecito di una rata già scaduta.
-   */
-  const sendToClient = async (
-    p: PaymentRow,
-    kind: "reminder" | "overdue" = "reminder",
-  ): Promise<"sent" | "no_account" | "no_devices" | "failed"> => {
-    const userId = p.crm_leads?.linked_profile_id;
-    if (!userId) return "no_account";
+  const { data: settingRow } = await supabase
+    .from("site_settings").select("value").eq("key", "crm_payment_dunning").maybeSingle();
+  const rules: DunningSettings = { ...DEFAULT_DUNNING, ...((settingRow?.value as Partial<DunningSettings>) ?? {}) };
 
-    const { data: devices } = await supabase.from("push_devices").select("id, token").eq("user_id", userId);
-    if (!devices || devices.length === 0) return "no_devices";
-
+  const clientTexts = (p: PaymentRow, kind: "reminder" | "overdue") => {
     const firstName = p.crm_leads?.full_name?.trim().split(/\s+/)[0] ?? "";
     const greeting = firstName ? `Ciao ${firstName}, ` : "";
     const title = kind === "overdue" ? "Pagamento da saldare" : "Promemoria pagamento";
     const text = kind === "overdue"
       ? `${greeting}risulta ancora da saldare ${paymentPhrase(p)} di ${euro(p.amount_cents)}${p.due_date ? `, con scadenza il ${shortDate(p.due_date)}` : ""}. Se hai già pagato, ignora questo messaggio. Grazie!`
       : `${greeting}${firstName ? "ti" : "Ti"} ricordiamo ${paymentPhrase(p)} di ${euro(p.amount_cents)}${p.due_date ? ` in scadenza il ${shortDate(p.due_date)}` : ""}. Grazie!`;
+    return { title, text };
+  };
+
+  /** Email al cliente (fallback quando la push non è possibile). */
+  const sendEmail = async (p: PaymentRow, kind: "reminder" | "overdue"): Promise<"email_sent" | "no_email" | "failed"> => {
+    const to = p.crm_leads?.email?.trim();
+    if (!to) return "no_email";
+    if (!RESEND_API_KEY) {
+      console.warn("[send-payment-reminders] RESEND_API_KEY mancante, email non inviata");
+      return "failed";
+    }
+    const { title, text } = clientTexts(p, kind);
+    const instructions = rules.payment_instructions?.trim();
+    const hasAccount = !!p.crm_leads?.linked_profile_id;
+    const html = `<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
+<table role="presentation" style="width:100%;border-collapse:collapse;"><tr><td align="center" style="padding:32px 12px;">
+<table role="presentation" style="width:560px;max-width:100%;border-collapse:collapse;background:#ffffff;border-radius:16px;overflow:hidden;">
+<tr><td style="background:linear-gradient(135deg,#10b981 0%,#06b6d4 100%);padding:28px 24px;text-align:center;">
+<h1 style="color:#ffffff;margin:0;font-size:22px;">${escapeHtml(title)}</h1></td></tr>
+<tr><td style="padding:28px 24px;color:#1f2937;font-size:16px;line-height:1.6;">
+<p style="margin:0 0 16px;">${escapeHtml(text)}</p>
+<table role="presentation" style="width:100%;border-collapse:collapse;background:#f0fdf4;border-radius:12px;margin:0 0 16px;">
+<tr><td style="padding:16px;font-size:15px;">
+<strong>Importo:</strong> ${escapeHtml(euro(p.amount_cents))}<br>
+${p.due_date ? `<strong>Scadenza:</strong> ${escapeHtml(longDate(p.due_date))}<br>` : ""}
+${p.description ? `<strong>Descrizione:</strong> ${escapeHtml(p.description)}` : ""}
+</td></tr></table>
+${instructions ? `<p style="margin:0 0 16px;white-space:pre-line;"><strong>Come pagare</strong><br>${escapeHtml(instructions)}</p>` : ""}
+${hasAccount ? `<p style="margin:0 0 16px;"><a href="${SITE_URL}/area-riservata/acquisti" style="color:#059669;font-weight:bold;">Vedi i tuoi pagamenti nell'area riservata →</a></p>` : ""}
+<p style="margin:0;color:#4b5563;font-size:14px;">Per qualsiasi dubbio rispondi pure a questa email.</p>
+</td></tr>
+<tr><td style="background:#f9fafb;padding:20px;text-align:center;border-top:1px solid #e5e7eb;color:#6b7280;font-size:13px;">Il Team TECHLAND · techlanditalia.it</td></tr>
+</table></td></tr></table></body></html>`;
+
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: "TECHLAND <info@techlanditalia.it>",
+        to: [to],
+        reply_to: "info@techlanditalia.it",
+        subject: `${title} – ${euro(p.amount_cents)}`,
+        html,
+        text: `${text}${instructions ? `\n\nCome pagare:\n${instructions}` : ""}\n\nIl Team TECHLAND`,
+      }),
+    });
+    if (!res.ok) {
+      console.error(`[send-payment-reminders] Resend ${res.status}: ${await res.text()}`);
+      return "failed";
+    }
+    return "email_sent";
+  };
+
+  /**
+   * Promemoria al cliente: push se ha l'app con le notifiche attive, altrimenti email.
+   * Restituisce l'esito da salvare in client_reminder_result.
+   */
+  const sendToClient = async (
+    p: PaymentRow,
+    kind: "reminder" | "overdue" = "reminder",
+  ): Promise<string> => {
+    const push = await sendPush(p, kind);
+    if (push === "sent") return "sent";
+    const email = await sendEmail(p, kind);
+    if (email === "email_sent") return "email_sent";
+    // Nessun canale riuscito: se l'email manca del tutto, conta il motivo della push
+    return email === "no_email" ? push : "failed";
+  };
+
+  /** Push al cliente collegato. `overdue` = sollecito di una rata già scaduta. */
+  const sendPush = async (
+    p: PaymentRow,
+    kind: "reminder" | "overdue",
+  ): Promise<"sent" | "no_account" | "no_devices" | "failed"> => {
+    const userId = p.crm_leads?.linked_profile_id;
+    if (!userId) return "no_account";
+    if (!LOVABLE_API_KEY || !CONNECTION_KEY) return "no_devices";
+
+    const { data: devices } = await supabase.from("push_devices").select("id, token").eq("user_id", userId);
+    if (!devices || devices.length === 0) return "no_devices";
+
+    const { title, text } = clientTexts(p, kind);
     const path = "/area-riservata/acquisti";
     const link = `${SITE_URL}${path}`;
 
@@ -198,13 +281,10 @@ serve(async (req: Request): Promise<Response> => {
   };
 
   const select =
-    "id, lead_id, amount_cents, description, due_date, reminder_date, installment_number, installment_total, remind_admin, remind_client, admin_reminder_sent_at, client_reminder_sent_at, overdue_reminder_count, last_overdue_reminder_at, crm_leads(full_name, linked_profile_id)";
+    "id, lead_id, amount_cents, description, due_date, reminder_date, installment_number, installment_total, remind_admin, remind_client, admin_reminder_sent_at, client_reminder_sent_at, overdue_reminder_count, last_overdue_reminder_at, crm_leads(full_name, email, linked_profile_id)";
 
   /** Solleciti delle rate scadute e non pagate. */
   const runDunning = async (today: string) => {
-    const { data: setting } = await supabase
-      .from("site_settings").select("value").eq("key", "crm_payment_dunning").maybeSingle();
-    const rules: DunningSettings = { ...DEFAULT_DUNNING, ...((setting?.value as Partial<DunningSettings>) ?? {}) };
     if (!rules.enabled || rules.max_reminders <= 0) return { enabled: false, sent: 0 };
 
     const firstAfter = Math.max(0, rules.first_after_days);
@@ -265,7 +345,7 @@ serve(async (req: Request): Promise<Response> => {
         type: "note",
         subject: `Sollecito automatico ${count}/${rules.max_reminders}`,
         content: `${capitalize(paymentPhrase(p))} di ${euro(p.amount_cents)}, scadenza ${shortDate(p.due_date)}.` +
-          (clientResult === "sent" ? " Notifica inviata anche al cliente." : ""),
+          (clientResult === "sent" ? " Notifica push inviata anche al cliente." : clientResult === "email_sent" ? " Email inviata anche al cliente." : ""),
         metadata: { payment_id: p.id, automatic: true, client_result: clientResult },
       });
     }

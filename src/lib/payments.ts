@@ -2,7 +2,18 @@ import { addDays, addMonths, addWeeks, format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
 
 export type PaymentStatus = 'scheduled' | 'paid' | 'cancelled';
-export type ClientReminderResult = 'sent' | 'no_account' | 'no_devices' | 'failed' | 'skipped_old';
+export type ClientReminderResult = 'sent' | 'email_sent' | 'no_account' | 'no_devices' | 'no_email' | 'failed' | 'skipped_old';
+
+/** Esito del promemoria al cliente, per i messaggi all'admin. */
+export const CLIENT_RESULT_LABELS: Record<string, string> = {
+  sent: 'Notifica push inviata al cliente',
+  email_sent: 'Email inviata al cliente',
+  no_account: 'Cliente senza account e senza email',
+  no_devices: 'Il cliente non ha le notifiche attive',
+  no_email: 'Il cliente non ha un indirizzo email',
+  failed: 'Invio al cliente non riuscito',
+  skipped_old: 'Promemoria al cliente saltato (data troppo vecchia)',
+};
 
 export interface CrmPayment {
   id: string;
@@ -136,6 +147,8 @@ export interface DunningSettings {
   max_reminders: number;
   /** Manda il sollecito anche al cliente (solo per le rate con notifica al cliente attiva) */
   notify_client: boolean;
+  /** Testo aggiunto alle email di promemoria al cliente, es. IBAN */
+  payment_instructions?: string;
 }
 
 export const DUNNING_SETTINGS_KEY = 'crm_payment_dunning';
@@ -151,3 +164,54 @@ export const DEFAULT_DUNNING_SETTINGS: DunningSettings = {
 /** Giorni tra due date YYYY-MM-DD (positivo se `toIso` è dopo `fromIso`). */
 export const daysBetween = (fromIso: string, toIso: string) =>
   Math.round((Date.parse(`${toIso}T00:00:00Z`) - Date.parse(`${fromIso}T00:00:00Z`)) / 86_400_000);
+
+/** Link WhatsApp con il messaggio di promemoria (o sollecito, se la rata è scaduta) già scritto. */
+export function paymentWhatsAppLink(
+  contact: { phone: string | null; full_name: string | null },
+  p: Pick<CrmPayment, 'amount_cents' | 'due_date' | 'installment_number' | 'installment_total' | 'description'>,
+  today = todayIso(),
+): string | null {
+  const phone = contact.phone?.replace(/[^\d]/g, '');
+  if (!phone) return null;
+  const firstName = contact.full_name?.trim().split(/\s+/)[0] ?? '';
+  const hello = firstName ? `Ciao ${firstName}, ti` : 'Ciao, ti';
+  const what = `${paymentPhrase(p)} di ${formatEuro(p.amount_cents)}`;
+  const overdue = !!p.due_date && p.due_date < today;
+  const text = overdue
+    ? `${hello} scrivo da TECHLAND: risulta ancora da saldare ${what}, con scadenza il ${formatDate(p.due_date)}. Se hai già pagato, ignora pure questo messaggio. Grazie!`
+    : `${hello} scrivo da TECHLAND per ricordarti ${what}${p.due_date ? ` in scadenza il ${formatDate(p.due_date)}` : ''}. Grazie!`;
+  return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+}
+
+/** Come arriverà il promemoria al cliente: push se ha l'app con notifiche, altrimenti email. */
+export interface ClientChannel {
+  /** Esiste almeno un canale (push o email) */
+  canNotify: boolean;
+  hint: string;
+  /** L'hint è un avviso (es. notifiche non attive) */
+  warn: boolean;
+}
+
+export function getClientChannel(
+  hasAccount: boolean,
+  hasPushDevices: boolean | null,
+  email: string | null | undefined,
+): ClientChannel {
+  if (hasAccount && hasPushDevices !== false) {
+    return {
+      canNotify: true,
+      hint: email ? `Notifica push sull'app (se non arriva, email a ${email})` : "Notifica push sull'app",
+      warn: false,
+    };
+  }
+  if (email) {
+    return {
+      canNotify: true,
+      hint: hasAccount
+        ? `Non ha le notifiche attive: riceverà un'email a ${email}`
+        : `Non ha l'app: riceverà un'email a ${email}`,
+      warn: false,
+    };
+  }
+  return { canNotify: false, hint: "Aggiungi un'email o collega l'account per avvisare il cliente", warn: true };
+}

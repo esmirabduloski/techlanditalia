@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { DUNNING_SETTINGS_KEY, type DunningSettings } from '@/lib/payments';
@@ -34,7 +35,7 @@ export function DunningSettingsDialog({ open, onOpenChange, settings, onSaved }:
     const { error } = await supabase
       .from('site_settings')
       .upsert(
-        { key: DUNNING_SETTINGS_KEY, value: { ...draft }, is_public: false },
+        { key: DUNNING_SETTINGS_KEY, value: { ...draft, payment_instructions: draft.payment_instructions?.trim() ?? '' }, is_public: false },
         { onConflict: 'key' },
       );
     setSaving(false);
@@ -71,7 +72,7 @@ export function DunningSettingsDialog({ open, onOpenChange, settings, onSaved }:
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Solleciti automatici</DialogTitle>
+          <DialogTitle>Promemoria e solleciti</DialogTitle>
           <DialogDescription>
             Se una rata non viene segnata come pagata, ogni mattina ti arriva una notifica per sollecitarla.
           </DialogDescription>
@@ -106,6 +107,20 @@ export function DunningSettingsDialog({ open, onOpenChange, settings, onSaved }:
               disabled={!draft.enabled}
               onCheckedChange={notify_client => setDraft(d => ({ ...d, notify_client }))}
             />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="dunning-instructions">Come pagare (inserito nelle email al cliente)</Label>
+            <Textarea
+              id="dunning-instructions"
+              rows={3}
+              placeholder={'Es. Bonifico a TECHLAND\nIBAN IT00 X000 0000 0000 0000 0000 000\nCausale: nome dello studente e mese'}
+              value={draft.payment_instructions ?? ''}
+              onChange={e => setDraft(d => ({ ...d, payment_instructions: e.target.value }))}
+            />
+            <p className="text-xs text-muted-foreground">
+              Le email partono quando il cliente non ha l'app o non ha le notifiche attive.
+            </p>
           </div>
 
           {draft.enabled && (

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
-  Bell, BellOff, CalendarClock, CheckCircle2, Loader2, MoreHorizontal, Pencil, Plus, Send, Smartphone, Trash2, Wallet,
+  Bell, BellOff, CalendarClock, CheckCircle2, Loader2, Mail, MessageCircle, MoreHorizontal, Pencil, Plus, Send, Smartphone,
+  Trash2, Wallet,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,19 +17,13 @@ import { useToast } from '@/hooks/use-toast';
 import { useCRMPayments, useClientPushStatus } from '@/hooks/useCRMPayments';
 import type { CrmInteraction, CrmLead } from '@/hooks/useCRM';
 import {
-  daysBetween, formatDate, formatEuro, methodLabel, paymentLabel, todayIso, type CrmPayment,
+  CLIENT_RESULT_LABELS, daysBetween, getClientChannel, formatDate, formatEuro, methodLabel, paymentLabel, paymentWhatsAppLink, todayIso,
+  type CrmPayment,
 } from '@/lib/payments';
 import { cn } from '@/lib/utils';
 import { PaymentFormDialog, type PaymentFormMode, type PaymentFormValues } from './PaymentFormDialog';
 import { ScheduleInstallmentsDialog } from './ScheduleInstallmentsDialog';
 
-const CLIENT_RESULT_LABELS: Record<string, string> = {
-  sent: 'Promemoria inviato al cliente',
-  no_account: 'Cliente senza account: promemoria non inviato',
-  no_devices: 'Il cliente non ha le notifiche attive',
-  failed: 'Invio al cliente non riuscito',
-  skipped_old: 'Promemoria al cliente saltato (data troppo vecchia)',
-};
 
 interface Props {
   lead: CrmLead;
@@ -41,8 +36,8 @@ export function CRMPaymentsSection({ lead, addInteraction }: Props) {
   const {
     payments, loading, loadError, insertPayments, updatePayment, deletePayment, sendClientReminderNow,
   } = useCRMPayments(lead.id);
-  const clientHasAccount = !!lead.linked_profile_id;
   const clientHasPushDevices = useClientPushStatus(lead.linked_profile_id);
+  const clientChannel = getClientChannel(!!lead.linked_profile_id, clientHasPushDevices, lead.email);
 
   const [form, setForm] = useState<{ mode: PaymentFormMode; payment: CrmPayment | null } | null>(null);
   const [scheduleOpen, setScheduleOpen] = useState(false);
@@ -125,7 +120,7 @@ export function CRMPaymentsSection({ lead, addInteraction }: Props) {
     const { ok, result } = await sendClientReminderNow(p.id);
     setSendingId(null);
     toast({
-      title: ok ? 'Promemoria inviato al cliente' : 'Promemoria non inviato',
+      title: ok ? (result === 'email_sent' ? 'Email inviata al cliente' : 'Notifica push inviata al cliente') : 'Promemoria non inviato',
       description: ok ? undefined : CLIENT_RESULT_LABELS[result ?? ''] ?? result,
       variant: ok ? undefined : 'destructive',
     });
@@ -225,9 +220,14 @@ export function CRMPaymentsSection({ lead, addInteraction }: Props) {
                           <DropdownMenuItem onSelect={() => setForm({ mode: 'edit', payment: p })}>
                             <Pencil className="w-4 h-4 mr-2" /> Modifica
                           </DropdownMenuItem>
-                          {clientHasAccount && (
-                            <DropdownMenuItem onSelect={() => handleSendNow(p)}>
-                              <Send className="w-4 h-4 mr-2" /> Invia ora promemoria al cliente
+                          <DropdownMenuItem onSelect={() => handleSendNow(p)}>
+                            <Send className="w-4 h-4 mr-2" /> Invia ora promemoria (push o email)
+                          </DropdownMenuItem>
+                          {paymentWhatsAppLink(lead, p, today) && (
+                            <DropdownMenuItem asChild>
+                              <a href={paymentWhatsAppLink(lead, p, today)!} target="_blank" rel="noopener noreferrer">
+                                <MessageCircle className="w-4 h-4 mr-2" /> Promemoria su WhatsApp
+                              </a>
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuSeparator />
@@ -303,7 +303,7 @@ export function CRMPaymentsSection({ lead, addInteraction }: Props) {
         onOpenChange={open => !open && setForm(null)}
         mode={form?.mode ?? 'record'}
         payment={form?.payment}
-        clientHasAccount={clientHasAccount}
+        clientChannel={clientChannel}
         onSubmit={handleFormSubmit}
       />
 
@@ -311,8 +311,7 @@ export function CRMPaymentsSection({ lead, addInteraction }: Props) {
         open={scheduleOpen}
         onOpenChange={setScheduleOpen}
         defaultDescription={lead.interest}
-        clientHasAccount={clientHasAccount}
-        clientHasPushDevices={clientHasPushDevices}
+        clientChannel={clientChannel}
         onSubmit={handleSchedule}
       />
 
@@ -364,9 +363,11 @@ function ReminderInfo({ payment: p }: { payment: CrmPayment }) {
           className={cn('flex items-center gap-1', p.client_reminder_result && p.client_reminder_result !== 'sent' && 'text-amber-600')}
           title={p.client_reminder_result ? CLIENT_RESULT_LABELS[p.client_reminder_result] : 'Notifica al cliente'}
         >
-          <Smartphone className="w-3 h-3" />
+          {p.client_reminder_result === 'email_sent' ? <Mail className="w-3 h-3" /> : <Smartphone className="w-3 h-3" />}
           {p.client_reminder_sent_at
-            ? (p.client_reminder_result === 'sent' ? 'Cliente avvisato' : 'Cliente non avvisato')
+            ? (p.client_reminder_result === 'sent'
+              ? 'Cliente avvisato (push)'
+              : p.client_reminder_result === 'email_sent' ? 'Cliente avvisato (email)' : 'Cliente non avvisato')
             : `Cliente il ${formatDate(p.reminder_date, 'dd/MM')}`}
         </span>
       )}

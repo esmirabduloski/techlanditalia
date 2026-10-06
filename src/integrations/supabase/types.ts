@@ -2832,6 +2832,20 @@ export type Database = {
       }
       generate_slug: { Args: { title: string }; Returns: string }
       get_children_ids: { Args: { _parent_id: string }; Returns: string[] }
+      get_my_crm_payments: {
+        Args: never
+        Returns: {
+          amount_cents: number
+          description: string | null
+          due_date: string | null
+          id: string
+          installment_number: number | null
+          installment_total: number | null
+          method: string | null
+          paid_at: string | null
+          status: string
+        }[]
+      }
       get_leaderboard: {
         Args: { _filter_id?: string; _filter_type?: string; _limit?: number }
         Returns: {

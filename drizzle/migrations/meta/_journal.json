@@ -71,6 +71,13 @@
       "when": 1791268492373,
       "tag": "0009_crm_lead_profile_link",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791268315908,
+      "tag": "0010_crm_client_payments_view",
+      "breakpoints": true
     }
   ]
 }

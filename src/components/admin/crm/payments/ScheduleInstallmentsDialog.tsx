@@ -8,8 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import {
   FREQUENCIES, REMINDER_OFFSETS, formatDate, formatEuro, parseEuroToCents, planInstallments, todayIso,
-  type InstallmentFrequency,
+  type ClientChannel, type InstallmentFrequency,
 } from '@/lib/payments';
+import { cn } from '@/lib/utils';
 import type { PaymentInsert } from '@/hooks/useCRMPayments';
 
 interface Props {
@@ -17,16 +18,15 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   /** Descrizione proposta, es. il corso di interesse del lead */
   defaultDescription?: string | null;
-  clientHasAccount: boolean;
-  /** null = sconosciuto */
-  clientHasPushDevices: boolean | null;
+  /** Canale del promemoria al cliente (push o email) */
+  clientChannel: ClientChannel;
   onSubmit: (rows: PaymentInsert[]) => Promise<boolean>;
 }
 
 const MAX_INSTALLMENTS = 36;
 
 export function ScheduleInstallmentsDialog({
-  open, onOpenChange, defaultDescription, clientHasAccount, clientHasPushDevices, onSubmit,
+  open, onOpenChange, defaultDescription, clientChannel, onSubmit,
 }: Props) {
   const [count, setCount] = useState('10');
   const [amount, setAmount] = useState('');
@@ -64,7 +64,7 @@ export function ScheduleInstallmentsDialog({
       due_date: p.dueDate,
       reminder_date: p.reminderDate,
       remind_admin: remindAdmin,
-      remind_client: remindClient && clientHasAccount,
+      remind_client: remindClient && clientChannel.canNotify,
       plan_id: planId,
       installment_number: p.number,
       installment_total: countNum,
@@ -155,23 +155,17 @@ export function ScheduleInstallmentsDialog({
             <div className="flex items-center justify-between gap-3">
               <Label htmlFor="plan-remind-client" className="font-normal">
                 <span className="flex items-center gap-2">
-                  <Smartphone className="w-4 h-4 text-primary" /> Notifica al cliente con l'importo della rata
+                  <Smartphone className="w-4 h-4 text-primary" /> Promemoria al cliente con l'importo della rata
                 </span>
-                {!clientHasAccount ? (
-                  <span className="block text-xs text-muted-foreground mt-0.5">
-                    Disponibile solo se il cliente ha un account sulla piattaforma
-                  </span>
-                ) : clientHasPushDevices === false ? (
-                  <span className="block text-xs text-amber-600 mt-0.5">
-                    Il cliente non ha ancora attivato le notifiche: le riceverà solo quando le attiva
-                  </span>
-                ) : null}
+                <span className={cn('block text-xs mt-0.5', clientChannel.warn ? 'text-amber-600' : 'text-muted-foreground')}>
+                  {clientChannel.hint}
+                </span>
               </Label>
               <Switch
                 id="plan-remind-client"
-                checked={remindClient && clientHasAccount}
+                checked={remindClient && clientChannel.canNotify}
                 onCheckedChange={setRemindClient}
-                disabled={!clientHasAccount}
+                disabled={!clientChannel.canNotify}
               />
             </div>
           </div>

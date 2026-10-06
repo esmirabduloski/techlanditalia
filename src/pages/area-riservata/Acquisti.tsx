@@ -13,6 +13,7 @@ import { AcquistiBenefits } from '@/components/acquisti/AcquistiBenefits';
 import { AcquistiFAQ } from '@/components/acquisti/AcquistiFAQ';
 import { AcquistiFilters } from '@/components/acquisti/AcquistiFilters';
 import { ProductCard } from '@/components/acquisti/ProductCard';
+import { MyPaymentsCard } from '@/components/acquisti/MyPaymentsCard';
 
 interface StripePrice {
   id: string;
@@ -283,6 +284,9 @@ export default function Acquisti() {
               </CardContent>
             </Card>
           )}
+
+          {/* Rate pagate e da pagare (solo se il genitore ha pagamenti registrati) */}
+          {user && <MyPaymentsCard />}
 
           {/* Benefits */}
           <AcquistiBenefits />

@@ -8,8 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  PAYMENT_METHODS, centsToInput, formatEuro, parseEuroToCents, todayIso, type CrmPayment,
+  PAYMENT_METHODS, centsToInput, formatEuro, parseEuroToCents, todayIso, type ClientChannel, type CrmPayment,
 } from '@/lib/payments';
+import { cn } from '@/lib/utils';
 
 export type PaymentFormMode = 'record' | 'markPaid' | 'edit';
 
@@ -31,8 +32,8 @@ interface Props {
   mode: PaymentFormMode;
   /** Pagamento esistente (markPaid / edit) */
   payment?: CrmPayment | null;
-  /** Il cliente ha un account sulla piattaforma (serve per la push al cliente) */
-  clientHasAccount: boolean;
+  /** Canale del promemoria al cliente (push o email) */
+  clientChannel: ClientChannel;
   onSubmit: (values: PaymentFormValues) => Promise<boolean>;
 }
 
@@ -42,7 +43,7 @@ const TITLES: Record<PaymentFormMode, string> = {
   edit: 'Modifica pagamento',
 };
 
-export function PaymentFormDialog({ open, onOpenChange, mode, payment, clientHasAccount, onSubmit }: Props) {
+export function PaymentFormDialog({ open, onOpenChange, mode, payment, clientChannel, onSubmit }: Props) {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [paidAt, setPaidAt] = useState(todayIso());
@@ -95,7 +96,7 @@ export function PaymentFormDialog({ open, onOpenChange, mode, payment, clientHas
       due_date: isPaid ? (payment?.due_date ?? null) : dueDate,
       reminder_date: isPaid ? (payment?.reminder_date ?? null) : (reminderDate || dueDate),
       remind_admin: isPaid ? (payment?.remind_admin ?? false) : remindAdmin,
-      remind_client: isPaid ? (payment?.remind_client ?? false) : remindClient && clientHasAccount,
+      remind_client: isPaid ? (payment?.remind_client ?? false) : remindClient && clientChannel.canNotify,
       notes: notes.trim() || null,
     });
     setSaving(false);
@@ -179,16 +180,16 @@ export function PaymentFormDialog({ open, onOpenChange, mode, payment, clientHas
               </div>
               <div className="flex items-center justify-between gap-3">
                 <Label htmlFor="pay-remind-client" className="font-normal">
-                  Notifica al cliente con l'importo
-                  {!clientHasAccount && (
-                    <span className="block text-xs text-muted-foreground">Il cliente non ha un account sulla piattaforma</span>
-                  )}
+                  Promemoria al cliente con l'importo
+                  <span className={cn('block text-xs', clientChannel.warn ? 'text-amber-600' : 'text-muted-foreground')}>
+                    {clientChannel.hint}
+                  </span>
                 </Label>
                 <Switch
                   id="pay-remind-client"
-                  checked={remindClient && clientHasAccount}
+                  checked={remindClient && clientChannel.canNotify}
                   onCheckedChange={setRemindClient}
-                  disabled={!clientHasAccount}
+                  disabled={!clientChannel.canNotify}
                 />
               </div>
             </div>

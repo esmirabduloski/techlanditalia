@@ -14,7 +14,8 @@ import { useSiteSetting } from '@/hooks/useSiteSetting';
 import { supabase } from '@/integrations/supabase/client';
 import type { ScheduledPaymentWithLead, useAllScheduledPayments } from '@/hooks/useCRMPayments';
 import {
-  DEFAULT_DUNNING_SETTINGS, DUNNING_SETTINGS_KEY, daysBetween, formatDate, formatEuro, methodLabel, paymentLabel, paymentPhrase,
+  CLIENT_RESULT_LABELS, DEFAULT_DUNNING_SETTINGS, getClientChannel, DUNNING_SETTINGS_KEY, daysBetween, formatDate, formatEuro, methodLabel,
+  paymentLabel, paymentWhatsAppLink,
   todayIso, type DunningSettings,
 } from '@/lib/payments';
 import { cn } from '@/lib/utils';
@@ -29,11 +30,6 @@ interface Props {
   onOpenLead: (leadId: string) => void;
 }
 
-const CLIENT_RESULT_LABELS: Record<string, string> = {
-  no_account: 'il cliente non ha un account',
-  no_devices: 'il cliente non ha le notifiche attive',
-  failed: 'invio non riuscito',
-};
 
 /** Scadenziario: le rate da incassare di tutti i clienti, con solleciti. */
 export function CRMPaymentsSchedule({ schedule, onOpenLead }: Props) {
@@ -109,23 +105,14 @@ export function CRMPaymentsSchedule({ schedule, onOpenLead }: Props) {
     const { ok, result } = await sendClientReminderNow(p.id);
     setSendingId(null);
     toast({
-      title: ok ? 'Notifica inviata al cliente' : 'Notifica non inviata',
+      title: ok ? (result === 'email_sent' ? 'Email inviata al cliente' : 'Notifica push inviata al cliente') : 'Promemoria non inviato',
       description: ok ? undefined : CLIENT_RESULT_LABELS[result ?? ''] ?? result,
       variant: ok ? undefined : 'destructive',
     });
   };
 
-  const whatsappLink = (p: ScheduledPaymentWithLead) => {
-    const phone = p.crm_leads?.phone?.replace(/[^\d]/g, '');
-    if (!phone) return null;
-    const firstName = p.crm_leads?.full_name?.trim().split(/\s+/)[0] ?? '';
-    const overdue = !!p.due_date && p.due_date < today;
-    const label = paymentPhrase(p);
-    const text = overdue
-      ? `Ciao ${firstName}, ti scrivo da TECHLAND: risulta ancora da saldare ${label} di ${formatEuro(p.amount_cents)}, con scadenza il ${formatDate(p.due_date)}. Se hai già pagato, ignora pure questo messaggio. Grazie!`
-      : `Ciao ${firstName}, ti scrivo da TECHLAND per ricordarti ${label} di ${formatEuro(p.amount_cents)} in scadenza il ${formatDate(p.due_date)}. Grazie!`;
-    return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
-  };
+  const whatsappLink = (p: ScheduledPaymentWithLead) =>
+    p.crm_leads ? paymentWhatsAppLink(p.crm_leads, p, today) : null;
 
   if (loadError) {
     return (
@@ -185,7 +172,7 @@ export function CRMPaymentsSchedule({ schedule, onOpenLead }: Props) {
         </div>
         <Button size="sm" variant="outline" className="ml-auto" onClick={() => setSettingsOpen(true)}>
           <Settings2 className="w-4 h-4 mr-1" />
-          Solleciti automatici: {dunning.enabled ? 'attivi' : 'spenti'}
+          Promemoria e solleciti: {dunning.enabled ? 'attivi' : 'spenti'}
         </Button>
       </div>
 
@@ -259,11 +246,9 @@ export function CRMPaymentsSchedule({ schedule, onOpenLead }: Props) {
                       <DropdownMenuItem onSelect={() => onOpenLead(p.lead_id)}>
                         <User className="w-4 h-4 mr-2" /> Apri scheda cliente
                       </DropdownMenuItem>
-                      {p.crm_leads?.linked_profile_id && (
-                        <DropdownMenuItem onSelect={() => handleSendPush(p)}>
-                          <Send className="w-4 h-4 mr-2" /> Invia notifica push al cliente
-                        </DropdownMenuItem>
-                      )}
+                      <DropdownMenuItem onSelect={() => handleSendPush(p)}>
+                        <Send className="w-4 h-4 mr-2" /> Invia promemoria al cliente (push o email)
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -278,7 +263,7 @@ export function CRMPaymentsSchedule({ schedule, onOpenLead }: Props) {
         onOpenChange={open => !open && setToMarkPaid(null)}
         mode="markPaid"
         payment={toMarkPaid}
-        clientHasAccount={!!toMarkPaid?.crm_leads?.linked_profile_id}
+        clientChannel={getClientChannel(!!toMarkPaid?.crm_leads?.linked_profile_id, null, toMarkPaid?.crm_leads?.email)}
         onSubmit={handleMarkPaid}
       />
 

@@ -33,9 +33,9 @@ export function MyPaymentsCard() {
 
   useEffect(() => {
     let active = true;
-    supabase.rpc('get_my_crm_payments').then(({ data, error }) => {
+    (supabase.rpc as any)('get_my_crm_payments').then(({ data, error }) => {
       // In caso di errore la sezione resta nascosta: non deve bloccare la pagina acquisti
-      if (active) setPayments(error ? [] : (data ?? []));
+      if (active) setPayments(error ? [] : ((data ?? []) as MyPayment[]));
     });
     return () => {
       active = false;

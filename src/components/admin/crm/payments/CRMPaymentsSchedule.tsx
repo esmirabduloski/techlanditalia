@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
-  AlertTriangle, BellRing, CheckCircle2, Loader2, MessageCircle, MoreHorizontal, Search, Send, Settings2, User,
+  AlertTriangle, BellRing, CheckCircle2, Download, Loader2, MessageCircle, MoreHorizontal, Search, Send, Settings2, User,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,7 @@ import {
 import { cn } from '@/lib/utils';
 import { PaymentFormDialog, type PaymentFormValues } from './PaymentFormDialog';
 import { DunningSettingsDialog } from './DunningSettingsDialog';
+import { ExportPaymentsDialog } from './ExportPaymentsDialog';
 
 type Filter = 'overdue' | 'week' | 'month' | 'all';
 
@@ -45,6 +46,7 @@ export function CRMPaymentsSchedule({ schedule, onOpenLead }: Props) {
   const [query, setQuery] = useState('');
   const [toMarkPaid, setToMarkPaid] = useState<ScheduledPaymentWithLead | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const [sendingId, setSendingId] = useState<string | null>(null);
 
   const today = todayIso();
@@ -170,7 +172,10 @@ export function CRMPaymentsSchedule({ schedule, onOpenLead }: Props) {
             aria-label="Cerca cliente"
           />
         </div>
-        <Button size="sm" variant="outline" className="ml-auto" onClick={() => setSettingsOpen(true)}>
+        <Button size="sm" variant="outline" className="ml-auto" onClick={() => setExportOpen(true)}>
+          <Download className="w-4 h-4 mr-1" /> Esporta
+        </Button>
+        <Button size="sm" variant="outline" onClick={() => setSettingsOpen(true)}>
           <Settings2 className="w-4 h-4 mr-1" />
           Promemoria e solleciti: {dunning.enabled ? 'attivi' : 'spenti'}
         </Button>
@@ -266,6 +271,8 @@ export function CRMPaymentsSchedule({ schedule, onOpenLead }: Props) {
         clientChannel={getClientChannel(!!toMarkPaid?.crm_leads?.linked_profile_id, null, toMarkPaid?.crm_leads?.email)}
         onSubmit={handleMarkPaid}
       />
+
+      <ExportPaymentsDialog open={exportOpen} onOpenChange={setExportOpen} />
 
       <DunningSettingsDialog
         open={settingsOpen}

@@ -1,6 +1,42 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeadersFor } from "../_shared/cors.ts";
 
+/** Rata CRM da trasformare in preventivo (opzionale: { lead_id, payment_id }). */
+type PaymentRow = {
+  id: string;
+  lead_id: string;
+  amount_cents: number;
+  list_amount_cents: number | null;
+  discount_label: string | null;
+  description: string | null;
+  due_date: string | null;
+  installment_number: number | null;
+  installment_total: number | null;
+};
+
+function paymentTitle(p: PaymentRow): string {
+  const parts: string[] = [];
+  if (p.installment_number && p.installment_total) parts.push(`Rata ${p.installment_number}/${p.installment_total}`);
+  if (p.description) parts.push(p.description);
+  return parts.join(" - ") || "Pagamento";
+}
+
+
+/** Parametri del preventivo nel link di Quote Genie (prefill della bozza). */
+function quoteQuery(quote: { external_id: string; title: string; total: number; due_date: string | null; discount: { label: string | null; amount: number } | null } | null): string {
+  if (!quote) return "";
+  const params = new URLSearchParams({
+    quote_external_id: quote.external_id,
+    quote_description: quote.title,
+    quote_amount: quote.total.toFixed(2),
+  });
+  if (quote.due_date) params.set("quote_due_date", quote.due_date);
+  if (quote.discount) {
+    params.set("quote_discount", quote.discount.amount.toFixed(2));
+    if (quote.discount.label) params.set("quote_discount_label", quote.discount.label);
+  }
+  return `&${params.toString()}`;
+}
 
 Deno.serve(async (req) => {
   const corsHeaders = corsHeadersFor(req);
@@ -58,6 +94,51 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Preventivo di una singola rata: la rata deve appartenere al lead
+    const paymentId = typeof body?.payment_id === "string" ? body.payment_id : null;
+    let payment: PaymentRow | null = null;
+    if (paymentId) {
+      const { data } = await admin
+        .from("crm_payments")
+        .select("id, lead_id, amount_cents, list_amount_cents, discount_label, description, due_date, installment_number, installment_total")
+        .eq("id", paymentId)
+        .maybeSingle();
+      if (!data || data.lead_id !== leadId) {
+        return new Response(JSON.stringify({ error: "Payment not found" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      payment = data as PaymentRow;
+    }
+
+    // Dati strutturati del preventivo, letti da Quote Genie per precompilare la bozza
+    const quote = payment
+      ? {
+        external_id: payment.id,
+        title: paymentTitle(payment),
+        currency: "EUR",
+        due_date: payment.due_date,
+        installment_number: payment.installment_number,
+        installment_total: payment.installment_total,
+        items: [{
+          description: paymentTitle(payment),
+          quantity: 1,
+          unit_price: (payment.list_amount_cents ?? payment.amount_cents) / 100,
+          unit_price_cents: payment.list_amount_cents ?? payment.amount_cents,
+        }],
+        discount: payment.list_amount_cents != null
+          ? {
+            label: payment.discount_label,
+            amount: (payment.list_amount_cents - payment.amount_cents) / 100,
+            amount_cents: payment.list_amount_cents - payment.amount_cents,
+          }
+          : null,
+        total: payment.amount_cents / 100,
+        total_cents: payment.amount_cents,
+      }
+      : null;
+
     const { data: lead, error: leadErr } = await admin
       .from("crm_leads")
       .select("*")
@@ -108,6 +189,7 @@ Deno.serve(async (req) => {
             child_age: lead.child_age,
             notes: lead.notes,
           },
+          ...(quote ? { quote } : {}),
         }),
       });
 
@@ -122,7 +204,7 @@ Deno.serve(async (req) => {
           // Append action=new_quote so Quote Genie auto-opens the new-quote dialog
           if (redirectUrl) {
             const sep = redirectUrl.includes("?") ? "&" : "?";
-            redirectUrl = `${redirectUrl}${sep}action=new_quote`;
+            redirectUrl = `${redirectUrl}${sep}action=new_quote${quoteQuery(quote)}`;
           }
         } catch (parseErr) {
           qgError = `Invalid JSON from Quote Genie: ${(parseErr as Error).message}`;
@@ -145,7 +227,7 @@ Deno.serve(async (req) => {
         external_id: lead.id,
         action: "new_quote",
       });
-      redirectUrl = `${qgBase.replace(/\/$/, "")}/app/clients?${params.toString()}`;
+      redirectUrl = `${qgBase.replace(/\/$/, "")}/app/clients?${params.toString()}${quoteQuery(quote)}`;
     }
 
     // Update lead and log interaction
@@ -160,11 +242,13 @@ Deno.serve(async (req) => {
       lead_id: lead.id,
       admin_id: userId,
       type: "quote_sent",
-      subject: "Preventivo inviato a Quote Genie",
+      subject: quote
+        ? `Preventivo rata in Quote Genie: ${quote.title} (${quote.total.toFixed(2).replace(".", ",")} €)`
+        : "Preventivo inviato a Quote Genie",
       content: qgError
         ? `Apertura manuale (fallback). ${qgError}`
         : "Cliente creato/aggiornato in Quote Genie",
-      metadata: { quote_genie_client_id: qgClientId, redirect_url: redirectUrl, error: qgError },
+      metadata: { quote_genie_client_id: qgClientId, redirect_url: redirectUrl, error: qgError, payment_id: payment?.id ?? null },
     });
 
     return new Response(

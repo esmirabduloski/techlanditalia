@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
-  Bell, BellOff, CalendarClock, CheckCircle2, Loader2, Mail, MessageCircle, MoreHorizontal, Pencil, Plus, Send, Smartphone,
+  Bell, BellOff, CalendarClock, CheckCircle2, Download, FileSignature, Layers, Loader2, Mail, MessageCircle, MoreHorizontal, Pencil, Plus, Send, Smartphone,
   Trash2, Wallet,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +23,9 @@ import {
 import { cn } from '@/lib/utils';
 import { PaymentFormDialog, type PaymentFormMode, type PaymentFormValues } from './PaymentFormDialog';
 import { ScheduleInstallmentsDialog } from './ScheduleInstallmentsDialog';
+import { BulkEditPlanDialog, type BulkUpdate } from './BulkEditPlanDialog';
+import { ExportPaymentsDialog } from './ExportPaymentsDialog';
+import { supabase } from '@/integrations/supabase/client';
 
 
 interface Props {
@@ -34,7 +37,7 @@ interface Props {
 export function CRMPaymentsSection({ lead, addInteraction }: Props) {
   const { toast } = useToast();
   const {
-    payments, loading, loadError, insertPayments, updatePayment, deletePayment, sendClientReminderNow,
+    payments, loading, loadError, insertPayments, updatePayment, updateMany, deletePayment, sendClientReminderNow,
   } = useCRMPayments(lead.id);
   const clientHasPushDevices = useClientPushStatus(lead.linked_profile_id);
   const clientChannel = getClientChannel(!!lead.linked_profile_id, clientHasPushDevices, lead.email);
@@ -43,6 +46,9 @@ export function CRMPaymentsSection({ lead, addInteraction }: Props) {
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [toDelete, setToDelete] = useState<CrmPayment | null>(null);
   const [sendingId, setSendingId] = useState<string | null>(null);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [quotingId, setQuotingId] = useState<string | null>(null);
 
   const today = todayIso();
   const { upcoming, history, totals } = useMemo(() => {
@@ -126,6 +132,54 @@ export function CRMPaymentsSection({ lead, addInteraction }: Props) {
     });
   };
 
+  const handleBulkApply = async (updates: BulkUpdate[]) => {
+    const ok = await updateMany(updates);
+    if (ok) {
+      const label = updates.find(u => u.discount_label)?.discount_label;
+      toast({ title: `${updates.length} rate aggiornate`, description: label ?? undefined });
+      await addInteraction({
+        type: 'note',
+        subject: 'Piano rate modificato',
+        content: `${updates.length} rate da pagare: ${label ?? `nuovo importo ${formatEuro(updates[0].amount_cents)}`}.`,
+      });
+    }
+    return ok;
+  };
+
+  /** Crea il preventivo di una singola rata in Quote Genie (preventivi.techlanditalia.it). */
+  const handleQuote = async (p: CrmPayment) => {
+    setQuotingId(p.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('quote-genie-create-client', {
+        body: { lead_id: lead.id, payment_id: p.id },
+      });
+      if (error) throw error;
+      if (!data?.redirect_url) throw new Error('Nessun link ricevuto da Quote Genie');
+      window.open(data.redirect_url, '_blank', 'noopener,noreferrer');
+      toast({
+        title: `Preventivo: ${paymentLabel(p)}`,
+        description: data.fallback ? 'Quote Genie aperto in modalità fallback' : 'Aperto Quote Genie in una nuova scheda',
+      });
+    } catch (e) {
+      toast({ title: 'Errore Quote Genie', description: e instanceof Error ? e.message : String(e), variant: 'destructive' });
+    } finally {
+      setQuotingId(null);
+    }
+  };
+
+  const quoteButton = (p: CrmPayment) => (
+    <Button
+      size="icon"
+      variant="ghost"
+      onClick={() => handleQuote(p)}
+      disabled={quotingId === p.id}
+      aria-label={`Crea preventivo per ${paymentLabel(p)}`}
+      title="Crea preventivo per questa rata"
+    >
+      {quotingId === p.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSignature className="w-4 h-4" />}
+    </Button>
+  );
+
   const handleSchedule = async (rows: Parameters<typeof insertPayments>[0]) => {
     const ok = await insertPayments(rows);
     if (ok) {
@@ -140,7 +194,16 @@ export function CRMPaymentsSection({ lead, addInteraction }: Props) {
         <Label id="crm-payments-title" className="text-base font-semibold flex items-center gap-2">
           <Wallet className="w-4 h-4" /> Pagamenti
         </Label>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setExportOpen(true)}
+            disabled={payments.length === 0}
+            title="Esporta i pagamenti di questo cliente in Excel o CSV"
+          >
+            <Download className="w-4 h-4 mr-1" /> Esporta
+          </Button>
           <Button size="sm" variant="outline" onClick={() => setScheduleOpen(true)}>
             <CalendarClock className="w-4 h-4 mr-1" /> Pianifica rate
           </Button>
@@ -182,7 +245,12 @@ export function CRMPaymentsSection({ lead, addInteraction }: Props) {
           {/* Rate da incassare */}
           {upcoming.length > 0 && (
             <div className="space-y-1.5">
-              <h4 className="text-sm font-medium text-muted-foreground">Rate in programma</h4>
+              <div className="flex items-center justify-between gap-2">
+                <h4 className="text-sm font-medium text-muted-foreground">Rate in programma</h4>
+                <Button size="sm" variant="ghost" className="h-7" onClick={() => setBulkOpen(true)}>
+                  <Layers className="w-4 h-4 mr-1" /> Modifica piano
+                </Button>
+              </div>
               <ul className="divide-y rounded-lg border">
                 {upcoming.map(p => {
                   const isOverdue = !!p.due_date && p.due_date < today;
@@ -198,7 +266,8 @@ export function CRMPaymentsSection({ lead, addInteraction }: Props) {
                         <div className="text-muted-foreground truncate">{paymentLabel(p)}</div>
                         <ReminderInfo payment={p} />
                       </div>
-                      <span className="font-semibold whitespace-nowrap">{formatEuro(p.amount_cents)}</span>
+                      <AmountCell payment={p} />
+                      {quoteButton(p)}
                       <Button
                         size="sm"
                         variant="outline"
@@ -268,7 +337,8 @@ export function CRMPaymentsSection({ lead, addInteraction }: Props) {
                       </div>
                       {p.notes && <div className="text-xs text-muted-foreground truncate">{p.notes}</div>}
                     </div>
-                    <span className="font-semibold whitespace-nowrap">{formatEuro(p.amount_cents)}</span>
+                    <AmountCell payment={p} />
+                    {quoteButton(p)}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button size="icon" variant="ghost" aria-label="Azioni pagamento">
@@ -305,6 +375,20 @@ export function CRMPaymentsSection({ lead, addInteraction }: Props) {
         payment={form?.payment}
         clientChannel={clientChannel}
         onSubmit={handleFormSubmit}
+      />
+
+      <BulkEditPlanDialog
+        open={bulkOpen}
+        onOpenChange={setBulkOpen}
+        scheduled={upcoming}
+        onApply={handleBulkApply}
+      />
+
+      <ExportPaymentsDialog
+        open={exportOpen}
+        onOpenChange={setExportOpen}
+        leadId={lead.id}
+        label={lead.full_name || lead.email}
       />
 
       <ScheduleInstallmentsDialog
@@ -370,6 +454,22 @@ function ReminderInfo({ payment: p }: { payment: CrmPayment }) {
               : p.client_reminder_result === 'email_sent' ? 'Cliente avvisato (email)' : 'Cliente non avvisato')
             : `Cliente il ${formatDate(p.reminder_date, 'dd/MM')}`}
         </span>
+      )}
+    </div>
+  );
+}
+
+/** Importo della rata, con prezzo pieno barrato e nome dello sconto se presente. */
+function AmountCell({ payment: p }: { payment: CrmPayment }) {
+  const discounted = p.list_amount_cents != null && p.list_amount_cents !== p.amount_cents;
+  return (
+    <div className="text-right whitespace-nowrap">
+      <div className="font-semibold">{formatEuro(p.amount_cents)}</div>
+      {discounted && (
+        <div className="text-xs text-muted-foreground">
+          <span className="line-through">{formatEuro(p.list_amount_cents!)}</span>
+          {p.discount_label && <span className="block text-green-600 dark:text-green-400">{p.discount_label}</span>}
+        </div>
       )}
     </div>
   );

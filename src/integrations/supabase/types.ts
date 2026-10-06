@@ -786,12 +786,14 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
+          discount_label: string | null
           due_date: string | null
           id: string
           installment_number: number | null
           installment_total: number | null
           last_overdue_reminder_at: string | null
           lead_id: string
+          list_amount_cents: number | null
           method: string | null
           notes: string | null
           overdue_reminder_count: number
@@ -811,12 +813,14 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          discount_label?: string | null
           due_date?: string | null
           id?: string
           installment_number?: number | null
           installment_total?: number | null
           last_overdue_reminder_at?: string | null
           lead_id: string
+          list_amount_cents?: number | null
           method?: string | null
           notes?: string | null
           overdue_reminder_count?: number
@@ -836,12 +840,14 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          discount_label?: string | null
           due_date?: string | null
           id?: string
           installment_number?: number | null
           installment_total?: number | null
           last_overdue_reminder_at?: string | null
           lead_id?: string
+          list_amount_cents?: number | null
           method?: string | null
           notes?: string | null
           overdue_reminder_count?: number
@@ -2837,10 +2843,12 @@ export type Database = {
         Returns: {
           amount_cents: number
           description: string | null
+          discount_label: string | null
           due_date: string | null
           id: string
           installment_number: number | null
           installment_total: number | null
+          list_amount_cents: number | null
           method: string | null
           paid_at: string | null
           status: string

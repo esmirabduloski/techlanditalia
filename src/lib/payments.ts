@@ -34,6 +34,10 @@ export interface CrmPayment {
   client_reminder_sent_at: string | null;
   client_reminder_result: ClientReminderResult | null;
   notes: string | null;
+  /** Prezzo pieno prima dello sconto (null = nessuno sconto) */
+  list_amount_cents: number | null;
+  /** Es. "Sconto fratelli 10%" */
+  discount_label: string | null;
   overdue_reminder_count: number;
   last_overdue_reminder_at: string | null;
   created_at: string;

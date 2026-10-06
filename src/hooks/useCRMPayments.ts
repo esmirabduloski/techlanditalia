@@ -60,6 +60,15 @@ export function useCRMPayments(leadId: string | null) {
     return true;
   };
 
+  /** Aggiorna più rate insieme (modifica in blocco di un piano). */
+  const updateMany = async (rows: ({ id: string } & Partial<CrmPayment>)[]) => {
+    const results = await Promise.all(rows.map(({ id, ...patch }) => table().update(patch).eq('id', id)));
+    const failed = results.find(r => r.error);
+    await load();
+    if (failed?.error) return fail('Alcune rate non sono state aggiornate', failed.error);
+    return true;
+  };
+
   const deletePayment = async (id: string) => {
     const { error } = await table().delete().eq('id', id);
     if (error) return fail('Errore eliminazione pagamento', error);
@@ -75,7 +84,9 @@ export function useCRMPayments(leadId: string | null) {
     return { ok: Boolean(data?.success), result: data?.result as string | undefined };
   };
 
-  return { payments, loading, loadError, reload: load, insertPayments, updatePayment, deletePayment, sendClientReminderNow };
+  return {
+    payments, loading, loadError, reload: load, insertPayments, updatePayment, updateMany, deletePayment, sendClientReminderNow,
+  };
 }
 
 /** Il cliente collegato ha almeno un dispositivo con notifiche push attive? null = sconosciuto. */

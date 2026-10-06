@@ -10,6 +10,8 @@ import { cn } from '@/lib/utils';
 interface MyPayment {
   id: string;
   amount_cents: number;
+  list_amount_cents: number | null;
+  discount_label: string | null;
   status: string;
   description: string | null;
   due_date: string | null;
@@ -111,7 +113,7 @@ export function MyPaymentsCard() {
                       </div>
                       <div className="text-muted-foreground truncate">{paymentLabel(p)}</div>
                     </div>
-                    <span className="font-semibold whitespace-nowrap">{formatEuro(p.amount_cents)}</span>
+                    <Amount payment={p} />
                   </li>
                 );
               })}
@@ -134,7 +136,7 @@ export function MyPaymentsCard() {
                     </div>
                     <div className="text-muted-foreground truncate">{paymentLabel(p)}</div>
                   </div>
-                  <span className="font-semibold whitespace-nowrap">{formatEuro(p.amount_cents)}</span>
+                  <Amount payment={p} />
                 </li>
               ))}
             </ul>
@@ -152,5 +154,20 @@ export function MyPaymentsCard() {
         </p>
       </CardContent>
     </Card>
+  );
+}
+
+function Amount({ payment: p }: { payment: MyPayment }) {
+  const discounted = p.list_amount_cents != null && p.list_amount_cents !== p.amount_cents;
+  return (
+    <div className="text-right whitespace-nowrap">
+      <div className="font-semibold">{formatEuro(p.amount_cents)}</div>
+      {discounted && (
+        <div className="text-xs">
+          <span className="text-muted-foreground line-through">{formatEuro(p.list_amount_cents!)}</span>
+          {p.discount_label && <span className="block text-green-600 dark:text-green-400">{p.discount_label}</span>}
+        </div>
+      )}
+    </div>
   );
 }

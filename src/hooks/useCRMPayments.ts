@@ -7,8 +7,7 @@ export type PaymentInsert = Partial<Omit<CrmPayment, 'id' | 'created_at' | 'upda
   amount_cents: number;
 };
 
-// Cast finché le colonne degli sconti non sono nei tipi generati
-const table = () => supabase.from('crm_payments' as any) as any;
+const table = () => supabase.from('crm_payments');
 
 /** Pagamenti e rate di un cliente CRM. */
 export function useCRMPayments(leadId: string | null) {

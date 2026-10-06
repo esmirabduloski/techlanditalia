@@ -23,12 +23,13 @@ function paymentTitle(p: PaymentRow): string {
 
 
 /** Parametri del preventivo nel link di Quote Genie (prefill della bozza). */
-function quoteQuery(quote: { external_id: string; title: string; total: number; due_date: string | null; discount: { label: string | null; amount: number } | null } | null): string {
+function quoteQuery(quote: { external_id: string; title: string; items: { unit_price: number }[]; due_date: string | null; discount: { label: string | null; amount: number } | null } | null): string {
   if (!quote) return "";
+  // quote_amount è il prezzo pieno della riga: Quote Genie applica lo sconto a parte
   const params = new URLSearchParams({
     quote_external_id: quote.external_id,
     quote_description: quote.title,
-    quote_amount: quote.total.toFixed(2),
+    quote_amount: quote.items[0].unit_price.toFixed(2),
   });
   if (quote.due_date) params.set("quote_due_date", quote.due_date);
   if (quote.discount) {
@@ -201,8 +202,15 @@ Deno.serve(async (req) => {
           const qgData = JSON.parse(responseText);
           qgClientId = qgData.client_id ?? null;
           redirectUrl = qgData.redirect_url ?? null;
-          // Append action=new_quote so Quote Genie auto-opens the new-quote dialog
-          if (redirectUrl) {
+          // Bozza già creata da Quote Genie con la rata: apri direttamente quella
+          // (evita un secondo preventivo vuoto aperto dal deeplink)
+          if (qgData.quote?.success && typeof qgData.quote.redirect_url === "string") {
+            redirectUrl = qgData.quote.redirect_url;
+          } else if (redirectUrl) {
+            if (qgData.quote && !qgData.quote.success) {
+              console.warn("[QG] Quote draft not created:", qgData.quote.error);
+            }
+            // Append action=new_quote so Quote Genie auto-opens the new-quote dialog
             const sep = redirectUrl.includes("?") ? "&" : "?";
             redirectUrl = `${redirectUrl}${sep}action=new_quote${quoteQuery(quote)}`;
           }

@@ -786,14 +786,12 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
-          discount_label: string | null
           due_date: string | null
           id: string
           installment_number: number | null
           installment_total: number | null
           last_overdue_reminder_at: string | null
           lead_id: string
-          list_amount_cents: number | null
           method: string | null
           notes: string | null
           overdue_reminder_count: number
@@ -813,14 +811,12 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
-          discount_label?: string | null
           due_date?: string | null
           id?: string
           installment_number?: number | null
           installment_total?: number | null
           last_overdue_reminder_at?: string | null
           lead_id: string
-          list_amount_cents?: number | null
           method?: string | null
           notes?: string | null
           overdue_reminder_count?: number
@@ -840,14 +836,12 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
-          discount_label?: string | null
           due_date?: string | null
           id?: string
           installment_number?: number | null
           installment_total?: number | null
           last_overdue_reminder_at?: string | null
           lead_id?: string
-          list_amount_cents?: number | null
           method?: string | null
           notes?: string | null
           overdue_reminder_count?: number
@@ -2838,22 +2832,6 @@ export type Database = {
       }
       generate_slug: { Args: { title: string }; Returns: string }
       get_children_ids: { Args: { _parent_id: string }; Returns: string[] }
-      get_my_crm_payments: {
-        Args: never
-        Returns: {
-          amount_cents: number
-          description: string | null
-          discount_label: string | null
-          due_date: string | null
-          id: string
-          installment_number: number | null
-          installment_total: number | null
-          list_amount_cents: number | null
-          method: string | null
-          paid_at: string | null
-          status: string
-        }[]
-      }
       get_leaderboard: {
         Args: { _filter_id?: string; _filter_type?: string; _limit?: number }
         Returns: {

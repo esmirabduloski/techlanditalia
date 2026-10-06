@@ -1,0 +1,1 @@
+COMMENT ON FUNCTION public.get_my_crm_payments() IS 'Rate del cliente collegato (area riservata), con eventuale sconto.';

@@ -57,7 +57,7 @@ async function loadRows(opts: PaymentsExportOptions): Promise<ExportRow[]> {
 
   return (data ?? [])
     .filter(p => (opts.from || opts.to) ? inRange(p.status === 'paid' ? p.paid_at : p.due_date) : true)
-    .map((p: any) => {
+    .map(p => {
       const lead = p.crm_leads as { full_name: string | null; email: string; phone: string | null } | null;
       const overdue = p.status === 'scheduled' && !!p.due_date && p.due_date < today;
       return {

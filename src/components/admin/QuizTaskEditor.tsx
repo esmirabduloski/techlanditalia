@@ -5,9 +5,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CheckCircle2, AlertTriangle, Eye, EyeOff } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, Eye, EyeOff, Braces, ListChecks } from 'lucide-react';
 import { QuizTask } from '@/components/lesson/QuizTask';
 import { parseQuizContent } from '@/lib/quiz';
+import { QuizFormEditor, draftFromJson } from '@/components/admin/QuizFormEditor';
 
 interface QuizTaskEditorProps {
   value: string;
@@ -50,6 +51,11 @@ export function QuizTaskEditor({ value, onChange, courseId, currentTaskId }: Qui
   const parsed = useMemo(() => parseQuizContent(value), [value]);
   const [mode, setMode] = useState<'json' | 'link'>(parsed.kind === 'ref' ? 'link' : 'json');
   const [showPreview, setShowPreview] = useState(false);
+  // Modulo visuale di default; si parte dal JSON solo se quello salvato non è leggibile dal modulo.
+  const [editor, setEditor] = useState<'form' | 'json'>(
+    parsed.kind === 'ref' || draftFromJson(value) ? 'form' : 'json',
+  );
+  const formAvailable = useMemo(() => draftFromJson(value) !== null, [value]);
   const [quizTasks, setQuizTasks] = useState<QuizTaskOption[]>([]);
   // Tiene da parte il JSON scritto a mano se si passa a "collega" e poi si torna indietro.
   const [jsonDraft, setJsonDraft] = useState(parsed.kind === 'ref' ? '' : value);
@@ -129,14 +135,33 @@ export function QuizTaskEditor({ value, onChange, courseId, currentTaskId }: Qui
         </div>
       ) : (
         <div className="space-y-2">
-          <div className="flex items-center justify-between gap-2">
-            <Label htmlFor="quiz_json">Domande (JSON)</Label>
-            {!value.trim() && (
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <Tabs value={editor} onValueChange={(v) => setEditor(v as 'form' | 'json')}>
+              <TabsList className="h-9">
+                <TabsTrigger value="form" disabled={!formAvailable} className="gap-1.5">
+                  <ListChecks className="h-4 w-4" /> Modulo
+                </TabsTrigger>
+                <TabsTrigger value="json" className="gap-1.5">
+                  <Braces className="h-4 w-4" /> JSON
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+            {editor === 'json' && !value.trim() && (
               <Button type="button" variant="outline" size="sm" onClick={() => onChange(EXAMPLE)}>
                 Inserisci esempio
               </Button>
             )}
           </div>
+          {editor === 'form' && !formAvailable && (
+            <p className="text-xs text-destructive">
+              Il JSON ha un errore di sintassi: correggilo nella scheda JSON per tornare al modulo.
+            </p>
+          )}
+          {editor === 'form' && formAvailable ? (
+            <QuizFormEditor value={value} onChange={onChange} />
+          ) : (
+          <>
+          <Label htmlFor="quiz_json" className="sr-only">Domande (JSON)</Label>
           <Textarea
             id="quiz_json"
             value={value}
@@ -148,8 +173,11 @@ export function QuizTaskEditor({ value, onChange, courseId, currentTaskId }: Qui
           <p className="text-xs text-muted-foreground">
             <code>tipo</code>: <code>scelta_multipla</code> o <code>vero_falso</code>. <code>risposta_corretta</code>{' '}
             deve essere uguale a una delle <code>risposte_possibili</code>. <code>spiegazione</code> è facoltativa. Le
-            risposte a scelta multipla vengono mescolate per ogni studente.
+            risposte a scelta multipla vengono mescolate per ogni studente. Puoi incollare qui un JSON e poi
+            passare a <strong>Modulo</strong> per modificarlo comodamente.
           </p>
+          </>
+          )}
         </div>
       )}
 

@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowDown, ArrowUp, Check, Copy, Plus, Trash2, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, Check, Copy, GripVertical, Plus, Trash2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { QuizQuestionType } from '@/lib/quiz';
 
@@ -105,6 +105,11 @@ interface QuizFormEditorProps {
 export function QuizFormEditor({ value, onChange }: QuizFormEditorProps) {
   const [draft, setDraft] = useState<Draft>(() => draftFromJson(value) ?? { titolo: '', domande: [] });
   const lastEmitted = useRef(value);
+  // Drag & drop nativo: la scheda diventa trascinabile solo mentre si tiene premuta la maniglia,
+  // così selezionare il testo nei campi continua a funzionare.
+  const [armedKey, setArmedKey] = useState<string | null>(null);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [overIndex, setOverIndex] = useState<number | null>(null);
 
   // Se il contenuto cambia dall'esterno (es. modificato nel JSON o caricato dopo), riallinea la bozza.
   useEffect(() => {
@@ -127,12 +132,20 @@ export function QuizFormEditor({ value, onChange }: QuizFormEditorProps) {
       domande: draft.domande.map((q, i) => (i === index ? { ...q, ...patch } : q)),
     });
 
-  const moveQuestion = (index: number, delta: number) => {
-    const target = index + delta;
-    if (target < 0 || target >= draft.domande.length) return;
+  const moveQuestionTo = (from: number, to: number) => {
+    if (from === to || to < 0 || to >= draft.domande.length) return;
     const domande = [...draft.domande];
-    [domande[index], domande[target]] = [domande[target], domande[index]];
+    const [moved] = domande.splice(from, 1);
+    domande.splice(to, 0, moved);
     update({ ...draft, domande });
+  };
+
+  const moveQuestion = (index: number, delta: number) => moveQuestionTo(index, index + delta);
+
+  const endDrag = () => {
+    setArmedKey(null);
+    setDragIndex(null);
+    setOverIndex(null);
   };
 
   const duplicateQuestion = (index: number) => {
@@ -202,8 +215,42 @@ export function QuizFormEditor({ value, onChange }: QuizFormEditorProps) {
               ? 'Segna la risposta giusta.'
               : null;
         return (
-          <div key={q.key} className={cn('rounded-lg border bg-card p-4 space-y-3', warning && 'border-amber-400')}>
+          <div
+            key={q.key}
+            draggable={armedKey === q.key}
+            onDragStart={(e) => {
+              e.dataTransfer.effectAllowed = 'move';
+              setDragIndex(qi);
+            }}
+            onDragOver={(e) => {
+              if (dragIndex === null) return;
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'move';
+              if (overIndex !== qi) setOverIndex(qi);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              if (dragIndex !== null) moveQuestionTo(dragIndex, qi);
+              endDrag();
+            }}
+            onDragEnd={endDrag}
+            className={cn(
+              'rounded-lg border bg-card p-4 space-y-3 transition-opacity',
+              warning && 'border-amber-400',
+              dragIndex === qi && 'opacity-40',
+              dragIndex !== null && overIndex === qi && dragIndex !== qi &&
+                (dragIndex < qi ? 'shadow-[0_3px_0_0_hsl(var(--primary))]' : 'shadow-[0_-3px_0_0_hsl(var(--primary))]'),
+            )}
+          >
             <div className="flex flex-wrap items-center gap-2">
+              <span
+                className="-ml-1 cursor-grab text-muted-foreground hover:text-foreground active:cursor-grabbing"
+                title="Trascina per riordinare"
+                onPointerDown={() => setArmedKey(q.key)}
+                onPointerUp={() => dragIndex === null && setArmedKey(null)}
+              >
+                <GripVertical className="h-5 w-5" />
+              </span>
               <span className="font-semibold">Domanda {qi + 1}</span>
               <Select value={q.tipo} onValueChange={(t) => changeType(qi, t as QuizQuestionType)}>
                 <SelectTrigger className="h-8 w-auto gap-2">

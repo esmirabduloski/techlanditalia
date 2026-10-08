@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import type { TablesInsert } from "@/integrations/supabase/types";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { Button } from "@/components/ui/button";
@@ -184,6 +185,7 @@ export default function TeacherGroupDetail() {
   }, [user, authLoading, groupId, effectiveUserId]);
 
   const fetchData = async () => {
+    if (!groupId) return;
     if (!effectiveUserId) return;
     
     const teacherId = effectiveUserId;
@@ -206,11 +208,14 @@ export default function TeacherGroupDetail() {
       }
 
       // Get teacher name (use the actual teacher of the group, not the current user)
-      const { data: teacherProfile } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('id', groupData.teacher_id)
-        .single();
+      // Un gruppo può non avere ancora un docente assegnato
+      const { data: teacherProfile } = groupData.teacher_id
+        ? await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', groupData.teacher_id)
+            .single()
+        : { data: null };
 
       setGroup({
         id: groupData.id,
@@ -220,7 +225,7 @@ export default function TeacherGroupDetail() {
         course_emoji: (groupData.courses as any)?.emoji,
         teacher_name: teacherProfile?.full_name || '',
         start_date: groupData.start_date,
-        max_lessons: groupData.max_lessons,
+        max_lessons: groupData.max_lessons ?? 32,
         lesson_days: (groupData.lesson_days as number[]) || [0],
         lesson_time: groupData.lesson_time,
         status: groupData.status || 'active',
@@ -242,7 +247,7 @@ export default function TeacherGroupDetail() {
         await generateLessonSchedule(
           groupId!, 
           groupData.start_date, 
-          groupData.max_lessons, 
+          groupData.max_lessons ?? 32, 
           (groupData.lesson_days as number[]) || [0]
         );
         // Refetch
@@ -330,7 +335,7 @@ export default function TeacherGroupDetail() {
     maxLessons: number, 
     lessonDays: number[]
   ) => {
-    const scheduleItems = [];
+    const scheduleItems: TablesInsert<"group_lesson_schedule">[] = [];
     let currentDate = new Date(startDate);
     let lessonCount = 0;
 
@@ -473,7 +478,7 @@ export default function TeacherGroupDetail() {
   };
 
   const saveAttendance = async () => {
-    if (!selectedAttendance) return;
+    if (!selectedAttendance || !groupId) return;
 
     try {
       // Use real user ID for marking attendance (who actually did it)
@@ -516,7 +521,7 @@ export default function TeacherGroupDetail() {
   };
 
   const handleAddGroupComment = async () => {
-    if (!newComment.trim()) return;
+    if (!newComment.trim() || !groupId) return;
 
     setIsSavingComment(true);
     try {

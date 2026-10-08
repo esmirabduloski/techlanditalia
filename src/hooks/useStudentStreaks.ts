@@ -14,7 +14,7 @@ interface AttendanceRecord {
   id: string;
   status: 'present' | 'absent_unexcused' | 'absent_excused';
   notes: string | null;
-  marked_at: string;
+  marked_at: string | null;
   scheduled_lesson: {
     id: string;
     title: string;
@@ -39,7 +39,7 @@ interface StreakBonus {
   streak_type: 'homework' | 'attendance';
   milestone: number;
   points_awarded: number;
-  awarded_at: string;
+  awarded_at: string | null;
 }
 
 export function useStudentStreaks(studentId?: string) {
@@ -66,7 +66,15 @@ export function useStudentStreaks(studentId?: string) {
         .maybeSingle();
 
       if (streakData) {
-        setStreaks(streakData);
+        // Le colonne sono nullable nel DB: una streak mai calcolata vale 0
+        setStreaks({
+          homework_streak: streakData.homework_streak ?? 0,
+          attendance_streak: streakData.attendance_streak ?? 0,
+          best_homework_streak: streakData.best_homework_streak ?? 0,
+          best_attendance_streak: streakData.best_attendance_streak ?? 0,
+          last_homework_date: streakData.last_homework_date,
+          last_attendance_date: streakData.last_attendance_date,
+        });
       } else {
         setStreaks({
           homework_streak: 0,

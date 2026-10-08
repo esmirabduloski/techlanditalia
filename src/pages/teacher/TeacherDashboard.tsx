@@ -103,7 +103,7 @@ interface TeacherLink {
   title: string;
   url: string;
   description: string | null;
-  icon: string;
+  icon: string | null;
 }
 
 const DAYS = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"];
@@ -113,7 +113,7 @@ const TIMES = Array.from({ length: 28 }, (_, i) => {
   return `${hour.toString().padStart(2, "0")}:${minutes}`;
 });
 
-const getIconComponent = (iconName: string) => {
+const getIconComponent = (iconName: string | null) => {
   const icons: Record<string, React.ElementType> = {
     link: LinkIcon,
     book: Book,
@@ -126,7 +126,7 @@ const getIconComponent = (iconName: string) => {
     star: Star,
     globe: Globe,
   };
-  return icons[iconName] || LinkIcon;
+  return (iconName && icons[iconName]) || LinkIcon;
 };
 
 export default function TeacherDashboard() {

@@ -95,7 +95,14 @@ export default function AdminTeacherLinks() {
         .order('sort_order', { ascending: true });
 
       if (error) throw error;
-      setLinks(data || []);
+      // Colonne nullable nel DB: valori di default come nel form di creazione
+      setLinks((data || []).map((l) => ({
+        ...l,
+        icon: l.icon ?? "link",
+        sort_order: l.sort_order ?? 0,
+        is_active: l.is_active ?? true,
+        created_at: l.created_at ?? "",
+      })));
     } catch (error) {
       console.error("Error fetching links:", error);
     } finally {

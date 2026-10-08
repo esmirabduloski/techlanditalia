@@ -89,7 +89,7 @@ export default function Leaderboard() {
     try {
       const { data, error } = await supabase.rpc('get_leaderboard', {
         _filter_type: filterType,
-        _filter_id: filterId,
+        _filter_id: filterId ?? undefined,
         _limit: 50,
       });
 

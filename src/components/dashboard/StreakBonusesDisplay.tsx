@@ -10,7 +10,7 @@ interface StreakBonus {
   streak_type: 'homework' | 'attendance';
   milestone: number;
   points_awarded: number;
-  awarded_at: string;
+  awarded_at: string | null;
 }
 
 interface StreakBonusesDisplayProps {
@@ -33,7 +33,7 @@ const MILESTONES = [7, 14, 21, 28, 32];
 export function StreakBonusesDisplay({ bonuses, compact = false, currentHomeworkStreak = 0, currentAttendanceStreak = 0 }: StreakBonusesDisplayProps) {
   // Sort by awarded_at descending
   const sortedBonuses = [...bonuses].sort(
-    (a, b) => new Date(b.awarded_at).getTime() - new Date(a.awarded_at).getTime()
+    (a, b) => new Date(b.awarded_at ?? 0).getTime() - new Date(a.awarded_at ?? 0).getTime()
   );
 
   if (compact) {
@@ -92,7 +92,7 @@ export function StreakBonusesDisplay({ bonuses, compact = false, currentHomework
                   config={config}
                   milestone={milestone}
                   isEarned={isEarned}
-                  earnedAt={bonus?.awarded_at}
+                  earnedAt={bonus?.awarded_at ?? undefined}
                   progress={progress}
                   currentStreak={currentHomeworkStreak}
                 />
@@ -120,7 +120,7 @@ export function StreakBonusesDisplay({ bonuses, compact = false, currentHomework
                   config={config}
                   milestone={milestone}
                   isEarned={isEarned}
-                  earnedAt={bonus?.awarded_at}
+                  earnedAt={bonus?.awarded_at ?? undefined}
                   progress={progress}
                   currentStreak={currentAttendanceStreak}
                 />

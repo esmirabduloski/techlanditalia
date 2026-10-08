@@ -71,6 +71,7 @@ export default function LessonEditor() {
   }, [user, isAdmin, courseId, lessonId]);
 
   const fetchData = async () => {
+    if (!courseId) return;
     // Fetch course
     const { data: courseData } = await supabase
       .from('courses')
@@ -124,6 +125,7 @@ export default function LessonEditor() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!courseId) return;
     
     if (!formData.title.trim()) {
       toast({ title: 'Errore', description: 'Il titolo è obbligatorio', variant: 'destructive' });
@@ -151,7 +153,7 @@ export default function LessonEditor() {
     };
 
     try {
-      if (isEditing) {
+      if (isEditing && lessonId) {
         const { error } = await supabase
           .from('lessons')
           .update(lessonPayload)

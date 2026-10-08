@@ -119,6 +119,7 @@ export default function TaskEditor() {
   }, [formData, saveDraft]);
 
   const fetchData = async () => {
+    if (!courseId || !lessonId) return;
     // Fetch course
     const { data: courseData } = await supabase
       .from('courses')
@@ -229,6 +230,7 @@ export default function TaskEditor() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!lessonId) return;
     
     if (!formData.title.trim()) {
       toast({ title: 'Errore', description: 'Il titolo è obbligatorio', variant: 'destructive' });
@@ -271,7 +273,7 @@ export default function TaskEditor() {
     };
 
     try {
-      if (isEditing) {
+      if (isEditing && taskId) {
         const { error } = await supabase
           .from('lesson_tasks')
           .update(taskPayload)

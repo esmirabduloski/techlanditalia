@@ -51,7 +51,7 @@ interface AnalyticsEvent {
   event_action: string;
   event_label: string | null;
   created_at: string;
-  page_url: string;
+  page_url: string | null;
   metadata: unknown;
   click_x: number | null;
   click_y: number | null;
@@ -65,14 +65,14 @@ interface PageView {
   time_on_page: number | null;
   scroll_depth: number | null;
   entered_at: string;
-  device_type: string;
+  device_type: string | null;
 }
 
 interface ConversionFunnel {
   funnel_name: string;
   step_number: number;
   step_name: string;
-  completed: boolean;
+  completed: boolean | null;
   created_at: string;
 }
 
@@ -213,7 +213,8 @@ export default function AdminAnalytics() {
 
   // Device breakdown
   const deviceBreakdown = pageViews.reduce((acc, pv) => {
-    acc[pv.device_type] = (acc[pv.device_type] || 0) + 1;
+    const device = pv.device_type ?? "sconosciuto";
+    acc[device] = (acc[device] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
@@ -573,7 +574,7 @@ export default function AdminAnalytics() {
                           innerRadius={60}
                           outerRadius={80}
                           dataKey="value"
-                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                          label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
                         >
                           {deviceData.map((_, index) => (
                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />

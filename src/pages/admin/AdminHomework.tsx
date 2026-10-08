@@ -71,6 +71,7 @@ export default function AdminHomework() {
   }, [user, isAdmin, lessonId]);
 
   const fetchData = async () => {
+    if (!lessonId) return;
     // Fetch lesson
     const { data: lessonData } = await supabase
       .from('lessons')

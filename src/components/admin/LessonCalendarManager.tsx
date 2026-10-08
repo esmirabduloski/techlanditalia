@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { TablesInsert } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -163,7 +164,7 @@ export function LessonCalendarManager({
   const generateSchedule = async () => {
     if (!startDate) return;
 
-    const scheduleItems = [];
+    const scheduleItems: TablesInsert<"group_lesson_schedule">[] = [];
     let currentDate = new Date(startDate);
     let lessonCount = 0;
 

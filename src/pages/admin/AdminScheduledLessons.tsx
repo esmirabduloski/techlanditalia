@@ -31,7 +31,7 @@ interface ScheduledLesson {
   lesson_date: string;
   title: string;
   description: string | null;
-  created_at: string;
+  created_at: string | null;
   course: Course;
 }
 

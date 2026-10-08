@@ -492,7 +492,7 @@ export default function Dashboard() {
           )}
 
           {/* Attendance History + Streaks - Hide for teachers and parents */}
-          {streaks && !effectiveIsTeacher && !effectiveIsParent && (
+          {streaks && effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (
             <div className="mb-8">
               <div className="mb-6">
                 <ChildAttendanceHistory childId={effectiveUserId} />

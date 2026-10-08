@@ -1,11 +1,12 @@
 import type { ComponentType } from "react";
+import type { LoaderFunction } from "react-router-dom";
 import type { RouteRecord } from "vite-react-ssg";
 import App from "./App";
 import Index from "./pages/Index";
 
 interface PageModule {
   default: ComponentType;
-  loader?: (args: unknown) => unknown;
+  loader?: LoaderFunction;
 }
 
 // Adapter: le pagine esportano `default` (+ eventuale `loader`), React Router

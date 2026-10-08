@@ -61,6 +61,7 @@ export default function AdminLessons() {
   }, [user, isAdmin, courseId]);
 
   const fetchData = async () => {
+    if (!courseId) return;
     // Fetch course
     const { data: courseData } = await supabase
       .from('courses')

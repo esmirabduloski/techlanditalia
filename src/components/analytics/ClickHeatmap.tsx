@@ -8,7 +8,7 @@ interface ClickData {
   click_y: number | null;
   viewport_width: number | null;
   viewport_height: number | null;
-  page_url: string;
+  page_url: string | null;
   element_selector: string | null;
   event_label: string | null;
 }

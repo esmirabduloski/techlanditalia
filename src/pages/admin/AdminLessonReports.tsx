@@ -18,7 +18,7 @@ interface LessonReport {
   topics_covered: string;
   topics_not_covered: string;
   students_needing_support: string[];
-  support_notes: string;
+  support_notes: string | null;
   created_at: string;
   updated_at: string;
   group_title: string;

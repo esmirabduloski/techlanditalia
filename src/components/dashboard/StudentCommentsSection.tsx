@@ -92,7 +92,7 @@ export function StudentCommentsSection({ studentId, viewMode = 'student' }: Stud
   }
 
   const getVisibilityLabel = (visibility: string[]) => {
-    const labels = [];
+    const labels: string[] = [];
     if (visibility.includes('parent')) labels.push('Genitore');
     if (visibility.includes('teacher')) labels.push('Insegnante');
     if (visibility.includes('student')) labels.push('Studente');

@@ -187,6 +187,7 @@ export default function TeacherStudentDetail() {
   }, [user, authLoading, studentId, effectiveUserId]);
 
   const fetchData = async () => {
+    if (!studentId) return;
     if (!effectiveUserId) return;
     
     const teacherId = effectiveUserId;

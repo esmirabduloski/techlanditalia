@@ -105,6 +105,7 @@ export default function BlogEditor() {
   }, [id, user, isAdmin]);
 
   const fetchPost = async () => {
+    if (!id) return;
     setIsLoading(true);
     const { data, error } = await supabase
       .from('blog_posts')
@@ -202,7 +203,7 @@ export default function BlogEditor() {
 
     let error;
 
-    if (isEditing) {
+    if (isEditing && id) {
       const result = await supabase.from('blog_posts').update(postData).eq('id', id);
       error = result.error;
     } else {

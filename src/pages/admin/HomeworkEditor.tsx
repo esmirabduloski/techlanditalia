@@ -103,6 +103,7 @@ export default function HomeworkEditor() {
   }, [user, isAdmin, courseId, lessonId, homeworkId]);
 
   const fetchData = async () => {
+    if (!courseId || !lessonId) return;
     // Fetch course
     const { data: courseData } = await supabase
       .from('courses')
@@ -257,7 +258,7 @@ export default function HomeworkEditor() {
     };
 
     try {
-      if (isEditing) {
+      if (isEditing && homeworkId) {
         const { error } = await supabase
           .from('homework')
           .update(payload)

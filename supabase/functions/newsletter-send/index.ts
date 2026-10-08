@@ -115,13 +115,21 @@ const handler = async (req: Request): Promise<Response> => {
       const batch = subscribers.slice(i, i + batchSize);
       
       const promises = batch.map(async (subscriber) => {
-        const unsubscribeUrl = `${supabaseUrl}/functions/v1/newsletter-unsubscribe?token=${subscriber.unsubscribe_token}`;
+        // Link nell'email: pagina del sito che chiede conferma prima di disiscrivere.
+        const unsubscribeUrl = `${siteUrl}/newsletter?azione=disiscrizione&token=${subscriber.unsubscribe_token}`;
+        // Header List-Unsubscribe: disiscrizione con un clic dal client email (RFC 8058),
+        // richiesta da Gmail e Yahoo a chi invia newsletter.
+        const oneClickUrl = `${supabaseUrl}/functions/v1/newsletter-unsubscribe?token=${subscriber.unsubscribe_token}`;
         
         try {
           const { error: emailError } = await resend.emails.send({
             from: "TECHLAND <newsletter@techlanditalia.it>",
             to: [subscriber.email],
             subject: subject.trim(),
+            headers: {
+              "List-Unsubscribe": `<${oneClickUrl}>`,
+              "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+            },
             html: `
               <!DOCTYPE html>
               <html>

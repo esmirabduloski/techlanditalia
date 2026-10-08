@@ -1,147 +1,74 @@
+/**
+ * Disiscrizione dalla newsletter.
+ *
+ * GET  ?token=...  link nell'email: NON cancella nulla, rimanda alla pagina
+ *                  /newsletter del sito che chiede conferma. I filtri antispam
+ *                  aprono i link in anticipo e prima disiscrivevano le persone.
+ * POST             cancella l'iscrizione. Token nel body JSON (pulsante della
+ *                  pagina) oppure nella query: è il "disiscriviti" con un clic
+ *                  dei client email (RFC 8058, header List-Unsubscribe-Post).
+ */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeadersFor } from "../_shared/cors.ts";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const handler = async (req: Request): Promise<Response> => {
   const corsHeaders = corsHeadersFor(req);
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const siteUrl = Deno.env.get("SITE_URL") || "https://techlanditalia.it";
+  const siteUrl = (Deno.env.get("SITE_URL") || "https://techlanditalia.it").replace(/\/$/, "");
+  const url = new URL(req.url);
+  const json = (body: unknown, status = 200) =>
+    new Response(JSON.stringify(body), {
+      status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+
+  if (req.method === "GET") {
+    const token = url.searchParams.get("token") ?? "";
+    const target = UUID_RE.test(token)
+      ? `${siteUrl}/newsletter?azione=disiscrizione&token=${encodeURIComponent(token)}`
+      : `${siteUrl}/newsletter?esito=link-non-valido`;
+    return new Response(null, { status: 302, headers: { ...corsHeaders, Location: target } });
+  }
+
+  if (req.method !== "POST") return json({ error: "Metodo non consentito" }, 405);
 
   try {
-    const url = new URL(req.url);
-    const token = url.searchParams.get("token");
-
-    if (!token) {
-      return createHtmlResponse(corsHeaders, siteUrl, false, "Token mancante");
+    let token = url.searchParams.get("token") ?? "";
+    if (!token && req.headers.get("content-type")?.includes("application/json")) {
+      const body = await req.json().catch(() => null);
+      token = typeof body?.token === "string" ? body.token : "";
     }
+    if (!UUID_RE.test(token)) return json({ error: "Token non valido" }, 400);
 
-    // Validate token format (UUID)
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(token)) {
-      return createHtmlResponse(corsHeaders, siteUrl, false, "Token non valido");
-    }
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
 
-    // Create Supabase client with service role
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Find and delete subscriber by unsubscribe token
-    const { data: subscriber, error: fetchError } = await supabase
-      .from("newsletter_subscribers")
-      .select("id, email")
-      .eq("unsubscribe_token", token)
-      .maybeSingle();
-
-    if (fetchError || !subscriber) {
-      console.error("Subscriber not found:", fetchError);
-      return createHtmlResponse(corsHeaders, siteUrl, false, "Link non valido o già utilizzato");
-    }
-
-    // Delete subscriber
-    const { error: deleteError } = await supabase
+    const { data: deleted, error } = await supabase
       .from("newsletter_subscribers")
       .delete()
-      .eq("id", subscriber.id);
+      .eq("unsubscribe_token", token)
+      .select("id");
 
-    if (deleteError) {
-      console.error("Delete error:", deleteError);
-      return createHtmlResponse(corsHeaders, siteUrl, false, "Errore durante la disiscrizione. Riprova più tardi.");
+    if (error) {
+      console.error("Delete error:", error);
+      return json({ error: "Errore durante la disiscrizione" }, 500);
     }
+    if (!deleted || deleted.length === 0) return json({ error: "Link non valido o già utilizzato" }, 404);
 
-    console.log(`Newsletter unsubscribed: ${subscriber.email}`);
-    return createHtmlResponse(corsHeaders, siteUrl, true, "Ti sei disiscritto dalla newsletter");
-
-  } catch (error: any) {
+    console.log("Newsletter unsubscribed:", deleted[0].id);
+    return json({ success: true });
+  } catch (error) {
     console.error("Newsletter unsubscribe error:", error);
-    return createHtmlResponse(corsHeaders, siteUrl, false, "Errore interno del server");
+    return json({ error: "Errore interno del server" }, 500);
   }
 };
-
-function createHtmlResponse(corsHeaders: Record<string, string>, siteUrl: string, success: boolean, message: string): Response {
-  const html = `
-    <!DOCTYPE html>
-    <html lang="it">
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>${success ? "Disiscrizione Completata" : "Errore"} - TECHLAND</title>
-      <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-          background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0fdfa 100%);
-          min-height: 100vh;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 20px;
-        }
-        .container {
-          background: white;
-          border-radius: 16px;
-          padding: 40px;
-          max-width: 480px;
-          text-align: center;
-          box-shadow: 0 10px 40px rgba(0,0,0,0.08);
-        }
-        .icon {
-          font-size: 64px;
-          margin-bottom: 20px;
-        }
-        h1 {
-          color: ${success ? "#10b981" : "#ef4444"};
-          margin-bottom: 16px;
-          font-size: 24px;
-        }
-        p {
-          color: #666;
-          margin-bottom: 24px;
-          line-height: 1.6;
-        }
-        .btn {
-          display: inline-block;
-          background: #10b981;
-          color: white;
-          text-decoration: none;
-          padding: 14px 28px;
-          border-radius: 8px;
-          font-weight: 600;
-          transition: background 0.2s;
-        }
-        .btn:hover {
-          background: #059669;
-        }
-        .logo {
-          color: #10b981;
-          font-size: 28px;
-          font-weight: bold;
-          margin-bottom: 30px;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="logo">🚀 TECHLAND</div>
-        <div class="icon">${success ? "👋" : "❌"}</div>
-        <h1>${success ? "Ci mancherai!" : "Ops!"}</h1>
-        <p>${message}</p>
-        ${success ? `<p>Se cambi idea, puoi sempre reiscriverti dalla pagina del blog.</p>` : ""}
-        <a href="${siteUrl}/blog" class="btn">Vai al Blog</a>
-      </div>
-    </body>
-    </html>
-  `;
-
-  return new Response(html, {
-    status: 200,
-    headers: { "Content-Type": "text/html; charset=utf-8", ...corsHeaders },
-  });
-}
 
 serve(handler);

@@ -71,6 +71,8 @@ export const routes: RouteRecord[] = [
       { path: "faq", lazy: page(() => import("./pages/FAQ")) },
       { path: "privacy", lazy: page(() => import("./pages/Privacy")) },
       { path: "termini", lazy: page(() => import("./pages/Termini")) },
+      // Esito dei link nelle email della newsletter (non prerenderata, noindex)
+      { path: "newsletter", lazy: page(() => import("./pages/Newsletter")) },
       { path: "cookie", lazy: page(() => import("./pages/Cookie")) },
       { path: "contatti", lazy: page(() => import("./pages/Contatti")) },
       { path: "lavora-con-noi", lazy: page(() => import("./pages/LavoraConNoiGuard")) },

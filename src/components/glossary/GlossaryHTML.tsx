@@ -1,6 +1,7 @@
 import { useMemo, useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import DOMPurify from "dompurify";
+import { restrictEmbeds } from "@/lib/embeds";
 import {
   Popover,
   PopoverContent,
@@ -74,10 +75,12 @@ export function GlossaryHTML({ html, className }: Props) {
     const map = new Map<string, GlossaryTerm>();
     terms.forEach((t) => map.set(t.slug, t));
     const enriched = injectGlossaryMarkup(html, terms);
-    const safe = DOMPurify.sanitize(enriched, {
-      ADD_ATTR: ["data-glossary", "target", "rel", "allow", "allowfullscreen", "frameborder", "class"],
-      ADD_TAGS: ["iframe"],
-    });
+    const safe = restrictEmbeds(
+      DOMPurify.sanitize(enriched, {
+        ADD_ATTR: ["data-glossary", "target", "rel", "allow", "allowfullscreen", "frameborder", "class"],
+        ADD_TAGS: ["iframe"],
+      }),
+    );
     return { processed: safe, termMap: map };
   }, [html, terms]);
 

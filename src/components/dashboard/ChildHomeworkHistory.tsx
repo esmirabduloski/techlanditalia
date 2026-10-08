@@ -40,11 +40,13 @@ export function ChildHomeworkHistory({ childId, childName, courseIds: filterCour
   const [showAll, setShowAll] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
+  // Confronto per valore: l'array cambia a ogni render del genitore
+  const courseIdsKey = filterCourseIds?.join(',');
   useEffect(() => {
     if (childId) {
       fetchHomeworkHistory();
     }
-  }, [childId, filterCourseIds?.join(',')]);
+  }, [childId, courseIdsKey]);
 
   const fetchHomeworkHistory = async () => {
     setError(null);

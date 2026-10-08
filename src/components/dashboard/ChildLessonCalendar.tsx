@@ -46,11 +46,13 @@ export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupI
   const [showCompleted, setShowCompleted] = useState(false);
   const navigate = useNavigate();
 
+  // Confronto per valore: l'array cambia a ogni render del genitore
+  const groupIdsKey = filterGroupIds?.join(',');
   useEffect(() => {
     if (childId) {
       fetchLessonSchedule();
     }
-  }, [childId, filterGroupIds?.join(',')]);
+  }, [childId, groupIdsKey]);
 
   const fetchLessonSchedule = async () => {
     setError(null);

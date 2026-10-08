@@ -51,7 +51,7 @@ export default function BlogEditor() {
   const [scheduledPublishAt, setScheduledPublishAt] = useState('');
   const [autoPublishQueue, setAutoPublishQueue] = useState(false);
   const [courses, setCourses] = useState<{ title: string; slug: string; emoji: string }[]>([]);
-  const [blogPosts, setBlogPosts] = useState<{ title: string; slug: string; category: string }[]>([]);
+  const [blogPosts, setBlogPosts] = useState<{ id: string; title: string; slug: string; category: string }[]>([]);
   const [copiedLink, setCopiedLink] = useState<string | null>(null);
   const [linksOpen, setLinksOpen] = useState(true);
   const contentRef = React.useRef<HTMLTextAreaElement>(null);
@@ -60,13 +60,14 @@ export default function BlogEditor() {
     const fetchLinksData = async () => {
       const [coursesRes, postsRes] = await Promise.all([
         supabase.from('courses').select('title, slug, emoji').eq('is_visible', true).order('title'),
-        supabase.from('blog_posts').select('title, slug, category').eq('published', true).order('created_at', { ascending: false }),
+        supabase.from('blog_posts').select('id, title, slug, category').eq('published', true).order('created_at', { ascending: false }),
       ]);
       if (coursesRes.data) setCourses(coursesRes.data);
-      if (postsRes.data) setBlogPosts(postsRes.data.filter(p => p.slug !== slug));
+      // Escluso l'articolo aperto (per id: lo slug arriva dopo e può cambiare mentre lo modifichi)
+      if (postsRes.data) setBlogPosts(postsRes.data.filter(p => p.id !== id));
     };
     if (user && isAdmin) fetchLinksData();
-  }, [user, isAdmin]);
+  }, [user, isAdmin, id]);
 
   const insertLink = (label: string, url: string) => {
     const markdown = `[${label}](${url})`;

@@ -41,9 +41,11 @@ export function ParentHomeworkDetail({ childId, childName, courseIds }: ParentHo
   const [showAll, setShowAll] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
+  // Confronto per valore: l'array cambia a ogni render del genitore
+  const courseIdsKey = courseIds?.join(",");
   useEffect(() => {
     if (childId) fetchHomeworks();
-  }, [childId, courseIds?.join(",")]);
+  }, [childId, courseIdsKey]);
 
   const fetchHomeworks = async () => {
     setIsLoading(true);

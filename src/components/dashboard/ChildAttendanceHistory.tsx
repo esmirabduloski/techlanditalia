@@ -34,11 +34,13 @@ export function ChildAttendanceHistory({ childId, childName, groupIds: filterGro
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Confronto per valore: l'array cambia a ogni render del genitore
+  const groupIdsKey = filterGroupIds?.join(',');
   useEffect(() => {
     if (childId) {
       fetchAttendanceHistory();
     }
-  }, [childId, filterGroupIds?.join(',')]);
+  }, [childId, groupIdsKey]);
 
   const fetchAttendanceHistory = async () => {
     setError(null);

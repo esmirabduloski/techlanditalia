@@ -54,7 +54,7 @@ verify_jwt = false
 [functions.chat-operator]
 verify_jwt = false
 
-# Pulizia dati: "scan" arriva dal cron con la chiave anon (non cancella nulla),
+# Pulizia dati: "scan" arriva dal cron (x-cron-token) o da un admin,
 # "approve"/"reject" verificano il JWT admin dentro la funzione.
 [functions.data-retention]
 verify_jwt = false

@@ -7,16 +7,34 @@ Deno.serve(async (req) => {
   const corsHeaders = corsHeadersFor(req);
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
-  // No auth check: this function is idempotent — it only flips `published=true` on posts
-  // that admins have already scheduled. Nothing sensitive is returned. Called by pg_cron
-  // hourly and safe to invoke publicly.
-
-
-
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   );
+
+  // Solo il cron orario (token interno) o un admin: prima chiunque poteva lanciarla
+  // e far partire le notifiche IndexNow.
+  const cronToken = req.headers.get('x-cron-token') ?? '';
+  let authorized = false;
+  if (cronToken) {
+    const { data: ok } = await supabase.rpc('verify_cron_token', { _name: 'blog-auto-publish', _token: cronToken });
+    authorized = ok === true;
+  }
+  if (!authorized) {
+    const auth = req.headers.get('Authorization');
+    if (auth?.startsWith('Bearer ')) {
+      const { data: { user } } = await supabase.auth.getUser(auth.slice(7));
+      if (user) {
+        const { data: role } = await supabase.from('user_roles').select('role').eq('user_id', user.id).eq('role', 'admin').maybeSingle();
+        authorized = Boolean(role);
+      }
+    }
+  }
+  if (!authorized) {
+    return new Response(JSON.stringify({ error: 'Non autorizzato' }), {
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
 
   const now = new Date().toISOString();
   const published: string[] = [];

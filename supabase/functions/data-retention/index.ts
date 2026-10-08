@@ -4,7 +4,7 @@
  * POST { action: "scan", trigger?: "scheduled" | "manual" }
  *   Conta i record scaduti per categoria, crea/aggiorna una run "pending" e
  *   avvisa gli admin (push + email). NON cancella nulla. Chiamata dal cron
- *   mensile (chiave anon) o dalla pagina admin.
+ *   mensile (header x-cron-token) o da un admin dalla pagina Privacy.
  * POST { action: "approve", runId, categories: string[] }   (solo admin)
  *   Esegue le DELETE per le categorie scelte e chiude la run come "executed".
  * POST { action: "reject", runId, note? }                    (solo admin)
@@ -151,6 +151,15 @@ async function notify(runId: string, summary: SummaryRow[]) {
   ]);
 }
 
+/** Chiamata del cron mensile: header x-cron-token valido per "data-retention". */
+async function isCronCall(db: Db, req: Request): Promise<boolean> {
+  const token = req.headers.get("x-cron-token") ?? "";
+  if (!token) return false;
+  // deno-lint-ignore no-explicit-any
+  const { data: ok } = await (db as any).rpc("verify_cron_token", { _name: "data-retention", _token: token });
+  return ok === true;
+}
+
 async function requireAdmin(db: Db, req: Request): Promise<{ userId: string } | Response> {
   const corsHeaders = corsHeadersFor(req);
   const deny = (msg: string, status: number) =>
@@ -181,8 +190,10 @@ serve(async (req: Request): Promise<Response> => {
       { auth: { persistSession: false, autoRefreshToken: false } },
     );
 
-    // Tutte le azioni (anche "scan") richiedono un admin autenticato
-    const admin = await requireAdmin(db, req);
+    // "scan" può arrivare dal cron mensile (token interno) o da un admin;
+    // approve/reject, che cancellano dati, solo da un admin autenticato.
+    const fromCron = action === "scan" && await isCronCall(db, req);
+    const admin = fromCron ? null : await requireAdmin(db, req);
     if (admin instanceof Response) return admin;
 
     if (action === "scan") {
@@ -231,6 +242,7 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     // approve / reject: admin già verificato sopra
+    if (!admin) return json({ error: "Non autorizzato" }, 401);
     if (!runId) return json({ error: "runId mancante" }, 400);
 
     const { data: run } = await db.from("data_retention_runs").select("id, status, summary").eq("id", runId).maybeSingle();

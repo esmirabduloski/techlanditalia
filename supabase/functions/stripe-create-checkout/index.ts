@@ -14,11 +14,9 @@ function isAllowedRedirect(url: string | undefined): boolean {
   if (!url) return false;
   try {
     const u = new URL(url);
-    if (u.protocol !== 'https:' && u.protocol !== 'http:') return false;
-    if (ALLOWED_HOSTS.has(u.hostname)) return true;
-    // Allow any *.lovable.app preview/published subdomain
-    if (u.hostname.endsWith('.lovable.app')) return true;
-    return false;
+    if (u.protocol !== 'https:') return false;
+    // No *.lovable.app wildcard: anyone can publish there and phish after checkout
+    return ALLOWED_HOSTS.has(u.hostname);
   } catch {
     return false;
   }

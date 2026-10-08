@@ -17,10 +17,10 @@ function isAllowedRedirect(url: string | undefined | null): boolean {
   if (!url) return false;
   try {
     const u = new URL(url);
-    if (u.protocol !== "https:" && u.protocol !== "http:") return false;
-    if (ALLOWED_HOSTS.has(u.hostname)) return true;
-    if (u.hostname.endsWith(".lovable.app")) return true;
-    return false;
+    // Il link porta il token di sessione: solo https e solo i nostri domini esatti.
+    // Niente wildcard *.lovable.app, chiunque può pubblicarci un sito e rubare il token.
+    if (u.protocol !== "https:") return false;
+    return ALLOWED_HOSTS.has(u.hostname);
   } catch {
     return false;
   }

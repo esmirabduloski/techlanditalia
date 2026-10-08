@@ -121,8 +121,9 @@ serve(async (req) => {
       console.error("Error updating profile:", profileError);
     }
 
-    // If a course was selected, create enrollment
-    if (courseId && courseId !== 'none') {
+    // Solo un admin può iscrivere a un corso: per un genitore l'iscrizione
+    // passa dal pagamento, altrimenti otterrebbe l'accesso gratis a qualsiasi corso.
+    if (courseId && courseId !== 'none' && adminRole) {
       const { error: enrollError } = await supabaseAdmin
         .from('enrollments')
         .insert({

@@ -18,10 +18,33 @@ function escapeHtml(text: string): string {
   return text.replace(/[&<>"']/g, (char) => htmlEntities[char] || char);
 }
 
+/** Indirizzo del servizio inviti automatici (AFS) di Trustpilot per techlanditalia.it. */
+const TRUSTPILOT_AFS_ADDRESS = "techlanditalia.it+af31baed12@invite.trustpilot.com";
+
+/**
+ * Trustpilot legge i dati dell'invito dallo snippet JSON: riceve solo nome ed
+ * email del genitore (più un riferimento), nient'altro.
+ */
+async function sendTrustpilotInvitation(email: string, fullName: string) {
+  const data = {
+    recipientEmail: email.trim().toLowerCase(),
+    recipientName: fullName.trim(),
+    referenceId: `account-${Date.now()}`,
+  };
+  // "<" escapato: lo snippet resta JSON valido e non può chiudere il tag script
+  const snippet = JSON.stringify(data).replace(/</g, "\\u003c");
+  await resend.emails.send({
+    from: "TECHLAND <info@techlanditalia.it>",
+    to: [TRUSTPILOT_AFS_ADDRESS],
+    subject: "Invito recensione",
+    html: `<script type="application/json+trustpilot">${snippet}</script>`,
+  });
+}
+
 interface WelcomeEmailRequest {
   email: string;
   fullName: string;
-  role: "student" | "parent";
+  role: "student" | "parent" | "teacher";
   childName?: string;
   childUsername?: string;
   setupLink?: string;
@@ -130,12 +153,20 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await resend.emails.send({
       from: "TECHLAND <info@techlanditalia.it>",
       to: [email],
-      bcc: ["techlanditalia.it+af31baed12@invite.trustpilot.com"],
       subject: subject,
       html: htmlContent,
     });
 
     console.log("Welcome email sent successfully");
+
+    // Invito a recensirci su Trustpilot, solo per i genitori. Messaggio separato con
+    // il minimo indispensabile: prima l'intera email di benvenuto andava in BCC a
+    // Trustpilot, compresi i dati del figlio e il link per impostare la password.
+    if (role === "parent" && email) {
+      await sendTrustpilotInvitation(email, fullName || "").catch((e) =>
+        console.error("Trustpilot invitation failed:", e)
+      );
+    }
 
     return new Response(JSON.stringify({ success: true, data: emailResponse }), {
       status: 200,

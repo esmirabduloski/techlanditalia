@@ -12,7 +12,7 @@ import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
  * pagamenti Stripe, statistiche di prima parte e log di sicurezza. Se aggiungi un
  * fornitore o un nuovo trattamento, aggiorna anche questa pagina e la data.
  */
-const LAST_UPDATE = "16 settembre 2026";
+const LAST_UPDATE = "8 ottobre 2026";
 const PRIVACY_EMAIL = "info@techlanditalia.it";
 
 const H2 = ({ children }: { children: React.ReactNode }) => (
@@ -223,7 +223,10 @@ export default function Privacy() {
                     <strong>Sentry</strong> — monitoraggio degli errori tecnici.
                   </li>
                   <li>
-                    <strong>Trustpilot</strong> — widget delle recensioni nell&apos;area riservata.
+                    <strong>Trustpilot</strong> — widget delle recensioni nell&apos;area riservata e invito a lasciare
+                    una recensione: alla creazione dell&apos;account del genitore trasmettiamo a Trustpilot solo nome ed
+                    email del genitore (legittimo interesse). Nessun dato degli studenti. Puoi opporti in qualsiasi
+                    momento scrivendoci o non dando seguito all&apos;invito.
                   </li>
                   <li>
                     <strong>Meta (WhatsApp)</strong> — solo se scegli di contattarci tramite WhatsApp, secondo l&apos;informativa

@@ -2,6 +2,10 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeadersFor } from "../_shared/cors.ts";
 
+// Login alunno con username: tentativi errati consentiti prima del blocco temporaneo
+const STUDENT_MAX_ATTEMPTS = 10;
+const STUDENT_LOCK_MINUTES = 15;
+
 
 serve(async (req) => {
   const corsHeaders = corsHeadersFor(req);
@@ -112,6 +116,26 @@ serve(async (req) => {
     }
 
     emailForLog = studentAuthUser.user.email?.toLowerCase() ?? null;
+
+    // Blocco temporaneo dopo troppi errori, contati sull'account dell'alunno
+    if (emailForLog) {
+      const { data: rl } = await supabaseAdmin.rpc("check_login_rate_limit", {
+        _email: emailForLog,
+        _max_attempts: STUDENT_MAX_ATTEMPTS,
+        _window_minutes: STUDENT_LOCK_MINUTES,
+      });
+      if (rl && (rl as any).blocked) {
+        const minutes = Math.max(1, Math.ceil(((rl as any).retry_after_seconds ?? 60) / 60));
+        return new Response(JSON.stringify({
+          error: `Hai sbagliato la password ${STUDENT_MAX_ATTEMPTS} volte. Riprova tra ${minutes} minuti oppure chiedi a un genitore o a un admin di reimpostare la password.`,
+          blocked: true,
+          retry_after_seconds: (rl as any).retry_after_seconds,
+        }), {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     const { data: signInData, error: signInError } = await supabaseAdmin.auth.signInWithPassword({
       email: studentAuthUser.user.email!,

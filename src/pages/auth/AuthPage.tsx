@@ -250,10 +250,19 @@ export default function AuthPage() {
 
 
       if (!success) {
+        // Con risposte 4xx supabase-js mette il corpo in error.context, non in data
+        let serverError: { error?: string; blocked?: boolean } | null = loginData;
+        if (!serverError?.error && loginError && "context" in loginError) {
+          try {
+            serverError = await (loginError.context as Response).json();
+          } catch {
+            serverError = null;
+          }
+        }
         toast({
           variant: "destructive",
-          title: "Errore di accesso",
-          description: loginData?.error || "Credenziali non corrette",
+          title: serverError?.blocked ? "Accesso temporaneamente bloccato" : "Errore di accesso",
+          description: serverError?.error || "Credenziali non corrette",
         });
       } else if (loginData?.session) {
         await supabase.auth.setSession(loginData.session);

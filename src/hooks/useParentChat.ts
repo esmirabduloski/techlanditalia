@@ -67,6 +67,15 @@ export function useParentChat() {
         }),
       });
 
+      if (resp.status === 429) {
+        // Limite raggiunto: il server spiega quando riprovare o dove scriverci
+        const data = await resp.json().catch(() => null);
+        setMessages([
+          ...newMessages,
+          { role: 'assistant', content: data?.error || 'Hai inviato molti messaggi. Riprova tra poco o scrivici da /contatti.' },
+        ]);
+        return;
+      }
       if (!resp.ok) throw new Error('Errore nella risposta');
 
       // Quando un operatore umano è in chat (o è stato appena richiesto)

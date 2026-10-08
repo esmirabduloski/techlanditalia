@@ -48,6 +48,14 @@ async function requestOperator(
 }
 
 
+/** Messaggi al giorno per tutta la chat pubblica, sommando tutti i visitatori. */
+const GLOBAL_DAILY_MAX_REQUESTS = 1000;
+/**
+ * Tetto ai token generati per risposta. Con Gemini 2.5 include anche il
+ * ragionamento interno del modello: un valore basso dà risposte vuote o troncate.
+ */
+const MAX_OUTPUT_TOKENS = 2000;
+
 // In-memory rate limiting (persists per function instance)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
@@ -206,6 +214,17 @@ serve(async (req) => {
   const limited = await rateLimit(req, { endpoint: 'parent-chat', maxRequests: 40, windowSeconds: 3600, corsHeaders });
   if (limited) return limited;
 
+  // Tetto complessivo giornaliero: chi ruota molti IP non può far crescere i costi senza limite
+  const globalLimited = await rateLimit(req, {
+    endpoint: 'parent-chat-global',
+    identifier: 'global',
+    maxRequests: GLOBAL_DAILY_MAX_REQUESTS,
+    windowSeconds: 86400,
+    corsHeaders,
+    message: 'La chat è momentaneamente non disponibile. Scrivici dalla pagina /contatti e ti risponderemo al più presto.',
+  });
+  if (globalLimited) return globalLimited;
+
   try {
     const { messages, sessionId } = await req.json();
     // sessionId deve essere un UUID casuale (non indovinabile): funge da segreto della conversazione
@@ -342,6 +361,7 @@ serve(async (req) => {
           ...modelMessages,
         ],
         stream: true,
+        max_tokens: MAX_OUTPUT_TOKENS,
       }),
     });
 

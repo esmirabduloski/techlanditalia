@@ -17,6 +17,8 @@ export async function rateLimit(
     maxRequests: number;
     windowSeconds: number;
     identifier?: string;
+    /** Testo mostrato al visitatore quando il limite è superato. */
+    message?: string;
     corsHeaders: Record<string, string>;
   },
 ): Promise<Response | null> {
@@ -44,7 +46,7 @@ export async function rateLimit(
         metadata: { retry_after: retryAfter },
       });
       return new Response(
-        JSON.stringify({ error: "Troppe richieste, riprova più tardi." }),
+        JSON.stringify({ error: opts.message ?? "Troppe richieste, riprova più tardi." }),
         {
           status: 429,
           headers: {

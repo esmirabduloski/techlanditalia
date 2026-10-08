@@ -219,3 +219,45 @@ export function getClientChannel(
   }
   return { canNotify: false, hint: "Aggiungi un'email o collega l'account per avvisare il cliente", warn: true };
 }
+
+/** Modifica in blocco delle rate: nuovo prezzo, sconto in percentuale o fisso, rimozione dello sconto. */
+export type BulkEditMode = 'price' | 'percent' | 'fixed' | 'remove';
+
+export interface BulkUpdate {
+  id: string;
+  amount_cents: number;
+  list_amount_cents: number | null;
+  discount_label: string | null;
+}
+
+/**
+ * Nuovo importo di una rata. Lo sconto è sempre calcolato sul prezzo pieno
+ * (quello prima di un eventuale sconto già applicato), quindi non si somma a
+ * uno precedente. Restituisce null se il valore inserito non è valido.
+ */
+export function computeBulkUpdate(
+  p: Pick<CrmPayment, 'id' | 'amount_cents' | 'list_amount_cents'>,
+  mode: BulkEditMode,
+  value: string,
+  label: string,
+): BulkUpdate | null {
+  const base = p.list_amount_cents ?? p.amount_cents;
+  if (mode === 'remove') {
+    return { id: p.id, amount_cents: base, list_amount_cents: null, discount_label: null };
+  }
+  if (mode === 'price') {
+    const cents = parseEuroToCents(value);
+    return cents ? { id: p.id, amount_cents: cents, list_amount_cents: null, discount_label: null } : null;
+  }
+  const n = Number(value.replace(',', '.'));
+  if (!Number.isFinite(n) || n <= 0) return null;
+  const discount = mode === 'percent' ? Math.round((base * Math.min(n, 100)) / 100) : Math.round(n * 100);
+  const amount = Math.max(0, base - discount);
+  const autoLabel = mode === 'percent' ? `Sconto ${n}%` : `Sconto ${formatEuro(discount)}`;
+  return {
+    id: p.id,
+    amount_cents: amount,
+    list_amount_cents: base,
+    discount_label: label.trim() || autoLabel,
+  };
+}

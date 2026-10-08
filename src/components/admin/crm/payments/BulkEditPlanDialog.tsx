@@ -6,17 +6,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { formatDate, formatEuro, parseEuroToCents, paymentLabel, type CrmPayment } from '@/lib/payments';
+import {
+  computeBulkUpdate,
+  formatDate,
+  formatEuro,
+  paymentLabel,
+  type BulkEditMode,
+  type BulkUpdate,
+  type CrmPayment,
+} from '@/lib/payments';
 import { cn } from '@/lib/utils';
 
-type Mode = 'price' | 'percent' | 'fixed' | 'remove';
+type Mode = BulkEditMode;
 
-export interface BulkUpdate {
-  id: string;
-  amount_cents: number;
-  list_amount_cents: number | null;
-  discount_label: string | null;
-}
+export type { BulkUpdate };
 
 interface Props {
   open: boolean;
@@ -28,9 +31,6 @@ interface Props {
 
 const NO_PLAN = '__single__';
 const SIBLING_DISCOUNT_PERCENT = 10;
-
-/** Prezzo pieno della rata: quello prima di un eventuale sconto già applicato. */
-const basePrice = (p: CrmPayment) => p.list_amount_cents ?? p.amount_cents;
 
 /**
  * Modifica in blocco delle rate future di un piano: nuovo prezzo, sconto
@@ -73,27 +73,7 @@ export function BulkEditPlanDialog({ open, onOpenChange, scheduled, onApply }: P
 
   const targets = (plan?.list ?? []).filter(p => !fromDate || (p.due_date ?? '') >= fromDate);
 
-  const compute = (p: CrmPayment): BulkUpdate | null => {
-    const base = basePrice(p);
-    if (mode === 'remove') {
-      return { id: p.id, amount_cents: base, list_amount_cents: null, discount_label: null };
-    }
-    if (mode === 'price') {
-      const cents = parseEuroToCents(value);
-      return cents ? { id: p.id, amount_cents: cents, list_amount_cents: null, discount_label: null } : null;
-    }
-    const n = Number(value.replace(',', '.'));
-    if (!Number.isFinite(n) || n <= 0) return null;
-    const discount = mode === 'percent' ? Math.round((base * Math.min(n, 100)) / 100) : Math.round(n * 100);
-    const amount = Math.max(0, base - discount);
-    const autoLabel = mode === 'percent' ? `Sconto ${n}%` : `Sconto ${formatEuro(discount)}`;
-    return {
-      id: p.id,
-      amount_cents: amount,
-      list_amount_cents: base,
-      discount_label: label.trim() || autoLabel,
-    };
-  };
+  const compute = (p: CrmPayment) => computeBulkUpdate(p, mode, value, label);
 
   const updates = targets.map(compute);
   const valid = targets.length > 0 && updates.every(Boolean);

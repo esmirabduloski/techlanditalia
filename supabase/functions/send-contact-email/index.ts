@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { corsHeadersFor } from "../_shared/cors.ts";
+import { clientIp } from "../_shared/clientip.ts";
 import { notifyAdmins } from "../_shared/adminpush.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
@@ -41,13 +42,6 @@ async function sendEmail(to: string[], subject: string, html: string, replyTo?: 
 
 const BOT_UA_PATTERNS = /(curl|wget|python-requests|scrapy|httpclient|go-http-client|java\/|libwww|httrack|nikto|sqlmap|nmap|masscan|zgrab|acunetix|nessus|burpsuite)/i;
 
-function getClientIp(req: Request): string {
-  return req.headers.get("cf-connecting-ip")
-    || (req.headers.get("x-forwarded-for") || "").split(",")[0].trim()
-    || req.headers.get("x-real-ip")
-    || "unknown";
-}
-
 async function logSecurityEvent(supabase: any, event: Record<string, unknown>) {
   try { await supabase.from("security_events").insert(event); } catch (e) { console.error("[sec-log]", e); }
 }
@@ -57,7 +51,7 @@ const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-  const ip = getClientIp(req);
+  const ip = clientIp(req);
   const ua = req.headers.get("user-agent") || "";
 
   if (!ua || BOT_UA_PATTERNS.test(ua)) {

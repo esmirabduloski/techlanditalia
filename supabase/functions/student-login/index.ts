@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeadersFor } from "../_shared/cors.ts";
+import { clientIp } from "../_shared/clientip.ts";
 
 // Login alunno con username: tentativi errati consentiti prima del blocco temporaneo
 const STUDENT_MAX_ATTEMPTS = 10;
@@ -17,8 +18,8 @@ serve(async (req) => {
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
-    || req.headers.get("x-real-ip") || null;
+  const rawIp = clientIp(req);
+  const ip = rawIp === "unknown" ? null : rawIp;
 
   let emailForLog: string | null = null;
 

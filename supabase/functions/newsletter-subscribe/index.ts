@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { corsHeadersFor } from "../_shared/cors.ts";
+import { clientIp } from "../_shared/clientip.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -15,13 +16,6 @@ const SubscribeSchema = z.object({
 
 const BOT_UA_PATTERNS = /(curl|wget|python-requests|scrapy|httpclient|go-http-client|java\/|libwww|httrack|nikto|sqlmap|nmap|masscan|zgrab|acunetix|nessus|burpsuite)/i;
 
-function getClientIp(req: Request): string {
-  return req.headers.get("cf-connecting-ip")
-    || (req.headers.get("x-forwarded-for") || "").split(",")[0].trim()
-    || req.headers.get("x-real-ip")
-    || "unknown";
-}
-
 async function logSecurityEvent(supabase: any, event: Record<string, unknown>) {
   try { await supabase.from("security_events").insert(event); } catch (e) { console.error("[sec-log]", e); }
 }
@@ -33,7 +27,7 @@ const handler = async (req: Request): Promise<Response> => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
-  const ip = getClientIp(req);
+  const ip = clientIp(req);
   const ua = req.headers.get("user-agent") || "";
 
   if (!ua || BOT_UA_PATTERNS.test(ua)) {

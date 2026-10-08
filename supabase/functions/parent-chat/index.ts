@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { notifyAdmins } from "../_shared/adminpush.ts";
-import { rateLimit } from "../_shared/ratelimit.ts";
+import { clientIp, rateLimit } from "../_shared/ratelimit.ts";
 
 /** Frasi con cui un visitatore chiede di parlare con una persona reale. */
 const OPERATOR_PATTERNS = [
@@ -183,8 +183,7 @@ serve(async (req) => {
   }
 
   // Rate limiting check
-  const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
-                   req.headers.get('x-real-ip') || 'unknown';
+  const clientIP = clientIp(req);
   
   const rateLimitResult = checkRateLimit(clientIP);
   if (!rateLimitResult.allowed) {

@@ -3,14 +3,9 @@
  * Usa la RPC `check_rate_limit` già presente nel database.
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { clientIp } from "./clientip.ts";
 
-export function clientIp(req: Request): string {
-  return (
-    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
-    req.headers.get("cf-connecting-ip") ||
-    "unknown"
-  );
-}
+export { clientIp };
 
 /**
  * Restituisce una Response 429 se il limite è superato, altrimenti null.

@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { corsHeadersFor } from "../_shared/cors.ts";
+import { clientIp } from "../_shared/clientip.ts";
 
 
 const Schema = z.object({
@@ -40,8 +41,8 @@ serve(async (req: Request): Promise<Response> => {
           { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
-      const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
-        || req.headers.get("x-real-ip") || null;
+      const rawIp = clientIp(req);
+      const ip = rawIp === "unknown" ? null : rawIp;
 
       await supabase.from("login_attempts").insert({
         email,

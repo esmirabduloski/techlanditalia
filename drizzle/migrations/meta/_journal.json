@@ -99,6 +99,13 @@
       "when": 1791480948854,
       "tag": "0013_signup_role_hardening",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791489149804,
+      "tag": "0014_security_logs_retention",
+      "breakpoints": true
     }
   ]
 }

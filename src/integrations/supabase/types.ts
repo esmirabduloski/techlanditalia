@@ -2320,7 +2320,6 @@ export type Database = {
           code_type: string
           content: string
           created_at: string
-          homework_id: string | null
           id: string
           lesson_id: string | null
           student_id: string
@@ -2331,7 +2330,6 @@ export type Database = {
           code_type: string
           content?: string
           created_at?: string
-          homework_id?: string | null
           id?: string
           lesson_id?: string | null
           student_id: string
@@ -2342,7 +2340,6 @@ export type Database = {
           code_type?: string
           content?: string
           created_at?: string
-          homework_id?: string | null
           id?: string
           lesson_id?: string | null
           student_id?: string
@@ -2350,13 +2347,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "student_code_drafts_homework_id_fkey"
-            columns: ["homework_id"]
-            isOneToOne: false
-            referencedRelation: "homework"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "student_code_drafts_lesson_id_fkey"
             columns: ["lesson_id"]

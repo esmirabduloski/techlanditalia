@@ -12,6 +12,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
+import { getSignedUrl, openStorageFile } from '@/hooks/useSignedUrl';
 import { CodeViewer } from '@/components/admin/CodeViewer';
 import {
   Dialog,
@@ -193,10 +194,25 @@ export default function TeacherGrading() {
     return codeExtensions.some(ext => fileName.toLowerCase().endsWith(ext));
   };
 
+  // Il DB contiene il percorso nel bucket privato, non un indirizzo: il link
+  // firmato si genera al clic (così non scade se la pagina resta aperta).
+  const openSubmissionFile = async (path: string) => {
+    const ok = await openStorageFile('homework-files', path);
+    if (!ok) {
+      toast({ title: 'File non disponibile', description: 'Impossibile aprire il file consegnato.', variant: 'destructive' });
+    }
+  };
+
   const loadCodeContent = async (fileUrl: string) => {
     setIsLoadingCode(true);
     try {
-      const response = await fetch(fileUrl);
+      // I file sono in un bucket privato: serve un link firmato
+      const signedUrl = await getSignedUrl('homework-files', fileUrl, 300);
+      if (!signedUrl) {
+        setCodeContent(null);
+        return;
+      }
+      const response = await fetch(signedUrl);
       if (response.ok) {
         const text = await response.text();
         setCodeContent(text);
@@ -420,11 +436,13 @@ export default function TeacherGrading() {
                         </Badge>
                       )}
                       {submission.file_url && (
-                        <Button variant="outline" size="sm" asChild>
-                          <a href={submission.file_url} target="_blank" rel="noopener noreferrer">
-                            <Download className="w-4 h-4 mr-1" />
-                            {submission.file_name || 'File'}
-                          </a>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openSubmissionFile(submission.file_url!)}
+                        >
+                          <Download className="w-4 h-4 mr-1" />
+                          {submission.file_name || 'File'}
                         </Button>
                       )}
                       <Button onClick={() => openGradeDialog(submission)}>
@@ -469,14 +487,13 @@ export default function TeacherGrading() {
                   ) : (
                     <div className="text-sm text-muted-foreground bg-muted/30 rounded-lg p-4 text-center">
                       Impossibile caricare il codice. 
-                      <a 
-                        href={selectedSubmission.file_url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
+                      <button
+                        type="button"
+                        onClick={() => openSubmissionFile(selectedSubmission.file_url!)}
                         className="text-primary underline ml-1"
                       >
                         Scarica il file
-                      </a>
+                      </button>
                     </div>
                   )}
                 </div>

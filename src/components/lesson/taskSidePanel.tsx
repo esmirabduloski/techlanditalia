@@ -72,7 +72,7 @@ export function getTaskSidePanel(
     // Turtle anche quando l'ambiente non è impostato ma il codice di partenza importa turtle
     const usesTurtle = task.python_env === 'turtle' || /^\s*(import turtle|from turtle)/m.test(task.default_python_code || '');
     const node = usesTurtle ? (
-      <TurtleCompiler defaultCode={task.default_python_code || undefined} />
+      <TurtleCompiler defaultCode={task.default_python_code || undefined} taskId={taskId} />
     ) : task.python_env === 'pgzero' ? (
       <PgzeroCompiler defaultCode={task.default_python_code || undefined} replitUrl={task.replit_url || undefined} />
     ) : (

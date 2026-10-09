@@ -1,11 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
-import { Play, RotateCcw, Square, Loader2, ZoomIn, ZoomOut, Maximize } from 'lucide-react';
+import { Play, RotateCcw, Square, Loader2, ZoomIn, ZoomOut, Maximize, Save, Check } from 'lucide-react';
+import { useCodeDraft } from '@/hooks/useCodeDraft';
 import { CodeEditor } from './CodeEditor';
 
 interface TurtleCompilerProps {
   defaultCode?: string;
+  /**
+   * Se presente, il codice dello studente viene salvato (come nel compilatore
+   * Python): id del task oppure "homework-<id>" per i compiti.
+   */
+  taskId?: string;
 }
 
 const FALLBACK_CODE = `import turtle
@@ -57,9 +63,19 @@ function loadSkulpt() {
 
 const clamp = (v: number) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, v));
 
-export function TurtleCompiler({ defaultCode }: TurtleCompilerProps) {
+export function TurtleCompiler({ defaultCode, taskId }: TurtleCompilerProps) {
   const initial = defaultCode || FALLBACK_CODE;
-  const [code, setCode] = useState(initial);
+  // Stesso salvataggio del compilatore Python (code_type "python"): bozza
+  // caricata all'apertura, salvataggio automatico e all'uscita dall'esercizio.
+  const {
+    code,
+    setCode,
+    isLoading: isLoadingDraft,
+    isSaving,
+    lastSaved,
+    resetCode,
+    saveDraft,
+  } = useCodeDraft({ taskId, codeType: 'python', defaultCode: initial });
   const [output, setOutput] = useState('');
   const [running, setRunning] = useState(false);
   const [ready, setReady] = useState(false);
@@ -69,8 +85,6 @@ export function TurtleCompiler({ defaultCode }: TurtleCompilerProps) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const targetRef = useRef<HTMLDivElement>(null);
   const stopRef = useRef(false);
-
-  useEffect(() => setCode(initial), [initial]);
 
   useEffect(() => {
     loadSkulpt()
@@ -166,7 +180,7 @@ export function TurtleCompiler({ defaultCode }: TurtleCompilerProps) {
 
   const reset = () => {
     stop();
-    setCode(initial);
+    resetCode();
     setOutput('');
     if (targetRef.current) targetRef.current.innerHTML = '';
   };
@@ -174,8 +188,34 @@ export function TurtleCompiler({ defaultCode }: TurtleCompilerProps) {
   return (
     <div className="flex flex-col h-full bg-card border-l border-border">
       <div className="flex items-center justify-between gap-2 px-4 py-2 border-b bg-muted/50">
-        <span className="text-sm font-medium text-foreground">🐢 Python Turtle</span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-foreground">🐢 Python Turtle</span>
+          {taskId && isSaving && (
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              Salvataggio...
+            </span>
+          )}
+          {taskId && !isSaving && lastSaved && (
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <Check className="w-3 h-3 text-green-500" />
+              Salvato {lastSaved.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
+            </span>
+          )}
+        </div>
         <div className="flex items-center gap-1">
+          {taskId && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={saveDraft}
+              disabled={isSaving || isLoadingDraft}
+              aria-label="Salva codice"
+              title="Salva codice"
+            >
+              <Save className="w-4 h-4" />
+            </Button>
+          )}
           <Button
             size="sm"
             variant="ghost"
@@ -207,7 +247,13 @@ export function TurtleCompiler({ defaultCode }: TurtleCompilerProps) {
       <ResizablePanelGroup direction="vertical" className="flex-1">
         <ResizablePanel defaultSize={40} minSize={15}>
           <div className="h-full bg-muted overflow-hidden">
-            <CodeEditor code={code} onChange={setCode} language="python" className="h-full" />
+            {isLoadingDraft ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" aria-label="Caricamento del codice salvato" />
+              </div>
+            ) : (
+              <CodeEditor code={code} onChange={setCode} language="python" className="h-full" />
+            )}
           </div>
         </ResizablePanel>
 

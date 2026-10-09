@@ -91,8 +91,11 @@ export function CRMPaymentsSection({ lead, addInteraction }: Props) {
     }
 
     const payment = form.payment!;
+    // Se l'importo viene cambiato a mano, lo sconto precedente non è più valido
+    const discountReset: Partial<CrmPayment> =
+      values.amount_cents !== payment.amount_cents ? { list_amount_cents: null, discount_label: null } : {};
     if (form.mode === 'markPaid') {
-      const ok = await updatePayment(payment.id, { ...values, status: 'paid' });
+      const ok = await updatePayment(payment.id, { ...values, ...discountReset, status: 'paid' });
       if (ok) {
         await logPaymentReceived(values);
         toast({ title: 'Rata segnata come pagata', description: formatEuro(values.amount_cents) });
@@ -101,7 +104,7 @@ export function CRMPaymentsSection({ lead, addInteraction }: Props) {
     }
 
     // Modifica: se cambia il giorno della notifica, i promemoria ripartono
-    const patch: Partial<CrmPayment> = { ...values };
+    const patch: Partial<CrmPayment> = { ...values, ...discountReset };
     if (payment.status === 'scheduled' && values.reminder_date !== payment.reminder_date) {
       patch.admin_reminder_sent_at = null;
       patch.client_reminder_sent_at = null;

@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, Send, ArrowLeft, Calendar, Trophy, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCodeDraft } from '@/hooks/useCodeDraft';
+import { flushCodeDrafts } from '@/lib/codeDrafts';
 
 interface Attachment {
   name: string;
@@ -444,7 +445,10 @@ export default function HomeworkView() {
           <ResizablePanel defaultSize={50} minSize={30}>
             {isPythonCourse && (
               homework.python_env === 'turtle' ? (
-                <TurtleCompiler defaultCode={homework.default_python_code || undefined} />
+                <TurtleCompiler
+                  defaultCode={homework.default_python_code || undefined}
+                  taskId={`homework-${homework.id}`}
+                />
               ) : homework.python_env === 'pgzero' ? (
                 <PgzeroCompiler defaultCode={homework.default_python_code || undefined} replitUrl={homework.replit_url || undefined} />
               ) : (
@@ -496,6 +500,10 @@ function HomeworkSubmitButton({
     
     if (!userData.user) return;
 
+    // Prima salva le modifiche ancora in sospeso nei compilatori aperti:
+    // altrimenti verrebbe consegnato il codice dell'ultimo salvataggio automatico.
+    await flushCodeDrafts();
+
     let codeContent = '';
     
     if (isPythonCourse) {
@@ -503,7 +511,7 @@ function HomeworkSubmitButton({
         .from('student_code_drafts')
         .select('content')
         .eq('student_id', userData.user.id)
-        .eq('task_id', `homework-${homeworkId}`)
+        .eq('homework_id', homeworkId)
         .eq('code_type', 'python')
         .maybeSingle();
       
@@ -513,7 +521,7 @@ function HomeworkSubmitButton({
         .from('student_code_drafts')
         .select('content')
         .eq('student_id', userData.user.id)
-        .eq('task_id', `homework-${homeworkId}`)
+        .eq('homework_id', homeworkId)
         .eq('code_type', 'html')
         .maybeSingle();
       
@@ -521,7 +529,7 @@ function HomeworkSubmitButton({
         .from('student_code_drafts')
         .select('content')
         .eq('student_id', userData.user.id)
-        .eq('task_id', `homework-${homeworkId}`)
+        .eq('homework_id', homeworkId)
         .eq('code_type', 'css')
         .maybeSingle();
       
@@ -529,7 +537,7 @@ function HomeworkSubmitButton({
         .from('student_code_drafts')
         .select('content')
         .eq('student_id', userData.user.id)
-        .eq('task_id', `homework-${homeworkId}`)
+        .eq('homework_id', homeworkId)
         .eq('code_type', 'js')
         .maybeSingle();
       

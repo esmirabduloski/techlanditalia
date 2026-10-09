@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { draftColumns, draftConflictTarget, draftTarget } from '@/lib/codeDrafts';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
 
@@ -54,13 +55,14 @@ export function useWebFileDrafts({ taskId }: UseWebFileDraftsOptions) {
 
   const loadDraft = async () => {
     if (!user || !taskId) return;
+    const target = draftTarget(taskId);
 
     try {
       const { data, error } = await supabase
         .from('student_code_drafts')
         .select('content, updated_at')
         .eq('student_id', user.id)
-        .eq('task_id', taskId)
+        .eq(target.column, target.id)
         .eq('code_type', 'web_files')
         .maybeSingle();
 
@@ -88,6 +90,7 @@ export function useWebFileDrafts({ taskId }: UseWebFileDraftsOptions) {
     jsFilesToSave?: JsFile[]
   ) => {
     if (!user || !taskId) return;
+    const target = draftTarget(taskId);
 
     const currentUploadedFiles = filesToSave ?? uploadedFiles;
     const currentJsFiles = jsFilesToSave ?? additionalJsFiles;
@@ -107,7 +110,7 @@ export function useWebFileDrafts({ taskId }: UseWebFileDraftsOptions) {
 
       const payload = {
         student_id: user.id,
-        task_id: taskId,
+        ...draftColumns(target),
         code_type: 'web_files',
         content: JSON.stringify(webFilesData),
       };
@@ -115,7 +118,7 @@ export function useWebFileDrafts({ taskId }: UseWebFileDraftsOptions) {
       const { error } = await supabase
         .from('student_code_drafts')
         .upsert(payload, {
-          onConflict: 'student_id,task_id,code_type'
+          onConflict: draftConflictTarget(target),
         });
 
       if (error) {

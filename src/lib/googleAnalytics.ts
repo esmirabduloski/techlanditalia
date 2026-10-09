@@ -2,6 +2,8 @@
 // L'ID di misurazione arriva dal connettore Google Analytics:
 // VITE_LOVABLE_CONNECTOR_GOOGLE_ANALYTICS_API_KEY (es. G-XXXXXXXXXX).
 
+import { isPrivateAreaPath } from "./privateAreas";
+
 const measurementId = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_ANALYTICS_API_KEY as
   | string
   | undefined;
@@ -26,6 +28,10 @@ export function isGAConfigured(): boolean {
 export function initGA(): void {
   if (initialized || !measurementId) return;
   if (typeof document === "undefined") return;
+  // Se la visita inizia in un'area privata (studenti minorenni, admin...) non
+  // carichiamo il tag: il config di Google Ads invia subito un hit di
+  // remarketing con l'indirizzo della pagina.
+  if (isPrivateAreaPath(window.location.pathname)) return;
   initialized = true;
 
   const script = document.createElement("script");

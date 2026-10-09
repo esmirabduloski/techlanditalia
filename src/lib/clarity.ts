@@ -14,19 +14,13 @@
  * Clarity non imposta cookie e non collega visite diverse. Se in futuro si
  * aggiunge un banner, chiamare window.clarity('consentv2', {... 'granted'}).
  */
+import { isPrivateAreaPath } from "./privateAreas";
+
 export const CLARITY_PROJECT_ID = "wk0bgige7s";
 
-export const CLARITY_EXCLUDED_PREFIXES = [
-  "/admin",
-  "/area-riservata",
-  "/insegnante",
-  "/auth",
-  "/.lovable",
-] as const;
-
+/** Aree escluse: lista unica in privateAreas.ts (condivisa con Google Analytics). */
 export function isClarityAllowedPath(pathname: string): boolean {
-  const p = pathname.startsWith("/") ? pathname : `/${pathname}`;
-  return !CLARITY_EXCLUDED_PREFIXES.some((pre) => p === pre || p.startsWith(`${pre}/`));
+  return !isPrivateAreaPath(pathname);
 }
 
 declare global {

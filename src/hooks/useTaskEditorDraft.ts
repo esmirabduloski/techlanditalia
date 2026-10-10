@@ -104,7 +104,12 @@ export function useTaskEditorDraft({ courseId, lessonId, taskId, isEditing }: Us
   // Clear draft from localStorage
   const clearDraft = useCallback(() => {
     if (!courseId || !lessonId) return;
-    
+    // Un salvataggio in attesa riscriverebbe la bozza appena cancellata
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+    }
+
     try {
       const key = getDraftKey();
       localStorage.removeItem(key);

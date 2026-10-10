@@ -20,6 +20,7 @@ import { useAutoBackup } from '@/hooks/useAutoBackup';
 import { Switch } from '@/components/ui/switch';
 import { QuizTaskEditor } from '@/components/admin/QuizTaskEditor';
 import { parseQuizContent } from '@/lib/quiz';
+import { AdminTaskStepper, type AdminTaskStep } from '@/components/admin/AdminTaskStepper';
 interface Attachment {
   name: string;
   url: string;
@@ -57,7 +58,14 @@ interface TaskData {
   is_visible: boolean;
 }
 
-export default function TaskEditor() {
+// La chiave rimonta l'editor a ogni cambio task: stato, bozza e caricamento
+// ripartono da zero invece di mescolare i dati del task precedente.
+export default function TaskEditorPage() {
+  const { taskId } = useParams<{ taskId: string }>();
+  return <TaskEditor key={taskId ?? 'nuovo'} />;
+}
+
+function TaskEditor() {
   const { courseId, lessonId, taskId } = useParams<{ courseId: string; lessonId: string; taskId: string }>();
   const isEditing = Boolean(taskId);
   
@@ -67,6 +75,9 @@ export default function TaskEditor() {
   const [isSaving, setIsSaving] = useState(false);
   const { createCourseSnapshot } = useAutoBackup();
   const dataLoadedFromDbRef = useRef(false);
+  // Dati come sono nel DB: se il form è uguale, cambiare task non salva nulla
+  const savedSnapshotRef = useRef<string | null>(null);
+  const [lessonTasks, setLessonTasks] = useState<AdminTaskStep[]>([]);
   
   const [formData, setFormData] = useState<TaskData>({
     title: '',
@@ -142,6 +153,18 @@ export default function TaskEditor() {
       setLesson(lessonData);
     }
 
+    // Task della lezione, per la navigazione in alto
+    const { data: siblingsData } = await supabase
+      .from('lesson_tasks')
+      .select('id, task_number, title, content_type, is_visible')
+      .eq('lesson_id', lessonId)
+      .order('task_number')
+      .order('created_at');
+
+    if (siblingsData) {
+      setLessonTasks(siblingsData as AdminTaskStep[]);
+    }
+
     // Check for saved draft first (for new tasks only)
     const savedDraft = loadDraft();
 
@@ -192,6 +215,8 @@ export default function TaskEditor() {
           is_visible: (taskData as any).is_visible ?? true,
         };
 
+        savedSnapshotRef.current = JSON.stringify(dbData);
+
         // If there's a saved draft, prefer it over DB data (user was editing and switched tabs)
         if (savedDraft && savedDraft.title) {
           setFormData({ is_visible: true, ...savedDraft });
@@ -228,20 +253,20 @@ export default function TaskEditor() {
     setIsLoading(false);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!lessonId) return;
-    
+  /** Salva il task; false se la validazione o il DB lo impediscono */
+  const saveTask = async (): Promise<boolean> => {
+    if (!lessonId) return false;
+
     if (!formData.title.trim()) {
       toast({ title: 'Errore', description: 'Il titolo è obbligatorio', variant: 'destructive' });
-      return;
+      return false;
     }
 
     if (formData.content_type === 'quiz') {
       const parsed = parseQuizContent(formData.content);
       if (parsed.kind === 'error') {
         toast({ title: 'Quiz non valido', description: parsed.message, variant: 'destructive' });
-        return;
+        return false;
       }
     }
 
@@ -292,17 +317,36 @@ export default function TaskEditor() {
 
       // Clear draft on successful save
       clearDraft();
-
-      navigate(`/admin/corsi/${courseId}/lezioni/${lessonId}/task`);
+      return true;
     } catch (error: any) {
       toast({ 
         title: 'Errore', 
         description: error.message || 'Impossibile salvare il task', 
         variant: 'destructive' 
       });
+      return false;
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (await saveTask()) {
+      navigate(`/admin/corsi/${courseId}/lezioni/${lessonId}/task`);
+    }
+  };
+
+  // Salva le modifiche (se ce ne sono) e passa a un altro task della lezione
+  const goToTask = async (target: string | null) => {
+    const hasChanges = isEditing
+      ? JSON.stringify(formData) !== savedSnapshotRef.current
+      : formData.title.trim() !== ''; // un task nuovo senza titolo si abbandona e basta
+
+    if (hasChanges && !(await saveTask())) return;
+
+    const base = `/admin/corsi/${courseId}/lezioni/${lessonId}/task`;
+    navigate(target ? `${base}/${target}/modifica` : `${base}/nuovo`);
   };
 
   const handleSignOut = async () => {
@@ -342,6 +386,14 @@ export default function TaskEditor() {
           <span className="text-muted-foreground">/</span>
           <span className="font-medium">{isEditing ? 'Modifica' : 'Nuovo'} Task</span>
         </div>
+
+        <AdminTaskStepper
+          tasks={lessonTasks}
+          currentTaskId={taskId}
+          busy={isSaving}
+          onSelect={(id) => goToTask(id)}
+          onNew={() => goToTask(null)}
+        />
 
         <form onSubmit={handleSubmit}>
           <Card className="mb-6">

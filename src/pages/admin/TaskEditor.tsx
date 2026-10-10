@@ -20,7 +20,7 @@ import { useAutoBackup } from '@/hooks/useAutoBackup';
 import { Switch } from '@/components/ui/switch';
 import { QuizTaskEditor } from '@/components/admin/QuizTaskEditor';
 import { parseQuizContent } from '@/lib/quiz';
-import { AdminTaskStepper, type AdminTaskStep } from '@/components/admin/AdminTaskStepper';
+import { AdminStepper, type AdminStep } from '@/components/admin/AdminStepper';
 interface Attachment {
   name: string;
   url: string;
@@ -77,7 +77,7 @@ function TaskEditor() {
   const dataLoadedFromDbRef = useRef(false);
   // Dati come sono nel DB: se il form è uguale, cambiare task non salva nulla
   const savedSnapshotRef = useRef<string | null>(null);
-  const [lessonTasks, setLessonTasks] = useState<AdminTaskStep[]>([]);
+  const [lessonTasks, setLessonTasks] = useState<AdminStep[]>([]);
   
   const [formData, setFormData] = useState<TaskData>({
     title: '',
@@ -162,7 +162,13 @@ function TaskEditor() {
       .order('created_at');
 
     if (siblingsData) {
-      setLessonTasks(siblingsData as AdminTaskStep[]);
+      setLessonTasks(siblingsData.map(t => ({
+        id: t.id,
+        number: t.task_number,
+        title: t.title,
+        contentType: t.content_type,
+        hidden: !t.is_visible,
+      })));
     }
 
     // Check for saved draft first (for new tasks only)
@@ -387,9 +393,10 @@ function TaskEditor() {
           <span className="font-medium">{isEditing ? 'Modifica' : 'Nuovo'} Task</span>
         </div>
 
-        <AdminTaskStepper
-          tasks={lessonTasks}
-          currentTaskId={taskId}
+        <AdminStepper
+          steps={lessonTasks}
+          currentId={taskId}
+          itemLabel="Task"
           busy={isSaving}
           onSelect={(id) => goToTask(id)}
           onNew={() => goToTask(null)}

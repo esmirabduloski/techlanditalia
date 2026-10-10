@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { useRef } from 'react';
 import { useAutoBackup } from '@/hooks/useAutoBackup';
+import { AdminStepper, type AdminStep } from '@/components/admin/AdminStepper';
 
 interface Course {
   id: string;
@@ -58,7 +59,14 @@ interface HomeworkFormData {
 const PYTHON_COURSES = ['python-base', 'python-ai', 'python-avanzato'];
 const WEB_COURSES = ['web-development'];
 
-export default function HomeworkEditor() {
+// La chiave rimonta l'editor a ogni cambio compito: stato e caricamento
+// ripartono da zero invece di mescolare i dati del compito precedente.
+export default function HomeworkEditorPage() {
+  const { homeworkId } = useParams<{ homeworkId: string }>();
+  return <HomeworkEditor key={homeworkId ?? 'nuovo'} />;
+}
+
+function HomeworkEditor() {
   const { courseId, lessonId, homeworkId } = useParams<{ courseId: string; lessonId: string; homeworkId: string }>();
   const isEditing = Boolean(homeworkId);
   
@@ -69,6 +77,9 @@ export default function HomeworkEditor() {
   const { createCourseSnapshot } = useAutoBackup();
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Dati come sono nel DB: se il form è uguale, cambiare compito non salva nulla
+  const savedSnapshotRef = useRef<string | null>(null);
+  const [lessonHomework, setLessonHomework] = useState<AdminStep[]>([]);
   
   const [formData, setFormData] = useState<HomeworkFormData>({
     title: '',
@@ -126,6 +137,17 @@ export default function HomeworkEditor() {
       setLesson(lessonData);
     }
 
+    // Compiti della lezione, per la navigazione in alto (stesso ordine della lista)
+    const { data: siblingsData } = await supabase
+      .from('homework')
+      .select('id, title')
+      .eq('lesson_id', lessonId)
+      .order('created_at');
+
+    if (siblingsData) {
+      setLessonHomework(siblingsData.map((h, i) => ({ id: h.id, number: i + 1, title: h.title })));
+    }
+
     // If editing, fetch homework
     if (homeworkId) {
       const { data: homeworkData } = await supabase
@@ -135,7 +157,7 @@ export default function HomeworkEditor() {
         .maybeSingle();
 
       if (homeworkData) {
-        setFormData({
+        const dbData: HomeworkFormData = {
           title: homeworkData.title || '',
           description: homeworkData.description || '',
           instructions: homeworkData.instructions || '',
@@ -151,7 +173,9 @@ export default function HomeworkEditor() {
           python_env: (homeworkData as any).python_env || 'standard',
           replit_url: (homeworkData as any).replit_url || '',
           preview_only: (homeworkData as any).preview_only || false,
-        });
+        };
+        savedSnapshotRef.current = JSON.stringify(dbData);
+        setFormData(dbData);
       }
     }
 
@@ -225,12 +249,11 @@ export default function HomeworkEditor() {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  /** Salva il compito; false se la validazione o il DB lo impediscono */
+  const saveHomework = async (): Promise<boolean> => {
     if (!formData.title.trim()) {
       toast({ title: 'Errore', description: 'Il titolo è obbligatorio', variant: 'destructive' });
-      return;
+      return false;
     }
 
     setIsSaving(true);
@@ -274,17 +297,36 @@ export default function HomeworkEditor() {
         if (error) throw error;
         toast({ title: 'Successo', description: 'Compito creato' });
       }
-
-      navigate(`/admin/corsi/${courseId}/lezioni/${lessonId}/compiti`);
+      return true;
     } catch (error: any) {
       toast({ 
         title: 'Errore', 
         description: error.message || 'Impossibile salvare il compito', 
         variant: 'destructive' 
       });
+      return false;
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (await saveHomework()) {
+      navigate(`/admin/corsi/${courseId}/lezioni/${lessonId}/compiti`);
+    }
+  };
+
+  // Salva le modifiche (se ce ne sono) e passa a un altro compito della lezione
+  const goToHomework = async (target: string | null) => {
+    const hasChanges = isEditing
+      ? JSON.stringify(formData) !== savedSnapshotRef.current
+      : formData.title.trim() !== ''; // un compito nuovo senza titolo si abbandona e basta
+
+    if (hasChanges && !(await saveHomework())) return;
+
+    const base = `/admin/corsi/${courseId}/lezioni/${lessonId}/compiti`;
+    navigate(target ? `${base}/${target}/modifica` : `${base}/nuovo`);
   };
 
   const handleSignOut = async () => {
@@ -327,6 +369,15 @@ export default function HomeworkEditor() {
           <span className="text-muted-foreground">/</span>
           <span className="font-medium">{isEditing ? 'Modifica' : 'Nuovo'} Compito</span>
         </div>
+
+        <AdminStepper
+          steps={lessonHomework}
+          currentId={homeworkId}
+          itemLabel="Compito"
+          busy={isSaving || isUploading}
+          onSelect={(id) => goToHomework(id)}
+          onNew={() => goToHomework(null)}
+        />
 
         <form onSubmit={handleSubmit}>
           <Card className="mb-6">

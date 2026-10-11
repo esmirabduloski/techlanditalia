@@ -162,6 +162,13 @@
       "when": 1791823610381,
       "tag": "0023_legal_consent_records",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1791840000000,
+      "tag": "0024_teacher_scope_own_groups",
+      "breakpoints": true
     }
   ]
 }

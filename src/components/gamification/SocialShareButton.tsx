@@ -19,6 +19,8 @@ interface SocialShareButtonProps {
 
 const SITE_URL = "https://techlanditalia.lovable.app";
 
+// Solo per account adulti (genitori). Non usarlo nelle viste dello studente:
+// aprirebbe WhatsApp/Facebook dall'account di un minore.
 export function SocialShareButton({
   text,
   emoji = "🏆",

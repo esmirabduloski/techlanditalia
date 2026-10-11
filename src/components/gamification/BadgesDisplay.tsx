@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2, Trophy, Lock, ChevronDown } from "lucide-react";
-import { SocialShareButton } from "./SocialShareButton";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -175,15 +174,11 @@ export function BadgesDisplay({ userId, showAll: showAllProp = true, maxItems, t
                         +{badge.points_reward} punti bonus
                       </p>
                     )}
+                    {/* Niente social dall'account dello studente (minori): la condivisione passa dal genitore */}
                     {badge.isEarned && (
-                      <div className="mt-2" onClick={(e) => e.stopPropagation()}>
-                        <SocialShareButton
-                          text={`Ho ottenuto il badge "${badge.name}" su TechLand!`}
-                          emoji={badge.emoji}
-                          size="sm"
-                          variant="ghost"
-                        />
-                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Vuoi condividerlo? Chiedi a un genitore 👨‍👩‍👧
+                      </p>
                     )}
                   </div>
                 </TooltipContent>

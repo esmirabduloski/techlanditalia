@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Trophy, Star, Sparkles } from 'lucide-react';
-import { SocialShareButton } from './SocialShareButton';
 
 interface Confetti {
   id: number;
@@ -223,21 +222,15 @@ export function CelebrationOverlay({
                   )}
                 </motion.div>
 
-                {/* Share button */}
-                <motion.div
+                {/* Niente social dall'account dello studente (minori): la condivisione passa dal genitore */}
+                <motion.p
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.8 }}
-                  className="flex justify-center mt-4"
-                  onClick={(e) => e.stopPropagation()}
+                  className="text-center text-sm text-muted-foreground mt-4"
                 >
-                  <SocialShareButton
-                    text={type === 'level-up' 
-                      ? `Ho raggiunto il ${title} su TechLand!` 
-                      : `Ho ottenuto il badge "${title}" su TechLand!`}
-                    emoji={emoji || '🏆'}
-                  />
-                </motion.div>
+                  Fallo vedere a mamma o papà: possono condividerlo dalla loro area 👨‍👩‍👧
+                </motion.p>
 
                 {/* Close hint */}
                 <motion.p

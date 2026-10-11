@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- Security headers (defense in depth — primary headers should be set at the edge/CDN) -->
+    <!-- CSP "di base": l'hosting Lovable ignora public/_headers, quindi la regola arriva
+         al browser da qui. Deve restare PRIMA di ogni script. Permette qualsiasi risorsa
+         https perché le anteprime dei compilatori Web (iframe blob:) ereditano questa
+         policy e il codice degli studenti può usare CDN e API esterne. Blocca http non
+         sicuro, plugin (<object>), il dirottamento di <base> e i form verso siti http.
+         frame-ancestors non funziona nei <meta>: lo invia già l'hosting.
+         Tenerla identica a quella in public/_headers. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: blob: https:; font-src 'self' data: https:; connect-src 'self' https: wss: data: blob:; frame-src 'self' https: data: blob:; media-src 'self' data: blob: https:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https:" />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
@@ -29,8 +37,8 @@
       _iub.csConfiguration = {"siteId":4686056,"cookiePolicyId":92368401,"lang":"it","storage":{"useSiteId":true}};
     </script>
     <script type="text/javascript" src="https://cs.iubenda.com/autoblocking/4686056.js"></script>
-    <script type="text/javascript" src="//cdn.iubenda.com/cs/gpp/stub.js"></script>
-    <script type="text/javascript" src="//cdn.iubenda.com/cs/iubenda_cs.js" charset="UTF-8" async></script>
+    <script type="text/javascript" src="https://cdn.iubenda.com/cs/gpp/stub.js"></script>
+    <script type="text/javascript" src="https://cdn.iubenda.com/cs/iubenda_cs.js" charset="UTF-8" async></script>
 
     <!-- Google Tag Manager. Caricato DOPO iubenda: così il blocco dei tracker e
          Google Consent Mode sono già registrati quando il container viene scaricato.

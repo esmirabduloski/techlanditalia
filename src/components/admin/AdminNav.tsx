@@ -3,7 +3,7 @@ import { useRef, useState, useEffect } from 'react';
 import { 
   FileText, GraduationCap, BookOpen, Mail, User, BarChart3, 
   Award, Calendar, ClipboardCheck, Users, Newspaper, UsersRound, CalendarClock, Link as LinkIcon,
-  ChevronLeft, ChevronRight, Menu, X, Database, ClipboardList, BookText, Megaphone, Briefcase, Shield, Settings, Gift, Bug, Bell, Headset, ShieldCheck
+  ChevronLeft, ChevronRight, Menu, X, Database, ClipboardList, BookText, Megaphone, Briefcase, Shield, Settings, Gift, Bug, Bell, Headset, ShieldCheck, Camera
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -47,6 +47,7 @@ const navItems: NavItem[] = [
   { to: '/admin/notifiche-push', label: 'Notifiche', icon: Bell },
   { to: '/admin/chat-live', label: 'Chat live', icon: Headset },
   { to: '/admin/privacy', label: 'Privacy', icon: ShieldCheck, notificationKey: 'pendingRetention' },
+  { to: '/admin/consensi-foto-video', label: 'Foto e video', icon: Camera },
   { to: '/admin/impostazioni', label: 'Impostazioni', icon: Settings },
   { to: '/account/sicurezza', label: 'Il mio 2FA', icon: ShieldCheck },
   { to: '/admin/sentry-log-error', label: 'Sentry Log error', icon: Bug },

@@ -9,6 +9,7 @@ import { AvatarSelector, AvatarDisplay } from '@/components/gamification/AvatarS
 import { LevelBadge, PointsDisplay, getLevelFromPoints, LEVELS } from '@/components/gamification/LevelBadge';
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { DeleteAccountCard } from '@/components/account/DeleteAccountCard';
+import { MediaConsentCard } from '@/components/account/MediaConsentCard';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ArrowLeft, Save, Trophy, RotateCcw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -235,8 +236,9 @@ export default function Profile() {
             </Card>
           </div>
 
-          {/* Solo genitori: cancellazione account self-service (GDPR art. 17) */}
-          <div className="mt-8">
+          {/* Solo genitori: consensi foto/video dei figli e cancellazione account self-service (GDPR art. 17) */}
+          <div className="mt-8 space-y-6">
+            <MediaConsentCard />
             <DeleteAccountCard />
           </div>
         </div>

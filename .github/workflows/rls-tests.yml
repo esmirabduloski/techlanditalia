@@ -1,0 +1,34 @@
+# Test dei permessi sul database: a ogni migrazione nuova o modificata
+# riapplica tutto da zero e verifica che alunni, genitori e insegnanti vedano
+# solo i dati che devono vedere. Dettagli in scripts/test-rls.sh.
+name: Test permessi database
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "drizzle/migrations/**"
+      - "supabase/migrations/**"
+      - "supabase/tests/rls/**"
+      - "scripts/test-rls.sh"
+      - ".github/workflows/rls-tests.yml"
+  pull_request:
+    paths:
+      - "drizzle/migrations/**"
+      - "supabase/migrations/**"
+      - "supabase/tests/rls/**"
+      - "scripts/test-rls.sh"
+      - ".github/workflows/rls-tests.yml"
+  workflow_dispatch:
+
+jobs:
+  rls:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Verifica permessi (RLS)
+        run: bash scripts/test-rls.sh

@@ -34,10 +34,13 @@ import {
   Eye,
   CreditCard,
   ShieldCheck,
-  ShieldAlert
+  ShieldAlert,
+  FileCheck2
 } from 'lucide-react';
 import { MfaResetDialog } from '@/components/admin/MfaResetDialog';
 import { fetchMfaOverview, type MfaUserStatus } from '@/lib/mfaOverview';
+import { BackgroundCheckDialog } from '@/components/admin/BackgroundCheckDialog';
+import { backgroundCheckStatus, fetchBackgroundChecks, formatItDate, type BackgroundCheck } from '@/lib/backgroundChecks';
 import { LessonBalanceManager } from '@/components/admin/LessonBalanceManager';
 import {
   Select,
@@ -151,6 +154,8 @@ export default function AdminUsers() {
   const [creatingUser, setCreatingUser] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const [mfaStatus, setMfaStatus] = useState<Map<string, MfaUserStatus>>(new Map());
+  const [backgroundChecks, setBackgroundChecks] = useState<Map<string, BackgroundCheck>>(new Map());
+  const [checkDialogTeacher, setCheckDialogTeacher] = useState<{ id: string; name: string } | null>(null);
   const [mfaDialogUser, setMfaDialogUser] = useState<{ id: string; name: string; email?: string | null } | null>(null);
 
   // Precompilazione dalla scheda lead del CRM (?create=1&email=..&name=..&course=..)
@@ -365,11 +370,19 @@ export default function AdminUsers() {
     setCourses(coursesData || []);
     setEnrollments(enrollmentsData || []);
     setMfaStatus(await fetchMfaOverview());
+    setBackgroundChecks(await fetchBackgroundChecks());
     setIsLoading(false);
   };
 
   const refreshMfaStatus = async () => setMfaStatus(await fetchMfaOverview());
   const pendingMfaRequests = profiles.filter(p => mfaStatus.get(p.id)?.pendingRequestId);
+
+  const refreshBackgroundChecks = async () => setBackgroundChecks(await fetchBackgroundChecks());
+  // Insegnanti senza certificato del casellario verificato, scaduto o in scadenza
+  const teachersNeedingCheck = profiles
+    .filter(p => p.isTeacher)
+    .map(p => ({ profile: p, status: backgroundCheckStatus(backgroundChecks.get(p.id)) }))
+    .filter(t => t.status !== 'ok');
 
   const handleSignOut = async () => {
     await signOut();
@@ -878,6 +891,33 @@ export default function AdminUsers() {
           </Button>
         </div>
 
+        {teachersNeedingCheck.length > 0 && (
+          <div className="mb-6 rounded-lg border border-red-500/40 bg-red-500/10 p-4">
+            <p className="flex items-center gap-2 font-medium">
+              <FileCheck2 className="w-4 h-4 text-red-500" />
+              Certificato del casellario da verificare (D.Lgs. 39/2014)
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Obbligatorio per chi lavora a contatto con minori, collaboratori compresi.
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {teachersNeedingCheck.map(({ profile: p, status }) => (
+                <Button
+                  key={p.id}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCheckDialogTeacher({ id: p.id, name: p.full_name })}
+                >
+                  {p.full_name}
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    {status === 'missing' ? 'mancante' : status === 'expired' ? 'scaduto' : 'in scadenza'}
+                  </span>
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {pendingMfaRequests.length > 0 && (
           <div className="mb-6 rounded-lg border border-amber-500/40 bg-amber-500/10 p-4">
             <p className="flex items-center gap-2 font-medium">
@@ -1021,6 +1061,13 @@ export default function AdminUsers() {
                                       <ShieldCheck className="w-3 h-3" />2FA
                                     </Badge>
                                   )}
+                                  {group.parent.isTeacher && (() => {
+                                    const check = backgroundChecks.get(group.parent!.id);
+                                    const status = backgroundCheckStatus(check);
+                                    if (status === 'ok') return <Badge variant="outline" className="gap-1 border-green-600/40 text-green-700 dark:text-green-400"><FileCheck2 className="w-3 h-3" />Casellario fino al {formatItDate(check!.next_check_at)}</Badge>;
+                                    if (status === 'expiring') return <Badge className="bg-amber-500 text-white">Casellario in scadenza {formatItDate(check!.next_check_at)}</Badge>;
+                                    return <Badge variant="destructive">{status === 'missing' ? 'Casellario mancante' : 'Casellario scaduto'}</Badge>;
+                                  })()}
                                   {mfaStatus.get(group.parent.id)?.pendingRequestId && (
                                     <Badge className="bg-amber-500 text-white">Reset 2FA richiesto</Badge>
                                   )}
@@ -1091,6 +1138,22 @@ export default function AdminUsers() {
                                   <TooltipContent>Reset password</TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
+                              {group.parent.isTeacher && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={(e) => { e.stopPropagation(); setCheckDialogTeacher({ id: group.parent!.id, name: group.parent!.full_name }); }}
+                                      >
+                                        <FileCheck2 className="w-4 h-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Certificato casellario</TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
                               {group.parent.id !== user?.id && ((mfaStatus.get(group.parent.id)?.verifiedFactors ?? 0) > 0 || mfaStatus.get(group.parent.id)?.pendingRequestId) && (
                                 <TooltipProvider>
                                   <Tooltip>
@@ -1899,6 +1962,14 @@ export default function AdminUsers() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <BackgroundCheckDialog
+        open={!!checkDialogTeacher}
+        onOpenChange={(o) => !o && setCheckDialogTeacher(null)}
+        teacher={checkDialogTeacher}
+        check={checkDialogTeacher ? backgroundChecks.get(checkDialogTeacher.id) : undefined}
+        onSaved={refreshBackgroundChecks}
+      />
 
       <MfaResetDialog
         open={!!mfaDialogUser}

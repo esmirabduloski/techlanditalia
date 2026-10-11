@@ -1805,6 +1805,36 @@ export type Database = {
         }
         Relationships: []
       }
+      mfa_reset_requests: {
+        Row: {
+          created_at: string
+          id: string
+          note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       newsletter_subscribers: {
         Row: {
           confirmation_token: string
@@ -2814,6 +2844,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_mfa_overview: {
+        Args: never
+        Returns: {
+          last_enrolled_at: string
+          pending_request_at: string
+          pending_request_id: string
+          pending_request_note: string
+          user_id: string
+          verified_factors: number
+        }[]
+      }
       check_login_rate_limit: {
         Args: {
           _email: string
@@ -2846,6 +2887,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      ensure_mfa_policies: { Args: never; Returns: undefined }
       generate_slug: { Args: { title: string }; Returns: string }
       get_children_ids: { Args: { _parent_id: string }; Returns: string[] }
       get_leaderboard: {
@@ -2936,6 +2978,9 @@ export type Database = {
         Args: { _student_id: string; _teacher_id: string }
         Returns: boolean
       }
+      mfa_ok: { Args: never; Returns: boolean }
+      mfa_required: { Args: { _user_id: string }; Returns: boolean }
+      my_mfa_required: { Args: never; Returns: boolean }
       reward_referral: {
         Args: { _credits_each?: number; _reason?: string; _referral_id: string }
         Returns: Json

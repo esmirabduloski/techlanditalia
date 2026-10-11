@@ -79,9 +79,10 @@ export default function Termini() {
                 </p>
                 <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
                   <li>I prezzi sono indicati in Euro e includono l'IVA dove applicabile</li>
-                  <li>Il pagamento è richiesto prima dell'inizio del corso</li>
+                  <li>È possibile pagare il corso in comode rate mensili</li>
+                  <li>Non ci sono vincoli di durata: puoi interrompere il corso quando vuoi, senza penali</li>
                   <li>Accettiamo pagamenti tramite carta di credito, bonifico bancario e altri metodi specificati</li>
-                  <li>È possibile richiedere il rimborso entro 14 giorni dall'inizio del corso se non sono state fruite più di 2 lezioni</li>
+                  <li>È possibile richiedere il rimborso in qualsiasi momento</li>
                   <li>I rimborsi verranno elaborati entro 30 giorni dalla richiesta</li>
                 </ul>
               </section>

@@ -176,6 +176,13 @@
       "when": 1791840000000,
       "tag": "0024_teacher_scope_own_groups",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1791758604642,
+      "tag": "0025_teacher_scope_own_groups",
+      "breakpoints": true
     }
   ]
 }

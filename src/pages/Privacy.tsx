@@ -12,7 +12,7 @@ import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
  * pagamenti Stripe, statistiche di prima parte e log di sicurezza. Se aggiungi un
  * fornitore o un nuovo trattamento, aggiorna anche questa pagina e la data.
  */
-const LAST_UPDATE = "8 ottobre 2026";
+const LAST_UPDATE = "11 ottobre 2026";
 const PRIVACY_EMAIL = "info@techlanditalia.it";
 
 const H2 = ({ children }: { children: React.ReactNode }) => (
@@ -186,6 +186,19 @@ export default function Privacy() {
                   creati da un genitore o tutore, che fornisce i dati del minore e ne autorizza il trattamento. Per gli studenti
                   raccogliamo il minimo indispensabile (nome utente senza email, età), gli insegnanti vedono solo i propri
                   studenti e nessun dato del minore viene usato per finalità di marketing o profilazione.
+                </P>
+                <P>
+                  Per i minori di 14 anni (art. 8 GDPR e art. 2-quinquies D.Lgs. 196/2003) l&apos;accettazione di questa
+                  informativa e dei Termini la dà il genitore, al primo accesso all&apos;area riservata e a ogni nuova
+                  versione, dichiarando di esercitare la responsabilità genitoriale. Per poterlo dimostrare registriamo chi ha
+                  accettato, per quale figlio, quale versione, data e ora, indirizzo IP e browser. Il registro è conservato per
+                  10 anni, anche dopo la chiusura dell&apos;account, per la difesa di eventuali diritti (art. 17.3.e GDPR).
+                </P>
+                <P>
+                  Foto e video in cui il minore è riconoscibile richiedono un consenso specifico del genitore, separato per
+                  ogni finalità: registrazione delle lezioni, giornate di presentazione, pubblicazione su sito e social. Sono
+                  facoltativi e non dandoli lo studente partecipa comunque alle attività. Il genitore li gestisce e li revoca
+                  in qualsiasi momento dal proprio profilo nell&apos;area riservata, oppure scrivendoci a <Mail />.
                 </P>
               </section>
 

@@ -3,6 +3,8 @@ import { SEOHead } from "@/components/seo/SEOHead";
 import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
 import { Link } from "react-router-dom";
 
+// Ogni nuova versione va aggiunta in legal_document_versions (migrazione Drizzle):
+// così l'area riservata chiede di nuovo l'accettazione ai genitori.
 export default function Termini() {
   return (
     <Layout>
@@ -21,7 +23,7 @@ export default function Termini() {
             />
             <h1 className="text-4xl font-bold mb-8">Termini e Condizioni</h1>
             <p className="text-muted-foreground mb-8">
-              Ultimo aggiornamento: 13 settembre 2026
+              Ultimo aggiornamento: 11 ottobre 2026
             </p>
 
             <div className="prose prose-lg dark:prose-invert max-w-none space-y-8">

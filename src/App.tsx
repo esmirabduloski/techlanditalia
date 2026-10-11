@@ -16,6 +16,7 @@ import { PushNavigationListener } from "@/components/notifications/PushNavigatio
 import ScrollToTop from "./components/ScrollToTop";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { MfaGate } from "@/components/auth/mfa/MfaGate";
+import { ConsentGate } from "@/components/auth/consent/ConsentGate";
 
 
 const queryClient = new QueryClient();
@@ -50,7 +51,9 @@ const App = () => (
                   secondi sui telefoni. */}
               <ErrorBoundary>
                 <MfaGate>
-                  <Outlet />
+                  <ConsentGate>
+                    <Outlet />
+                  </ConsentGate>
                 </MfaGate>
               </ErrorBoundary>
 

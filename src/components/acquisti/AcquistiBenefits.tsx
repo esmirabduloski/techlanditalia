@@ -14,7 +14,7 @@ const benefits = [
   {
     icon: Shield,
     title: "Soddisfatti o rimborsati",
-    description: "Garanzia di rimborso entro 14 giorni",
+    description: "Rimborso in qualsiasi momento, nessun vincolo",
   },
   {
     icon: Sparkles,

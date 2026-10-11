@@ -52,7 +52,7 @@ const faqCategories = [
       },
       {
         question: "Quanto costa una lezione? Avete un piano di rateizzazione o un programma di referral?",
-        answer: "Sì, offriamo piani di rateizzazione per rendere i nostri corsi accessibili a tutti. Abbiamo anche un programma referral: se inviti un amico, entrambi riceverete uno sconto sulla prossima iscrizione!"
+        answer: "Sì, puoi pagare in comode rate mensili, senza vincoli: puoi interrompere quando vuoi. Abbiamo anche un programma referral: se inviti un amico, entrambi riceverete uno sconto sulla prossima iscrizione!"
       }
     ]
   },
@@ -86,7 +86,7 @@ const faqCategories = [
       },
       {
         question: "Possiamo richiedere un rimborso se cambiamo idea?",
-        answer: "Sì, offriamo una garanzia soddisfatti o rimborsati. Se non sei soddisfatto del corso entro le prime due lezioni, puoi richiedere un rimborso completo. Consulta i nostri Termini e Condizioni per maggiori dettagli."
+        answer: "Sì, puoi richiedere il rimborso in qualsiasi momento. Puoi pagare in comode rate mensili, non ci sono vincoli e puoi interrompere il corso quando vuoi. Consulta i nostri Termini e Condizioni per maggiori dettagli."
       }
     ]
   },

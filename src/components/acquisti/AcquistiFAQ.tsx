@@ -8,11 +8,11 @@ import {
 const faqs = [
   {
     q: "Come funziona il pagamento?",
-    a: "Il pagamento avviene in modo sicuro tramite Stripe. Accettiamo carte di credito, debito e altri metodi di pagamento elettronici.",
+    a: "Il pagamento avviene in modo sicuro tramite Stripe. Accettiamo carte di credito, debito e altri metodi di pagamento elettronici. Puoi pagare in comode rate mensili, senza vincoli: puoi smettere quando vuoi.",
   },
   {
     q: "Posso ottenere un rimborso?",
-    a: "Sì, offriamo una garanzia soddisfatti o rimborsati entro 14 giorni dall'acquisto. Contattaci e ti rimborseremo senza domande.",
+    a: "Sì, puoi richiedere il rimborso in qualsiasi momento. Contattaci e ti rimborseremo senza domande.",
   },
   {
     q: "Cosa succede dopo l'acquisto?",

@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { rateLimit } from "../_shared/ratelimit.ts";
+import { decodeClaims, mfaRequiredResponse } from "../_shared/mfa.ts";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/firebase_messaging";
 
@@ -53,6 +54,9 @@ serve(async (req: Request): Promise<Response> => {
       .eq("role", "admin")
       .maybeSingle();
     if (!adminRole) return json({ error: "Solo gli admin possono inviare notifiche" }, 403);
+
+    // Gli admin operano solo con la verifica in due passaggi completata (sessione aal2)
+    if (decodeClaims(authHeader.replace("Bearer ", "")).aal !== "aal2") return mfaRequiredResponse(corsHeaders);
 
     const parsed = BodySchema.safeParse(await req.json());
     if (!parsed.success) {

@@ -2,11 +2,23 @@ import { createContext, useContext, useEffect, useState, startTransition, ReactN
 import { User, Session } from '@supabase/supabase-js';
 import { getSupabase } from '@/integrations/supabase/lazyClient';
 
+/**
+ * Stato della verifica in due passaggi per la sessione corrente.
+ * `needsMfa`: l'utente deve configurare o inserire il codice prima di accedere
+ * ai dati (il database rifiuta comunque le query finché la sessione non è aal2).
+ */
+export interface MfaState {
+  needsMfa: boolean;
+  currentLevel: 'aal1' | 'aal2' | null;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   isAdmin: boolean;
   isLoading: boolean;
+  mfa: MfaState;
+  refreshAccess: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -19,6 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [mfa, setMfa] = useState<MfaState>({ needsMfa: false, currentLevel: null });
 
   useEffect(() => {
     // Il client Supabase è importato in modo dinamico (vedi lazyClient.ts): sulle
@@ -43,12 +56,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (session?.user) {
           startTransition(() => setIsLoading(true));
           setTimeout(async () => {
-            await checkAdminRole(session.user.id);
+            await loadAccess(session.user.id);
             startTransition(() => setIsLoading(false));
           }, 0);
         } else {
           startTransition(() => {
             setIsAdmin(false);
+            setMfa({ needsMfa: false, currentLevel: null });
             setIsLoading(false);
           });
         }
@@ -63,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(session?.user ?? null);
         });
         if (session?.user) {
-          await checkAdminRole(session.user.id);
+          await loadAccess(session.user.id);
         }
         startTransition(() => setIsLoading(false));
       });
@@ -91,13 +105,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Livello della sessione (aal1/aal2) e obbligo di 2FA (admin, insegnanti,
+  // operatori o chiunque abbia attivato un fattore): vedi migrazione 0019.
+  const checkMfa = async () => {
+    try {
+      const supabase = await getSupabase();
+      const [{ data: aal }, { data: required }] = await Promise.all([
+        supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
+        supabase.rpc('my_mfa_required' as never),
+      ]);
+      const currentLevel = (aal?.currentLevel ?? null) as MfaState['currentLevel'];
+      const needsMfa = currentLevel !== 'aal2' && (required === true || aal?.nextLevel === 'aal2');
+      setMfa({ needsMfa, currentLevel });
+    } catch {
+      setMfa({ needsMfa: false, currentLevel: null });
+    }
+  };
+
+  const loadAccess = async (userId: string) => {
+    await Promise.all([checkAdminRole(userId), checkMfa()]);
+  };
+
+  const refreshAccess = async () => {
+    const supabase = await getSupabase();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) await loadAccess(session.user.id);
+  };
+
   const signIn = async (email: string, password: string) => {
     const supabase = await getSupabase();
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     
     // If login successful, check admin role immediately and wait for it
     if (!error && data?.user) {
-      await checkAdminRole(data.user.id);
+      await loadAccess(data.user.id);
     }
     
     return { error };
@@ -118,10 +159,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const supabase = await getSupabase();
     await supabase.auth.signOut();
     setIsAdmin(false);
+    setMfa({ needsMfa: false, currentLevel: null });
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isAdmin, isLoading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, isAdmin, isLoading, mfa, refreshAccess, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );

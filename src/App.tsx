@@ -15,6 +15,7 @@ import { RouteAnnouncer } from "@/components/accessibility/RouteAnnouncer";
 import { PushNavigationListener } from "@/components/notifications/PushNavigationListener";
 import ScrollToTop from "./components/ScrollToTop";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { MfaGate } from "@/components/auth/mfa/MfaGate";
 
 
 const queryClient = new QueryClient();
@@ -48,7 +49,9 @@ const App = () => (
                   ri-renderizzava tutto lato client (errore #421): schermo vuoto per
                   secondi sui telefoni. */}
               <ErrorBoundary>
-                <Outlet />
+                <MfaGate>
+                  <Outlet />
+                </MfaGate>
               </ErrorBoundary>
 
             </AnalyticsProvider>

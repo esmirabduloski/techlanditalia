@@ -86,6 +86,9 @@ export const routes: RouteRecord[] = [
       { path: "auth", lazy: page(() => import("./pages/auth/AuthPage")) },
       { path: ".lovable/oauth/consent", lazy: page(() => import("./pages/OAuthConsent")) },
 
+      // === Sicurezza account (tutti i ruoli, SPA pura, dietro auth) ===
+      { path: "account/sicurezza", lazy: page(() => import("./pages/account/Security")) },
+
       // === Area riservata studenti (SPA pura, dietro auth) ===
       { path: "area-riservata", lazy: page(() => import("./pages/area-riservata/Dashboard")) },
       { path: "area-riservata/profilo", lazy: page(() => import("./pages/area-riservata/Profile")) },

@@ -14,6 +14,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { notifyAdmins } from "../_shared/adminpush.ts";
+import { decodeClaims, mfaRequiredResponse } from "../_shared/mfa.ts";
 
 const SITE_URL = (Deno.env.get("SITE_URL") || "https://techlanditalia.it").replace(/\/$/, "");
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
@@ -170,6 +171,8 @@ async function requireAdmin(db: Db, req: Request): Promise<{ userId: string } | 
   if (error || !user) return deny("Non autorizzato", 401);
   const { data: role } = await db.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
   if (!role) return deny("Solo gli admin possono approvare la pulizia dei dati", 403);
+  // Gli admin operano solo con la verifica in due passaggi completata (sessione aal2)
+  if (decodeClaims(auth.replace("Bearer ", "")).aal !== "aal2") return mfaRequiredResponse(corsHeaders);
   return { userId: user.id };
 }
 

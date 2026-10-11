@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { rateLimit } from "../_shared/ratelimit.ts";
+import { decodeClaims, mfaRequiredResponse } from "../_shared/mfa.ts";
 
 // Il link "Imposta la tua password" deve puntare alla pagina con il form di nuova
 // password, non alla homepage. Stessa allowlist usata da send-password-reset-email.
@@ -76,6 +77,9 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Gli admin operano solo con la verifica in due passaggi completata (sessione aal2)
+    if (decodeClaims(token).aal !== "aal2") return mfaRequiredResponse(corsHeaders);
 
     const { role, email, password, fullName, childName, childUsername, courseId } = await req.json();
 

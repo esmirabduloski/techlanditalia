@@ -48,6 +48,7 @@ const navItems: NavItem[] = [
   { to: '/admin/chat-live', label: 'Chat live', icon: Headset },
   { to: '/admin/privacy', label: 'Privacy', icon: ShieldCheck, notificationKey: 'pendingRetention' },
   { to: '/admin/impostazioni', label: 'Impostazioni', icon: Settings },
+  { to: '/account/sicurezza', label: 'Il mio 2FA', icon: ShieldCheck },
   { to: '/admin/sentry-log-error', label: 'Sentry Log error', icon: Bug },
 ];
 

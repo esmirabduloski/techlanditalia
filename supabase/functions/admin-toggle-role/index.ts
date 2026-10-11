@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { rateLimit } from "../_shared/ratelimit.ts";
+import { decodeClaims, mfaRequiredResponse } from "../_shared/mfa.ts";
 
 const BodySchema = z.object({
   userId: z.string().uuid(),
@@ -58,6 +59,9 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Gli admin operano solo con la verifica in due passaggi completata (sessione aal2)
+    if (decodeClaims(token).aal !== "aal2") return mfaRequiredResponse(corsHeaders);
 
     const raw = await req.json();
     const parsed = BodySchema.safeParse(raw);

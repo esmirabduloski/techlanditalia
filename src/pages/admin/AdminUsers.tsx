@@ -32,8 +32,12 @@ import {
   Users2,
   UserPlus,
   Eye,
-  CreditCard
+  CreditCard,
+  ShieldCheck,
+  ShieldAlert
 } from 'lucide-react';
+import { MfaResetDialog } from '@/components/admin/MfaResetDialog';
+import { fetchMfaOverview, type MfaUserStatus } from '@/lib/mfaOverview';
 import { LessonBalanceManager } from '@/components/admin/LessonBalanceManager';
 import {
   Select,
@@ -146,6 +150,8 @@ export default function AdminUsers() {
   }>({ role: 'parent', fullName: '', email: '', password: '', childName: '', childUsername: '', courseId: 'none' });
   const [creatingUser, setCreatingUser] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
+  const [mfaStatus, setMfaStatus] = useState<Map<string, MfaUserStatus>>(new Map());
+  const [mfaDialogUser, setMfaDialogUser] = useState<{ id: string; name: string; email?: string | null } | null>(null);
 
   // Precompilazione dalla scheda lead del CRM (?create=1&email=..&name=..&course=..)
   useEffect(() => {
@@ -358,8 +364,12 @@ export default function AdminUsers() {
     setProfiles(enrichedProfiles);
     setCourses(coursesData || []);
     setEnrollments(enrollmentsData || []);
+    setMfaStatus(await fetchMfaOverview());
     setIsLoading(false);
   };
+
+  const refreshMfaStatus = async () => setMfaStatus(await fetchMfaOverview());
+  const pendingMfaRequests = profiles.filter(p => mfaStatus.get(p.id)?.pendingRequestId);
 
   const handleSignOut = async () => {
     await signOut();
@@ -868,6 +878,27 @@ export default function AdminUsers() {
           </Button>
         </div>
 
+        {pendingMfaRequests.length > 0 && (
+          <div className="mb-6 rounded-lg border border-amber-500/40 bg-amber-500/10 p-4">
+            <p className="flex items-center gap-2 font-medium">
+              <ShieldAlert className="w-4 h-4 text-amber-500" />
+              Richieste di reset della verifica in due passaggi
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {pendingMfaRequests.map(p => (
+                <Button
+                  key={p.id}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setMfaDialogUser({ id: p.id, name: p.full_name, email: p.email })}
+                >
+                  {p.full_name}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Search and Filter */}
         <div className="flex flex-col gap-4 mb-6">
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
@@ -985,6 +1016,14 @@ export default function AdminUsers() {
                                   {group.parent.isAdmin && <Badge className="bg-amber-500 text-white">Admin</Badge>}
                                   {group.parent.isTeacher && <Badge className="bg-tech-teal text-white">Insegnante</Badge>}
                                   {group.parent.isParentRole && group.parent.role !== 'parent' && <Badge className="bg-purple-500 text-white">Ruolo Genitore</Badge>}
+                                  {(mfaStatus.get(group.parent.id)?.verifiedFactors ?? 0) > 0 && (
+                                    <Badge variant="outline" className="gap-1 border-green-600/40 text-green-700 dark:text-green-400">
+                                      <ShieldCheck className="w-3 h-3" />2FA
+                                    </Badge>
+                                  )}
+                                  {mfaStatus.get(group.parent.id)?.pendingRequestId && (
+                                    <Badge className="bg-amber-500 text-white">Reset 2FA richiesto</Badge>
+                                  )}
                                 </div>
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
                                   <span>{hasChildren ? `${group.children.length} ${group.children.length === 1 ? 'figlio' : 'figli'}` : 'Nessun figlio associato'}</span>
@@ -1052,6 +1091,22 @@ export default function AdminUsers() {
                                   <TooltipContent>Reset password</TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
+                              {group.parent.id !== user?.id && ((mfaStatus.get(group.parent.id)?.verifiedFactors ?? 0) > 0 || mfaStatus.get(group.parent.id)?.pendingRequestId) && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={(e) => { e.stopPropagation(); setMfaDialogUser({ id: group.parent!.id, name: group.parent!.full_name, email: group.parent!.email }); }}
+                                      >
+                                        <ShieldAlert className="w-4 h-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Reimposta 2FA</TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -1845,6 +1900,13 @@ export default function AdminUsers() {
         </DialogContent>
       </Dialog>
 
+      <MfaResetDialog
+        open={!!mfaDialogUser}
+        onOpenChange={(o) => !o && setMfaDialogUser(null)}
+        user={mfaDialogUser}
+        status={mfaDialogUser ? mfaStatus.get(mfaDialogUser.id) : undefined}
+        onDone={refreshMfaStatus}
+      />
     </div>
   );
 }

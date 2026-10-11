@@ -422,6 +422,59 @@ export type Database = {
           },
         ]
       }
+      consent_records: {
+        Row: {
+          accepted_at: string
+          accepted_by: string
+          accepted_by_email: string | null
+          accepted_by_name: string | null
+          capacity: string
+          document: string
+          id: string
+          ip: string | null
+          subject_id: string | null
+          subject_name: string | null
+          user_agent: string | null
+          version: string
+        }
+        Insert: {
+          accepted_at?: string
+          accepted_by: string
+          accepted_by_email?: string | null
+          accepted_by_name?: string | null
+          capacity: string
+          document: string
+          id?: string
+          ip?: string | null
+          subject_id?: string | null
+          subject_name?: string | null
+          user_agent?: string | null
+          version: string
+        }
+        Update: {
+          accepted_at?: string
+          accepted_by?: string
+          accepted_by_email?: string | null
+          accepted_by_name?: string | null
+          capacity?: string
+          document?: string
+          id?: string
+          ip?: string | null
+          subject_id?: string | null
+          subject_name?: string | null
+          user_agent?: string | null
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consent_records_document_version_fkey"
+            columns: ["document", "version"]
+            isOneToOne: false
+            referencedRelation: "legal_document_versions"
+            referencedColumns: ["document", "version"]
+          },
+        ]
+      }
       contact_submissions: {
         Row: {
           created_at: string
@@ -1521,6 +1574,27 @@ export type Database = {
           },
         ]
       }
+      legal_document_versions: {
+        Row: {
+          document: string
+          published_at: string
+          url: string
+          version: string
+        }
+        Insert: {
+          document: string
+          published_at: string
+          url: string
+          version: string
+        }
+        Update: {
+          document?: string
+          published_at?: string
+          url?: string
+          version?: string
+        }
+        Relationships: []
+      }
       lesson_balance_log: {
         Row: {
           amount: number
@@ -1802,6 +1876,57 @@ export type Database = {
           id?: string
           ip_address?: string | null
           success?: boolean
+        }
+        Relationships: []
+      }
+      media_consent_events: {
+        Row: {
+          decided_at: string
+          decided_by: string | null
+          granted: boolean
+          id: string
+          purpose: string
+          student_id: string
+        }
+        Insert: {
+          decided_at?: string
+          decided_by?: string | null
+          granted: boolean
+          id?: string
+          purpose: string
+          student_id: string
+        }
+        Update: {
+          decided_at?: string
+          decided_by?: string | null
+          granted?: boolean
+          id?: string
+          purpose?: string
+          student_id?: string
+        }
+        Relationships: []
+      }
+      media_consents: {
+        Row: {
+          decided_at: string
+          decided_by: string | null
+          granted: boolean
+          purpose: string
+          student_id: string
+        }
+        Insert: {
+          decided_at?: string
+          decided_by?: string | null
+          granted: boolean
+          purpose: string
+          student_id: string
+        }
+        Update: {
+          decided_at?: string
+          decided_by?: string | null
+          granted?: boolean
+          purpose?: string
+          student_id?: string
         }
         Relationships: []
       }
@@ -2609,6 +2734,30 @@ export type Database = {
           },
         ]
       }
+      teacher_background_checks: {
+        Row: {
+          next_check_at: string
+          updated_at: string
+          user_id: string
+          verified_at: string
+          verified_by: string | null
+        }
+        Insert: {
+          next_check_at: string
+          updated_at?: string
+          user_id: string
+          verified_at: string
+          verified_by?: string | null
+        }
+        Update: {
+          next_check_at?: string
+          updated_at?: string
+          user_id?: string
+          verified_at?: string
+          verified_by?: string | null
+        }
+        Relationships: []
+      }
       teacher_courses: {
         Row: {
           assigned_at: string | null
@@ -2978,9 +3127,24 @@ export type Database = {
         Args: { _student_id: string; _teacher_id: string }
         Returns: boolean
       }
+      is_teacher_of_student_in_course: {
+        Args: { _course_id: string; _student_id: string; _teacher_id: string }
+        Returns: boolean
+      }
       mfa_ok: { Args: never; Returns: boolean }
       mfa_required: { Args: { _user_id: string }; Returns: boolean }
       my_mfa_required: { Args: never; Returns: boolean }
+      pending_legal_consents: {
+        Args: never
+        Returns: {
+          document: string
+          published_at: string
+          subject_id: string
+          subject_name: string
+          version: string
+        }[]
+      }
+      record_legal_consents: { Args: { _items: Json }; Returns: number }
       reward_referral: {
         Args: { _credits_each?: number; _reason?: string; _referral_id: string }
         Returns: Json

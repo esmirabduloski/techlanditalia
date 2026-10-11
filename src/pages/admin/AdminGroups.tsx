@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import type { TablesInsert } from "@/integrations/supabase/types";
+import { addDays, format, parseISO } from "date-fns";
 import { useAuth } from "@/hooks/useAuth";
 import { GroupCertificatesManager } from "@/components/admin/GroupCertificatesManager";
 import { Button } from "@/components/ui/button";
@@ -366,7 +367,9 @@ export default function AdminGroups() {
         // Auto-generate lesson calendar if start_date and lesson_days are set
         if (formData.start_date && formData.lesson_days.length > 0) {
           const scheduleItems: TablesInsert<"group_lesson_schedule">[] = [];
-          let currentDate = new Date(formData.start_date);
+          // Date in ora locale (come LessonCalendarManager): con toISOString() le
+          // lezioni dopo il passaggio all'ora legale finivano il giorno prima.
+          let currentDate = parseISO(formData.start_date);
           let lessonCount = 0;
           const maxLessons = formData.max_lessons || 32;
 
@@ -377,12 +380,12 @@ export default function AdminGroups() {
               scheduleItems.push({
                 group_id: newGroup.id,
                 lesson_number: lessonCount,
-                lesson_date: currentDate.toISOString().split('T')[0],
+                lesson_date: format(currentDate, 'yyyy-MM-dd'),
                 lesson_title: `${lessonCount}.`,
                 lesson_time: formData.lesson_time || null
               });
             }
-            currentDate.setDate(currentDate.getDate() + 1);
+            currentDate = addDays(currentDate, 1);
           }
 
           if (scheduleItems.length > 0) {

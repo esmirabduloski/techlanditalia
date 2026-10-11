@@ -270,10 +270,12 @@ export default function AdminTeacherCalendar() {
       return nextDate;
     };
 
+    // Ora locale di Roma con TZID, non UTC: con una RRULE settimanale in UTC
+    // gli eventi slittavano di un'ora al cambio tra ora legale e solare.
     const formatICSDate = (date: Date, time: string): string => {
       const [hours, minutes] = time.split(":").map(Number);
-      date.setHours(hours, minutes, 0, 0);
-      return date.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+      const pad = (n: number) => String(n).padStart(2, "0");
+      return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}T${pad(hours)}${pad(minutes)}00`;
     };
 
     const events: string[] = [];
@@ -289,8 +291,8 @@ export default function AdminTeacherCalendar() {
         events.push(`BEGIN:VEVENT
 UID:${uid}
 DTSTAMP:${new Date().toISOString().replace(/[-:]/g, "").split(".")[0]}Z
-DTSTART:${formatICSDate(startDate, slot.startTime)}
-DTEND:${formatICSDate(endDate, slot.endTime)}
+DTSTART;TZID=Europe/Rome:${formatICSDate(startDate, slot.startTime)}
+DTEND;TZID=Europe/Rome:${formatICSDate(endDate, slot.endTime)}
 RRULE:FREQ=WEEKLY
 SUMMARY:Disponibilità ${teacher.full_name}
 DESCRIPTION:Disponibilità oraria di ${teacher.full_name} (${teacher.email})
@@ -304,6 +306,24 @@ PRODID:-//Techland//Disponibilità Insegnanti//IT
 CALSCALE:GREGORIAN
 METHOD:PUBLISH
 X-WR-CALNAME:Disponibilità Insegnanti Techland
+X-WR-TIMEZONE:Europe/Rome
+BEGIN:VTIMEZONE
+TZID:Europe/Rome
+BEGIN:DAYLIGHT
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0200
+TZNAME:CEST
+DTSTART:19700329T020000
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:+0200
+TZOFFSETTO:+0100
+TZNAME:CET
+DTSTART:19701025T030000
+RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU
+END:STANDARD
+END:VTIMEZONE
 ${events.join("\n")}
 END:VCALENDAR`;
 

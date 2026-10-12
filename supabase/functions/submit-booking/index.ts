@@ -4,6 +4,7 @@ import { z } from "https://esm.sh/zod@3.23.8";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { clientIp } from "../_shared/clientip.ts";
 import { notifyAdmins } from "../_shared/adminpush.ts";
+import { captureServerError } from "../_shared/sentry.ts";
 
 declare const EdgeRuntime: { waitUntil?: (promise: Promise<unknown>) => void } | undefined;
 
@@ -160,7 +161,7 @@ serve(async (req: Request): Promise<Response> => {
     });
 
     if (dbError) {
-      console.error("Database error:", dbError);
+      await captureServerError(dbError, { fn: "submit-booking", tags: { step: "insert" } });
       return new Response(JSON.stringify({ error: "Errore nel salvataggio" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
@@ -210,7 +211,7 @@ serve(async (req: Request): Promise<Response> => {
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {
-    console.error("Error in submit-booking:", error);
+    await captureServerError(error, { fn: "submit-booking" });
     return new Response(JSON.stringify({ error: "Errore interno del server" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }

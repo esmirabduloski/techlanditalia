@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeadersFor } from "../_shared/cors.ts";
+import { captureServerError } from "../_shared/sentry.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
@@ -180,7 +181,7 @@ serve(async (req: Request): Promise<Response> => {
       }
     );
   } catch (error: any) {
-    console.error("Error in send-booking-notification function:", error);
+    await captureServerError(error, { fn: "send-booking-notification" });
     return new Response(
       JSON.stringify({ error: "Errore interno" }),
       {

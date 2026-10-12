@@ -15,6 +15,11 @@ import { z } from "https://esm.sh/zod@3.23.8";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { notifyAdmins } from "../_shared/adminpush.ts";
 import { decodeClaims, mfaRequiredResponse } from "../_shared/mfa.ts";
+import { captureServerError, withCronMonitor } from "../_shared/sentry.ts";
+
+const FN = "data-retention";
+// Stesso crontab del job pg_cron data-retention-monthly-scan (0015_cron_tokens_blog_retention.sql)
+const SCAN_MONITOR = { slug: "data-retention-scan", schedule: "0 6 1 * *", marginMinutes: 60, maxRuntimeMinutes: 5 };
 
 const SITE_URL = (Deno.env.get("SITE_URL") || "https://techlanditalia.it").replace(/\/$/, "");
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
@@ -200,48 +205,50 @@ serve(async (req: Request): Promise<Response> => {
     if (admin instanceof Response) return admin;
 
     if (action === "scan") {
-      const trigger = parsed.data.trigger ?? "manual";
-      const summary = await buildSummary(db);
-      const total = summary.reduce((a, r) => a + r.count, 0);
+      return await withCronMonitor(fromCron ? SCAN_MONITOR : null, FN, async () => {
+        const trigger = parsed.data.trigger ?? "manual";
+        const summary = await buildSummary(db);
+        const total = summary.reduce((a, r) => a + r.count, 0);
 
-      const { data: pending } = await db
-        .from("data_retention_runs")
-        .select("id, notified_at")
-        .eq("status", "pending")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (total === 0) {
-        // Niente da fare: chiudiamo un'eventuale run pendente rimasta senza record
-        if (pending) {
-          await db.from("data_retention_runs").update({ status: "rejected", note: "Nessun record scaduto alla scansione successiva" }).eq("id", pending.id);
-        }
-        return json({ ok: true, total: 0, run: null });
-      }
-
-      let id: string;
-      let shouldNotify = true;
-      if (pending) {
-        id = pending.id;
-        await db.from("data_retention_runs").update({ summary, trigger }).eq("id", id);
-        const last = pending.notified_at ? new Date(pending.notified_at).getTime() : 0;
-        shouldNotify = Date.now() - last > RENOTIFY_AFTER_HOURS * 3600 * 1000;
-      } else {
-        const { data: created, error } = await db
+        const { data: pending } = await db
           .from("data_retention_runs")
-          .insert({ summary, trigger })
-          .select("id")
-          .single();
-        if (error || !created) return json({ error: "Impossibile creare la run: " + error?.message }, 500);
-        id = created.id;
-      }
+          .select("id, notified_at")
+          .eq("status", "pending")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-      if (shouldNotify) {
-        await notify(id, summary);
-        await db.from("data_retention_runs").update({ notified_at: new Date().toISOString() }).eq("id", id);
-      }
-      return json({ ok: true, total, run: { id, summary, notified: shouldNotify } });
+        if (total === 0) {
+          // Niente da fare: chiudiamo un'eventuale run pendente rimasta senza record
+          if (pending) {
+            await db.from("data_retention_runs").update({ status: "rejected", note: "Nessun record scaduto alla scansione successiva" }).eq("id", pending.id);
+          }
+          return json({ ok: true, total: 0, run: null });
+        }
+
+        let id: string;
+        let shouldNotify = true;
+        if (pending) {
+          id = pending.id;
+          await db.from("data_retention_runs").update({ summary, trigger }).eq("id", id);
+          const last = pending.notified_at ? new Date(pending.notified_at).getTime() : 0;
+          shouldNotify = Date.now() - last > RENOTIFY_AFTER_HOURS * 3600 * 1000;
+        } else {
+          const { data: created, error } = await db
+            .from("data_retention_runs")
+            .insert({ summary, trigger })
+            .select("id")
+            .single();
+          if (error || !created) return json({ error: "Impossibile creare la run: " + error?.message }, 500);
+          id = created.id;
+        }
+
+        if (shouldNotify) {
+          await notify(id, summary);
+          await db.from("data_retention_runs").update({ notified_at: new Date().toISOString() }).eq("id", id);
+        }
+        return json({ ok: true, total, run: { id, summary, notified: shouldNotify } });
+      });
     }
 
     // approve / reject: admin già verificato sopra
@@ -266,7 +273,7 @@ serve(async (req: Request): Promise<Response> => {
       if (!selected.has(c.id)) continue;
       const { data, error } = await scoped(db, c, "delete");
       if (error) {
-        console.error(`[data-retention] delete ${c.id}`, error.message);
+        await captureServerError(new Error(`delete ${c.id}: ${error.message}`), { fn: FN, extra: { runId }, fingerprint: [FN, "delete", c.id] });
         result.push({ id: c.id, deleted: 0, error: error.message });
       } else {
         result.push({ id: c.id, deleted: Array.isArray(data) ? data.length : 0 });
@@ -285,7 +292,7 @@ serve(async (req: Request): Promise<Response> => {
     console.log(`[data-retention] run ${runId} approvata da ${admin.userId}: ${deletedTotal} record cancellati`);
     return json({ ok: true, result, deletedTotal });
   } catch (error) {
-    console.error("[data-retention]", error);
+    await captureServerError(error, { fn: FN });
     return json({ error: "Errore interno" }, 500);
   }
 });

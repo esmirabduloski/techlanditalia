@@ -4,6 +4,7 @@ import { z } from "https://esm.sh/zod@3.23.8";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { clientIp } from "../_shared/clientip.ts";
 import { notifyAdmins } from "../_shared/adminpush.ts";
+import { captureServerError } from "../_shared/sentry.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -139,7 +140,7 @@ const handler = async (req: Request): Promise<Response> => {
 
       emailSent = true;
     } catch (emailError: any) {
-      console.error("Email sending failed:", emailError);
+      await captureServerError(emailError, { fn: "send-contact-email", tags: { step: "resend" } });
       errorMessage = emailError.message;
     }
 
@@ -164,7 +165,7 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(JSON.stringify({ success: true, message: "Email inviate con successo" }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } });
   } catch (error: any) {
-    console.error("Error in send-contact-email:", error);
+    await captureServerError(error, { fn: "send-contact-email" });
     return new Response(JSON.stringify({ error: "Errore interno del server" }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } });
   }

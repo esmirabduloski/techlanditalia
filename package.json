@@ -15,6 +15,7 @@
     "preview": "vite preview",
     "verify:prerender": "node scripts/verify-prerender.mjs",
     "indexnow": "node scripts/indexnow-submit.mjs",
+    "sentry:alerts": "node scripts/sentry-alerts.mjs",
     "test:e2e": "playwright test"
   },
   "dependencies": {

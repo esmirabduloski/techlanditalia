@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { rateLimit } from "../_shared/ratelimit.ts";
+import { captureServerError } from "../_shared/sentry.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -89,7 +90,7 @@ const handler = async (req: Request): Promise<Response> => {
       .eq("confirmed", true);
 
     if (fetchError) {
-      console.error("Fetch subscribers error:", fetchError);
+      await captureServerError(fetchError, { fn: "newsletter-send", tags: { step: "subscribers" } });
       return new Response(
         JSON.stringify({ error: "Errore nel recupero degli iscritti" }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -193,7 +194,7 @@ const handler = async (req: Request): Promise<Response> => {
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   } catch (error: any) {
-    console.error("Newsletter send error:", error);
+    await captureServerError(error, { fn: "newsletter-send" });
     return new Response(
       JSON.stringify({ error: "Errore interno del server" }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }

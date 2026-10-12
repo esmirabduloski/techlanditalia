@@ -1,7 +1,11 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { submitToIndexNow } from "../_shared/indexnow.ts";
+import { captureServerError, withCronMonitor } from "../_shared/sentry.ts";
 
+const FN = 'blog-auto-publish';
+// Stesso crontab del job pg_cron blog-auto-publish-hourly (0015_cron_tokens_blog_retention.sql)
+const MONITOR = { slug: FN, schedule: '0 * * * *', marginMinutes: 15, maxRuntimeMinutes: 5 };
 
 Deno.serve(async (req) => {
   const corsHeaders = corsHeadersFor(req);
@@ -20,6 +24,7 @@ Deno.serve(async (req) => {
     const { data: ok } = await supabase.rpc('verify_cron_token', { _name: 'blog-auto-publish', _token: cronToken });
     authorized = ok === true;
   }
+  const isCron = authorized;
   if (!authorized) {
     const auth = req.headers.get('Authorization');
     if (auth?.startsWith('Bearer ')) {
@@ -36,80 +41,98 @@ Deno.serve(async (req) => {
     });
   }
 
-  const now = new Date().toISOString();
-  const published: string[] = [];
-  const publishedSlugs: string[] = [];
+  return withCronMonitor(isCron ? MONITOR : null, FN, async () => {
+    const now = new Date().toISOString();
+    const published: string[] = [];
+    const failed: string[] = [];
+    const publishedSlugs: string[] = [];
 
-  // 1) Publish posts with scheduled_publish_at <= now
-  const { data: scheduled } = await supabase
-    .from('blog_posts')
-    .select('id, title, slug')
-    .eq('published', false)
-    .not('scheduled_publish_at', 'is', null)
-    .lte('scheduled_publish_at', now);
-
-  for (const post of scheduled ?? []) {
-    const { error } = await supabase
+    // 1) Publish posts with scheduled_publish_at <= now
+    const { data: scheduled, error: scheduledError } = await supabase
       .from('blog_posts')
-      .update({ published: true })
-      .eq('id', post.id);
-    if (!error) {
-      published.push(`scheduled: ${post.title}`);
-      publishedSlugs.push(post.slug);
-    }
-  }
+      .select('id, title, slug')
+      .eq('published', false)
+      .not('scheduled_publish_at', 'is', null)
+      .lte('scheduled_publish_at', now);
+    if (scheduledError) failed.push(`lettura programmati: ${scheduledError.message}`);
 
-  // 2) Auto-publish queue: 1 per day at configured hour
-  const { data: settings } = await supabase
-    .from('blog_settings')
-    .select('*')
-    .limit(1)
-    .maybeSingle();
-
-  if (settings?.auto_publish_enabled) {
-    const nowDate = new Date();
-    const currentHour = nowDate.getUTCHours();
-    const targetHour = settings.publish_hour ?? 12;
-    // Allow ±1h window to avoid double-publish; also check last_auto_publish_at date
-    const lastPub = settings.last_auto_publish_at ? new Date(settings.last_auto_publish_at) : null;
-    const today = nowDate.toISOString().slice(0, 10);
-    const lastPubDay = lastPub ? lastPub.toISOString().slice(0, 10) : null;
-
-    if (currentHour >= targetHour && lastPubDay !== today) {
-      const { data: next } = await supabase
+    for (const post of scheduled ?? []) {
+      const { error } = await supabase
         .from('blog_posts')
-        .select('id, title, slug')
-        .eq('published', false)
-        .eq('auto_publish_queue', true)
-        .order('queue_order', { ascending: true, nullsFirst: false })
-        .order('created_at', { ascending: true })
-        .limit(1)
-        .maybeSingle();
+        .update({ published: true })
+        .eq('id', post.id);
+      if (!error) {
+        published.push(`scheduled: ${post.title}`);
+        publishedSlugs.push(post.slug);
+      } else {
+        failed.push(`scheduled: ${post.title}: ${error.message}`);
+      }
+    }
 
-      if (next) {
-        const { error } = await supabase
+    // 2) Auto-publish queue: 1 per day at configured hour
+    const { data: settings } = await supabase
+      .from('blog_settings')
+      .select('*')
+      .limit(1)
+      .maybeSingle();
+
+    if (settings?.auto_publish_enabled) {
+      const nowDate = new Date();
+      const currentHour = nowDate.getUTCHours();
+      const targetHour = settings.publish_hour ?? 12;
+      // Allow ±1h window to avoid double-publish; also check last_auto_publish_at date
+      const lastPub = settings.last_auto_publish_at ? new Date(settings.last_auto_publish_at) : null;
+      const today = nowDate.toISOString().slice(0, 10);
+      const lastPubDay = lastPub ? lastPub.toISOString().slice(0, 10) : null;
+
+      if (currentHour >= targetHour && lastPubDay !== today) {
+        const { data: next } = await supabase
           .from('blog_posts')
-          .update({ published: true })
-          .eq('id', next.id);
-        if (!error) {
-          published.push(`queue: ${next.title}`);
-          publishedSlugs.push(next.slug);
-          await supabase
-            .from('blog_settings')
-            .update({ last_auto_publish_at: now })
-            .eq('id', settings.id);
+          .select('id, title, slug')
+          .eq('published', false)
+          .eq('auto_publish_queue', true)
+          .order('queue_order', { ascending: true, nullsFirst: false })
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+
+        if (next) {
+          const { error } = await supabase
+            .from('blog_posts')
+            .update({ published: true })
+            .eq('id', next.id);
+          if (error) failed.push(`queue: ${next.title}: ${error.message}`);
+          if (!error) {
+            published.push(`queue: ${next.title}`);
+            publishedSlugs.push(next.slug);
+            await supabase
+              .from('blog_settings')
+              .update({ last_auto_publish_at: now })
+              .eq('id', settings.id);
+          }
         }
       }
     }
-  }
 
-  // Notifica IndexNow (Bing & co.) dei nuovi articoli + indice blog. Best effort,
-  // non blocca la risposta.
-  if (publishedSlugs.length) {
-    await submitToIndexNow(['/blog', ...publishedSlugs.map((slug) => `/blog/${slug}`)]);
-  }
+    // Notifica IndexNow (Bing & co.) dei nuovi articoli + indice blog. Best effort,
+    // non blocca la risposta.
+    if (publishedSlugs.length) {
+      await submitToIndexNow(['/blog', ...publishedSlugs.map((slug) => `/blog/${slug}`)]);
+    }
 
-  return new Response(JSON.stringify({ published, count: published.length }), {
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    // Un articolo programmato che non esce è proprio il guasto silenzioso da evitare:
+    // la risposta 500 marca il check-in Sentry come fallito.
+    if (failed.length) {
+      await captureServerError(new Error(`${failed.length} pubblicazioni del blog non riuscite`), {
+        fn: FN,
+        extra: { failed, published },
+        fingerprint: [FN, 'publish-failed'],
+      });
+    }
+
+    return new Response(JSON.stringify({ published, failed, count: published.length }), {
+      status: failed.length ? 500 : 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   });
 });

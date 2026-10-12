@@ -1,8 +1,12 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeadersFor } from "../_shared/cors.ts";
+import { captureServerError, withCronMonitor } from "../_shared/sentry.ts";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/firebase_messaging";
+const FN = "send-lesson-reminders";
+// Stesso crontab del job pg_cron (drizzle/migrations/0026_cron_health_check.sql)
+const MONITOR = { slug: FN, schedule: "*/30 * * * *", marginMinutes: 10, maxRuntimeMinutes: 5 };
 
 /** Converte data (YYYY-MM-DD) + ora locale Roma in un istante UTC. */
 function romeToUtc(dateStr: string, timeStr: string | null): Date {
@@ -65,6 +69,7 @@ serve(async (req: Request): Promise<Response> => {
     const { data: ok } = await supabase.rpc("verify_cron_token", { _name: "send-lesson-reminders", _token: cronToken });
     authorized = ok === true;
   }
+  const isCron = authorized;
   if (!authorized) {
     const auth = req.headers.get("Authorization");
     if (auth?.startsWith("Bearer ")) {
@@ -77,152 +82,167 @@ serve(async (req: Request): Promise<Response> => {
   }
   if (!authorized) return json({ error: "Non autorizzato" }, 401);
 
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-  const CONNECTION_KEY = Deno.env.get("FIREBASE_MESSAGING_API_KEY");
-  if (!LOVABLE_API_KEY || !CONNECTION_KEY) {
-    return json({ error: "Firebase Cloud Messaging non collegato al progetto" }, 503);
-  }
+  return withCronMonitor(isCron ? MONITOR : null, FN, async () => {
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const CONNECTION_KEY = Deno.env.get("FIREBASE_MESSAGING_API_KEY");
+    if (!LOVABLE_API_KEY || !CONNECTION_KEY) {
+      return json({ error: "Firebase Cloud Messaging non collegato al progetto" }, 503);
+    }
 
-  const sendToUser = async (
-    userId: string,
-    payload: { title: string; body: string; path: string },
-  ): Promise<{ ok: number; ko: number; errors: string[] }> => {
-    const { data: devices } = await supabase
-      .from("push_devices")
-      .select("id, token")
-      .eq("user_id", userId);
+    const sendToUser = async (
+      userId: string,
+      payload: { title: string; body: string; path: string },
+    ): Promise<{ ok: number; ko: number; errors: string[] }> => {
+      const { data: devices } = await supabase
+        .from("push_devices")
+        .select("id, token")
+        .eq("user_id", userId);
 
-    let ok = 0;
-    let ko = 0;
-    const errors: string[] = [];
+      let ok = 0;
+      let ko = 0;
+      const errors: string[] = [];
 
-    for (const device of devices ?? []) {
-      const res = await fetch(`${GATEWAY_URL}/v1/projects/_/messages:send`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "X-Connection-Api-Key": CONNECTION_KEY,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: {
-            token: device.token,
-            notification: { title: payload.title, body: payload.body },
-            data: { path: payload.path },
+      for (const device of devices ?? []) {
+        const res = await fetch(`${GATEWAY_URL}/v1/projects/_/messages:send`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "X-Connection-Api-Key": CONNECTION_KEY,
+            "Content-Type": "application/json",
           },
-        }),
-      });
+          body: JSON.stringify({
+            message: {
+              token: device.token,
+              notification: { title: payload.title, body: payload.body },
+              data: { path: payload.path },
+            },
+          }),
+        });
 
-      if (res.ok) {
-        ok++;
-      } else {
-        ko++;
-        const text = await res.text();
-        console.error(`[send-lesson-reminders] FCM ${res.status}: ${text}`);
-        if (res.status === 404 || res.status === 400) {
-          await supabase.from("push_devices").delete().eq("id", device.id as string);
+        if (res.ok) {
+          ok++;
         } else {
-          errors.push(`${res.status}: ${text.slice(0, 200)}`);
+          ko++;
+          const text = await res.text();
+          console.error(`[send-lesson-reminders] FCM ${res.status}: ${text}`);
+          if (res.status === 404 || res.status === 400) {
+            await supabase.from("push_devices").delete().eq("id", device.id as string);
+          } else {
+            errors.push(`${res.status}: ${text.slice(0, 200)}`);
+          }
         }
       }
-    }
-    return { ok, ko, errors };
-  };
+      return { ok, ko, errors };
+    };
 
-  try {
-    const now = new Date();
-    const today = now.toISOString().slice(0, 10);
-    const inThreeDays = new Date(now.getTime() + 3 * 86400_000).toISOString().slice(0, 10);
+    try {
+      const now = new Date();
+      const today = now.toISOString().slice(0, 10);
+      const inThreeDays = new Date(now.getTime() + 3 * 86400_000).toISOString().slice(0, 10);
 
-    const { data: schedules, error: schedErr } = await supabase
-      .from("group_lesson_schedule")
-      .select("id, group_id, lesson_number, lesson_date, lesson_time, lesson_title")
-      .gte("lesson_date", today)
-      .lte("lesson_date", inThreeDays);
+      const { data: schedules, error: schedErr } = await supabase
+        .from("group_lesson_schedule")
+        .select("id, group_id, lesson_number, lesson_date, lesson_time, lesson_title")
+        .gte("lesson_date", today)
+        .lte("lesson_date", inThreeDays);
 
-    if (schedErr) return json({ error: schedErr.message }, 500);
+      if (schedErr) {
+        await captureServerError(schedErr, { fn: FN });
+        return json({ error: schedErr.message }, 500);
+      }
 
-    let sent = 0;
-    let skipped = 0;
-    let lessons = 0;
-    const errors: string[] = [];
+      let sent = 0;
+      let skipped = 0;
+      let lessons = 0;
+      const errors: string[] = [];
 
-    for (const reminder of REMINDERS) {
-      const windowStart = now.getTime() + reminder.fromMs;
-      const windowEnd = now.getTime() + reminder.toMs;
+      for (const reminder of REMINDERS) {
+        const windowStart = now.getTime() + reminder.fromMs;
+        const windowEnd = now.getTime() + reminder.toMs;
 
-      const due = (schedules ?? []).filter((s) => {
-        const startsAt = romeToUtc(s.lesson_date as string, s.lesson_time as string | null).getTime();
-        return startsAt >= windowStart && startsAt < windowEnd;
-      });
-      lessons += due.length;
+        const due = (schedules ?? []).filter((s) => {
+          const startsAt = romeToUtc(s.lesson_date as string, s.lesson_time as string | null).getTime();
+          return startsAt >= windowStart && startsAt < windowEnd;
+        });
+        lessons += due.length;
 
-      for (const lesson of due) {
-        const { data: group } = await supabase
-          .from("student_groups")
-          .select("id, title, status, teacher_id, course:courses(title)")
-          .eq("id", lesson.group_id as string)
-          .maybeSingle();
+        for (const lesson of due) {
+          const { data: group } = await supabase
+            .from("student_groups")
+            .select("id, title, status, teacher_id, course:courses(title)")
+            .eq("id", lesson.group_id as string)
+            .maybeSingle();
 
-        if (!group || group.status !== "active") { skipped++; continue; }
+          if (!group || group.status !== "active") { skipped++; continue; }
 
-        const { data: members } = await supabase
-          .from("group_students")
-          .select("student_id")
-          .eq("group_id", lesson.group_id as string);
+          const { data: members } = await supabase
+            .from("group_students")
+            .select("student_id")
+            .eq("group_id", lesson.group_id as string);
 
-        const studentIds = (members ?? []).map((m) => m.student_id as string);
+          const studentIds = (members ?? []).map((m) => m.student_id as string);
 
-        let parentIds: string[] = [];
-        if (studentIds.length > 0) {
-          const { data: students } = await supabase
-            .from("profiles")
-            .select("id, parent_id")
-            .in("id", studentIds);
-          parentIds = Array.from(
-            new Set((students ?? []).map((s) => s.parent_id as string | null).filter(Boolean)),
-          ) as string[];
-        }
+          let parentIds: string[] = [];
+          if (studentIds.length > 0) {
+            const { data: students } = await supabase
+              .from("profiles")
+              .select("id, parent_id")
+              .in("id", studentIds);
+            parentIds = Array.from(
+              new Set((students ?? []).map((s) => s.parent_id as string | null).filter(Boolean)),
+            ) as string[];
+          }
 
-        const courseTitle = (group as { course?: { title?: string } | null }).course?.title
-          ?? group.title ?? "coding";
-        const timeLabel = (lesson.lesson_time as string | null)?.slice(0, 5);
-        const title = "Promemoria lezione TECHLAND";
-        const body = reminder.label(courseTitle, timeLabel);
+          const courseTitle = (group as { course?: { title?: string } | null }).course?.title
+            ?? group.title ?? "coding";
+          const timeLabel = (lesson.lesson_time as string | null)?.slice(0, 5);
+          const title = "Promemoria lezione TECHLAND";
+          const body = reminder.label(courseTitle, timeLabel);
 
-        const recipients: { userId: string; path: string }[] = [
-          ...parentIds.map((id) => ({ userId: id, path: "/area-riservata" })),
-        ];
-        const teacherId = group.teacher_id as string | null;
-        if (teacherId) recipients.push({ userId: teacherId, path: "/insegnante" });
+          const recipients: { userId: string; path: string }[] = [
+            ...parentIds.map((id) => ({ userId: id, path: "/area-riservata" })),
+          ];
+          const teacherId = group.teacher_id as string | null;
+          if (teacherId) recipients.push({ userId: teacherId, path: "/insegnante" });
 
-        for (const recipient of recipients) {
-          const { error: logErr } = await supabase.from("push_notification_log").insert({
-            user_id: recipient.userId,
-            schedule_id: lesson.id as string,
-            notification_type: reminder.type,
-            title,
-            body,
-          });
-          if (logErr) { skipped++; continue; } // già inviata
+          for (const recipient of recipients) {
+            const { error: logErr } = await supabase.from("push_notification_log").insert({
+              user_id: recipient.userId,
+              schedule_id: lesson.id as string,
+              notification_type: reminder.type,
+              title,
+              body,
+            });
+            if (logErr) { skipped++; continue; } // già inviata
 
-          const result = await sendToUser(recipient.userId, { title, body, path: recipient.path });
-          sent += result.ok;
-          errors.push(...result.errors);
+            const result = await sendToUser(recipient.userId, { title, body, path: recipient.path });
+            sent += result.ok;
+            errors.push(...result.errors);
 
-          await supabase
-            .from("push_notification_log")
-            .update({ success_count: result.ok, failure_count: result.ko })
-            .eq("user_id", recipient.userId)
-            .eq("schedule_id", lesson.id as string)
-            .eq("notification_type", reminder.type);
+            await supabase
+              .from("push_notification_log")
+              .update({ success_count: result.ok, failure_count: result.ko })
+              .eq("user_id", recipient.userId)
+              .eq("schedule_id", lesson.id as string)
+              .eq("notification_type", reminder.type);
+          }
         }
       }
-    }
 
-    return json({ success: true, lessons, sent, skipped, errors: errors.slice(0, 10) });
-  } catch (error) {
-    console.error("[send-lesson-reminders]", error);
-    return json({ error: error instanceof Error ? error.message : "Errore interno" }, 500);
-  }
+      // Push fallite per motivi diversi da token scaduti (già rimossi sopra)
+      if (errors.length > 0) {
+        await captureServerError(new Error(`${errors.length} push di promemoria non inviate`), {
+          fn: FN,
+          level: sent > 0 ? "warning" : "error",
+          extra: { lessons, sent, skipped, errors: errors.slice(0, 10) },
+          fingerprint: [FN, "push-failures"],
+        });
+      }
+
+      return json({ success: true, lessons, sent, skipped, errors: errors.slice(0, 10) });
+    } catch (error) {
+      await captureServerError(error, { fn: FN });
+      return json({ error: error instanceof Error ? error.message : "Errore interno" }, 500);
+    }
+  });
 });

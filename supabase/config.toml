@@ -62,3 +62,8 @@ verify_jwt = false
 # Cancellazione account self-service: richiede l'utente autenticato.
 [functions.delete-my-account]
 verify_jwt = true
+
+# Controllo orario dei job pianificati: chiamato dal cron con x-cron-token,
+# oppure da un admin (JWT + 2FA verificati dentro la funzione).
+[functions.cron-health-check]
+verify_jwt = false

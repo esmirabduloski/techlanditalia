@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeadersFor } from "../_shared/cors.ts";
+import { captureServerError } from "../_shared/sentry.ts";
 
 
 // Only allow redirects to our own domains
@@ -94,7 +95,7 @@ serve(async (req) => {
     const session = await sessionRes.json();
 
     if (session.error) {
-      console.error('Stripe error:', session.error);
+      await captureServerError(new Error(`Stripe: ${session.error?.message ?? 'errore'}`), { fn: 'stripe-create-checkout', extra: { type: session.error?.type, code: session.error?.code } });
       return new Response(JSON.stringify({ error: 'Errore creazione sessione' }), {
         status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -104,7 +105,7 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('stripe-create-checkout error:', error);
+    await captureServerError(error, { fn: 'stripe-create-checkout' });
     return new Response(JSON.stringify({ error: 'Errore interno' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

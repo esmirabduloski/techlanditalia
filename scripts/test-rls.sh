@@ -78,3 +78,11 @@ if ! out=$(run_sql postgres supabase/tests/rls/02_checks.sql 2>&1); then
 fi
 echo "$out" | sed -n 's/.*NOTICE: *//p'
 echo "✓ Test dei permessi superati"
+
+echo "▶ Segnali studenti a rischio"
+if ! out=$(run_sql supabase_admin supabase/tests/rls/03_student_risk.sql 2>&1); then
+  echo "$out" | sed -nE 's/.*(NOTICE|ERROR): *//p'
+  echo "✗ Test dei segnali FALLITI"
+  exit 1
+fi
+echo "$out" | sed -n 's/.*NOTICE: *//p'

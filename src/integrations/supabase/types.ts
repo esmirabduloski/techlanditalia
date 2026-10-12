@@ -943,6 +943,75 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_tasks: {
+        Row: {
+          assigned_to: string | null
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          details: string | null
+          due_at: string
+          id: string
+          kind: string
+          lead_id: string
+          outcome: string | null
+          signals: Json
+          status: string
+          student_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          details?: string | null
+          due_at?: string
+          id?: string
+          kind: string
+          lead_id: string
+          outcome?: string | null
+          signals?: Json
+          status?: string
+          student_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          details?: string | null
+          due_at?: string
+          id?: string
+          kind?: string
+          lead_id?: string
+          outcome?: string | null
+          signals?: Json
+          status?: string
+          student_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_tasks_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_tasks_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       data_deletion_requests: {
         Row: {
           admin_notes: string | null
@@ -3156,6 +3225,15 @@ export type Database = {
       reward_referral: {
         Args: { _credits_each?: number; _reason?: string; _referral_id: string }
         Returns: Json
+      }
+      student_risk_signals: {
+        Args: { _rules?: Json }
+        Returns: {
+          parent_id: string
+          signals: Json
+          student_id: string
+          student_name: string
+        }[]
       }
       teacher_teaches_student_in_group: {
         Args: { _group_id: string; _teacher_id: string }

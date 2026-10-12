@@ -22,6 +22,7 @@ import { Link } from "react-router-dom";
 import { CRMCourseSelect } from "./CRMCourseSelect";
 import { CRMPaymentsSection } from "./payments/CRMPaymentsSection";
 import { CRMLinkedAccount } from "./CRMLinkedAccount";
+import { CRMLeadTasks } from "./tasks/CRMLeadTasks";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 
@@ -51,7 +52,7 @@ const interactionLabels: Record<InteractionType, string> = {
 
 export function CRMLeadDetailDrawer({ lead, open, onClose, onUpdate, onDelete }: Props) {
   const { toast } = useToast();
-  const { interactions, addInteraction } = useCRMInteractions(lead?.id ?? null);
+  const { interactions, addInteraction, reload: reloadInteractions } = useCRMInteractions(lead?.id ?? null);
   const [savingQuote, setSavingQuote] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [referralStatus, setReferralStatus] = useState<string | null>(null);
@@ -180,6 +181,9 @@ export function CRMLeadDetailDrawer({ lead, open, onClose, onUpdate, onDelete }:
             <Trash2 className="w-4 h-4" />
           </Button>
         </div>
+
+        {/* Attività aperte, es. "chiama la famiglia" per uno studente a rischio */}
+        <CRMLeadTasks leadId={lead.id} onChanged={reloadInteractions} />
 
         {/* Dati anagrafici modificabili */}
         <div className="space-y-3 mb-6 p-3 border rounded-lg">

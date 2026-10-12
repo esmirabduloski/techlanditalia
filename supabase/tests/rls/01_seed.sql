@@ -196,6 +196,9 @@ INSERT INTO public.crm_leads (id, email, full_name, linked_profile_id) VALUES
 INSERT INTO public.crm_payments (lead_id, amount_cents) SELECT id, 1000 FROM public.crm_leads WHERE email LIKE '%@test.local';
 INSERT INTO public.crm_interactions (lead_id, type)
 SELECT id, (SELECT enum_range(NULL::public.crm_interaction_type))[1] FROM public.crm_leads WHERE email LIKE '%@test.local';
+INSERT INTO public.crm_tasks (lead_id, student_id, kind, title) VALUES
+  ('00000000-0000-0000-0000-0000000ce001', '00000000-0000-0000-0000-000000000101', 'student_at_risk', 'Chiama la famiglia di S1'),
+  ('00000000-0000-0000-0000-0000000ce002', '00000000-0000-0000-0000-000000000103', 'student_at_risk', 'Chiama la famiglia di S3');
 
 -- Tabelle solo-admin con dati personali di terzi (moduli pubblici, log, chat)
 INSERT INTO public.admin_access_logs (admin_id, action) VALUES ('00000000-0000-0000-0000-000000000901', 'test');

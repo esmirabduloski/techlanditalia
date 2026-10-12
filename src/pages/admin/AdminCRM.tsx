@@ -18,8 +18,10 @@ import { CRMTrash } from "@/components/admin/crm/CRMTrash";
 import { CRMCourseSelect } from "@/components/admin/crm/CRMCourseSelect";
 import { CRMPaymentsSchedule } from "@/components/admin/crm/payments/CRMPaymentsSchedule";
 import { useAllScheduledPayments } from "@/hooks/useCRMPayments";
+import { useCRMTasks } from "@/hooks/useCRMTasks";
+import { CRMTasksList } from "@/components/admin/crm/tasks/CRMTasksList";
 import { todayIso } from "@/lib/payments";
-import { Loader2, Plus, LogOut, KanbanSquare, List, BarChart3, Database, CalendarClock } from "lucide-react";
+import { Loader2, Plus, LogOut, KanbanSquare, List, BarChart3, Database, CalendarClock, PhoneCall } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function AdminCRM() {
@@ -36,6 +38,7 @@ export default function AdminCRM() {
     permanentlyDeleteLead,
     emptyTrash,
     createLead,
+    reload: reloadLeads,
   } = useCRMLeads();
 
   const [selectedLead, setSelectedLead] = useState<CrmLead | null>(null);
@@ -55,11 +58,13 @@ export default function AdminCRM() {
   // ?lead=<id> (es. dalla notifica push di un pagamento) apre direttamente la scheda
   const [searchParams, setSearchParams] = useSearchParams();
   const leadParam = searchParams.get("lead");
-  // ?tab=scadenziario (dalla notifica dei solleciti) apre lo Scadenziario
+  // ?tab=scadenziario (dalla notifica dei solleciti) apre lo Scadenziario,
+  // ?tab=da-chiamare (dalla notifica degli studenti a rischio) le attività
   const [tab, setTab] = useState(searchParams.get("tab") ?? "kanban");
   const schedule = useAllScheduledPayments();
   const today = todayIso();
   const overdueCount = schedule.payments.filter(p => p.due_date && p.due_date < today).length;
+  const tasks = useCRMTasks();
 
   const openLeadById = (leadId: string) => {
     const lead = leads.find(l => l.id === leadId);
@@ -143,6 +148,17 @@ export default function AdminCRM() {
                   </span>
                 )}
               </TabsTrigger>
+              <TabsTrigger value="da-chiamare">
+                <PhoneCall className="w-4 h-4 mr-1" /> Da chiamare
+                {tasks.tasks.length > 0 && (
+                  <span
+                    className="ml-1.5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 min-w-[1.25rem] leading-5"
+                    aria-label={`${tasks.tasks.length} famiglie da chiamare`}
+                  >
+                    {tasks.tasks.length}
+                  </span>
+                )}
+              </TabsTrigger>
               <TabsTrigger value="analytics"><BarChart3 className="w-4 h-4 mr-1" /> Analytics</TabsTrigger>
               <TabsTrigger value="notion"><Database className="w-4 h-4 mr-1" /> Notion</TabsTrigger>
             </TabsList>
@@ -162,6 +178,9 @@ export default function AdminCRM() {
             </TabsContent>
             <TabsContent value="scadenziario">
               <CRMPaymentsSchedule schedule={schedule} onOpenLead={openLeadById} />
+            </TabsContent>
+            <TabsContent value="da-chiamare">
+              <CRMTasksList tasks={tasks} onOpenLead={openLeadById} onChecked={reloadLeads} />
             </TabsContent>
             <TabsContent value="analytics">
               <CRMAnalytics leads={leads} />
@@ -189,6 +208,8 @@ export default function AdminCRM() {
           setDrawerOpen(false);
           // I pagamenti modificati nella scheda si riflettono nello scadenziario
           schedule.reload();
+          // ...e le attività chiuse dalla scheda spariscono da "Da chiamare"
+          tasks.reload();
         }}
         onUpdate={updateLead}
         onDelete={deleteLead}

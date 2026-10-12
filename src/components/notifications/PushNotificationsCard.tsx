@@ -1,18 +1,22 @@
 import { useEffect, useState } from 'react';
-import { Bell, BellOff, Smartphone } from 'lucide-react';
+import { Bell, BellOff, Share, SquarePlus, Smartphone } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
-import { countMyPushDevices, disablePush, enablePush, isPushConfigured } from '@/lib/push';
+import { countMyPushDevices, disablePush, enablePush, isIos, isPushConfigured, isStandalone } from '@/lib/push';
 
 export function PushNotificationsCard() {
   const [devices, setDevices] = useState(0);
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  // Su iPhone/iPad le push web arrivano solo al sito installato sulla Home (limite Apple):
+  // calcolato dopo il mount perché navigator non esiste durante il prerender.
+  const [needsHomeScreen, setNeedsHomeScreen] = useState(false);
 
   useEffect(() => {
     countMyPushDevices().then(setDevices).catch(() => setDevices(0));
+    setNeedsHomeScreen(isIos() && !isStandalone());
   }, []);
 
   const handleEnable = async () => {
@@ -72,6 +76,24 @@ export function PushNotificationsCard() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
+        {needsHomeScreen && (
+          <Alert>
+            <Smartphone className="h-4 w-4" />
+            <AlertDescription className="space-y-2">
+              <p className="font-medium">Su iPhone e iPad le notifiche arrivano solo se aggiungi TECHLAND alla schermata Home.</p>
+              <ol className="list-decimal pl-5 space-y-1 text-sm">
+                <li>
+                  In Safari tocca il pulsante Condividi <Share className="inline w-4 h-4 align-text-bottom" aria-label="Condividi" />
+                </li>
+                <li>
+                  Scegli «Aggiungi alla schermata Home» <SquarePlus className="inline w-4 h-4 align-text-bottom" aria-hidden="true" />
+                </li>
+                <li>Apri TECHLAND dall'icona sulla Home, entra nella tua area e tocca «Attiva notifiche».</li>
+              </ol>
+            </AlertDescription>
+          </Alert>
+        )}
+
         {notice && (
           <Alert variant="destructive">
             <AlertDescription>{notice}</AlertDescription>
@@ -85,16 +107,18 @@ export function PushNotificationsCard() {
               Attive su {devices} dispositiv{devices === 1 ? 'o' : 'i'}
             </p>
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={handleEnable} disabled={loading}>
-                Attiva su questo dispositivo
-              </Button>
+              {!needsHomeScreen && (
+                <Button size="sm" variant="outline" onClick={handleEnable} disabled={loading}>
+                  Attiva su questo dispositivo
+                </Button>
+              )}
               <Button size="sm" variant="ghost" onClick={handleDisable} disabled={loading}>
                 <BellOff className="w-4 h-4 mr-2" />
                 Disattiva
               </Button>
             </div>
           </div>
-        ) : (
+        ) : needsHomeScreen ? null : (
           <Button onClick={handleEnable} disabled={loading || !configured} className="w-full sm:w-auto">
             <Bell className="w-4 h-4 mr-2" />
             {loading ? 'Attivazione…' : 'Attiva notifiche'}

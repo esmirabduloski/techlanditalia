@@ -302,7 +302,7 @@ export default function Blog() {
       "name": "TECHLAND",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://techlanditalia.it/favicon.ico"
+        "url": "https://techlanditalia.it/logo.png"
       }
     },
     "inLanguage": "it-IT"

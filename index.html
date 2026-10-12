@@ -23,6 +23,15 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
+    <!-- PWA: serve per installare il sito sulla schermata Home. Su iPhone le notifiche
+         push web arrivano SOLO al sito installato (limite di Apple). -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#1c724a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="TECHLAND" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
     <!-- Meta per-pagina (title, description, robots, canonical, og:*, twitter:*) emessi
          nell'HTML statico da vite-react-ssg via SEOHead: nessun fallback statico qui per
          evitare tag duplicati/conflittuali (audit SEO-002). Le route non prerenderate

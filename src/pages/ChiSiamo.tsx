@@ -76,7 +76,7 @@ const organizationSchema = {
   description:
     "Scuola di programmazione e coding per bambini e ragazzi dai 6 ai 18 anni. Corsi online di Roblox, Minecraft, Python, Scratch e sviluppo web.",
   url: "https://techlanditalia.it",
-  logo: "https://techlanditalia.it/favicon.ico",
+  logo: "https://techlanditalia.it/logo.png",
   foundingDate: "2023",
   numberOfEmployees: "10+",
   areaServed: "IT",

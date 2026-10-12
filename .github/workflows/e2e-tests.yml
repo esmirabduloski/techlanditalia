@@ -1,0 +1,32 @@
+# Test end-to-end dei flussi che portano incassi: prenotazione della prova,
+# login alunno, esecuzione del codice, consegna del compito, pagamento.
+# Girano contro un Supabase finto (e2e/support/fakeSupabase.ts): nessun dato
+# vero viene letto o scritto e Stripe non viene contattato.
+name: Test end-to-end
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --legacy-peer-deps
+      - run: npx playwright install --with-deps chromium
+      - name: Flussi incassi (Playwright)
+        run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

@@ -76,7 +76,8 @@ export default defineConfig(({ mode, isSsrBuild }) => ({
     host: "::",
     port: 8080,
   },
-  plugins: [react(), mcpPlugin(), deferEntryModule(), mode === "development" && componentTagger()].filter(Boolean),
+  // mcpPlugin rigenera supabase/functions/mcp/index.ts: non nei test e2e (playwright.config.ts)
+  plugins: [react(), mode !== "e2e" && mcpPlugin(), deferEntryModule(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

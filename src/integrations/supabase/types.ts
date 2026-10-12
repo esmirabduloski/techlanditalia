@@ -3036,6 +3036,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      cron_expected_jobs: {
+        Args: never
+        Returns: {
+          jobname: string
+          max_age: string
+        }[]
+      }
+      cron_health_report: { Args: { _since?: string }; Returns: Json }
       ensure_mfa_policies: { Args: never; Returns: undefined }
       generate_slug: { Args: { title: string }; Returns: string }
       get_children_ids: { Args: { _parent_id: string }; Returns: string[] }

@@ -190,6 +190,13 @@
       "when": 1791840223000,
       "tag": "0026_cron_health_check",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1791845353010,
+      "tag": "0027_cron_health_check",
+      "breakpoints": true
     }
   ]
 }

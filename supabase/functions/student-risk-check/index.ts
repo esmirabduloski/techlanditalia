@@ -22,6 +22,7 @@ import { notifyAdmins } from "../_shared/adminpush.ts";
 import { decodeClaims, mfaRequiredResponse } from "../_shared/mfa.ts";
 import { captureServerError, withCronMonitor } from "../_shared/sentry.ts";
 import { parseRules, planTask, type RiskSignal, toStored } from "../_shared/studentrisk.ts";
+import { pausedStudentIds } from "../_shared/subscriptionpause.ts";
 
 const FN = "student-risk-check";
 // Stesso crontab del job pg_cron student-risk-check-daily
@@ -111,7 +112,9 @@ async function run(supabase: SupabaseClient, isCron: boolean): Promise<Summary &
 
   const { data, error } = await supabase.rpc("student_risk_signals", { _rules: rules });
   if (error) throw new Error(`student_risk_signals: ${error.message}`);
-  const rows = (data ?? []) as SignalRow[];
+  // Assenze e saldo basso sono attesi durante la pausa dell'abbonamento: niente avviso
+  const paused = await pausedStudentIds(supabase);
+  const rows = ((data ?? []) as SignalRow[]).filter((r) => !paused.has(r.student_id));
   summary.students = rows.length;
   if (rows.length === 0) return summary;
 

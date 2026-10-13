@@ -77,3 +77,8 @@ verify_jwt = false
 # trigger su profiles via pg_net, con x-cron-token verificato dentro la funzione.
 [functions.lesson-balance-alert]
 verify_jwt = false
+
+# Pause dell'abbonamento: riprese automatiche e avvisi di fine pausa. Chiamata
+# dal cron con x-cron-token, oppure da un admin (JWT + 2FA verificati dentro la funzione).
+[functions.subscription-pause-check]
+verify_jwt = false

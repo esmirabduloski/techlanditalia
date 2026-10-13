@@ -95,3 +95,11 @@ if ! out=$(run_sql supabase_admin supabase/tests/rls/04_lesson_balance_alert.sql
   exit 1
 fi
 echo "$out" | sed -n 's/.*NOTICE: *//p'
+
+echo "▶ Pausa dell'abbonamento"
+if ! out=$(run_sql supabase_admin supabase/tests/rls/05_subscription_pause.sql 2>&1); then
+  echo "$out" | sed -nE 's/.*(NOTICE|WARNING|ERROR): *//p'
+  echo "✗ Test della pausa FALLITI"
+  exit 1
+fi
+echo "$out" | sed -n 's/.*NOTICE: *//p'

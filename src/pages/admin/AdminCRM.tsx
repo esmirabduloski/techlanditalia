@@ -19,6 +19,7 @@ import { CRMCourseSelect } from "@/components/admin/crm/CRMCourseSelect";
 import { CRMPaymentsSchedule } from "@/components/admin/crm/payments/CRMPaymentsSchedule";
 import { useAllScheduledPayments } from "@/hooks/useCRMPayments";
 import { useCRMTasks } from "@/hooks/useCRMTasks";
+import { useSubscriptionPauses } from "@/hooks/useSubscriptionPauses";
 import { CRMTasksList } from "@/components/admin/crm/tasks/CRMTasksList";
 import { todayIso } from "@/lib/payments";
 import { Loader2, Plus, LogOut, KanbanSquare, List, BarChart3, Database, CalendarClock, PhoneCall } from "lucide-react";
@@ -65,6 +66,8 @@ export default function AdminCRM() {
   const today = todayIso();
   const overdueCount = schedule.payments.filter(p => p.due_date && p.due_date < today).length;
   const tasks = useCRMTasks();
+  const pauses = useSubscriptionPauses();
+  const pausesFor = (lead: CrmLead) => pauses.activeForProfile(lead.linked_profile_id);
 
   const openLeadById = (leadId: string) => {
     const lead = leads.find(l => l.id === leadId);
@@ -167,6 +170,7 @@ export default function AdminCRM() {
                 leads={leads}
                 onSelectLead={handleSelectLead}
                 onMoveLead={(id, stage) => updateLead(id, { pipeline_stage: stage })}
+                pausesFor={pausesFor}
                 onSetInterest={async (id, interest) => {
                   const ok = await updateLead(id, { interest });
                   if (ok) toast({ title: "Corso assegnato al lead" });
@@ -174,7 +178,7 @@ export default function AdminCRM() {
               />
             </TabsContent>
             <TabsContent value="list">
-              <CRMLeadList leads={leads} onSelectLead={handleSelectLead} />
+              <CRMLeadList leads={leads} onSelectLead={handleSelectLead} pausesFor={pausesFor} />
             </TabsContent>
             <TabsContent value="scadenziario">
               <CRMPaymentsSchedule schedule={schedule} onOpenLead={openLeadById} />
@@ -213,6 +217,7 @@ export default function AdminCRM() {
         }}
         onUpdate={updateLead}
         onDelete={deleteLead}
+        pauses={pauses}
       />
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>

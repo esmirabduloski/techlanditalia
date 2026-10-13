@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Loader2, Plus, Minus, History, CreditCard, Trash2, Pencil, Check, X } from 'lucide-react';
 import { format } from 'date-fns';
+import { isPauseActive, pausePeriodLabel, type SubscriptionPause } from '@/lib/subscriptionPause';
 import { it } from 'date-fns/locale';
 
 interface BalanceLogEntry {
@@ -61,6 +62,19 @@ export function LessonBalanceManager({
   useEffect(() => {
     setLiveBalance(currentBalance);
   }, [currentBalance]);
+
+  // Abbonamento in pausa: le lezioni completate non vengono scalate
+  const [pause, setPause] = useState<SubscriptionPause | null>(null);
+  useEffect(() => {
+    if (!open || !studentId) return;
+    supabase
+      .from('subscription_pauses')
+      .select('*')
+      .eq('student_id', studentId)
+      .is('ended_at', null)
+      .maybeSingle()
+      .then(({ data }) => setPause((data as SubscriptionPause | null) ?? null));
+  }, [open, studentId]);
 
   useEffect(() => {
     if (open && studentId) {
@@ -255,6 +269,13 @@ export function LessonBalanceManager({
             Saldo Lezioni - {studentName}
           </DialogTitle>
         </DialogHeader>
+        {pause && (
+          <div className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
+            {isPauseActive(pause)
+              ? `Abbonamento in pausa ${pausePeriodLabel(pause)}: le lezioni non vengono scalate in automatico.`
+              : `Pausa programmata ${pausePeriodLabel(pause)}.`}
+          </div>
+        )}
 
         {/* Current Balance */}
         <div className="text-center py-4">

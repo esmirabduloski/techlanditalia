@@ -10,15 +10,19 @@ import { groupByInterest } from "@/lib/crmInterestGroups";
 import { CRMCourseSelect } from "./CRMCourseSelect";
 import { GraduationCap, Gift } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SubscriptionPauseBadge } from "@/components/admin/SubscriptionPauseBadge";
+import type { SubscriptionPauseWithStudent } from "@/lib/subscriptionPause";
 
 interface Props {
   leads: CrmLead[];
   onSelectLead: (lead: CrmLead) => void;
   onMoveLead: (leadId: string, newStage: PipelineStage) => void;
   onSetInterest?: (leadId: string, interest: string | null) => void;
+  /** Pause dell'abbonamento in corso della famiglia del lead */
+  pausesFor?: (lead: CrmLead) => SubscriptionPauseWithStudent[];
 }
 
-export function CRMKanbanBoard({ leads, onSelectLead, onMoveLead, onSetInterest }: Props) {
+export function CRMKanbanBoard({ leads, onSelectLead, onMoveLead, onSetInterest, pausesFor }: Props) {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [overStage, setOverStage] = useState<PipelineStage | null>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
@@ -132,6 +136,9 @@ export function CRMKanbanBoard({ leads, onSelectLead, onMoveLead, onSetInterest 
                                 </div>
                               )}
                               <div className="flex flex-wrap gap-1 mt-2">
+                                {pausesFor && (
+                                  <SubscriptionPauseBadge pauses={pausesFor(lead)} className="text-[10px] py-0" />
+                                )}
                                 <Badge variant="outline" className="text-[10px] py-0">
                                   {SOURCE_LABELS[lead.source]}
                                 </Badge>

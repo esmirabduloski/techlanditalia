@@ -2,7 +2,7 @@ import { addDays, addMonths, addWeeks, format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
 
 export type PaymentStatus = 'scheduled' | 'paid' | 'cancelled';
-export type ClientReminderResult = 'sent' | 'email_sent' | 'no_account' | 'no_devices' | 'no_email' | 'failed' | 'skipped_old';
+export type ClientReminderResult = 'sent' | 'email_sent' | 'no_account' | 'no_devices' | 'no_email' | 'paused' | 'failed' | 'skipped_old';
 
 /** Esito del promemoria al cliente, per i messaggi all'admin. */
 export const CLIENT_RESULT_LABELS: Record<string, string> = {
@@ -11,6 +11,7 @@ export const CLIENT_RESULT_LABELS: Record<string, string> = {
   no_account: 'Cliente senza account e senza email',
   no_devices: 'Il cliente non ha le notifiche attive',
   no_email: 'Il cliente non ha un indirizzo email',
+  paused: 'Abbonamento in pausa: niente push e nessuna email',
   failed: 'Invio al cliente non riuscito',
   skipped_old: 'Promemoria al cliente saltato (data troppo vecchia)',
 };

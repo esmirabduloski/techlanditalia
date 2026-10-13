@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { captureServerError, withCronMonitor } from "../_shared/sentry.ts";
+import { pausedStudentIds } from "../_shared/subscriptionpause.ts";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/firebase_messaging";
 const FN = "send-lesson-reminders";
@@ -151,6 +152,9 @@ serve(async (req: Request): Promise<Response> => {
         return json({ error: schedErr.message }, 500);
       }
 
+      // Durante la pausa dell'abbonamento la famiglia non riceve promemoria
+      const paused = await pausedStudentIds(supabase, now);
+
       let sent = 0;
       let skipped = 0;
       let lessons = 0;
@@ -180,7 +184,7 @@ serve(async (req: Request): Promise<Response> => {
             .select("student_id")
             .eq("group_id", lesson.group_id as string);
 
-          const studentIds = (members ?? []).map((m) => m.student_id as string);
+          const studentIds = (members ?? []).map((m) => m.student_id as string).filter((id) => !paused.has(id));
 
           let parentIds: string[] = [];
           if (studentIds.length > 0) {

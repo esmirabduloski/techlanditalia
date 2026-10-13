@@ -42,6 +42,9 @@ import { fetchMfaOverview, type MfaUserStatus } from '@/lib/mfaOverview';
 import { BackgroundCheckDialog } from '@/components/admin/BackgroundCheckDialog';
 import { backgroundCheckStatus, fetchBackgroundChecks, formatItDate, type BackgroundCheck } from '@/lib/backgroundChecks';
 import { LessonBalanceManager } from '@/components/admin/LessonBalanceManager';
+import { SubscriptionPauseDialog } from '@/components/admin/SubscriptionPauseDialog';
+import { SubscriptionPauseButton } from '@/components/admin/SubscriptionPauseBadge';
+import { useSubscriptionPauses } from '@/hooks/useSubscriptionPauses';
 import {
   Select,
   SelectContent,
@@ -140,6 +143,8 @@ export default function AdminUsers() {
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; userId: string; userName: string }>({ open: false, userId: '', userName: '' });
   const [assignChildrenDialog, setAssignChildrenDialog] = useState<{ open: boolean; parentId: string; parentName: string }>({ open: false, parentId: '', parentName: '' });
   const [selectedChildrenToAssign, setSelectedChildrenToAssign] = useState<string[]>([]);
+  const pauses = useSubscriptionPauses();
+  const [pauseStudent, setPauseStudent] = useState<Profile | null>(null);
   const [balanceDialog, setBalanceDialog] = useState<{ open: boolean; userId: string; userName: string; balance: number }>({ open: false, userId: '', userName: '', balance: 0 });
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createForm, setCreateForm] = useState<{
@@ -1357,6 +1362,7 @@ export default function AdminUsers() {
                                     <TooltipContent>Gestisci saldo lezioni</TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
+                                <SubscriptionPauseButton pause={pauses.byStudent.get(child.id)} onClick={() => setPauseStudent(child)} />
                                 <TooltipProvider>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
@@ -1491,6 +1497,7 @@ export default function AdminUsers() {
                                   <TooltipContent>Gestisci saldo lezioni</TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
+                              <SubscriptionPauseButton pause={pauses.byStudent.get(child.id)} onClick={() => setPauseStudent(child)} />
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -1856,6 +1863,16 @@ export default function AdminUsers() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {pauseStudent && (
+        <SubscriptionPauseDialog
+          open={!!pauseStudent}
+          onOpenChange={(open) => !open && setPauseStudent(null)}
+          student={pauseStudent}
+          pause={pauses.byStudent.get(pauseStudent.id) ?? null}
+          onSaved={pauses.reload}
+        />
+      )}
+
       {/* Lesson Balance Manager Dialog */}
       <LessonBalanceManager
         open={balanceDialog.open}

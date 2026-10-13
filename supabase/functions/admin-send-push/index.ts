@@ -4,6 +4,7 @@ import { z } from "https://esm.sh/zod@3.23.8";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { rateLimit } from "../_shared/ratelimit.ts";
 import { decodeClaims, mfaRequiredResponse } from "../_shared/mfa.ts";
+import { silencedProfileIds } from "../_shared/subscriptionpause.ts";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/firebase_messaging";
 
@@ -91,6 +92,11 @@ serve(async (req: Request): Promise<Response> => {
           .in("id", ids);
         const parentIds = new Set((parents ?? []).map((p) => p.id as string));
         ids = ids.filter((id) => parentIds.has(id));
+      }
+      // Gli invii a tutti saltano le famiglie con l'abbonamento in pausa
+      if (audience !== "teachers") {
+        const silenced = await silencedProfileIds(supabase);
+        ids = ids.filter((id) => !silenced.has(id));
       }
       targets = ids;
     }

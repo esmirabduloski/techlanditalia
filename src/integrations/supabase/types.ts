@@ -2764,6 +2764,65 @@ export type Database = {
           },
         ]
       }
+      subscription_pauses: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          end_reason: string | null
+          ended_at: string | null
+          ended_by: string | null
+          ends_on: string | null
+          id: string
+          notes: string | null
+          reason: string
+          reminder_14_sent_at: string | null
+          reminder_7_sent_at: string | null
+          starts_on: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          end_reason?: string | null
+          ended_at?: string | null
+          ended_by?: string | null
+          ends_on?: string | null
+          id?: string
+          notes?: string | null
+          reason?: string
+          reminder_14_sent_at?: string | null
+          reminder_7_sent_at?: string | null
+          starts_on?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          end_reason?: string | null
+          ended_at?: string | null
+          ended_by?: string | null
+          ends_on?: string | null
+          id?: string
+          notes?: string | null
+          reason?: string
+          reminder_14_sent_at?: string | null
+          reminder_7_sent_at?: string | null
+          starts_on?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_pauses_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_progress: {
         Row: {
           completed_at: string
@@ -3170,6 +3229,10 @@ export type Database = {
       }
       is_parent_of: {
         Args: { _parent_id: string; _student_id: string }
+        Returns: boolean
+      }
+      is_student_paused: {
+        Args: { _student: string }
         Returns: boolean
       }
       is_parent_of_enrolled: {

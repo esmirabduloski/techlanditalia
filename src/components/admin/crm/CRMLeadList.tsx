@@ -8,13 +8,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, Download, AlertCircle, Gift } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
+import { SubscriptionPauseBadge } from "@/components/admin/SubscriptionPauseBadge";
+import type { SubscriptionPauseWithStudent } from "@/lib/subscriptionPause";
 
 interface Props {
   leads: CrmLead[];
   onSelectLead: (lead: CrmLead) => void;
+  /** Pause dell'abbonamento in corso della famiglia del lead */
+  pausesFor?: (lead: CrmLead) => SubscriptionPauseWithStudent[];
 }
 
-export function CRMLeadList({ leads, onSelectLead }: Props) {
+export function CRMLeadList({ leads, onSelectLead, pausesFor }: Props) {
   const [search, setSearch] = useState("");
   const [sourceFilter, setSourceFilter] = useState<LeadSource | "all">("all");
   const [stageFilter, setStageFilter] = useState<PipelineStage | "all">("all");
@@ -116,7 +120,12 @@ export function CRMLeadList({ leads, onSelectLead }: Props) {
                 const overdue = l.next_followup_at && new Date(l.next_followup_at) < new Date();
                 return (
                   <tr key={l.id} onClick={() => onSelectLead(l)} className="border-t cursor-pointer hover:bg-muted/30">
-                    <td className="p-3 font-medium">{l.full_name || "—"}</td>
+                    <td className="p-3 font-medium">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {l.full_name || "—"}
+                        {pausesFor && <SubscriptionPauseBadge pauses={pausesFor(l)} className="text-[10px] py-0" />}
+                      </div>
+                    </td>
                     <td className="p-3 text-muted-foreground">{l.email}</td>
                     <td className="p-3 text-muted-foreground hidden md:table-cell">{l.phone || "—"}</td>
                     <td className="p-3 hidden lg:table-cell"><Badge variant="outline">{SOURCE_LABELS[l.source]}</Badge></td>

@@ -23,6 +23,9 @@ import { CRMCourseSelect } from "./CRMCourseSelect";
 import { CRMPaymentsSection } from "./payments/CRMPaymentsSection";
 import { CRMLinkedAccount } from "./CRMLinkedAccount";
 import { CRMLeadTasks } from "./tasks/CRMLeadTasks";
+import { CRMSubscriptionSection } from "./CRMSubscriptionSection";
+import { SubscriptionPauseBadge } from "@/components/admin/SubscriptionPauseBadge";
+import type { SubscriptionPausesState } from "@/hooks/useSubscriptionPauses";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 
@@ -32,6 +35,8 @@ interface Props {
   onClose: () => void;
   onUpdate: (id: string, patch: Partial<CrmLead>) => Promise<boolean>;
   onDelete: (id: string) => Promise<boolean>;
+  /** Pause dell'abbonamento (badge IN PAUSA e sezione Abbonamento) */
+  pauses?: SubscriptionPausesState;
 }
 
 const interactionIcons: Record<InteractionType, React.ReactNode> = {
@@ -50,7 +55,7 @@ const interactionLabels: Record<InteractionType, string> = {
   quote_sent: "Preventivo", meeting: "Meeting", status_change: "Cambio stato", sms: "SMS",
 };
 
-export function CRMLeadDetailDrawer({ lead, open, onClose, onUpdate, onDelete }: Props) {
+export function CRMLeadDetailDrawer({ lead, open, onClose, onUpdate, onDelete, pauses }: Props) {
   const { toast } = useToast();
   const { interactions, addInteraction, reload: reloadInteractions } = useCRMInteractions(lead?.id ?? null);
   const [savingQuote, setSavingQuote] = useState(false);
@@ -151,6 +156,7 @@ export function CRMLeadDetailDrawer({ lead, open, onClose, onUpdate, onDelete }:
             <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{lead.email}</span>
             {lead.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{lead.phone}</span>}
             <Badge variant="outline">{SOURCE_LABELS[lead.source]}</Badge>
+            {pauses && <SubscriptionPauseBadge pauses={pauses.activeForProfile(lead.linked_profile_id)} />}
           </div>
         </SheetHeader>
 
@@ -184,6 +190,9 @@ export function CRMLeadDetailDrawer({ lead, open, onClose, onUpdate, onDelete }:
 
         {/* Attività aperte, es. "chiama la famiglia" per uno studente a rischio */}
         <CRMLeadTasks leadId={lead.id} onChanged={reloadInteractions} />
+
+        {/* Abbonamento: pausa per estate, esami o malattia invece della disdetta */}
+        {pauses && <CRMSubscriptionSection lead={lead} pauses={pauses} onChanged={reloadInteractions} />}
 
         {/* Dati anagrafici modificabili */}
         <div className="space-y-3 mb-6 p-3 border rounded-lg">

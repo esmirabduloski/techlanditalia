@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { notifyAdmins } from "../_shared/adminpush.ts";
 import { captureServerError, withCronMonitor } from "../_shared/sentry.ts";
+import { silencedProfileIds } from "../_shared/subscriptionpause.ts";
 
 /**
  * Promemoria dei pagamenti CRM (tabella crm_payments).
@@ -159,6 +160,9 @@ serve(async (req: Request): Promise<Response> => {
       return { title, text };
     };
 
+    /** Account con l'abbonamento in pausa, caricati al primo promemoria del cron. */
+    let silenced: Set<string> | null = null;
+
     /** Email al cliente (fallback quando la push non è possibile). */
     const sendEmail = async (p: PaymentRow, kind: "reminder" | "overdue"): Promise<"email_sent" | "no_email" | "failed"> => {
       const to = p.crm_leads?.email?.trim();
@@ -234,9 +238,14 @@ serve(async (req: Request): Promise<Response> => {
     const sendPush = async (
       p: PaymentRow,
       kind: "reminder" | "overdue",
-    ): Promise<"sent" | "no_account" | "no_devices" | "failed"> => {
+    ): Promise<"sent" | "no_account" | "no_devices" | "paused" | "failed"> => {
       const userId = p.crm_leads?.linked_profile_id;
       if (!userId) return "no_account";
+      // Famiglia con l'abbonamento in pausa: niente push automatiche, resta l'email
+      if (isCron) {
+        silenced ??= await silencedProfileIds(supabase);
+        if (silenced.has(userId)) return "paused";
+      }
       if (!LOVABLE_API_KEY || !CONNECTION_KEY) return "no_devices";
 
       const { data: devices } = await supabase.from("push_devices").select("id, token").eq("user_id", userId);

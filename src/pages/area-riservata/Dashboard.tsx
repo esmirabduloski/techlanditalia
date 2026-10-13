@@ -40,6 +40,7 @@ import { useTheme } from 'next-themes';
 import { supabase } from '@/integrations/supabase/client';
 import { PushNotificationsCard } from '@/components/notifications/PushNotificationsCard';
 import { CourseProposalCard } from '@/components/dashboard/CourseProposalCard';
+import { SatisfactionSurveyCard } from '@/components/dashboard/SatisfactionSurveyCard';
 
 interface CourseProgress {
   courseId: string;
@@ -320,6 +321,11 @@ export default function Dashboard() {
           {/* Proposta del corso successivo a fine corso, con lo sconto per chi continua subito */}
           {effectiveUserId && !effectiveIsTeacher && (
             <CourseProposalCard userId={effectiveUserId} readOnly={isImpersonating} />
+          )}
+
+          {/* Sondaggio di soddisfazione dopo 3 lezioni e a fine modulo */}
+          {effectiveUserId && !effectiveIsTeacher && (
+            <SatisfactionSurveyCard userId={effectiveUserId} readOnly={isImpersonating} />
           )}
 
           {/* Notifiche push promemoria lezioni - solo genitori */}

@@ -377,6 +377,11 @@ SELECT rls_test.expect('genitore P1', 'sé stesso e i due figli', 'SELECT count(
 SELECT rls_test.expect('genitore P1', 'i compiti dei figli', 'SELECT count(*) FROM public.homework_submissions', 2);
 SELECT rls_test.expect('genitore P1', 'i commenti per i genitori (non quelli solo-docenti)', 'SELECT count(*) FROM public.student_comments', 2);
 SELECT rls_test.expect('genitore P1', 'i gruppi dei figli', 'SELECT count(*) FROM public.student_groups', 2);
+-- Sondaggio di soddisfazione: lo vede solo chi deve rispondere (il genitore), non l'alunno
+SELECT rls_test.expect('genitore P1', 'il sondaggio di soddisfazione di S1', 'SELECT count(*) FROM public.satisfaction_surveys', 1);
+SELECT rls_test.expect('alunno S1', 'nessun sondaggio (risponde il genitore)', 'SELECT count(*) FROM public.satisfaction_surveys', 0);
+SELECT rls_test.expect_blocked('genitore P1', 'rispondere al sondaggio senza la edge function',
+  'UPDATE public.satisfaction_surveys SET score = 0');
 DO $$
 BEGIN
   IF to_regclass('public.media_consents') IS NOT NULL THEN

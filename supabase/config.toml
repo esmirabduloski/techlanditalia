@@ -92,3 +92,8 @@ verify_jwt = false
 # oppure da un admin per riceverlo subito (JWT + 2FA verificati dentro la funzione).
 [functions.monthly-report]
 verify_jwt = false
+
+# Sondaggio di soddisfazione: "scan" dal cron (x-cron-token) o da un admin con
+# 2FA, "respond" dalla famiglia. JWT e ruolo verificati dentro la funzione.
+[functions.satisfaction-survey]
+verify_jwt = false

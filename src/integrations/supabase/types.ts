@@ -2477,6 +2477,82 @@ export type Database = {
           },
         ]
       }
+      satisfaction_surveys: {
+        Row: {
+          answered_at: string | null
+          comment: string | null
+          created_at: string
+          group_id: string | null
+          id: string
+          kind: string
+          module_number: number | null
+          module_title: string | null
+          recipient_id: string
+          satisfied: boolean | null
+          score: number | null
+          sent_at: string | null
+          skip_reason: string | null
+          status: string
+          student_id: string
+        }
+        Insert: {
+          answered_at?: string | null
+          comment?: string | null
+          created_at?: string
+          group_id?: string | null
+          id?: string
+          kind: string
+          module_number?: number | null
+          module_title?: string | null
+          recipient_id: string
+          satisfied?: boolean | null
+          score?: number | null
+          sent_at?: string | null
+          skip_reason?: string | null
+          status?: string
+          student_id: string
+        }
+        Update: {
+          answered_at?: string | null
+          comment?: string | null
+          created_at?: string
+          group_id?: string | null
+          id?: string
+          kind?: string
+          module_number?: number | null
+          module_title?: string | null
+          recipient_id?: string
+          satisfied?: boolean | null
+          score?: number | null
+          sent_at?: string | null
+          skip_reason?: string | null
+          status?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "satisfaction_surveys_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "student_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "satisfaction_surveys_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "satisfaction_surveys_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scheduled_lessons: {
         Row: {
           course_id: string
@@ -3455,6 +3531,17 @@ export type Database = {
       reward_referral: {
         Args: { _credits_each?: number; _reason?: string; _referral_id: string }
         Returns: Json
+      }
+      satisfaction_survey_due: {
+        Args: { _window_days?: number }
+        Returns: {
+          group_id: string
+          kind: string
+          lesson_date: string
+          module_number: number
+          module_title: string
+          student_id: string
+        }[]
       }
       student_risk_signals: {
         Args: { _rules?: Json }

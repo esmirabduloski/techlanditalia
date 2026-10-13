@@ -202,6 +202,11 @@ INSERT INTO public.crm_tasks (lead_id, student_id, kind, title) VALUES
 INSERT INTO public.subscription_cancellations (lead_id, student_id, reason, would_return) VALUES
   ('00000000-0000-0000-0000-0000000ce001', '00000000-0000-0000-0000-000000000102', 'schedule', 'maybe'),
   ('00000000-0000-0000-0000-0000000ce002', '00000000-0000-0000-0000-000000000103', 'cost', 'no');
+-- Sondaggi di soddisfazione: P1 ha risposto per S1, P2 deve ancora rispondere per S3
+INSERT INTO public.satisfaction_surveys (student_id, recipient_id, kind, status, score, sent_at, answered_at) VALUES
+  ('00000000-0000-0000-0000-000000000101', '00000000-0000-0000-0000-000000000201', 'after_3_lessons', 'answered', 10, now(), now()),
+  ('00000000-0000-0000-0000-000000000103', '00000000-0000-0000-0000-000000000202', 'after_3_lessons', 'pending', NULL, now(), NULL);
+
 -- Proposte del corso successivo: S1 (G1) e S3 (G2) inviate, S2 (G2) ancora
 -- bozza dell'insegnante, che il genitore P1 non deve vedere
 INSERT INTO public.course_proposals (student_id, group_id, proposed_course_id, teacher_reason, status, offer_expires_on, sent_at) VALUES

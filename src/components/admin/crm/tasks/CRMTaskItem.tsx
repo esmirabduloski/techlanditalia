@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CalendarX, Check, Coins, Flame, Loader2, NotebookPen, Phone, User, X } from 'lucide-react';
+import { CalendarX, Check, Coins, Flame, Frown, Loader2, NotebookPen, Phone, User, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -7,11 +7,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { daysOpen, telLink, type CrmTaskWithRefs, type RiskSignalKind } from '@/lib/studentRisk';
 
-const SIGNAL_ICONS: Record<RiskSignalKind, typeof Flame> = {
+// low_satisfaction: voto basso al sondaggio di soddisfazione (edge function satisfaction-survey)
+const SIGNAL_ICONS: Record<RiskSignalKind | 'low_satisfaction', typeof Flame> = {
   consecutive_absences: CalendarX,
   missing_homework: NotebookPen,
   streak_broken: Flame,
   low_balance: Coins,
+  low_satisfaction: Frown,
 };
 
 interface Props {

@@ -3,6 +3,7 @@ import { useCRMStats } from "@/hooks/useCRM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, Users, AlertCircle, Trophy, XCircle } from "lucide-react";
 import { CRMCancellationStats } from "./CRMCancellationStats";
+import { CRMSatisfactionStats } from "./CRMSatisfactionStats";
 import { CRMMonthlyReportCard } from "./CRMMonthlyReportCard";
 
 interface Props { leads: CrmLead[] }
@@ -75,6 +76,8 @@ export function CRMAnalytics({ leads }: Props) {
           })}
         </CardContent>
       </Card>
+
+      <CRMSatisfactionStats />
 
       <CRMCancellationStats />
 

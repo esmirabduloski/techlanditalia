@@ -577,6 +577,91 @@ export type Database = {
         }
         Relationships: []
       }
+      course_proposals: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          discount_applies: boolean | null
+          discount_cents: number
+          email_sent_at: string | null
+          group_id: string
+          id: string
+          offer_expires_on: string | null
+          parent_note: string | null
+          proposed_course_id: string
+          responded_at: string | null
+          responded_by: string | null
+          sent_at: string | null
+          sent_by: string | null
+          status: string
+          student_id: string
+          teacher_reason: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          discount_applies?: boolean | null
+          discount_cents?: number
+          email_sent_at?: string | null
+          group_id: string
+          id?: string
+          offer_expires_on?: string | null
+          parent_note?: string | null
+          proposed_course_id: string
+          responded_at?: string | null
+          responded_by?: string | null
+          sent_at?: string | null
+          sent_by?: string | null
+          status?: string
+          student_id: string
+          teacher_reason: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          discount_applies?: boolean | null
+          discount_cents?: number
+          email_sent_at?: string | null
+          group_id?: string
+          id?: string
+          offer_expires_on?: string | null
+          parent_note?: string | null
+          proposed_course_id?: string
+          responded_at?: string | null
+          responded_by?: string | null
+          sent_at?: string | null
+          sent_by?: string | null
+          status?: string
+          student_id?: string
+          teacher_reason?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_proposals_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "student_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_proposals_proposed_course_id_fkey"
+            columns: ["proposed_course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_proposals_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courses: {
         Row: {
           age_range: string | null
@@ -2029,6 +2114,33 @@ export type Database = {
         }
         Relationships: []
       }
+      monthly_reports: {
+        Row: {
+          created_at: string
+          month: string
+          sent_at: string | null
+          sent_to: string[]
+          stats: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          month: string
+          sent_at?: string | null
+          sent_to?: string[]
+          stats: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          month?: string
+          sent_at?: string | null
+          sent_to?: string[]
+          stats?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       newsletter_subscribers: {
         Row: {
           confirmation_token: string
@@ -2359,6 +2471,82 @@ export type Database = {
           {
             foreignKeyName: "referrals_rewarded_by_fkey"
             columns: ["rewarded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      satisfaction_surveys: {
+        Row: {
+          answered_at: string | null
+          comment: string | null
+          created_at: string
+          group_id: string | null
+          id: string
+          kind: string
+          module_number: number | null
+          module_title: string | null
+          recipient_id: string
+          satisfied: boolean | null
+          score: number | null
+          sent_at: string | null
+          skip_reason: string | null
+          status: string
+          student_id: string
+        }
+        Insert: {
+          answered_at?: string | null
+          comment?: string | null
+          created_at?: string
+          group_id?: string | null
+          id?: string
+          kind: string
+          module_number?: number | null
+          module_title?: string | null
+          recipient_id: string
+          satisfied?: boolean | null
+          score?: number | null
+          sent_at?: string | null
+          skip_reason?: string | null
+          status?: string
+          student_id: string
+        }
+        Update: {
+          answered_at?: string | null
+          comment?: string | null
+          created_at?: string
+          group_id?: string | null
+          id?: string
+          kind?: string
+          module_number?: number | null
+          module_title?: string | null
+          recipient_id?: string
+          satisfied?: boolean | null
+          score?: number | null
+          sent_at?: string | null
+          skip_reason?: string | null
+          status?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "satisfaction_surveys_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "student_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "satisfaction_surveys_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "satisfaction_surveys_student_id_fkey"
+            columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -3324,6 +3512,10 @@ export type Database = {
       }
       mfa_ok: { Args: never; Returns: boolean }
       mfa_required: { Args: { _user_id: string }; Returns: boolean }
+      monthly_report_stats: {
+        Args: { _from: string; _to: string }
+        Returns: Json
+      }
       my_mfa_required: { Args: never; Returns: boolean }
       pending_legal_consents: {
         Args: never
@@ -3339,6 +3531,17 @@ export type Database = {
       reward_referral: {
         Args: { _credits_each?: number; _reason?: string; _referral_id: string }
         Returns: Json
+      }
+      satisfaction_survey_due: {
+        Args: { _window_days?: number }
+        Returns: {
+          group_id: string
+          kind: string
+          lesson_date: string
+          module_number: number
+          module_title: string
+          student_id: string
+        }[]
       }
       student_risk_signals: {
         Args: { _rules?: Json }

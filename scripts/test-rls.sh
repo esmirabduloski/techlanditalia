@@ -103,3 +103,11 @@ if ! out=$(run_sql supabase_admin supabase/tests/rls/05_subscription_pause.sql 2
   exit 1
 fi
 echo "$out" | sed -n 's/.*NOTICE: *//p'
+
+echo "▶ Report mensile"
+if ! out=$(run_sql supabase_admin supabase/tests/rls/06_monthly_report.sql 2>&1); then
+  echo "$out" | sed -nE 's/.*(NOTICE|WARNING|ERROR): *//p'
+  echo "✗ Test del report mensile FALLITI"
+  exit 1
+fi
+echo "$out" | sed -n 's/.*NOTICE: *//p'

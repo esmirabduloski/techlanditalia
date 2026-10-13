@@ -216,6 +216,7 @@ INSERT INTO public.subscription_pauses (student_id, reason, starts_on, ends_on, 
   ('00000000-0000-0000-0000-000000000103', 'illness', current_date - 60, current_date - 30, now() - interval '30 days', 'auto');
 
 -- Tabelle solo-admin con dati personali di terzi (moduli pubblici, log, chat)
+INSERT INTO public.monthly_reports (month, stats, sent_to, sent_at) VALUES ('2020-01', '{}', '{admin@test.local}', now());
 INSERT INTO public.admin_access_logs (admin_id, action) VALUES ('00000000-0000-0000-0000-000000000901', 'test');
 INSERT INTO public.security_events (event_type) VALUES ('test');
 INSERT INTO public.login_attempts (email) VALUES ('s1@test.local');

@@ -87,3 +87,8 @@ verify_jwt = false
 # risposta della famiglia. JWT e ruolo verificati dentro la funzione.
 [functions.course-proposal]
 verify_jwt = false
+
+# Report mensile agli admin: chiamato il primo del mese dal cron con x-cron-token,
+# oppure da un admin per riceverlo subito (JWT + 2FA verificati dentro la funzione).
+[functions.monthly-report]
+verify_jwt = false

@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 import { Layout } from '@/components/layout/Layout';
 import { LessonContent } from '@/components/lesson/LessonContent';
-import { PythonCompiler } from '@/components/lesson/PythonCompiler';
+import { PythonCompiler, type TestRunnerRef } from '@/components/lesson/PythonCompiler';
 import { TurtleCompiler } from '@/components/lesson/TurtleCompiler';
 import { PgzeroCompiler } from '@/components/lesson/PgzeroCompiler';
 import { WebCompiler } from '@/components/lesson/WebCompiler';
@@ -16,6 +17,7 @@ import { Loader2, Send, ArrowLeft, Calendar, Trophy, CheckCircle2, Clock, AlertC
 import { useToast } from '@/hooks/use-toast';
 import { useCodeDraft } from '@/hooks/useCodeDraft';
 import { flushCodeDrafts } from '@/lib/codeDrafts';
+import { parseTestCases, pythonCases, scoreResults, webCases, type TestCase, type TestResult } from '@/lib/testCases';
 
 interface Attachment {
   name: string;
@@ -39,6 +41,7 @@ interface HomeworkDetails {
   python_env: string | null;
   replit_url: string | null;
   preview_only: boolean;
+  test_cases: TestCase[];
   lesson: {
     id: string;
     title: string;
@@ -61,7 +64,21 @@ interface Submission {
   teacher_feedback: string | null;
   grade: number | null;
   points_earned: number;
+  auto_score: number | null;
 }
+
+interface TestOutcome {
+  score: number;
+  results: TestResult[];
+}
+
+const SUBMIT_ERRORS: Record<string, string> = {
+  already_graded: 'Il compito è già stato valutato: non puoi più modificare la consegna.',
+  not_enrolled: 'Non risulti iscritto a questo corso.',
+  empty: 'Scrivi del codice prima di inviare il compito.',
+  too_large: 'Il codice è troppo lungo per essere consegnato.',
+  mfa_required: 'Completa la verifica in due passaggi per consegnare.',
+};
 
 const PYTHON_COURSES = ['python-base', 'python-ai', 'python-avanzato'];
 const WEB_COURSES = ['web-development'];
@@ -77,6 +94,8 @@ export default function HomeworkView() {
   const [submission, setSubmission] = useState<Submission | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Il compilatore aperto registra qui la sua "Verifica", rieseguita alla consegna
+  const testRunnerRef: TestRunnerRef = useRef(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -135,6 +154,7 @@ export default function HomeworkView() {
         python_env: (homeworkData as any).python_env || null,
         replit_url: (homeworkData as any).replit_url || null,
         preview_only: (homeworkData as any).preview_only || false,
+        test_cases: parseTestCases((homeworkData as any).test_cases),
         lesson: {
           id: lesson.id,
           title: lesson.title,
@@ -171,8 +191,17 @@ export default function HomeworkView() {
     }
   };
 
-  const handleSubmit = async (codeContent: string) => {
+  const handleSubmit = async (codeContent: string, tests: TestOutcome | null) => {
     if (!user || !homework || !effectiveUserId) return;
+
+    if (isImpersonating) {
+      toast({
+        variant: 'destructive',
+        title: 'Anteprima studente',
+        description: 'In modalità anteprima non puoi consegnare al posto dello studente',
+      });
+      return;
+    }
 
     if (!codeContent.trim()) {
       toast({
@@ -186,33 +215,23 @@ export default function HomeworkView() {
     setIsSubmitting(true);
 
     try {
-      // Use effectiveUserId for student submission
-      const submissionData: any = {
-        homework_id: homework.id,
-        student_id: effectiveUserId,
-        status: 'pending',
-        notes: `[CODE]\n${codeContent}`,
-        file_type: 'text/code',
-      };
-
-      if (submission) {
-        const { error } = await supabase
-          .from('homework_submissions')
-          .update(submissionData)
-          .eq('id', submission.id);
-
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('homework_submissions')
-          .insert(submissionData);
-
-        if (error) throw error;
+      const { data, error } = await supabase.rpc('submit_homework_code', {
+        _homework_id: homework.id,
+        _notes: `[CODE]\n${codeContent}`,
+        _auto_score: tests?.score,
+        _test_results: tests ? (tests.results as unknown as Json) : undefined,
+      });
+      if (error) throw error;
+      const res = data as { success?: boolean; error?: string } | null;
+      if (!res?.success) {
+        throw new Error(SUBMIT_ERRORS[res?.error ?? ''] || 'Impossibile inviare il compito');
       }
 
       toast({
         title: 'Compito inviato! 🎉',
-        description: 'Il tuo lavoro è stato inviato con successo',
+        description: tests
+          ? `Test superati: ${tests.results.filter(r => r.passed).length}/${tests.results.length} · voto proposto ${tests.score}/100, in attesa di conferma dell'insegnante`
+          : 'Il tuo lavoro è stato inviato con successo',
       });
 
       fetchHomeworkDetails();
@@ -239,6 +258,13 @@ export default function HomeworkView() {
     }
     
     switch (submission.status) {
+      case 'graded':
+        return (
+          <Badge variant="outline" className="text-green-600 border-green-300 bg-green-50">
+            <CheckCircle2 className="w-3 h-3 mr-1" />
+            Valutato{submission.grade != null ? ` · ${submission.grade}/100` : ''}
+          </Badge>
+        );
       case 'approved':
         return (
           <Badge variant="outline" className="text-green-600 border-green-300 bg-green-50">
@@ -381,6 +407,9 @@ export default function HomeworkView() {
               onSubmit={handleSubmit}
               isSubmitting={isSubmitting}
               isAlreadySubmitted={!!submission}
+              isLocked={!!submission && ['graded', 'approved'].includes(submission.status)}
+              testCases={homework.test_cases}
+              testRunnerRef={testRunnerRef}
             />
           </div>
         </div>
@@ -420,6 +449,19 @@ export default function HomeworkView() {
                 </div>
               )}
 
+              {/* Voto proposto dai test, finché l'insegnante non conferma */}
+              {submission?.status === 'pending' && submission.auto_score != null && (
+                <div className="px-6 pb-6">
+                  <div className="p-4 rounded-lg bg-muted/50 border">
+                    <h4 className="font-medium mb-1">🧪 Correzione automatica</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Voto proposto dai test: <span className="font-medium text-foreground">{submission.auto_score}/100</span>.
+                      L'insegnante lo conferma o lo modifica.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Teacher feedback if exists */}
               {submission?.teacher_feedback && (
                 <div className="px-6 pb-6">
@@ -428,9 +470,9 @@ export default function HomeworkView() {
                     <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                       {submission.teacher_feedback}
                     </p>
-                    {submission.grade && (
+                    {submission.grade != null && (
                       <p className="mt-2 text-sm font-medium">
-                        Voto: {submission.grade}/10 · Punti guadagnati: {submission.points_earned}
+                        Voto: {submission.grade}/100 · Punti guadagnati: {submission.points_earned}
                       </p>
                     )}
                   </div>
@@ -452,9 +494,11 @@ export default function HomeworkView() {
               ) : homework.python_env === 'pgzero' ? (
                 <PgzeroCompiler defaultCode={homework.default_python_code || undefined} replitUrl={homework.replit_url || undefined} />
               ) : (
-                <PythonCompiler 
-                  defaultCode={homework.default_python_code || undefined} 
+                <PythonCompiler
+                  defaultCode={homework.default_python_code || undefined}
                   taskId={`homework-${homework.id}`}
+                  testCases={homework.test_cases}
+                  testRunnerRef={testRunnerRef}
                 />
               )
             )}
@@ -464,6 +508,8 @@ export default function HomeworkView() {
                 defaultCssCode={homework.default_css_code || undefined}
                 defaultJsCode={homework.default_js_code || undefined}
                 taskId={`homework-${homework.id}`}
+                testCases={homework.test_cases}
+                testRunnerRef={testRunnerRef}
               />
             )}
           </ResizablePanel>
@@ -484,15 +530,23 @@ function HomeworkSubmitButton({
   isWebCourse, 
   onSubmit, 
   isSubmitting,
-  isAlreadySubmitted 
+  isAlreadySubmitted,
+  isLocked,
+  testCases,
+  testRunnerRef,
 }: {
   homeworkId: string;
   isPythonCourse: boolean;
   isWebCourse: boolean;
-  onSubmit: (code: string) => void;
+  onSubmit: (code: string, tests: TestOutcome | null) => void;
   isSubmitting: boolean;
   isAlreadySubmitted: boolean;
+  isLocked: boolean;
+  testCases: TestCase[];
+  testRunnerRef: TestRunnerRef;
 }) {
+  const [isTesting, setIsTesting] = useState(false);
+
   const handleClick = async () => {
     // Get code from the draft storage
     const { supabase } = await import('@/integrations/supabase/client');
@@ -544,17 +598,43 @@ function HomeworkSubmitButton({
       codeContent = `<!-- HTML -->\n${htmlData?.content || ''}\n\n/* CSS */\n${cssData?.content || ''}\n\n// JavaScript\n${jsData?.content || ''}`;
     }
 
-    onSubmit(codeContent);
+    // Correzione automatica: i test girano sul codice appena salvato.
+    // Turtle/Pygame Zero non registrano un runner: si consegna senza voto proposto.
+    let tests: TestOutcome | null = null;
+    const runTests = testRunnerRef.current;
+    const relevantCases = isPythonCourse ? pythonCases(testCases) : webCases(testCases);
+    if (runTests && relevantCases.length > 0 && codeContent.trim()) {
+      setIsTesting(true);
+      try {
+        const results = await runTests();
+        if (results) tests = { score: scoreResults(results), results };
+      } finally {
+        setIsTesting(false);
+      }
+    }
+
+    onSubmit(codeContent, tests);
   };
 
+  if (isLocked) {
+    return (
+      <Button disabled className="gap-2" title="Il compito è già stato valutato">
+        <CheckCircle2 className="w-4 h-4" />
+        Valutato
+      </Button>
+    );
+  }
+
   return (
-    <Button onClick={handleClick} disabled={isSubmitting} className="gap-2">
-      {isSubmitting ? (
+    <Button onClick={handleClick} disabled={isSubmitting || isTesting} className="gap-2">
+      {isTesting ? (
+        <Loader2 className="w-4 h-4 animate-spin" />
+      ) : isSubmitting ? (
         <Loader2 className="w-4 h-4 animate-spin" />
       ) : (
         <Send className="w-4 h-4" />
       )}
-      {isAlreadySubmitted ? 'Aggiorna consegna' : 'INVIA'}
+      {isTesting ? 'Verifica in corso…' : isAlreadySubmitted ? 'Aggiorna consegna' : 'INVIA'}
     </Button>
   );
 }

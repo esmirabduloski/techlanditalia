@@ -21,6 +21,9 @@ import { Switch } from '@/components/ui/switch';
 import { QuizTaskEditor } from '@/components/admin/QuizTaskEditor';
 import { parseQuizContent } from '@/lib/quiz';
 import { AdminStepper, type AdminStep } from '@/components/admin/AdminStepper';
+import { TestCasesEditor } from '@/components/admin/TestCasesEditor';
+import { PYTHON_COURSES, WEB_COURSES } from '@/components/lesson/taskSidePanel';
+import { countIncompleteCases, parseTestCases, toEditableCases, type EditableTestCase } from '@/lib/testCases';
 interface Attachment {
   name: string;
   url: string;
@@ -31,6 +34,7 @@ interface Course {
   id: string;
   title: string;
   emoji: string;
+  slug: string;
 }
 
 interface Lesson {
@@ -56,6 +60,8 @@ interface TaskData {
   replit_url: string;
   attachments: Attachment[];
   is_visible: boolean;
+  test_cases: EditableTestCase[];
+  tests_required: boolean;
 }
 
 // La chiave rimonta l'editor a ogni cambio task: stato, bozza e caricamento
@@ -96,6 +102,8 @@ function TaskEditor() {
     replit_url: '',
     attachments: [],
     is_visible: true,
+    test_cases: [],
+    tests_required: false,
   });
 
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
@@ -134,7 +142,7 @@ function TaskEditor() {
     // Fetch course
     const { data: courseData } = await supabase
       .from('courses')
-      .select('id, title, emoji')
+      .select('id, title, emoji, slug')
       .eq('id', courseId)
       .maybeSingle();
 
@@ -219,13 +227,15 @@ function TaskEditor() {
           replit_url: (taskData as any).replit_url || '',
           attachments,
           is_visible: (taskData as any).is_visible ?? true,
+          test_cases: toEditableCases((taskData as any).test_cases),
+          tests_required: (taskData as any).tests_required ?? false,
         };
 
         savedSnapshotRef.current = JSON.stringify(dbData);
 
         // If there's a saved draft, prefer it over DB data (user was editing and switched tabs)
         if (savedDraft && savedDraft.title) {
-          setFormData({ is_visible: true, ...savedDraft });
+          setFormData({ is_visible: true, test_cases: [], tests_required: false, ...savedDraft });
         } else {
           setFormData(dbData);
         }
@@ -235,6 +245,8 @@ function TaskEditor() {
       if (savedDraft && savedDraft.title) {
         setFormData(prev => ({
           is_visible: true,
+          test_cases: [],
+          tests_required: false,
           ...savedDraft,
           task_number: prev.task_number, // Keep task_number from DB
         }));
@@ -276,6 +288,16 @@ function TaskEditor() {
       }
     }
 
+    const incompleteTests = countIncompleteCases(formData.test_cases);
+    if (incompleteTests > 0) {
+      toast({
+        title: 'Casi di prova incompleti',
+        description: `Completa o elimina ${incompleteTests === 1 ? '1 caso' : `${incompleteTests} casi`} (manca l'output atteso, il controllo o il selettore).`,
+        variant: 'destructive',
+      });
+      return false;
+    }
+
     setIsSaving(true);
 
     // Auto-backup before editing
@@ -301,6 +323,8 @@ function TaskEditor() {
       replit_url: formData.python_env === 'pgzero' ? (formData.replit_url || null) : null,
       attachments: formData.attachments,
       is_visible: formData.is_visible,
+      test_cases: parseTestCases(formData.test_cases),
+      tests_required: formData.tests_required && formData.test_cases.length > 0,
     };
 
     try {
@@ -359,6 +383,12 @@ function TaskEditor() {
     await signOut();
     navigate('/admin/login');
   };
+
+  // Casi di prova: Python standard o Web, in base al corso
+  const testMode = !course ? null
+    : PYTHON_COURSES.includes(course.slug) ? (formData.python_env === 'standard' ? 'python' as const : null)
+    : WEB_COURSES.includes(course.slug) ? 'web' as const
+    : null;
 
   if (authLoading || isLoading) {
     return (
@@ -699,6 +729,38 @@ function TaskEditor() {
                       onAttachmentsChange={(attachments) => setFormData(prev => ({ ...prev, attachments }))}
                     />
                   </div>
+
+                  {/* Casi di prova: solo dove il compilatore li esegue (non Turtle/Pygame Zero) */}
+                  {testMode && (
+                    <div className="space-y-4 border-t pt-6">
+                      <TestCasesEditor
+                        mode={testMode}
+                        value={formData.test_cases}
+                        onChange={(test_cases) => setFormData(prev => ({ ...prev, test_cases }))}
+                        starter={{
+                          python: formData.default_python_code,
+                          html: formData.default_html_code,
+                          css: formData.default_css_code,
+                          js: formData.default_js_code,
+                        }}
+                      />
+                      {formData.test_cases.length > 0 && (
+                        <div className="flex items-center justify-between rounded-lg border p-3">
+                          <div className="space-y-0.5">
+                            <Label htmlFor="tests_required" className="text-sm font-medium">Obbligatorio superare i test</Label>
+                            <p className="text-xs text-muted-foreground">
+                              Lo studente passa alla task successiva solo dopo aver superato tutti i casi di prova.
+                            </p>
+                          </div>
+                          <Switch
+                            id="tests_required"
+                            checked={formData.tests_required}
+                            onCheckedChange={(checked) => setFormData(prev => ({ ...prev, tests_required: checked }))}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>

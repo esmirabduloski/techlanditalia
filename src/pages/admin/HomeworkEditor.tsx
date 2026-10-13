@@ -19,6 +19,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useRef } from 'react';
 import { useAutoBackup } from '@/hooks/useAutoBackup';
 import { AdminStepper, type AdminStep } from '@/components/admin/AdminStepper';
+import { TestCasesEditor } from '@/components/admin/TestCasesEditor';
+import { countIncompleteCases, parseTestCases, toEditableCases, type EditableTestCase } from '@/lib/testCases';
 
 interface Course {
   id: string;
@@ -54,6 +56,7 @@ interface HomeworkFormData {
   python_env: string;
   replit_url: string;
   preview_only: boolean;
+  test_cases: EditableTestCase[];
 }
 
 const PYTHON_COURSES = ['python-base', 'python-ai', 'python-avanzato'];
@@ -95,6 +98,7 @@ function HomeworkEditor() {
     python_env: 'standard',
     replit_url: '',
     preview_only: false,
+    test_cases: [],
   });
 
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
@@ -173,6 +177,7 @@ function HomeworkEditor() {
           python_env: (homeworkData as any).python_env || 'standard',
           replit_url: (homeworkData as any).replit_url || '',
           preview_only: (homeworkData as any).preview_only || false,
+          test_cases: toEditableCases((homeworkData as any).test_cases),
         };
         savedSnapshotRef.current = JSON.stringify(dbData);
         setFormData(dbData);
@@ -256,6 +261,16 @@ function HomeworkEditor() {
       return false;
     }
 
+    const incompleteTests = countIncompleteCases(formData.test_cases);
+    if (incompleteTests > 0) {
+      toast({
+        title: 'Casi di prova incompleti',
+        description: `Completa o elimina ${incompleteTests === 1 ? '1 caso' : `${incompleteTests} casi`} (manca l'output atteso, il controllo o il selettore).`,
+        variant: 'destructive',
+      });
+      return false;
+    }
+
     setIsSaving(true);
 
     // Auto-backup before editing
@@ -278,6 +293,7 @@ function HomeworkEditor() {
       python_env: isPythonCourse ? formData.python_env : null,
       replit_url: isPythonCourse && formData.python_env === 'pgzero' ? (formData.replit_url || null) : null,
       preview_only: isWebCourse ? formData.preview_only : false,
+      test_cases: parseTestCases(formData.test_cases) as unknown as Json,
     };
 
     try {
@@ -338,6 +354,9 @@ function HomeworkEditor() {
   const isPythonCourse = course ? PYTHON_COURSES.includes(course.slug) : false;
   const isWebCourse = course ? WEB_COURSES.includes(course.slug) : false;
   const hasCompiler = isPythonCourse || isWebCourse;
+  const testMode = isPythonCourse && formData.python_env === 'standard' ? 'python' as const
+    : isWebCourse && !formData.preview_only ? 'web' as const
+    : null;
 
   if (authLoading || isLoading) {
     return (
@@ -632,6 +651,23 @@ function HomeworkEditor() {
                           />
                         </div>
                       </div>
+                    </div>
+                  )}
+
+                  {/* Casi di prova: Python standard o Web (non per la sola anteprima) */}
+                  {testMode && (
+                    <div className="border-t pt-6">
+                      <TestCasesEditor
+                        mode={testMode}
+                        value={formData.test_cases}
+                        onChange={(test_cases) => setFormData(prev => ({ ...prev, test_cases }))}
+                        starter={{
+                          python: formData.default_python_code,
+                          html: formData.default_html_code,
+                          css: formData.default_css_code,
+                          js: formData.default_js_code,
+                        }}
+                      />
                     </div>
                   )}
                 </div>

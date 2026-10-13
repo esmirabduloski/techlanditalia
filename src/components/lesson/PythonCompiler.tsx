@@ -1,10 +1,14 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, type MutableRefObject } from 'react';
 import { Button } from '@/components/ui/button';
 import { Play, Loader2, Trash2, RotateCcw, Save, Check } from 'lucide-react';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { useToast } from '@/hooks/use-toast';
 import { useCodeDraft } from '@/hooks/useCodeDraft';
 import { CodeEditor } from './CodeEditor';
+import { TestCasesPanel, TestSummary } from './TestCasesPanel';
+import { useTestRunner } from '@/hooks/useTestRunner';
+import { pythonCases, type TestCase, type TestResult } from '@/lib/testCases';
+import { preloadPythonTests, runPythonTests } from '@/lib/pythonTestRunner';
 
 declare global {
   interface Window {
@@ -12,15 +16,23 @@ declare global {
   }
 }
 
+export type TestRunnerRef = MutableRefObject<(() => Promise<TestResult[] | null>) | null>;
+
 interface PythonCompilerProps {
   defaultCode?: string;
   taskId?: string;
+  // Correzione automatica: casi di prova della task o del compito
+  testCases?: TestCase[];
+  onTestResults?: (results: TestResult[]) => void;
+  // La pagina del compito lo usa per rieseguire i test alla consegna
+  testRunnerRef?: TestRunnerRef;
 }
 
 const FALLBACK_CODE = '# Scrivi il tuo codice Python qui\nprint("Ciao, mondo!")\n';
 
-export function PythonCompiler({ defaultCode, taskId }: PythonCompilerProps) {
+export function PythonCompiler({ defaultCode, taskId, testCases, onTestResults, testRunnerRef }: PythonCompilerProps) {
   const [output, setOutput] = useState<string>('');
+  const [bottomTab, setBottomTab] = useState<'output' | 'tests'>('output');
   const [isLoadingPyodide, setIsLoadingPyodide] = useState<boolean>(true);
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const pyodideRef = useRef<any>(null);
@@ -37,6 +49,25 @@ export function PythonCompiler({ defaultCode, taskId }: PythonCompilerProps) {
   useEffect(() => {
     loadPyodide();
   }, []);
+
+  const cases = pythonCases(testCases ?? []);
+  const hasTests = cases.length > 0;
+  const tests = useTestRunner(cases, (onResult) => runPythonTests(code, cases, onResult), onTestResults);
+
+  useEffect(() => {
+    if (hasTests) preloadPythonTests();
+  }, [hasTests]);
+
+  useEffect(() => {
+    if (!testRunnerRef) return;
+    testRunnerRef.current = hasTests ? tests.runTests : null;
+    return () => { testRunnerRef.current = null; };
+  }, [testRunnerRef, hasTests, tests.runTests]);
+
+  const verify = () => {
+    setBottomTab('tests');
+    void tests.runTests();
+  };
 
   const loadPyodide = async () => {
     try {
@@ -168,6 +199,18 @@ builtins.input = _js_input
           >
             <RotateCcw className="w-4 h-4" />
           </Button>
+          {hasTests && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={verify}
+              disabled={tests.running || isLoadingDraft}
+              title="Controlla il codice con i casi di prova"
+            >
+              {tests.running ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Check className="w-4 h-4 mr-1" />}
+              Verifica
+            </Button>
+          )}
           <Button
             size="sm"
             onClick={runCode}
@@ -209,20 +252,47 @@ builtins.input = _js_input
         {/* Output Panel */}
         <ResizablePanel defaultSize={35} minSize={15}>
           <div className="h-full flex flex-col border-t border-border bg-muted/30">
-            <div className="px-4 py-2 border-b border-border bg-muted/50 flex items-center justify-between">
-              <span className="text-xs font-medium text-muted-foreground">Output</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setOutput('')}
-                title="Pulisci output"
-              >
-                <Trash2 className="w-3 h-3" />
-              </Button>
-            </div>
-            <pre className="p-4 text-sm font-mono overflow-auto flex-1 text-foreground whitespace-pre-wrap">
-              {output}
-            </pre>
+            {hasTests && (
+              <div className="flex items-center gap-1 px-2 pt-1 border-b border-border bg-muted/50" role="tablist">
+                <button type="button" role="tab" aria-selected={bottomTab === 'output'} onClick={() => setBottomTab('output')}
+                  className={`px-3 py-1 text-xs font-medium rounded-t ${bottomTab === 'output' ? 'bg-background text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
+                  Output
+                </button>
+                <button type="button" role="tab" aria-selected={bottomTab === 'tests'} onClick={() => setBottomTab('tests')}
+                  className={`px-3 py-1 text-xs font-medium rounded-t flex items-center gap-1.5 ${bottomTab === 'tests' ? 'bg-background text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
+                  Test ({cases.length})
+                  {!tests.running && <TestSummary cases={cases} results={tests.results} />}
+                </button>
+              </div>
+            )}
+            {hasTests && bottomTab === 'tests' ? (
+              <TestCasesPanel
+                className="flex-1"
+                cases={cases}
+                results={tests.results}
+                running={tests.running}
+                error={tests.error}
+                onRun={verify}
+                disabled={isLoadingDraft}
+              />
+            ) : (
+              <>
+                <div className="px-4 py-2 border-b border-border bg-muted/50 flex items-center justify-between">
+                  <span className="text-xs font-medium text-muted-foreground">Output</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setOutput('')}
+                    title="Pulisci output"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
+                </div>
+                <pre className="p-4 text-sm font-mono overflow-auto flex-1 text-foreground whitespace-pre-wrap">
+                  {output}
+                </pre>
+              </>
+            )}
           </div>
         </ResizablePanel>
       </ResizablePanelGroup>

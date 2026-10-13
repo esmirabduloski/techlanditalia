@@ -119,3 +119,19 @@ if ! out=$(run_sql supabase_admin supabase/tests/rls/07_satisfaction_survey.sql 
   exit 1
 fi
 echo "$out" | sed -n 's/.*NOTICE: *//p'
+
+echo "▶ Correzione automatica"
+if ! out=$(run_sql supabase_admin supabase/tests/rls/08_auto_grading.sql 2>&1); then
+  echo "$out" | sed -nE 's/.*(NOTICE|WARNING|ERROR): *//p'
+  echo "✗ Test della correzione automatica FALLITI"
+  exit 1
+fi
+echo "$out" | sed -n 's/.*NOTICE: *//p'
+
+echo "▶ Consegna con file"
+if ! out=$(run_sql supabase_admin supabase/tests/rls/09_submit_homework_file.sql 2>&1); then
+  echo "$out" | sed -nE 's/.*(NOTICE|WARNING|ERROR): *//p'
+  echo "✗ Test della consegna con file FALLITI"
+  exit 1
+fi
+echo "$out" | sed -n 's/.*NOTICE: *//p'

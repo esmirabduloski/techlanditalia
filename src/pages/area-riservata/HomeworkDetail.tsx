@@ -70,6 +70,16 @@ interface Submission {
   points_earned: number;
 }
 
+// Errori delle RPC submit_homework_file / submit_homework_code
+const SUBMIT_ERRORS: Record<string, string> = {
+  already_graded: "Il compito è già stato valutato: non puoi più modificare la consegna.",
+  not_enrolled: "Non risulti iscritto a questo corso.",
+  empty: "Carica un file o scrivi del codice prima di inviare.",
+  invalid_file: "File non valido: caricalo di nuovo.",
+  too_large: "La consegna è troppo grande.",
+  mfa_required: "Completa la verifica in due passaggi per consegnare.",
+};
+
 export default function HomeworkDetail() {
   const { homeworkId } = useParams();
   const navigate = useNavigate();
@@ -183,6 +193,16 @@ export default function HomeworkDetail() {
   const handleSubmit = async () => {
     if (!user || !homework || !effectiveUserId) return;
 
+    // Le RPC consegnano sempre per auth.uid(): in anteprima finirebbe sull'admin
+    if (isImpersonating) {
+      toast({
+        variant: "destructive",
+        title: "Anteprima studente",
+        description: "In modalità anteprima non puoi consegnare al posto dello studente",
+      });
+      return;
+    }
+
     // Validate submission
     if (submitType === "file" && !uploadedFile) {
       toast({
@@ -205,39 +225,26 @@ export default function HomeworkDetail() {
     setIsSubmitting(true);
 
     try {
-      // Use effectiveUserId for student_id when submitting
-      const submissionData: any = {
-        homework_id: homework.id,
-        student_id: effectiveUserId,
-        status: "pending",
-        notes: notes || null,
-      };
-
-      if (submitType === "file" && uploadedFile) {
-        submissionData.file_url = uploadedFile.url;
-        submissionData.file_name = uploadedFile.name;
-        submissionData.file_type = uploadedFile.type;
-      } else if (submitType === "code") {
-        // Store code as a note with special prefix
-        submissionData.notes = `[CODE]\n${codeContent}`;
-        submissionData.file_type = "text/code";
-      }
-
-      if (submission) {
-        // Update existing submission
-        const { error } = await supabase
-          .from("homework_submissions")
-          .update(submissionData)
-          .eq("id", submission.id);
-
-        if (error) throw error;
-      } else {
-        // Create new submission
-        const { error } = await supabase
-          .from("homework_submissions")
-          .insert(submissionData);
-
-        if (error) throw error;
+      // Lo studente non ha una policy UPDATE: creazione e aggiornamento passano
+      // dalle RPC, che rifiutano anche le consegne già valutate
+      const { data, error } =
+        submitType === "file" && uploadedFile
+          ? await supabase.rpc("submit_homework_file", {
+              _homework_id: homework.id,
+              _file_url: uploadedFile.url,
+              _file_name: uploadedFile.name,
+              _file_type: uploadedFile.type,
+              _notes: notes || undefined,
+            })
+          : await supabase.rpc("submit_homework_code", {
+              _homework_id: homework.id,
+              // Il codice si salva nelle note con un prefisso speciale
+              _notes: `[CODE]\n${codeContent}`,
+            });
+      if (error) throw error;
+      const res = data as { success?: boolean; error?: string } | null;
+      if (!res?.success) {
+        throw new Error(SUBMIT_ERRORS[res?.error ?? ""] || "Impossibile inviare il compito");
       }
 
       toast({
@@ -505,9 +512,9 @@ export default function HomeworkDetail() {
                   <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                     {submission.teacher_feedback}
                   </p>
-                  {submission.grade && (
+                  {submission.grade != null && (
                     <p className="mt-2 text-sm font-medium">
-                      Voto: {submission.grade}/10 · Punti guadagnati: {submission.points_earned}
+                      Voto: {submission.grade}/100 · Punti guadagnati: {submission.points_earned}
                     </p>
                   )}
                 </div>

@@ -281,6 +281,20 @@
       "when": 1791895699380,
       "tag": "0039_apply_pending_0036_0038",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1791990000000,
+      "tag": "0040_auto_grading",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1792000000000,
+      "tag": "0041_submit_homework_file",
+      "breakpoints": true
     }
   ]
 }

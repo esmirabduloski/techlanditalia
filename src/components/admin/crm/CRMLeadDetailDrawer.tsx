@@ -191,8 +191,8 @@ export function CRMLeadDetailDrawer({ lead, open, onClose, onUpdate, onDelete, p
         {/* Attività aperte, es. "chiama la famiglia" per uno studente a rischio */}
         <CRMLeadTasks leadId={lead.id} onChanged={reloadInteractions} />
 
-        {/* Abbonamento: pausa per estate, esami o malattia invece della disdetta */}
-        {pauses && <CRMSubscriptionSection lead={lead} pauses={pauses} onChanged={reloadInteractions} />}
+        {/* Abbonamento: pausa per estate, esami o malattia, oppure disdetta con il questionario */}
+        {pauses && <CRMSubscriptionSection lead={lead} pauses={pauses} onUpdate={onUpdate} onChanged={reloadInteractions} />}
 
         {/* Dati anagrafici modificabili */}
         <div className="space-y-3 mb-6 p-3 border rounded-lg">

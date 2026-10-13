@@ -199,6 +199,10 @@ SELECT id, (SELECT enum_range(NULL::public.crm_interaction_type))[1] FROM public
 INSERT INTO public.crm_tasks (lead_id, student_id, kind, title) VALUES
   ('00000000-0000-0000-0000-0000000ce001', '00000000-0000-0000-0000-000000000101', 'student_at_risk', 'Chiama la famiglia di S1'),
   ('00000000-0000-0000-0000-0000000ce002', '00000000-0000-0000-0000-000000000103', 'student_at_risk', 'Chiama la famiglia di S3');
+INSERT INTO public.subscription_cancellations (lead_id, student_id, reason, would_return) VALUES
+  ('00000000-0000-0000-0000-0000000ce001', '00000000-0000-0000-0000-000000000102', 'schedule', 'maybe'),
+  ('00000000-0000-0000-0000-0000000ce002', '00000000-0000-0000-0000-000000000103', 'cost', 'no');
+
 -- Pause dell'abbonamento: S2 programmata, S3 già finita (nessuna in corso, per
 -- non cambiare i risultati di 03 e 04)
 INSERT INTO public.subscription_pauses (student_id, reason, starts_on, ends_on, ended_at, end_reason) VALUES

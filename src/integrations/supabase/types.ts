@@ -2764,6 +2764,60 @@ export type Database = {
           },
         ]
       }
+      subscription_cancellations: {
+        Row: {
+          cancelled_on: string
+          created_at: string
+          created_by: string | null
+          id: string
+          lead_id: string
+          reason: string
+          reason_other: string | null
+          student_id: string | null
+          would_have_stayed: string | null
+          would_return: string
+        }
+        Insert: {
+          cancelled_on?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          lead_id: string
+          reason: string
+          reason_other?: string | null
+          student_id?: string | null
+          would_have_stayed?: string | null
+          would_return: string
+        }
+        Update: {
+          cancelled_on?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          lead_id?: string
+          reason?: string
+          reason_other?: string | null
+          student_id?: string | null
+          would_have_stayed?: string | null
+          would_return?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_cancellations_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_cancellations_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_pauses: {
         Row: {
           created_at: string

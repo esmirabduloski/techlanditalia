@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Pause, Settings2 } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { Pause, Settings2, UserMinus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,24 +7,42 @@ import type { CrmLead } from '@/hooks/useCRM';
 import type { SubscriptionPausesState } from '@/hooks/useSubscriptionPauses';
 import { SubscriptionPauseDialog } from '@/components/admin/SubscriptionPauseDialog';
 import { SubscriptionPauseBadge } from '@/components/admin/SubscriptionPauseBadge';
-import { PAUSE_REASON_LABELS, isPauseActive, pausePeriodLabel } from '@/lib/subscriptionPause';
+import { PAUSE_REASON_LABELS, isPauseActive, pausePeriodLabel, shortDate } from '@/lib/subscriptionPause';
+import { WOULD_RETURN_LABELS, reasonText, type SubscriptionCancellation } from '@/lib/subscriptionCancellation';
+import { CRMCancellationDialog } from './CRMCancellationDialog';
 
 type Student = { id: string; full_name: string; parent_id: string | null };
 
 interface Props {
   lead: CrmLead;
   pauses: SubscriptionPausesState;
-  /** Mettere in pausa o riprendere aggiunge una voce alla timeline */
+  onUpdate: (id: string, patch: Partial<CrmLead>) => Promise<boolean>;
+  /** Pausa, ripresa e disdetta aggiungono una voce alla timeline */
   onChanged: () => void;
 }
 
 /**
  * Abbonamento degli studenti della famiglia (figli del genitore collegato, o
- * lo studente collegato): pausa e ripresa.
+ * lo studente collegato): pausa e ripresa, disdetta con il questionario.
  */
-export function CRMSubscriptionSection({ lead, pauses, onChanged }: Props) {
+export function CRMSubscriptionSection({ lead, pauses, onUpdate, onChanged }: Props) {
   const [students, setStudents] = useState<Student[]>([]);
   const [editing, setEditing] = useState<Student | null>(null);
+  const [cancellations, setCancellations] = useState<SubscriptionCancellation[]>([]);
+  const [cancelOpen, setCancelOpen] = useState(false);
+
+  const loadCancellations = useCallback(async () => {
+    const { data } = await supabase
+      .from('subscription_cancellations')
+      .select('*')
+      .eq('lead_id', lead.id)
+      .order('created_at', { ascending: false });
+    setCancellations((data ?? []) as SubscriptionCancellation[]);
+  }, [lead.id]);
+
+  useEffect(() => {
+    loadCancellations();
+  }, [loadCancellations]);
 
   useEffect(() => {
     const profileId = lead.linked_profile_id;
@@ -47,7 +65,9 @@ export function CRMSubscriptionSection({ lead, pauses, onChanged }: Props) {
     };
   }, [lead.linked_profile_id]);
 
-  if (students.length === 0) return null;
+  // Solo per i clienti: chi non si è mai iscritto non ha niente da disdire
+  if (students.length === 0 && lead.pipeline_stage !== 'won' && cancellations.length === 0) return null;
+  const studentName = (id: string | null) => (id ? students.find((s) => s.id === id)?.full_name ?? 'Studente' : 'Tutta la famiglia');
 
   return (
     <div className="space-y-2 mb-6">
@@ -55,7 +75,7 @@ export function CRMSubscriptionSection({ lead, pauses, onChanged }: Props) {
         <Label className="text-base font-semibold">Abbonamento</Label>
         <SubscriptionPauseBadge pauses={pauses.activeForProfile(lead.linked_profile_id)} />
       </div>
-      <ul className="divide-y rounded-lg border">
+      {students.length > 0 && <ul className="divide-y rounded-lg border">
         {students.map((s) => {
           const pause = pauses.byStudent.get(s.id) ?? null;
           return (
@@ -75,7 +95,42 @@ export function CRMSubscriptionSection({ lead, pauses, onChanged }: Props) {
             </li>
           );
         })}
-      </ul>
+      </ul>}
+
+      {cancellations.length > 0 && (
+        <ul className="space-y-2" aria-label="Disdette registrate">
+          {cancellations.map((c) => (
+            <li key={c.id} className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm space-y-0.5">
+              <div className="font-medium">
+                Disdetta del {shortDate(c.cancelled_on)} · {studentName(c.student_id)}
+              </div>
+              <div><span className="text-muted-foreground">Motivo:</span> {reasonText(c)}</div>
+              {c.would_have_stayed && (
+                <div><span className="text-muted-foreground">Li avrebbe fatti restare:</span> {c.would_have_stayed}</div>
+              )}
+              <div><span className="text-muted-foreground">Tornerebbero:</span> {WOULD_RETURN_LABELS[c.would_return]}</div>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => setCancelOpen(true)}>
+        <UserMinus className="w-4 h-4 mr-1" /> Registra disdetta
+      </Button>
+
+      <CRMCancellationDialog
+        open={cancelOpen}
+        onOpenChange={setCancelOpen}
+        lead={lead}
+        students={students}
+        openPauseIds={new Map(pauses.pauses.map((p) => [p.student_id, p.id]))}
+        onUpdate={onUpdate}
+        onSaved={() => {
+          loadCancellations();
+          pauses.reload();
+          onChanged();
+        }}
+      />
 
       {editing && (
         <SubscriptionPauseDialog

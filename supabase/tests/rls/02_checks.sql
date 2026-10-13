@@ -58,6 +58,7 @@ INSERT INTO rls_test.admin_only_tables VALUES
   ('crm_leads',         'CRM interno'),
   ('crm_interactions',  'CRM interno'),
   ('crm_payments',      'CRM interno'),
+  ('subscription_cancellations', 'questionario di disdetta, CRM interno'),
   ('admin_access_logs', 'log degli accessi admin');
 
 CREATE FUNCTION rls_test.group_col(_tbl text) RETURNS text LANGUAGE sql STABLE AS $$

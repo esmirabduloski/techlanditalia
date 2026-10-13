@@ -86,3 +86,12 @@ if ! out=$(run_sql supabase_admin supabase/tests/rls/03_student_risk.sql 2>&1); 
   exit 1
 fi
 echo "$out" | sed -n 's/.*NOTICE: *//p'
+
+echo "▶ Avviso saldo lezioni"
+if ! out=$(run_sql supabase_admin supabase/tests/rls/04_lesson_balance_alert.sql 2>&1); then
+  # Il trigger trasforma gli errori della chiamata in WARNING: mostrali
+  echo "$out" | sed -nE 's/.*(NOTICE|WARNING|ERROR): *//p'
+  echo "✗ Test dell'avviso saldo FALLITI"
+  exit 1
+fi
+echo "$out" | sed -n 's/.*NOTICE: *//p'

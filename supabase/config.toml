@@ -72,3 +72,8 @@ verify_jwt = false
 # oppure da un admin (JWT + 2FA verificati dentro la funzione).
 [functions.student-risk-check]
 verify_jwt = false
+
+# Push agli admin quando il saldo lezioni scende a 3: chiamata solo dal
+# trigger su profiles via pg_net, con x-cron-token verificato dentro la funzione.
+[functions.lesson-balance-alert]
+verify_jwt = false

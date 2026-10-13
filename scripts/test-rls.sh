@@ -127,3 +127,11 @@ if ! out=$(run_sql supabase_admin supabase/tests/rls/08_auto_grading.sql 2>&1); 
   exit 1
 fi
 echo "$out" | sed -n 's/.*NOTICE: *//p'
+
+echo "▶ Consegna con file"
+if ! out=$(run_sql supabase_admin supabase/tests/rls/09_submit_homework_file.sql 2>&1); then
+  echo "$out" | sed -nE 's/.*(NOTICE|WARNING|ERROR): *//p'
+  echo "✗ Test della consegna con file FALLITI"
+  exit 1
+fi
+echo "$out" | sed -n 's/.*NOTICE: *//p'

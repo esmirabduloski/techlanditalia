@@ -84,6 +84,7 @@ export function seedStudent(fake: FakeSupabase) {
   fake.seed("lesson_tasks", [codeTask]);
   fake.seed("homework", [homework]);
   fake.rpc("submit_homework_code", submitHomeworkCode);
+  fake.rpc("submit_homework_file", submitHomeworkFile);
   return fake;
 }
 
@@ -107,6 +108,39 @@ function submitHomeworkCode(args: unknown, { fake, userId }: { fake: FakeSupabas
     file_type: "text/code",
     auto_score: score,
     test_results: score != null ? (Array.isArray(_test_results) ? _test_results : []) : null,
+    submitted_at: new Date().toISOString(),
+  };
+  const existing = fake.table("homework_submissions").find((s) => s.homework_id === _homework_id && s.student_id === userId);
+  if (!existing) {
+    fake.seed("homework_submissions", [{ homework_id: _homework_id, student_id: userId, points_earned: 0, ...fields }]);
+    return { success: true, created: true };
+  }
+  if (existing.status === "graded" || existing.status === "approved") return { success: false, error: "already_graded" };
+  Object.assign(existing, fields);
+  return { success: true, created: false };
+}
+
+/**
+ * Come la RPC submit_homework_file (drizzle/migrations/0040_submit_homework_file.sql):
+ * crea o aggiorna la consegna con file dell'alunno loggato, accetta solo file nella
+ * sua cartella, rifiuta le consegne già valutate e azzera il voto proposto.
+ */
+function submitHomeworkFile(args: unknown, { fake, userId }: { fake: FakeSupabase; userId: string | null }) {
+  const { _homework_id, _file_url, _file_name, _file_type, _notes } = args as {
+    _homework_id: string; _file_url: string; _file_name: string; _file_type: string; _notes?: string | null;
+  };
+  if (!userId) return { success: false, error: "not_authenticated" };
+  if (!_file_url?.trim() || !_file_name?.trim()) return { success: false, error: "empty" };
+  if (!_file_url.startsWith(`${userId}/`) || _file_url.includes("..")) return { success: false, error: "invalid_file" };
+  const fields = {
+    status: "pending",
+    notes: _notes?.trim() || null,
+    file_url: _file_url,
+    file_name: _file_name,
+    file_type: _file_type,
+    auto_score: null,
+    test_results: null,
+    tests_run_at: null,
     submitted_at: new Date().toISOString(),
   };
   const existing = fake.table("homework_submissions").find((s) => s.homework_id === _homework_id && s.student_id === userId);

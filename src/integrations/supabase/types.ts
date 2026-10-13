@@ -3579,6 +3579,16 @@ export type Database = {
         }
         Returns: Json
       }
+      submit_homework_file: {
+        Args: {
+          _file_name: string
+          _file_type: string
+          _file_url: string
+          _homework_id: string
+          _notes?: string
+        }
+        Returns: Json
+      }
       teacher_teaches_student_in_group: {
         Args: { _group_id: string; _teacher_id: string }
         Returns: boolean

@@ -239,6 +239,13 @@
       "when": 1791894652860,
       "tag": "0033_lesson_balance_alert",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1791894684124,
+      "tag": "0034_subscription_pauses",
+      "breakpoints": true
     }
   ]
 }

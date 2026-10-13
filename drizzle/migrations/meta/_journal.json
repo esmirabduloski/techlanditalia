@@ -232,6 +232,13 @@
       "when": 1791894634374,
       "tag": "0032_student_risk_tasks",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1791894652860,
+      "tag": "0033_lesson_balance_alert",
+      "breakpoints": true
     }
   ]
 }

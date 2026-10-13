@@ -24,6 +24,7 @@ import { CRMPaymentsSection } from "./payments/CRMPaymentsSection";
 import { CRMLinkedAccount } from "./CRMLinkedAccount";
 import { CRMLeadTasks } from "./tasks/CRMLeadTasks";
 import { CRMSubscriptionSection } from "./CRMSubscriptionSection";
+import { CRMCourseProposalSection } from "./CRMCourseProposalSection";
 import { SubscriptionPauseBadge } from "@/components/admin/SubscriptionPauseBadge";
 import type { SubscriptionPausesState } from "@/hooks/useSubscriptionPauses";
 import { format } from "date-fns";
@@ -193,6 +194,9 @@ export function CRMLeadDetailDrawer({ lead, open, onClose, onUpdate, onDelete, p
 
         {/* Abbonamento: pausa per estate, esami o malattia, oppure disdetta con il questionario */}
         {pauses && <CRMSubscriptionSection lead={lead} pauses={pauses} onUpdate={onUpdate} onChanged={reloadInteractions} />}
+
+        {/* Proposta del corso successivo: sconto per chi continua subito e invio alla famiglia */}
+        <CRMCourseProposalSection lead={lead} onChanged={reloadInteractions} />
 
         {/* Dati anagrafici modificabili */}
         <div className="space-y-3 mb-6 p-3 border rounded-lg">

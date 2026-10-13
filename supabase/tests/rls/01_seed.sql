@@ -202,6 +202,12 @@ INSERT INTO public.crm_tasks (lead_id, student_id, kind, title) VALUES
 INSERT INTO public.subscription_cancellations (lead_id, student_id, reason, would_return) VALUES
   ('00000000-0000-0000-0000-0000000ce001', '00000000-0000-0000-0000-000000000102', 'schedule', 'maybe'),
   ('00000000-0000-0000-0000-0000000ce002', '00000000-0000-0000-0000-000000000103', 'cost', 'no');
+-- Proposte del corso successivo: S1 (G1) e S3 (G2) inviate, S2 (G2) ancora
+-- bozza dell'insegnante, che il genitore P1 non deve vedere
+INSERT INTO public.course_proposals (student_id, group_id, proposed_course_id, teacher_reason, status, offer_expires_on, sent_at) VALUES
+  ('00000000-0000-0000-0000-000000000101', '00000000-0000-0000-0000-00000000a001', '00000000-0000-0000-0000-00000000c002', 'Pronto per il corso C2, ottimi progressi', 'sent', current_date + 10, now()),
+  ('00000000-0000-0000-0000-000000000103', '00000000-0000-0000-0000-00000000a002', '00000000-0000-0000-0000-00000000c001', 'Pronto per il corso C1, ottimi progressi', 'sent', current_date + 10, now()),
+  ('00000000-0000-0000-0000-000000000102', '00000000-0000-0000-0000-00000000a002', '00000000-0000-0000-0000-00000000c001', 'Bozza: da rivedere in segreteria', 'draft', NULL, NULL);
 
 -- Pause dell'abbonamento: S2 programmata, S3 già finita (nessuna in corso, per
 -- non cambiare i risultati di 03 e 04)

@@ -409,6 +409,46 @@ SELECT rls_test.expect('insegnante T1', 'il profilo di S3 (alunno condiviso con 
 SELECT rls_test.expect('insegnante T1', 'solo l''iscrizione di S3 al proprio corso',
   $$SELECT count(*) FROM public.enrollments WHERE student_id = '00000000-0000-0000-0000-000000000103'$$, 1);
 
+-- Proposte del corso successivo: il genitore vede solo quelle inviate, non le
+-- bozze; l'insegnante scrive bozze solo per i propri gruppi, non sceglie lo
+-- sconto e non le invia; la famiglia risponde solo tramite la edge function.
+SELECT rls_test.expect('genitore P1', 'la proposta inviata per S1 ma non la bozza di S2',
+  'SELECT count(*) FROM public.course_proposals', 1);
+SELECT rls_test.expect('insegnante T2', 'le proposte del proprio gruppo (anche bozze)',
+  'SELECT count(*) FROM public.course_proposals', 2);
+SELECT rls_test.expect('insegnante T1', 'solo le proposte del proprio gruppo',
+  'SELECT count(*) FROM public.course_proposals', 1);
+SELECT rls_test.expect_blocked('genitore P1', 'accettare da sé la proposta di S1',
+  $$UPDATE public.course_proposals SET status = 'accepted' WHERE student_id = '00000000-0000-0000-0000-000000000101'$$);
+SELECT rls_test.expect_blocked('insegnante T2', 'inviare da sé la bozza di S2',
+  $$UPDATE public.course_proposals SET status = 'sent', offer_expires_on = current_date + 5 WHERE student_id = '00000000-0000-0000-0000-000000000102'$$);
+SELECT rls_test.expect_blocked('insegnante T1', 'scrivere una proposta per S2 nel gruppo di T2',
+  $$INSERT INTO public.course_proposals (student_id, group_id, proposed_course_id, teacher_reason, created_by)
+    VALUES ('00000000-0000-0000-0000-000000000102', '00000000-0000-0000-0000-00000000a002', '00000000-0000-0000-0000-00000000c001',
+            'Tentativo su un gruppo altrui', '00000000-0000-0000-0000-000000000301')$$);
+SELECT rls_test.expect_blocked('insegnante T1', 'scrivere una proposta già inviata',
+  $$INSERT INTO public.course_proposals (student_id, group_id, proposed_course_id, teacher_reason, created_by, status, offer_expires_on)
+    VALUES ('00000000-0000-0000-0000-000000000103', '00000000-0000-0000-0000-00000000a001', '00000000-0000-0000-0000-00000000c002',
+            'Tentativo di saltare la segreteria', '00000000-0000-0000-0000-000000000301', 'sent', current_date + 5)$$);
+DO $$
+DECLARE n int; cents int;
+BEGIN
+  -- La bozza dell'insegnante passa, ma lo sconto resta quello di default
+  PERFORM rls_test.login('00000000-0000-0000-0000-000000000302', 'aal2');
+  UPDATE public.course_proposals SET teacher_reason = 'Motivo corretto dall''insegnante', discount_cents = 99900
+  WHERE student_id = '00000000-0000-0000-0000-000000000102' AND status = 'draft';
+  GET DIAGNOSTICS n = ROW_COUNT;
+  PERFORM rls_test.logout();
+  SELECT discount_cents INTO cents FROM public.course_proposals
+  WHERE student_id = '00000000-0000-0000-0000-000000000102' AND status = 'draft';
+  PERFORM rls_test.count_check();
+  IF n IS DISTINCT FROM 1 THEN
+    PERFORM rls_test.fail(format('insegnante T2 non riesce a correggere la bozza di S2 (righe: %s)', n));
+  ELSIF cents IS DISTINCT FROM 5000 THEN
+    PERFORM rls_test.fail(format('insegnante T2 ha cambiato lo sconto della bozza di S2 (%s)', cents));
+  END IF;
+END $$;
+
 -- Senza verifica in due passaggi (aal1) un insegnante non vede nulla.
 DO $$
 BEGIN

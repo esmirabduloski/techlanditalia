@@ -82,3 +82,8 @@ verify_jwt = false
 # dal cron con x-cron-token, oppure da un admin (JWT + 2FA verificati dentro la funzione).
 [functions.subscription-pause-check]
 verify_jwt = false
+
+# Proposta del corso successivo: bozza dell'insegnante, invio dell'admin (2FA),
+# risposta della famiglia. JWT e ruolo verificati dentro la funzione.
+[functions.course-proposal]
+verify_jwt = false

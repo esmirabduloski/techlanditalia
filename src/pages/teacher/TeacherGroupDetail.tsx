@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { GroupCertificatesViewer } from "@/components/teacher/GroupCertificatesViewer";
 import { LessonReportForm } from "@/components/teacher/LessonReportForm";
+import { CourseProposalsCard } from "@/components/teacher/CourseProposalsCard";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -589,6 +590,9 @@ export default function TeacherGroupDetail() {
 
   const totalLessons = group.max_lessons;
   const lastCompletedLesson = getLastCompletedLesson();
+  const lessonsDone = Math.max(0, ...students.flatMap(s => Object.keys(s.attendance).map(Number)));
+  // Ultime 4 lezioni (o gruppo archiviato): è il momento di proporre il prossimo corso
+  const nearCourseEnd = group.status === 'archived' || (totalLessons > 0 && lessonsDone >= totalLessons - 4);
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -775,6 +779,15 @@ export default function TeacherGroupDetail() {
             )}
           </CardContent>
         </Card>
+
+        {/* Proposta del corso successivo, da inviare alla famiglia tramite la segreteria */}
+        <CourseProposalsCard
+          groupId={groupId!}
+          teacherId={effectiveUserId!}
+          currentCourseId={group.course_id}
+          students={students.map(s => ({ student_id: s.student_id, full_name: s.full_name }))}
+          nearEnd={nearCourseEnd}
+        />
 
         {/* Lesson Report Form */}
         <LessonReportForm

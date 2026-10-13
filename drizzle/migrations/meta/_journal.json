@@ -253,6 +253,13 @@
       "when": 1791894695334,
       "tag": "0035_subscription_cancellations",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1791960000000,
+      "tag": "0036_course_proposals",
+      "breakpoints": true
     }
   ]
 }

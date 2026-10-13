@@ -577,6 +577,91 @@ export type Database = {
         }
         Relationships: []
       }
+      course_proposals: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          discount_applies: boolean | null
+          discount_cents: number
+          email_sent_at: string | null
+          group_id: string
+          id: string
+          offer_expires_on: string | null
+          parent_note: string | null
+          proposed_course_id: string
+          responded_at: string | null
+          responded_by: string | null
+          sent_at: string | null
+          sent_by: string | null
+          status: string
+          student_id: string
+          teacher_reason: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          discount_applies?: boolean | null
+          discount_cents?: number
+          email_sent_at?: string | null
+          group_id: string
+          id?: string
+          offer_expires_on?: string | null
+          parent_note?: string | null
+          proposed_course_id: string
+          responded_at?: string | null
+          responded_by?: string | null
+          sent_at?: string | null
+          sent_by?: string | null
+          status?: string
+          student_id: string
+          teacher_reason: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          discount_applies?: boolean | null
+          discount_cents?: number
+          email_sent_at?: string | null
+          group_id?: string
+          id?: string
+          offer_expires_on?: string | null
+          parent_note?: string | null
+          proposed_course_id?: string
+          responded_at?: string | null
+          responded_by?: string | null
+          sent_at?: string | null
+          sent_by?: string | null
+          status?: string
+          student_id?: string
+          teacher_reason?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_proposals_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "student_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_proposals_proposed_course_id_fkey"
+            columns: ["proposed_course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_proposals_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courses: {
         Row: {
           age_range: string | null

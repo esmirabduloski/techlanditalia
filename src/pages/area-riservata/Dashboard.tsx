@@ -39,6 +39,7 @@ import { useBackgroundColor, LIGHT_COLORS, DARK_COLORS } from '@/hooks/useBackgr
 import { useTheme } from 'next-themes';
 import { supabase } from '@/integrations/supabase/client';
 import { PushNotificationsCard } from '@/components/notifications/PushNotificationsCard';
+import { CourseProposalCard } from '@/components/dashboard/CourseProposalCard';
 
 interface CourseProgress {
   courseId: string;
@@ -315,6 +316,11 @@ export default function Dashboard() {
               </Button>
             </div>
           </div>
+
+          {/* Proposta del corso successivo a fine corso, con lo sconto per chi continua subito */}
+          {effectiveUserId && !effectiveIsTeacher && (
+            <CourseProposalCard userId={effectiveUserId} readOnly={isImpersonating} />
+          )}
 
           {/* Notifiche push promemoria lezioni - solo genitori */}
           {effectiveIsParent && !isImpersonating && <PushNotificationsCard />}

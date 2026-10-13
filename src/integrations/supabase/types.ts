@@ -943,75 +943,6 @@ export type Database = {
         }
         Relationships: []
       }
-      crm_tasks: {
-        Row: {
-          assigned_to: string | null
-          completed_at: string | null
-          completed_by: string | null
-          created_at: string
-          details: string | null
-          due_at: string
-          id: string
-          kind: string
-          lead_id: string
-          outcome: string | null
-          signals: Json
-          status: string
-          student_id: string | null
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          assigned_to?: string | null
-          completed_at?: string | null
-          completed_by?: string | null
-          created_at?: string
-          details?: string | null
-          due_at?: string
-          id?: string
-          kind: string
-          lead_id: string
-          outcome?: string | null
-          signals?: Json
-          status?: string
-          student_id?: string | null
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          assigned_to?: string | null
-          completed_at?: string | null
-          completed_by?: string | null
-          created_at?: string
-          details?: string | null
-          due_at?: string
-          id?: string
-          kind?: string
-          lead_id?: string
-          outcome?: string | null
-          signals?: Json
-          status?: string
-          student_id?: string | null
-          title?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "crm_tasks_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "crm_leads"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "crm_tasks_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       data_deletion_requests: {
         Row: {
           admin_notes: string | null
@@ -2764,119 +2695,6 @@ export type Database = {
           },
         ]
       }
-      subscription_cancellations: {
-        Row: {
-          cancelled_on: string
-          created_at: string
-          created_by: string | null
-          id: string
-          lead_id: string
-          reason: string
-          reason_other: string | null
-          student_id: string | null
-          would_have_stayed: string | null
-          would_return: string
-        }
-        Insert: {
-          cancelled_on?: string
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          lead_id: string
-          reason: string
-          reason_other?: string | null
-          student_id?: string | null
-          would_have_stayed?: string | null
-          would_return: string
-        }
-        Update: {
-          cancelled_on?: string
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          lead_id?: string
-          reason?: string
-          reason_other?: string | null
-          student_id?: string | null
-          would_have_stayed?: string | null
-          would_return?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "subscription_cancellations_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "crm_leads"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "subscription_cancellations_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      subscription_pauses: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          end_reason: string | null
-          ended_at: string | null
-          ended_by: string | null
-          ends_on: string | null
-          id: string
-          notes: string | null
-          reason: string
-          reminder_14_sent_at: string | null
-          reminder_7_sent_at: string | null
-          starts_on: string
-          student_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          end_reason?: string | null
-          ended_at?: string | null
-          ended_by?: string | null
-          ends_on?: string | null
-          id?: string
-          notes?: string | null
-          reason?: string
-          reminder_14_sent_at?: string | null
-          reminder_7_sent_at?: string | null
-          starts_on?: string
-          student_id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          end_reason?: string | null
-          ended_at?: string | null
-          ended_by?: string | null
-          ends_on?: string | null
-          id?: string
-          notes?: string | null
-          reason?: string
-          reminder_14_sent_at?: string | null
-          reminder_7_sent_at?: string | null
-          starts_on?: string
-          student_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "subscription_pauses_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       task_progress: {
         Row: {
           completed_at: string
@@ -3285,10 +3103,6 @@ export type Database = {
         Args: { _parent_id: string; _student_id: string }
         Returns: boolean
       }
-      is_student_paused: {
-        Args: { _student: string }
-        Returns: boolean
-      }
       is_parent_of_enrolled: {
         Args: { _course_id: string; _parent_id: string }
         Returns: boolean
@@ -3342,15 +3156,6 @@ export type Database = {
       reward_referral: {
         Args: { _credits_each?: number; _reason?: string; _referral_id: string }
         Returns: Json
-      }
-      student_risk_signals: {
-        Args: { _rules?: Json }
-        Returns: {
-          parent_id: string
-          signals: Json
-          student_id: string
-          student_name: string
-        }[]
       }
       teacher_teaches_student_in_group: {
         Args: { _group_id: string; _teacher_id: string }

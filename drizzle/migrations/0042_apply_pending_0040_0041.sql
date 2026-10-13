@@ -1,0 +1,1 @@
+COMMENT ON TABLE public.homework_submissions IS 'Consegne dei compiti degli alunni.';

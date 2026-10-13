@@ -3530,11 +3530,11 @@ export type Database = {
       }
       mfa_ok: { Args: never; Returns: boolean }
       mfa_required: { Args: { _user_id: string }; Returns: boolean }
-      my_mfa_required: { Args: never; Returns: boolean }
       monthly_report_stats: {
         Args: { _from: string; _to: string }
         Returns: Json
       }
+      my_mfa_required: { Args: never; Returns: boolean }
       pending_legal_consents: {
         Args: never
         Returns: {

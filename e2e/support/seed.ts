@@ -89,7 +89,7 @@ export function seedStudent(fake: FakeSupabase) {
 }
 
 /**
- * Come la RPC submit_homework_code (drizzle/migrations/0039_auto_grading.sql):
+ * Come la RPC submit_homework_code (drizzle/migrations/0040_auto_grading.sql):
  * crea o aggiorna la consegna dell'alunno loggato, rifiuta quelle già valutate
  * e salva il voto proposto solo se il compito ha casi di prova.
  */
@@ -121,7 +121,7 @@ function submitHomeworkCode(args: unknown, { fake, userId }: { fake: FakeSupabas
 }
 
 /**
- * Come la RPC submit_homework_file (drizzle/migrations/0040_submit_homework_file.sql):
+ * Come la RPC submit_homework_file (drizzle/migrations/0041_submit_homework_file.sql):
  * crea o aggiorna la consegna con file dell'alunno loggato, accetta solo file nella
  * sua cartella, rifiuta le consegne già valutate e azzera il voto proposto.
  */

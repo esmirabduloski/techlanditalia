@@ -1,4 +1,4 @@
--- Verifica di public.submit_homework_code() (drizzle/migrations/0039_auto_grading.sql).
+-- Verifica di public.submit_homework_code() (drizzle/migrations/0040_auto_grading.sql).
 -- Gira come supabase_admin sul database usa-e-getta e chiama la RPC come i vari utenti:
 --   - l'alunno iscritto consegna e aggiorna la propria consegna non ancora valutata
 --     (anche se l'insegnante l'ha rimandata indietro: torna "in attesa");

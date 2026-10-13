@@ -1,6 +1,6 @@
 -- Consegna di un compito con file allegato (pagina compito-dettaglio).
 --
--- Come per il codice (0039_auto_grading.sql, submit_homework_code) lo studente
+-- Come per il codice (0040_auto_grading.sql, submit_homework_code) lo studente
 -- non ha una policy UPDATE su homework_submissions: "Aggiorna consegna" con un
 -- nuovo file non cambiava nulla (0 righe, nessun errore). La consegna passa
 -- ora dalla RPC submit_homework_file, che:

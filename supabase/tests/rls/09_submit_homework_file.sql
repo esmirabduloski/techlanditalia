@@ -1,4 +1,4 @@
--- Verifica di public.submit_homework_file() (drizzle/migrations/0040_submit_homework_file.sql).
+-- Verifica di public.submit_homework_file() (drizzle/migrations/0041_submit_homework_file.sql).
 -- Gira come supabase_admin sul database usa-e-getta e chiama la RPC come i vari utenti:
 --   - l'alunno iscritto consegna un file e aggiorna la propria consegna non ancora
 --     valutata (torna "in attesa", il feedback resta, il voto proposto si azzera);

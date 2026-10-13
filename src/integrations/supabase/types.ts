@@ -1459,7 +1459,6 @@ export type Database = {
           preview_only: boolean
           python_env: string | null
           replit_url: string | null
-          test_cases: Json
           title: string
         }
         Insert: {
@@ -1478,7 +1477,6 @@ export type Database = {
           preview_only?: boolean
           python_env?: string | null
           replit_url?: string | null
-          test_cases?: Json
           title: string
         }
         Update: {
@@ -1497,7 +1495,6 @@ export type Database = {
           preview_only?: boolean
           python_env?: string | null
           replit_url?: string | null
-          test_cases?: Json
           title?: string
         }
         Relationships: [
@@ -1551,7 +1548,6 @@ export type Database = {
       }
       homework_submissions: {
         Row: {
-          auto_score: number | null
           feedback_at: string | null
           file_name: string | null
           file_type: string | null
@@ -1565,11 +1561,8 @@ export type Database = {
           student_id: string
           submitted_at: string
           teacher_feedback: string | null
-          test_results: Json | null
-          tests_run_at: string | null
         }
         Insert: {
-          auto_score?: number | null
           feedback_at?: string | null
           file_name?: string | null
           file_type?: string | null
@@ -1583,11 +1576,8 @@ export type Database = {
           student_id: string
           submitted_at?: string
           teacher_feedback?: string | null
-          test_results?: Json | null
-          tests_run_at?: string | null
         }
         Update: {
-          auto_score?: number | null
           feedback_at?: string | null
           file_name?: string | null
           file_type?: string | null
@@ -1601,8 +1591,6 @@ export type Database = {
           student_id?: string
           submitted_at?: string
           teacher_feedback?: string | null
-          test_results?: Json | null
-          tests_run_at?: string | null
         }
         Relationships: [
           {
@@ -1911,8 +1899,6 @@ export type Database = {
           scratch_url: string | null
           slides_url: string | null
           task_number: number
-          test_cases: Json
-          tests_required: boolean
           title: string
         }
         Insert: {
@@ -1934,8 +1920,6 @@ export type Database = {
           scratch_url?: string | null
           slides_url?: string | null
           task_number: number
-          test_cases?: Json
-          tests_required?: boolean
           title: string
         }
         Update: {
@@ -1957,8 +1941,6 @@ export type Database = {
           scratch_url?: string | null
           slides_url?: string | null
           task_number?: number
-          test_cases?: Json
-          tests_required?: boolean
           title?: string
         }
         Relationships: [
@@ -3569,25 +3551,6 @@ export type Database = {
           student_id: string
           student_name: string
         }[]
-      }
-      submit_homework_code: {
-        Args: {
-          _auto_score?: number
-          _homework_id: string
-          _notes: string
-          _test_results?: Json
-        }
-        Returns: Json
-      }
-      submit_homework_file: {
-        Args: {
-          _file_name: string
-          _file_type: string
-          _file_url: string
-          _homework_id: string
-          _notes?: string
-        }
-        Returns: Json
       }
       teacher_teaches_student_in_group: {
         Args: { _group_id: string; _teacher_id: string }

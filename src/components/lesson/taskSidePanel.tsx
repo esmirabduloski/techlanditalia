@@ -3,6 +3,7 @@ import { TurtleCompiler } from './TurtleCompiler';
 import { PgzeroCompiler } from './PgzeroCompiler';
 import { WebCompiler } from './WebCompiler';
 import type { WorkspaceSidePanel } from './LessonWorkspace';
+import { parseTestCases, type TestResult } from '@/lib/testCases';
 
 export const PYTHON_COURSES = ['python-base', 'python-ai', 'python-avanzato'];
 export const WEB_COURSES = ['web-development'];
@@ -25,6 +26,8 @@ export interface SidePanelTask {
   python_env: string | null;
   replit_url: string | null;
   attachments: TaskAttachment[];
+  // Correzione automatica (jsonb lesson_tasks.test_cases)
+  test_cases?: unknown;
 }
 
 function getScratchEmbedUrl(url: string): string {
@@ -55,11 +58,12 @@ function ScratchPanel({ url }: { url: string }) {
 /**
  * Pannello destro di un task: gioco Scratch, oppure compilatore per i task "misto"
  * dei corsi Python/Web. `saveDrafts` = salva il codice dello studente (non per l'insegnante).
+ * `onTestResults` riceve l'esito di "Verifica" quando la task ha casi di prova.
  */
 export function getTaskSidePanel(
   courseSlug: string,
   task: SidePanelTask,
-  { saveDrafts }: { saveDrafts: boolean },
+  { saveDrafts, onTestResults }: { saveDrafts: boolean; onTestResults?: (results: TestResult[]) => void },
 ): WorkspaceSidePanel | undefined {
   if (task.content_type === 'scratch' && task.scratch_url) {
     return { label: 'Gioco', emoji: '🐱', node: <ScratchPanel url={task.scratch_url} />, defaultSize: 60 };
@@ -67,6 +71,7 @@ export function getTaskSidePanel(
 
   if (task.content_type !== 'mixed') return undefined;
   const taskId = saveDrafts ? task.id : undefined;
+  const testCases = parseTestCases(task.test_cases);
 
   if (PYTHON_COURSES.includes(courseSlug)) {
     // Turtle anche quando l'ambiente non è impostato ma il codice di partenza importa turtle
@@ -76,7 +81,7 @@ export function getTaskSidePanel(
     ) : task.python_env === 'pgzero' ? (
       <PgzeroCompiler defaultCode={task.default_python_code || undefined} replitUrl={task.replit_url || undefined} />
     ) : (
-      <PythonCompiler defaultCode={task.default_python_code || undefined} taskId={taskId} />
+      <PythonCompiler defaultCode={task.default_python_code || undefined} taskId={taskId} testCases={testCases} onTestResults={onTestResults} />
     );
     return { label: 'Codice', emoji: '💻', node };
   }
@@ -92,12 +97,27 @@ export function getTaskSidePanel(
           defaultJsCode={task.default_js_code || undefined}
           taskId={taskId}
           taskAttachments={task.attachments}
+          testCases={testCases}
+          onTestResults={onTestResults}
         />
       ),
     };
   }
 
   return undefined;
+}
+
+/** Casi di prova che la task fa davvero eseguire (Turtle e Pygame Zero non li supportano). */
+export function getRunnableTaskTests(courseSlug: string, task: SidePanelTask) {
+  if (task.content_type !== 'mixed') return [];
+  const cases = parseTestCases(task.test_cases);
+  if (PYTHON_COURSES.includes(courseSlug)) {
+    const usesTurtle = task.python_env === 'turtle' || /^\s*(import turtle|from turtle)/m.test(task.default_python_code || '');
+    if (usesTurtle || task.python_env === 'pgzero') return [];
+    return cases.filter(c => c.kind === 'io' || c.kind === 'assert');
+  }
+  if (WEB_COURSES.includes(courseSlug)) return cases.filter(c => c.kind !== 'io' && c.kind !== 'assert');
+  return [];
 }
 
 /** Compilatore libero per le lezioni senza task dei corsi Python/Web. */

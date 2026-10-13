@@ -14,6 +14,8 @@ import { getSignedUrl, openStorageFile } from '@/hooks/useSignedUrl';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { CodeViewer } from '@/components/admin/CodeViewer';
+import { AutoGradingReview, AutoScoreBadge } from '@/components/grading/AutoGradingReview';
+import { failedTestsFeedback, parseSubmittedCode, parseTestCases, parseTestResults } from '@/lib/testCases';
 import {
   Dialog,
   DialogContent,
@@ -43,6 +45,8 @@ interface Submission {
   submitted_at: string;
   feedback_at: string | null;
   points_earned: number;
+  auto_score: number | null;
+  test_results: unknown;
   student: {
     full_name: string;
     email: string | null;
@@ -50,6 +54,7 @@ interface Submission {
   homework: {
     title: string;
     points_reward: number;
+    test_cases: unknown;
     lesson: {
       title: string;
       lesson_number: number;
@@ -109,10 +114,13 @@ export default function AdminGrading() {
         submitted_at,
         feedback_at,
         points_earned,
+        auto_score,
+        test_results,
         student:student_id (full_name, email),
         homework:homework_id (
           title,
           points_reward,
+          test_cases,
           lesson:lesson_id (
             title,
             lesson_number,
@@ -191,7 +199,8 @@ export default function AdminGrading() {
   const openGradeDialog = async (submission: Submission) => {
     setSelectedSubmission(submission);
     setFormData({
-      grade: submission.grade ?? 100,
+      // Senza voto parte dal voto proposto dalla correzione automatica
+      grade: submission.grade ?? submission.auto_score ?? 100,
       teacher_feedback: submission.teacher_feedback || '',
     });
     setCodeContent(null);
@@ -203,7 +212,19 @@ export default function AdminGrading() {
     }
   };
 
-  const handleSubmit = async () => {
+  // Un clic: voto = punteggio dei test, feedback = quello scritto o l'elenco dei test da sistemare
+  const confirmAutoScore = (submission: Submission) => {
+    if (submission.auto_score == null) return;
+    const cases = parseTestCases(submission.homework.test_cases);
+    const results = parseTestResults(submission.test_results);
+    const relevant = cases.filter(c => results.some(r => r.id === c.id));
+    const feedback = formData.teacher_feedback.trim()
+      || (relevant.length > 0 ? failedTestsFeedback(relevant, results) : '');
+    void handleSubmit({ grade: submission.auto_score, teacher_feedback: feedback });
+  };
+
+  const handleSubmit = async (override?: { grade: number; teacher_feedback: string }) => {
+    const values = override ?? formData;
     if (!selectedSubmission) return;
 
     setIsSaving(true);
@@ -212,8 +233,8 @@ export default function AdminGrading() {
       const { error } = await supabase
         .from('homework_submissions')
         .update({
-          grade: formData.grade,
-          teacher_feedback: formData.teacher_feedback || null,
+          grade: values.grade,
+          teacher_feedback: values.teacher_feedback || null,
           status: 'graded',
           feedback_at: new Date().toISOString(),
         })
@@ -337,14 +358,15 @@ export default function AdminGrading() {
                           </span>
                         )}
                       </div>
-                      {submission.notes && (
+                      {submission.notes && parseSubmittedCode(submission.notes) == null && (
                         <p className="text-xs text-muted-foreground mt-2 italic">
                           Note: {submission.notes}
                         </p>
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      {submission.file_url && isCodeFile(submission.file_name) && (
+                      <AutoScoreBadge score={submission.auto_score} />
+                      {(parseSubmittedCode(submission.notes) != null || (submission.file_url && isCodeFile(submission.file_name))) && (
                         <Badge variant="outline" className="gap-1">
                           <Code className="w-3 h-3" />
                           Codice
@@ -414,8 +436,18 @@ export default function AdminGrading() {
                 </div>
               )}
 
-              {/* Notes Section */}
-              {selectedSubmission?.notes && (
+              {/* Codice dal compilatore e correzione automatica */}
+              {selectedSubmission && (
+                <AutoGradingReview
+                  notes={selectedSubmission.notes}
+                  autoScore={selectedSubmission.auto_score}
+                  testResults={selectedSubmission.test_results}
+                  testCases={selectedSubmission.homework.test_cases}
+                />
+              )}
+
+              {/* Notes */}
+              {selectedSubmission?.notes && parseSubmittedCode(selectedSubmission.notes) == null && (
                 <div className="space-y-2">
                   <Label>Note dello studente</Label>
                   <div className="bg-muted/30 rounded-lg p-3 text-sm">
@@ -474,7 +506,17 @@ export default function AdminGrading() {
               <Button variant="outline" onClick={() => setDialogOpen(false)}>
                 Annulla
               </Button>
-              <Button onClick={handleSubmit} disabled={isSaving}>
+              {selectedSubmission?.auto_score != null && (
+                <Button
+                  variant="secondary"
+                  onClick={() => confirmAutoScore(selectedSubmission)}
+                  disabled={isSaving}
+                  title="Salva come voto il punteggio dei test, con un feedback sui test non superati"
+                >
+                  Conferma voto proposto ({selectedSubmission.auto_score}%)
+                </Button>
+              )}
+              <Button onClick={() => handleSubmit()} disabled={isSaving}>
                 {isSaving ? (
                   <Loader2 className="w-4 h-4 animate-spin mr-2" />
                 ) : (

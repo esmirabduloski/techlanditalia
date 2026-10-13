@@ -83,5 +83,38 @@ export function seedStudent(fake: FakeSupabase) {
   fake.seed("lessons", [lesson]);
   fake.seed("lesson_tasks", [codeTask]);
   fake.seed("homework", [homework]);
+  fake.rpc("submit_homework_code", submitHomeworkCode);
   return fake;
+}
+
+/**
+ * Come la RPC submit_homework_code (drizzle/migrations/0039_auto_grading.sql):
+ * crea o aggiorna la consegna dell'alunno loggato, rifiuta quelle già valutate
+ * e salva il voto proposto solo se il compito ha casi di prova.
+ */
+function submitHomeworkCode(args: unknown, { fake, userId }: { fake: FakeSupabase; userId: string | null }) {
+  const { _homework_id, _notes, _auto_score, _test_results } = args as {
+    _homework_id: string; _notes: string; _auto_score?: number | null; _test_results?: unknown;
+  };
+  if (!userId) return { success: false, error: "not_authenticated" };
+  if (!_notes?.trim()) return { success: false, error: "empty" };
+  const hw = fake.table("homework").find((h) => h.id === _homework_id);
+  const hasTests = Array.isArray(hw?.test_cases) && (hw.test_cases as unknown[]).length > 0;
+  const score = hasTests && _auto_score != null ? Math.min(100, Math.max(0, _auto_score)) : null;
+  const fields = {
+    status: "pending",
+    notes: _notes,
+    file_type: "text/code",
+    auto_score: score,
+    test_results: score != null ? (Array.isArray(_test_results) ? _test_results : []) : null,
+    submitted_at: new Date().toISOString(),
+  };
+  const existing = fake.table("homework_submissions").find((s) => s.homework_id === _homework_id && s.student_id === userId);
+  if (!existing) {
+    fake.seed("homework_submissions", [{ homework_id: _homework_id, student_id: userId, points_earned: 0, ...fields }]);
+    return { success: true, created: true };
+  }
+  if (existing.status === "graded" || existing.status === "approved") return { success: false, error: "already_graded" };
+  Object.assign(existing, fields);
+  return { success: true, created: false };
 }

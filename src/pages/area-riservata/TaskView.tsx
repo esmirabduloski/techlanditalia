@@ -14,7 +14,8 @@ import { CourseOutlineSheet } from '@/components/lesson/CourseOutlineSheet';
 import { LessonCompleteDialog } from '@/components/lesson/LessonCompleteDialog';
 import { BookmarkButton } from '@/components/dashboard/BookmarkButton';
 import { LessonWorkspace } from '@/components/lesson/LessonWorkspace';
-import { getTaskSidePanel, type TaskAttachment } from '@/components/lesson/taskSidePanel';
+import { getRunnableTaskTests, getTaskSidePanel, type TaskAttachment } from '@/components/lesson/taskSidePanel';
+import { allPassed, type TestResult } from '@/lib/testCases';
 import { useLessonKeyboardNav } from '@/hooks/useLessonKeyboardNav';
 import { QuizTask } from '@/components/lesson/QuizTask';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -61,6 +62,8 @@ interface Task {
   python_env: string | null;
   replit_url: string | null;
   attachments: TaskAttachment[];
+  test_cases?: unknown;
+  tests_required?: boolean;
 }
 
 
@@ -94,6 +97,8 @@ export default function TaskView() {
   const [outlineOpen, setOutlineOpen] = useState(false);
   const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
   const [pointsGained, setPointsGained] = useState<{ id: number; points: number } | null>(null);
+  // Task con "tests_required": id della task di cui lo studente ha superato tutti i test
+  const [testsPassedFor, setTestsPassedFor] = useState<string | null>(null);
 
   // Il componente resta montato passando da un task all'altro: teniamo traccia
   // della richiesta più recente per ignorare risposte arrivate in ritardo e
@@ -230,7 +235,28 @@ export default function TaskView() {
     }
   };
 
+  const runnableTests = useMemo(
+    () => (course && task ? getRunnableTaskTests(course.slug, task) : []),
+    [course, task],
+  );
+  // Per andare avanti servono tutti i test superati (se la task lo richiede e non è già completata)
+  const testsGate = !!task && !!task.tests_required && runnableTests.length > 0
+    && !isTaskCompleted(task.id) && testsPassedFor !== task.id;
+
+  const handleTestResults = (results: TestResult[]) => {
+    if (!task) return;
+    setTestsPassedFor(allPassed(runnableTests, results) ? task.id : null);
+  };
+
+  const warnTestsGate = () => {
+    toast({ title: 'Supera tutti i test per continuare', description: 'Premi "Verifica" nel pannello del codice.' });
+  };
+
   const goToTask = (newTaskNumber: number) => {
+    if (task && newTaskNumber > task.task_number && testsGate) {
+      warnTestsGate();
+      return;
+    }
     // Andando avanti il task corrente viene segnato come completato.
     // Non blocchiamo la navigazione in attesa del salvataggio.
     if (task && newTaskNumber > task.task_number) {
@@ -246,13 +272,17 @@ export default function TaskView() {
 
   const handleNavigateToCourse = async () => {
     // Mark last task as completed when going back to course
-    if (task) {
+    if (task && !testsGate) {
       await completeTask(task.id);
     }
     navigate(`/area-riservata/corso/${courseId}`);
   };
 
   const handleFinishLesson = () => {
+    if (testsGate) {
+      warnTestsGate();
+      return;
+    }
     if (task) {
       void completeWithFeedback(task, 'toast');
     }
@@ -357,6 +387,7 @@ export default function TaskView() {
       onNext={nextTaskNumber !== undefined ? () => goToTask(nextTaskNumber) : undefined}
       onComplete={handleFinishLesson}
       disabled={isStale}
+      blockedReason={testsGate ? 'Supera tutti i test per continuare' : undefined}
       className={className}
     />
   );
@@ -405,7 +436,7 @@ export default function TaskView() {
     </>
   );
 
-  const sidePanel = getTaskSidePanel(course.slug, task, { saveDrafts: true });
+  const sidePanel = getTaskSidePanel(course.slug, task, { saveDrafts: true, onTestResults: handleTestResults });
 
   const content = isStale ? (
     <ContentSkeleton />

@@ -505,9 +505,9 @@ export default function HomeworkDetail() {
                   <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                     {submission.teacher_feedback}
                   </p>
-                  {submission.grade && (
+                  {submission.grade != null && (
                     <p className="mt-2 text-sm font-medium">
-                      Voto: {submission.grade}/10 · Punti guadagnati: {submission.points_earned}
+                      Voto: {submission.grade}/100 · Punti guadagnati: {submission.points_earned}
                     </p>
                   )}
                 </div>

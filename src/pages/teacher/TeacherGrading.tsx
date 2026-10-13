@@ -14,6 +14,8 @@ import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
 import { getSignedUrl, openStorageFile } from '@/hooks/useSignedUrl';
 import { CodeViewer } from '@/components/admin/CodeViewer';
+import { AutoGradingReview, AutoScoreBadge } from '@/components/grading/AutoGradingReview';
+import { failedTestsFeedback, parseSubmittedCode, parseTestCases, parseTestResults } from '@/lib/testCases';
 import {
   Dialog,
   DialogContent,
@@ -43,6 +45,8 @@ interface Submission {
   submitted_at: string;
   feedback_at: string | null;
   points_earned: number;
+  auto_score: number | null;
+  test_results: unknown;
   student: {
     full_name: string;
     email: string | null;
@@ -50,6 +54,7 @@ interface Submission {
   homework: {
     title: string;
     points_reward: number;
+    test_cases: unknown;
     lesson: {
       title: string;
       lesson_number: number;
@@ -144,10 +149,13 @@ export default function TeacherGrading() {
         submitted_at,
         feedback_at,
         points_earned,
+        auto_score,
+        test_results,
         student:student_id (full_name, email),
         homework:homework_id (
           title,
           points_reward,
+          test_cases,
           lesson:lesson_id (
             title,
             lesson_number,
@@ -229,7 +237,8 @@ export default function TeacherGrading() {
   const openGradeDialog = async (submission: Submission) => {
     setSelectedSubmission(submission);
     setFormData({
-      grade: submission.grade ?? 100,
+      // Senza voto parte dal voto proposto dalla correzione automatica
+      grade: submission.grade ?? submission.auto_score ?? 100,
       teacher_feedback: submission.teacher_feedback || '',
     });
     setCodeContent(null);
@@ -241,7 +250,19 @@ export default function TeacherGrading() {
     }
   };
 
-  const handleSubmit = async () => {
+  // Un clic: voto = punteggio dei test, feedback = quello scritto o l'elenco dei test da sistemare
+  const confirmAutoScore = (submission: Submission) => {
+    if (submission.auto_score == null) return;
+    const cases = parseTestCases(submission.homework.test_cases);
+    const results = parseTestResults(submission.test_results);
+    const relevant = cases.filter(c => results.some(r => r.id === c.id));
+    const feedback = formData.teacher_feedback.trim()
+      || (relevant.length > 0 ? failedTestsFeedback(relevant, results) : '');
+    void handleSubmit({ grade: submission.auto_score, teacher_feedback: feedback });
+  };
+
+  const handleSubmit = async (override?: { grade: number; teacher_feedback: string }) => {
+    const values = override ?? formData;
     if (!selectedSubmission) {
       toast({ title: 'Errore', description: 'Nessuna consegna selezionata', variant: 'destructive' });
       return;
@@ -252,8 +273,8 @@ export default function TeacherGrading() {
       const { data, error } = await supabase
         .from('homework_submissions')
         .update({
-          grade: formData.grade,
-          teacher_feedback: formData.teacher_feedback || null,
+          grade: values.grade,
+          teacher_feedback: values.teacher_feedback || null,
           status: 'graded',
           feedback_at: new Date().toISOString(),
         })
@@ -271,10 +292,10 @@ export default function TeacherGrading() {
         return;
       }
 
-      const pointsEarned = calculatePoints(selectedSubmission.homework.points_reward, formData.grade);
+      const pointsEarned = calculatePoints(selectedSubmission.homework.points_reward, values.grade);
       toast({
         title: '✅ Valutazione salvata',
-        description: `Voto ${formData.grade}% — ${pointsEarned} punti assegnati a ${selectedSubmission.student.full_name}`,
+        description: `Voto ${values.grade}% — ${pointsEarned} punti assegnati a ${selectedSubmission.student.full_name}`,
         variant: 'default',
       });
       setSavedSuccessfully(true);
@@ -422,14 +443,15 @@ export default function TeacherGrading() {
                           </span>
                         )}
                       </div>
-                      {submission.notes && (
+                      {submission.notes && parseSubmittedCode(submission.notes) == null && (
                         <p className="text-xs text-muted-foreground mt-2 italic">
                           Note: {submission.notes}
                         </p>
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      {submission.file_url && isCodeFile(submission.file_name) && (
+                      <AutoScoreBadge score={submission.auto_score} />
+                      {(parseSubmittedCode(submission.notes) != null || (submission.file_url && isCodeFile(submission.file_name))) && (
                         <Badge variant="outline" className="gap-1">
                           <Code className="w-3 h-3" />
                           Codice
@@ -499,8 +521,18 @@ export default function TeacherGrading() {
                 </div>
               )}
 
+              {/* Codice dal compilatore e correzione automatica */}
+              {selectedSubmission && (
+                <AutoGradingReview
+                  notes={selectedSubmission.notes}
+                  autoScore={selectedSubmission.auto_score}
+                  testResults={selectedSubmission.test_results}
+                  testCases={selectedSubmission.homework.test_cases}
+                />
+              )}
+
               {/* Notes */}
-              {selectedSubmission?.notes && (
+              {selectedSubmission?.notes && parseSubmittedCode(selectedSubmission.notes) == null && (
                 <div className="space-y-2">
                   <Label>Note dello studente</Label>
                   <div className="bg-muted/30 rounded-lg p-3 text-sm">
@@ -555,11 +587,22 @@ export default function TeacherGrading() {
                 />
               </div>
             </div>
-            <DialogFooter className="p-4 sm:p-6 pt-3 border-t bg-background shrink-0 flex-row justify-end gap-2 sm:gap-2">
+            <DialogFooter className="p-4 sm:p-6 pt-3 border-t bg-background shrink-0 flex-row flex-wrap justify-end gap-2 sm:gap-2">
               <Button variant="outline" size="sm" onClick={() => handleDialogOpenChange(false)} disabled={isSaving}>
                 Annulla
               </Button>
-              <Button size="sm" onClick={handleSubmit} disabled={isSaving}>
+              {selectedSubmission?.auto_score != null && (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => confirmAutoScore(selectedSubmission)}
+                  disabled={isSaving}
+                  title="Salva come voto il punteggio dei test, con un feedback sui test non superati"
+                >
+                  Conferma voto proposto ({selectedSubmission.auto_score}%)
+                </Button>
+              )}
+              <Button size="sm" onClick={() => handleSubmit()} disabled={isSaving}>
                 {isSaving ? (
                   <Loader2 className="w-4 h-4 animate-spin mr-2" />
                 ) : (

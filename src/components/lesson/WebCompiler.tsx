@@ -8,6 +8,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCodeDraft } from '@/hooks/useCodeDraft';
 import { useWebFileDrafts } from '@/hooks/useWebFileDrafts';
 import { CodeEditor } from './CodeEditor';
+import { buildPreviewHtml, type WebPreviewInput } from '@/lib/webPreview';
+import { TestCasesPanel, TestSummary } from './TestCasesPanel';
+import { useTestRunner } from '@/hooks/useTestRunner';
+import type { TestRunnerRef } from './PythonCompiler';
+import { webCases, type TestCase, type TestResult } from '@/lib/testCases';
+import { runWebTests } from '@/lib/webTestRunner';
 
 interface UploadedFile {
   name: string;
@@ -34,6 +40,10 @@ interface WebCompilerProps {
   defaultJsCode?: string;
   taskId?: string;
   taskAttachments?: TaskAttachment[];
+  // Correzione automatica: casi di prova della task o del compito
+  testCases?: TestCase[];
+  onTestResults?: (results: TestResult[]) => void;
+  testRunnerRef?: TestRunnerRef;
 }
 
 const FALLBACK_HTML = `<!DOCTYPE html>
@@ -100,8 +110,9 @@ const getFileIcon = (type: 'image' | 'css' | 'js' | 'html') => {
   }
 };
 
-export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, taskId, taskAttachments = [] }: WebCompilerProps) {
+export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, taskId, taskAttachments = [], testCases, onTestResults, testRunnerRef }: WebCompilerProps) {
   const [activeTab, setActiveTab] = useState<string>('html');
+  const [bottomTab, setBottomTab] = useState<'preview' | 'tests'>('preview');
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [showFileManager, setShowFileManager] = useState<boolean>(false);
   const [isPreviewFullscreen, setIsPreviewFullscreen] = useState<boolean>(false);
@@ -191,49 +202,36 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
     defaultCode: effectiveDefaultJs,
   });
 
-  const generatePreviewHtml = () => {
-    // Build CSS includes only from user uploaded files (task CSS is already in the cssDraft)
-    const cssIncludes = uploadedFiles
-      .filter(f => f.type === 'css')
-      .map(f => `<link rel="stylesheet" href="${f.url}">`)
-      .join('\n');
+  const previewInput = (): WebPreviewInput => ({
+    html: htmlDraft.code,
+    css: cssDraft.code,
+    js: jsDraft.code,
+    // CSS/JS solo dai file caricati dallo studente (il CSS della task è già in cssDraft)
+    cssUrls: uploadedFiles.filter(f => f.type === 'css').map(f => f.url),
+    jsUrls: uploadedFiles.filter(f => f.type === 'js').map(f => f.url),
+    taskJs: taskJsFiles.map(f => f.content).join('\n\n'),
+    extraJs: additionalJsFiles.map(f => f.code).join('\n\n'),
+  });
 
-    // Build JS includes only from user uploaded files
-    const jsIncludes = uploadedFiles
-      .filter(f => f.type === 'js')
-      .map(f => `<script src="${f.url}"></script>`)
-      .join('\n');
+  const generatePreviewHtml = () => buildPreviewHtml(previewInput());
 
-    // Task JS files content (already loaded)
-    const taskJsCode = taskJsFiles.map(f => f.content).join('\n\n');
+  const cases = webCases(testCases ?? []);
+  const hasTests = cases.length > 0;
+  const tests = useTestRunner(cases, async (onResult) => {
+    const { results } = await runWebTests(previewInput(), cases);
+    results.forEach(onResult);
+    return results;
+  }, onTestResults);
 
-    // Combine all additional JS code from user
-    const additionalJsCode = additionalJsFiles.map(f => f.code).join('\n\n');
+  useEffect(() => {
+    if (!testRunnerRef) return;
+    testRunnerRef.current = hasTests ? tests.runTests : null;
+    return () => { testRunnerRef.current = null; };
+  }, [testRunnerRef, hasTests, tests.runTests]);
 
-    // Extract any script tags from user HTML to preserve them
-    const userHtmlContent = htmlDraft.code
-      .replace(/<!DOCTYPE html>/gi, '')
-      .replace(/<\/?html[^>]*>/gi, '')
-      .replace(/<\/?head[^>]*>/gi, '')
-      .replace(/<\/?body[^>]*>/gi, '')
-      .replace(/<link[^>]*>/gi, '');
-
-    return `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <style>${cssDraft.code}</style>
-        ${cssIncludes}
-      </head>
-      <body>
-        ${userHtmlContent}
-        ${jsIncludes}
-        <script>${taskJsCode}</script>
-        <script>${jsDraft.code}</script>
-        <script>${additionalJsCode}</script>
-      </body>
-      </html>
-    `;
+  const verify = () => {
+    setBottomTab('tests');
+    void tests.runTests();
   };
 
   const openPreviewInNewTab = () => {
@@ -560,6 +558,18 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
           )}
         </div>
         <div className="flex items-center gap-2">
+          {hasTests && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={verify}
+              disabled={tests.running}
+              title="Controlla il codice con i casi di prova"
+            >
+              {tests.running ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Check className="w-4 h-4 mr-1" />}
+              Verifica
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="sm"
@@ -860,9 +870,23 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
         )}
 
         {/* Preview */}
-        <div className="h-1/3 min-h-[150px] border-t border-border">
+        <div className="h-1/3 min-h-[150px] border-t border-border flex flex-col">
           <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/50">
-            <span className="text-xs font-medium text-muted-foreground">Preview</span>
+            {hasTests ? (
+              <div className="flex items-center gap-1" role="tablist">
+                <button type="button" role="tab" aria-selected={bottomTab === 'preview'} onClick={() => setBottomTab('preview')}
+                  className={`px-2 text-xs font-medium ${bottomTab === 'preview' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
+                  Preview
+                </button>
+                <button type="button" role="tab" aria-selected={bottomTab === 'tests'} onClick={() => setBottomTab('tests')}
+                  className={`px-2 text-xs font-medium flex items-center gap-1.5 ${bottomTab === 'tests' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
+                  Test ({cases.length})
+                  {!tests.running && <TestSummary cases={cases} results={tests.results} />}
+                </button>
+              </div>
+            ) : (
+              <span className="text-xs font-medium text-muted-foreground">Preview</span>
+            )}
             <div className="flex items-center gap-1">
               <Button
                 variant="ghost"
@@ -884,12 +908,23 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
               </Button>
             </div>
           </div>
-          <iframe
-            src={previewUrl}
-            title="Preview"
-            className="w-full h-[calc(100%-32px)] bg-white"
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
-          />
+          {hasTests && bottomTab === 'tests' ? (
+            <TestCasesPanel
+              className="flex-1"
+              cases={cases}
+              results={tests.results}
+              running={tests.running}
+              error={tests.error}
+              onRun={verify}
+            />
+          ) : (
+            <iframe
+              src={previewUrl}
+              title="Preview"
+              className="w-full flex-1 bg-white"
+              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+            />
+          )}
         </div>
       </div>
     </div>

@@ -13,6 +13,8 @@ interface TaskNavigationProps {
   onComplete?: () => void;
   basePath?: string;
   disabled?: boolean;
+  // Avanti/Fine lezione bloccati (es. test da superare): il motivo viene mostrato
+  blockedReason?: string;
   className?: string;
 }
 
@@ -30,6 +32,7 @@ export function TaskNavigation({
   onComplete,
   basePath,
   disabled,
+  blockedReason,
   className,
 }: TaskNavigationProps) {
   const hasPrevious = currentTaskNumber > 1;
@@ -69,11 +72,12 @@ export function TaskNavigation({
         <div className="text-sm font-semibold text-foreground">
           Task {currentTaskNumber} <span className="text-muted-foreground font-normal">di {totalTasks}</span>
         </div>
+        {blockedReason && <div className="text-[11px] text-amber-700 dark:text-amber-300 mt-0.5">🔒 {blockedReason}</div>}
       </div>
 
       <div className="justify-self-end">
         {hasNext ? (
-          <Button size="lg" onClick={onNext} asChild={!onNext} disabled={disabled} className="px-4 sm:px-6" aria-label="Task successivo" title="Task successivo (tasto →)">
+          <Button size="lg" onClick={onNext} asChild={!onNext} disabled={disabled || !!blockedReason} className="px-4 sm:px-6" aria-label="Task successivo" title="Task successivo (tasto →)">
             {onNext ? (
               <>
                 <span className="hidden sm:inline">Successivo</span>
@@ -87,7 +91,7 @@ export function TaskNavigation({
             )}
           </Button>
         ) : (
-          <Button size="lg" onClick={onComplete} disabled={disabled} className="px-4 sm:px-6" aria-label="Fine lezione">
+          <Button size="lg" onClick={onComplete} disabled={disabled || !!blockedReason} className="px-4 sm:px-6" aria-label="Fine lezione">
             <CheckCircle2 className="w-5 h-5 sm:mr-2" />
             <span className="hidden sm:inline">Fine lezione</span>
           </Button>

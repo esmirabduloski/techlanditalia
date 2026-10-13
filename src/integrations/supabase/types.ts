@@ -3285,10 +3285,6 @@ export type Database = {
         Args: { _parent_id: string; _student_id: string }
         Returns: boolean
       }
-      is_student_paused: {
-        Args: { _student: string }
-        Returns: boolean
-      }
       is_parent_of_enrolled: {
         Args: { _course_id: string; _parent_id: string }
         Returns: boolean
@@ -3305,6 +3301,7 @@ export type Database = {
         Args: { _group_id: string; _student_id: string }
         Returns: boolean
       }
+      is_student_paused: { Args: { _student: string }; Returns: boolean }
       is_teacher_of_course: {
         Args: { _course_id: string; _teacher_id: string }
         Returns: boolean

@@ -152,14 +152,30 @@ serve(async (req) => {
 
     const newUserId = authData.user.id;
 
-    const { error: parentProfileError } = await supabaseAdmin
+    // Il trigger su auth.users crea già il profilo con ruolo 'student'. Il cambio di
+    // ruolo va fatto con la sessione dell'admin: un vecchio trigger di sicurezza su
+    // profiles accetta il cambio ruolo solo se auth.uid() è un admin (con la service
+    // role auth.uid() è NULL e l'update veniva respinto).
+    const supabaseAsAdmin = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+
+    const profileFields = {
+      full_name: fullName.trim(),
+      email: email.trim().toLowerCase(),
+      role: userRole,
+    };
+
+    const { data: existingProfile } = await supabaseAdmin
       .from("profiles")
-      .upsert({
-        id: newUserId,
-        full_name: fullName.trim(),
-        email: email.trim().toLowerCase(),
-        role: userRole,
-      }, { onConflict: "id" });
+      .select("id")
+      .eq("id", newUserId)
+      .maybeSingle();
+
+    const { error: parentProfileError } = existingProfile
+      ? await supabaseAsAdmin.from("profiles").update(profileFields).eq("id", newUserId)
+      : await supabaseAdmin.from("profiles").insert({ id: newUserId, ...profileFields });
 
     if (parentProfileError) {
       console.error("Error creating/updating parent profile:", parentProfileError);

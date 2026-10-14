@@ -74,6 +74,29 @@ test("Python: un ciclo infinito non blocca la pagina", async ({ page, fake }) =>
   await expect(panel.getByText("1/1 test superati")).toBeVisible({ timeout: 90_000 });
 });
 
+test("Python: un errore nei test è spiegato in italiano", async ({ page, fake }) => {
+  test.slow();
+  Object.assign(fake.table("lesson_tasks")[0], { test_cases: pythonTests });
+
+  await page.goto(taskUrl);
+  const editor = page.getByPlaceholder("Scrivi il tuo codice Python...");
+  await editor.fill('x = int("ciao")');
+  await page.getByRole("button", { name: "Verifica" }).first().click();
+
+  const panel = page.getByTestId("test-cases-panel");
+  await expect(panel.getByText("0/2 test superati")).toBeVisible({ timeout: 90_000 });
+  const errori = panel.getByTestId("friendly-error");
+  await expect(errori.first()).toContainText("Questo testo non è un numero · riga 1");
+
+  // Il codice gira ma non definisce somma(): l'errore è nel codice del test, quindi senza riga
+  await editor.fill("print(5)");
+  await page.getByRole("button", { name: "Verifica" }).first().click();
+  await expect(panel.getByText("1/2 test superati")).toBeVisible({ timeout: 30_000 });
+  await expect(errori).toHaveCount(1);
+  await expect(errori).toContainText("Hai usato somma, ma Python non sa ancora cos'è.");
+  await expect(errori).not.toContainText("riga");
+});
+
 test("Web: la consegna salva il voto proposto dai test", async ({ page, fake }) => {
   // Pyodide non serve per un compito Web
   await page.route("https://cdn.jsdelivr.net/pyodide/**", (route) => route.abort());

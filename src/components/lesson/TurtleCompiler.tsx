@@ -4,6 +4,8 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/componen
 import { Play, RotateCcw, Square, Loader2, ZoomIn, ZoomOut, Maximize, Save, Check } from 'lucide-react';
 import { useCodeDraft } from '@/hooks/useCodeDraft';
 import { CodeEditor } from './CodeEditor';
+import { FriendlyError } from './FriendlyError';
+import { explainPythonError, type FriendlyError as FriendlyErrorData } from '@/lib/friendlyErrors';
 
 interface TurtleCompilerProps {
   defaultCode?: string;
@@ -77,6 +79,7 @@ export function TurtleCompiler({ defaultCode, taskId }: TurtleCompilerProps) {
     saveDraft,
   } = useCodeDraft({ taskId, codeType: 'python', defaultCode: initial });
   const [output, setOutput] = useState('');
+  const [runError, setRunError] = useState<{ error: FriendlyErrorData; code: string } | null>(null);
   const [running, setRunning] = useState(false);
   const [ready, setReady] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -139,6 +142,7 @@ export function TurtleCompiler({ defaultCode, taskId }: TurtleCompilerProps) {
     if (!Sk || !targetRef.current) return;
     targetRef.current.innerHTML = '';
     setOutput('');
+    setRunError(null);
     stopRef.current = false;
     setRunning(true);
 
@@ -168,7 +172,10 @@ export function TurtleCompiler({ defaultCode, taskId }: TurtleCompilerProps) {
         },
       );
     } catch (err: any) {
-      setOutput((prev) => prev + '\n❌ ' + (err?.toString?.() ?? String(err)));
+      const message = err?.toString?.() ?? String(err);
+      const friendly = explainPythonError(message, code);
+      if (friendly) setRunError({ error: friendly, code });
+      else setOutput((prev) => prev + '\n❌ ' + message);
     } finally {
       setRunning(false);
     }
@@ -182,6 +189,7 @@ export function TurtleCompiler({ defaultCode, taskId }: TurtleCompilerProps) {
     stop();
     resetCode();
     setOutput('');
+    setRunError(null);
     if (targetRef.current) targetRef.current.innerHTML = '';
   };
 
@@ -305,6 +313,11 @@ export function TurtleCompiler({ defaultCode, taskId }: TurtleCompilerProps) {
               >
                 {output}
               </pre>
+            )}
+            {runError && (
+              <div className="max-h-48 overflow-auto border-t p-2 bg-muted">
+                <FriendlyError error={runError.error} code={runError.code} compact />
+              </div>
             )}
           </div>
         </ResizablePanel>

@@ -9,6 +9,8 @@ import { TestCasesPanel, TestSummary } from './TestCasesPanel';
 import { useTestRunner } from '@/hooks/useTestRunner';
 import { pythonCases, type TestCase, type TestResult } from '@/lib/testCases';
 import { preloadPythonTests, runPythonTests } from '@/lib/pythonTestRunner';
+import { explainPythonError, type FriendlyError as FriendlyErrorData } from '@/lib/friendlyErrors';
+import { FriendlyError } from './FriendlyError';
 
 declare global {
   interface Window {
@@ -32,6 +34,7 @@ const FALLBACK_CODE = '# Scrivi il tuo codice Python qui\nprint("Ciao, mondo!")\
 
 export function PythonCompiler({ defaultCode, taskId, testCases, onTestResults, testRunnerRef }: PythonCompilerProps) {
   const [output, setOutput] = useState<string>('');
+  const [runError, setRunError] = useState<{ error: FriendlyErrorData; code: string } | null>(null);
   const [bottomTab, setBottomTab] = useState<'output' | 'tests'>('output');
   const [isLoadingPyodide, setIsLoadingPyodide] = useState<boolean>(true);
   const [isRunning, setIsRunning] = useState<boolean>(false);
@@ -104,6 +107,7 @@ export function PythonCompiler({ defaultCode, taskId, testCases, onTestResults, 
     if (!pyodideRef.current || isRunning) return;
 
     setIsRunning(true);
+    setRunError(null);
     setOutput('Esecuzione in corso...');
 
     try {
@@ -141,7 +145,16 @@ builtins.input = _js_input
         setOutput(stdout || '(Nessun output)');
       }
     } catch (error: any) {
-      setOutput(`Errore:\n${error.message}`);
+      const message = String(error?.message ?? error);
+      const friendly = explainPythonError(message, code);
+      let printed = '';
+      try { printed = pyodideRef.current.runPython('sys.stdout.getvalue()'); } catch { /* niente output */ }
+      if (friendly) {
+        setRunError({ error: friendly, code });
+        setOutput(printed);
+      } else {
+        setOutput(`${printed ? `${printed}\n` : ''}Errore:\n${message}`);
+      }
     } finally {
       setIsRunning(false);
     }
@@ -274,6 +287,7 @@ builtins.input = _js_input
                 error={tests.error}
                 onRun={verify}
                 disabled={isLoadingDraft}
+                code={code}
               />
             ) : (
               <>
@@ -282,15 +296,20 @@ builtins.input = _js_input
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setOutput('')}
+                    onClick={() => { setOutput(''); setRunError(null); }}
                     title="Pulisci output"
                   >
                     <Trash2 className="w-3 h-3" />
                   </Button>
                 </div>
-                <pre className="p-4 text-sm font-mono overflow-auto flex-1 text-foreground whitespace-pre-wrap">
-                  {output}
-                </pre>
+                <div className="overflow-auto flex-1">
+                  {output && (
+                    <pre className="p-4 text-sm font-mono text-foreground whitespace-pre-wrap">
+                      {output}
+                    </pre>
+                  )}
+                  {runError && <FriendlyError error={runError.error} code={runError.code} className={output ? 'mx-4 mb-4' : 'm-4'} />}
+                </div>
               </>
             )}
           </div>

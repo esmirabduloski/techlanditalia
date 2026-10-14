@@ -31,10 +31,21 @@ test("l'alunno scrive Python, lo esegue e vede l'output", async ({ page, fake })
   const output = page.locator("pre").filter({ hasText: "Ciao Luca!" });
   await expect(output).toHaveText("Ciao Luca!\nCiao Sara!\n10\n");
 
-  // Gli errori Python arrivano all'alunno invece di bloccare la pagina
+  // Gli errori Python arrivano all'alunno spiegati in italiano, con la riga sbagliata
+  await editor.fill('print("prima")\nprint(punteggio)');
+  await run.click();
+  const errore = page.getByTestId("friendly-error");
+  await expect(errore).toContainText("Hai usato un nome che Python non conosce · riga 2");
+  await expect(errore).toContainText("2 │ print(punteggio)");
+  await expect(errore).toContainText("Hai usato punteggio, ma Python non sa ancora cos'è.");
+  await expect(page.getByText("prima", { exact: true })).toBeVisible();
+  // Il messaggio originale in inglese resta disponibile
+  await errore.getByText("Messaggio originale (in inglese)").click();
+  await expect(errore.getByText("NameError: name 'punteggio' is not defined")).toBeVisible();
+
   await editor.fill("print(1/0)");
   await run.click();
-  await expect(page.locator("pre").filter({ hasText: "ZeroDivisionError" })).toBeVisible();
+  await expect(errore).toContainText("Divisione per zero");
 
   // Il codice viene salvato come bozza dello studente (autosave dopo 3 s)
   await expect

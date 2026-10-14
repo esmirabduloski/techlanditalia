@@ -3,6 +3,8 @@ import { CheckCircle2, ChevronDown, CircleDashed, FlaskConical, Loader2, XCircle
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { describeCase, type TestCase, type TestResult } from '@/lib/testCases';
+import { explainPythonError } from '@/lib/friendlyErrors';
+import { FriendlyError } from './FriendlyError';
 
 interface TestCasesPanelProps {
   cases: TestCase[];
@@ -13,6 +15,8 @@ interface TestCasesPanelProps {
   onRun?: () => void;
   disabled?: boolean;
   className?: string;
+  // Codice Python dello studente: gli errori mostrano la riga sbagliata
+  code?: string;
 }
 
 export function TestSummary({ cases, results }: { cases: TestCase[]; results: TestResult[] | null }) {
@@ -31,7 +35,7 @@ export function TestSummary({ cases, results }: { cases: TestCase[]; results: Te
   );
 }
 
-export function TestCasesPanel({ cases, results, running, error, onRun, disabled, className }: TestCasesPanelProps) {
+export function TestCasesPanel({ cases, results, running, error, onRun, disabled, className, code }: TestCasesPanelProps) {
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const allOk = !!results && results.length === cases.length && results.every((r) => r.passed);
 
@@ -89,7 +93,12 @@ export function TestCasesPanel({ cases, results, running, error, onRun, disabled
                 </button>
                 {hasDetails && expanded && r && (
                   <div className="px-3 pb-3 space-y-2 text-xs">
-                    {r.error && <p className="font-mono text-red-700 dark:text-red-300 whitespace-pre-wrap">{r.error}</p>}
+                    {r.error && (() => {
+                      const friendly = (c.kind === 'io' || c.kind === 'assert') ? explainPythonError(r.error, code) : null;
+                      return friendly
+                        ? <FriendlyError error={friendly} code={code} compact />
+                        : <p className="font-mono text-red-700 dark:text-red-300 whitespace-pre-wrap">{r.error}</p>;
+                    })()}
                     {c.kind === 'io' && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <div>

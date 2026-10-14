@@ -53,7 +53,7 @@ export function AutoGradingReview({ notes, autoScore, testResults, testCases }: 
             Correzione automatica · voto proposto {autoScore}%
           </Label>
           {cases.length > 0 ? (
-            <TestCasesPanel cases={cases} results={results} className="rounded-lg border max-h-72" />
+            <TestCasesPanel cases={cases} results={results} code={code ?? undefined} className="rounded-lg border max-h-72" />
           ) : (
             <p className="text-sm text-muted-foreground">I casi di prova sono stati modificati dopo la consegna: dettaglio non disponibile.</p>
           )}

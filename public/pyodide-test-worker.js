@@ -46,12 +46,13 @@ def _tl_output():
 }
 
 // Ultima riga del traceback ("NameError: name 'x' is not defined"), con la riga del codice se c'è
-function shortError(err) {
+// withLine = false per gli errori del codice del test: la riga non è quella dello studente
+function shortError(err, withLine = true) {
   const msg = String((err && err.message) || err || 'Errore');
   const lines = msg.split('\n').map((l) => l.trimEnd()).filter(Boolean);
   const last = lines[lines.length - 1] || msg;
   let lineInfo = '';
-  for (let i = lines.length - 1; i >= 0; i--) {
+  for (let i = withLine ? lines.length - 1 : -1; i >= 0; i--) {
     const m = lines[i].match(/File "<exec>", line (\d+)/);
     if (m) { lineInfo = ` (riga ${m[1]})`; break; }
   }
@@ -86,7 +87,7 @@ async function runTest(pyodide, code, test) {
     } catch (err) {
       const error = /AssertionError\s*$/.test(String(err && err.message).trim())
         ? 'Il risultato non è quello atteso'
-        : shortError(err);
+        : shortError(err, false);
       return { id: test.id, passed: false, error };
     }
   } finally {

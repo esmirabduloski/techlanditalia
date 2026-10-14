@@ -173,9 +173,18 @@ serve(async (req) => {
       .eq("id", newUserId)
       .maybeSingle();
 
-    const { error: parentProfileError } = existingProfile
-      ? await supabaseAsAdmin.from("profiles").update(profileFields).eq("id", newUserId)
-      : await supabaseAdmin.from("profiles").insert({ id: newUserId, ...profileFields });
+    let parentProfileError: unknown = null;
+    if (existingProfile) {
+      const { data: updated, error } = await supabaseAsAdmin
+        .from("profiles")
+        .update(profileFields)
+        .eq("id", newUserId)
+        .select("id");
+      parentProfileError = error ?? (updated && updated.length > 0 ? null : { message: "Nessuna riga aggiornata (permessi admin)" });
+    } else {
+      const { error } = await supabaseAdmin.from("profiles").insert({ id: newUserId, ...profileFields });
+      parentProfileError = error;
+    }
 
     if (parentProfileError) {
       console.error("Error creating/updating parent profile:", parentProfileError);

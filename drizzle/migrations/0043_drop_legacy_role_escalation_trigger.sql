@@ -1,0 +1,2 @@
+DROP TRIGGER IF EXISTS prevent_role_self_escalation_trg ON public.profiles;
+COMMENT ON FUNCTION public.prevent_role_self_escalation() IS 'DEPRECATED: replaced by prevent_profile_role_self_escalation (allows backend/service-role writes)';

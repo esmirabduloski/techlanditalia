@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { getTaskTypeMeta } from '@/lib/lessonTheme';
 import { CourseEmoji } from '@/components/ui/CourseEmoji';
+import { LessonObjective } from './LessonObjective';
 
 export interface LessonStep {
   key: string;
@@ -19,6 +20,8 @@ interface LessonHeaderProps {
   courseEmoji?: string;
   lessonNumber: number;
   lessonTitle: string;
+  /** Obiettivo della lezione: riga compatta dal secondo task in poi (sul primo c'è il banner) */
+  lessonObjective?: string | null;
   /** Titolo del task corrente (se assente si mostra solo la lezione) */
   taskTitle?: string;
   /** Posizione del task tra quelli visibili, 1-based */
@@ -38,6 +41,7 @@ export function LessonHeader({
   courseEmoji,
   lessonNumber,
   lessonTitle,
+  lessonObjective,
   taskTitle,
   taskPosition,
   taskType,
@@ -51,6 +55,7 @@ export function LessonHeader({
   const completedCount = steps.filter(s => s.completed).length;
   const progress = steps.length > 0 ? Math.round((completedCount / steps.length) * 100) : 0;
   const typeMeta = taskTitle ? getTaskTypeMeta(taskType) : null;
+  const showInlineObjective = taskPosition !== undefined && taskPosition > 1;
 
   return (
     <header className={cn('border-b border-border bg-background', className)}>
@@ -97,6 +102,9 @@ export function LessonHeader({
               lessonTitle
             )}
           </h1>
+          {showInlineObjective && (
+            <LessonObjective objective={lessonObjective} variant="inline" className="hidden sm:flex mt-0.5" />
+          )}
         </div>
 
         <div className="flex items-center gap-1 shrink-0">
@@ -109,6 +117,11 @@ export function LessonHeader({
           )}
         </div>
       </div>
+
+      {/* Su mobile la colonna del titolo è stretta: l'obiettivo va su una riga sua */}
+      {showInlineObjective && (
+        <LessonObjective objective={lessonObjective} variant="inline" className="sm:hidden px-4 pb-3 -mt-1" />
+      )}
 
       {steps.length > 1 && (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 pb-3">

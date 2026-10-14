@@ -1982,6 +1982,7 @@ export type Database = {
           images: Json | null
           lesson_number: number
           manual_url: string | null
+          objective: string | null
           points_reward: number
           slides_url: string | null
           title: string
@@ -1997,6 +1998,7 @@ export type Database = {
           images?: Json | null
           lesson_number: number
           manual_url?: string | null
+          objective?: string | null
           points_reward?: number
           slides_url?: string | null
           title: string
@@ -2012,6 +2014,7 @@ export type Database = {
           images?: Json | null
           lesson_number?: number
           manual_url?: string | null
+          objective?: string | null
           points_reward?: number
           slides_url?: string | null
           title?: string

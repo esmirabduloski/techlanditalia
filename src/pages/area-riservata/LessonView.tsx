@@ -31,6 +31,7 @@ interface Lesson {
   id: string;
   lesson_number: number;
   title: string;
+  objective: string | null;
   description: string | null;
   content: string | null;
   content_type: string | null;
@@ -233,6 +234,7 @@ export default function LessonView() {
   ) : (
     <LessonContent
       title={lesson.title}
+      objective={lesson.objective}
       description={lesson.description}
       content={lesson.content}
       contentType={lesson.content_type || 'text'}

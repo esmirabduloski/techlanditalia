@@ -29,6 +29,7 @@ interface Lesson {
   id: string;
   lesson_number: number;
   title: string;
+  objective: string | null;
 }
 
 interface TaskSummary {
@@ -118,7 +119,7 @@ export default function TeacherTaskView() {
 
       const { data: lessonData } = await supabase
         .from('lessons')
-        .select('id, lesson_number, title')
+        .select('id, lesson_number, title, objective')
         .eq('course_id', courseId)
         .eq('lesson_number', parseInt(lessonNumber))
         .maybeSingle();
@@ -235,6 +236,7 @@ export default function TeacherTaskView() {
       courseEmoji={course.emoji}
       lessonNumber={lesson.lesson_number}
       lessonTitle={lesson.title}
+      lessonObjective={lesson.objective}
       taskTitle={task.title}
       taskPosition={displayPosition}
       taskType={task.content_type}
@@ -264,6 +266,7 @@ export default function TeacherTaskView() {
         title={task.title}
         lessonTitle={lesson.title}
         description={task.description}
+        objective={displayPosition === 1 ? lesson.objective : null}
         content={isQuizType ? null : task.content}
         contentType={task.content_type || 'text'}
         videoUrl={null}

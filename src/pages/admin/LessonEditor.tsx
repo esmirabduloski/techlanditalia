@@ -13,6 +13,7 @@ import { AdminHeader } from '@/components/admin/AdminHeader';
 import { useToast } from '@/hooks/use-toast';
 import { LogOut, Loader2, ArrowLeft, Save, User } from 'lucide-react';
 import { useAutoBackup } from '@/hooks/useAutoBackup';
+import { OBJECTIVE_MAX_LENGTH, OBJECTIVE_PREFIX, cleanObjective } from '@/lib/lessonObjective';
 
 interface Course {
   id: string;
@@ -22,6 +23,7 @@ interface Course {
 
 interface LessonData {
   title: string;
+  objective: string;
   description: string;
   content: string;
   content_type: string;
@@ -44,6 +46,7 @@ export default function LessonEditor() {
   
   const [formData, setFormData] = useState<LessonData>({
     title: '',
+    objective: '',
     description: '',
     content: '',
     content_type: 'text',
@@ -94,6 +97,7 @@ export default function LessonEditor() {
       if (lessonData) {
         setFormData({
           title: lessonData.title || '',
+          objective: lessonData.objective || '',
           description: lessonData.description || '',
           content: lessonData.content || '',
           content_type: lessonData.content_type || 'text',
@@ -142,6 +146,7 @@ export default function LessonEditor() {
     const lessonPayload = {
       course_id: courseId,
       title: formData.title,
+      objective: cleanObjective(formData.objective) || null,
       description: formData.description || null,
       content: formData.content || null,
       content_type: formData.content_type,
@@ -262,6 +267,27 @@ export default function LessonEditor() {
                       onChange={(e) => setFormData(prev => ({ ...prev, points_reward: parseInt(e.target.value) || 0 }))}
                     />
                   </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="objective">🎯 Obiettivo della lezione</Label>
+                <div className="flex rounded-md border border-input bg-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+                  <span className="flex items-center whitespace-nowrap pl-3 pr-1 text-sm text-muted-foreground select-none">
+                    {OBJECTIVE_PREFIX}
+                  </span>
+                  <Input
+                    id="objective"
+                    value={formData.objective}
+                    onChange={(e) => setFormData(prev => ({ ...prev, objective: e.target.value }))}
+                    placeholder="creare un bot che risponde ai comandi"
+                    maxLength={OBJECTIVE_MAX_LENGTH}
+                    className="border-0 pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
+                  />
+                </div>
+                <div className="flex justify-between gap-4 text-xs text-muted-foreground">
+                  <span>Una frase, verbo all'infinito. La vedono i ragazzi a inizio lezione e i genitori nel calendario.</span>
+                  <span className="shrink-0">{formData.objective.length}/{OBJECTIVE_MAX_LENGTH}</span>
                 </div>
               </div>
 

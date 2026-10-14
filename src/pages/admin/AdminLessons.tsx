@@ -34,6 +34,7 @@ interface Lesson {
   lesson_number: number;
   title: string;
   description: string | null;
+  objective: string | null;
   content_type: string | null;
   points_reward: number;
   created_at: string;
@@ -174,6 +175,11 @@ export default function AdminLessons() {
                       <h3 className="font-semibold truncate">{lesson.title}</h3>
                       {lesson.content_type && lesson.content_type !== 'text' && (
                         <Badge variant="outline">{lesson.content_type}</Badge>
+                      )}
+                      {!lesson.objective?.trim() && (
+                        <Badge variant="outline" className="border-amber-500/50 text-amber-600 dark:text-amber-400" title="Aggiungi l'obiettivo dall'editor della lezione">
+                          Senza obiettivo
+                        </Badge>
                       )}
                     </div>
                     <div className="flex items-center gap-3 text-sm text-muted-foreground">

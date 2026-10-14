@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { formatObjectiveForParent } from "@/lib/lessonObjective";
 
 interface LessonSchedule {
   id: string;
@@ -41,6 +42,7 @@ interface ChildLessonCalendarProps {
 export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupIds }: ChildLessonCalendarProps) {
   const [lessons, setLessons] = useState<LessonSchedule[]>([]);
   const [existingLessons, setExistingLessons] = useState<Set<string>>(new Set());
+  const [objectives, setObjectives] = useState<Map<string, string>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCompleted, setShowCompleted] = useState(false);
@@ -148,11 +150,16 @@ export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupI
         if (courseIds.length > 0) {
           const { data: lessonData } = await supabase
             .from("lessons")
-            .select("course_id, lesson_number")
+            .select("course_id, lesson_number, objective")
             .in("course_id", courseIds);
           if (lessonData) {
             const set = new Set(lessonData.map(l => `${l.course_id}_${l.lesson_number}`));
             setExistingLessons(set);
+            setObjectives(new Map(
+              lessonData
+                .filter(l => l.objective?.trim())
+                .map(l => [`${l.course_id}_${l.lesson_number}`, l.objective as string])
+            ));
           }
         }
       }
@@ -302,6 +309,7 @@ export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupI
                     const isTodayLesson = isToday(date);
                     const courseId = lesson.group.course.id;
                     const hasLessonMaterial = existingLessons.has(`${courseId}_${lesson.lesson_number}`);
+                    const objectiveText = formatObjectiveForParent(objectives.get(`${courseId}_${lesson.lesson_number}`), isPastLesson);
                     const isUnlocked = nextUnlockedByCourse.get(courseId) === lesson.id;
                     const isClickable = hasLessonMaterial && isUnlocked;
 
@@ -328,6 +336,11 @@ export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupI
                         )}>
                           {getLessonLabel(lesson.lesson_number, lesson.lesson_title)}
                         </p>
+                        {objectiveText && (
+                          <p className="text-[11px] leading-snug text-muted-foreground mt-1 line-clamp-2" title={objectiveText}>
+                            🎯 {objectiveText}
+                          </p>
+                        )}
                         <p className="text-xs text-muted-foreground flex items-center justify-center gap-1 mt-1">
                           <Clock className="w-3 h-3" />
                           {format(date, "d MMM", { locale: it })}

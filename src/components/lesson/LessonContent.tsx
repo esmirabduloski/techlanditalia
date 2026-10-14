@@ -3,11 +3,14 @@ import type { MouseEvent } from 'react';
 import { GoogleSlidesEmbed } from './GoogleSlidesEmbed';
 import { GlossaryHTML } from '@/components/glossary/GlossaryHTML';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { LessonObjective } from './LessonObjective';
 
 interface LessonContentProps {
   title: string;
   lessonTitle?: string | null;
   description?: string | null;
+  /** Obiettivo della lezione: banner "Oggi imparerai a…" in cima (solo a inizio lezione) */
+  objective?: string | null;
   content?: string | null;
   contentType?: string;
   videoUrl?: string | null;
@@ -73,6 +76,7 @@ export function LessonContent({
   title,
   lessonTitle,
   description,
+  objective,
   content,
   contentType = 'text',
   videoUrl,
@@ -203,6 +207,8 @@ export function LessonContent({
           {title}
         </h1>
       )}
+
+      <LessonObjective objective={objective} className="mb-6" />
 
       {/* Description */}
       {description && (

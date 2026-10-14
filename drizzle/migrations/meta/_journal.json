@@ -309,6 +309,13 @@
       "when": 1791970005663,
       "tag": "0043_drop_legacy_role_escalation_trigger",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1791970038955,
+      "tag": "0044_fix_role_escalation_allow_backend",
+      "breakpoints": true
     }
   ]
 }

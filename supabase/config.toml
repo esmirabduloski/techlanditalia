@@ -63,6 +63,11 @@ verify_jwt = false
 [functions.delete-my-account]
 verify_jwt = true
 
+# Il genitore imposta la password del figlio: richiede l'utente autenticato
+# (proprietà del figlio e 2FA verificate dentro la funzione).
+[functions.parent-set-child-password]
+verify_jwt = true
+
 # Controllo orario dei job pianificati: chiamato dal cron con x-cron-token,
 # oppure da un admin (JWT + 2FA verificati dentro la funzione).
 [functions.cron-health-check]

@@ -708,7 +708,7 @@ export default function AuthPage() {
               <p className="text-xs text-muted-foreground">Il figlio userà questo nome utente per accedere</p>
             </div>
             <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
-              Il figlio userà la stessa password del genitore per accedere
+              La password del figlio la imposta il genitore dalla sua area riservata, dopo il primo accesso
             </p>
             <div className="space-y-2">
               <Label htmlFor="child-course">Corso acquistato</Label>

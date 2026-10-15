@@ -4,7 +4,8 @@ import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Trophy, Users, Award, BookOpen } from "lucide-react";
+import { Loader2, Trophy, Users, Award, BookOpen, KeyRound } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { LevelBadge, PointsDisplay, getLevelFromPoints } from "@/components/gamification/LevelBadge";
 import { AvatarDisplay } from "@/components/gamification/AvatarSelector";
 import { StreakDisplay } from "@/components/dashboard/StreakDisplay";
@@ -17,11 +18,13 @@ import { ChildHomeworkHistory } from "@/components/dashboard/ChildHomeworkHistor
 import { ChildAttendanceHistory } from "@/components/dashboard/ChildAttendanceHistory";
 import { ParentPaymentHistory } from "@/components/dashboard/ParentPaymentHistory";
 import { useStudentStreaks } from "@/hooks/useStudentStreaks";
+import { ChildPasswordDialog } from "@/components/dashboard/ChildPasswordDialog";
 
 interface Child {
   id: string;
   full_name: string;
   email: string | null;
+  username: string | null;
   avatar_id: number;
   total_points: number;
 }
@@ -34,7 +37,7 @@ interface ChildCourse {
 }
 
 export function ParentChildrenSection() {
-  const { effectiveUserId } = useEffectiveUserId();
+  const { effectiveUserId, isImpersonating } = useEffectiveUserId();
   const [children, setChildren] = useState<Child[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isParent, setIsParent] = useState(false);
@@ -52,7 +55,7 @@ export function ParentChildrenSection() {
     try {
       const { data: childrenData } = await supabase
         .from("profiles")
-        .select("id, full_name, email, avatar_id, total_points")
+        .select("id, full_name, email, username, avatar_id, total_points")
         .eq("parent_id", effectiveUserId);
 
       if (!childrenData || childrenData.length === 0) {
@@ -107,18 +110,19 @@ export function ParentChildrenSection() {
 
           {children.map(child => (
             <TabsContent key={child.id} value={child.id} className="space-y-6">
-              <ChildDashboard child={child} />
+              <ChildDashboard child={child} canManagePassword={!isImpersonating} />
             </TabsContent>
           ))}
         </Tabs>
       ) : (
-        activeChildData && <ChildDashboard child={activeChildData} />
+        activeChildData && <ChildDashboard child={activeChildData} canManagePassword={!isImpersonating} />
       )}
     </div>
   );
 }
 
-function ChildDashboard({ child }: { child: Child }) {
+function ChildDashboard({ child, canManagePassword }: { child: Child; canManagePassword: boolean }) {
+  const [passwordOpen, setPasswordOpen] = useState(false);
   const level = getLevelFromPoints(child.total_points);
   const { streaks, bonuses, loading: streaksLoading } = useStudentStreaks(child.id);
   const [courses, setCourses] = useState<ChildCourse[]>([]);
@@ -189,13 +193,26 @@ function ChildDashboard({ child }: { child: Child }) {
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
               <AvatarDisplay avatarId={child.avatar_id} level={level.level} size="md" />
-              <div>
+              <div className="min-w-0">
                 <h3 className="font-semibold text-lg">{child.full_name}</h3>
+                {child.username && (
+                  <p className="text-xs text-muted-foreground">Nome utente: {child.username}</p>
+                )}
                 <LevelBadge points={child.total_points} size="sm" showProgress />
               </div>
             </div>
+            {/* Solo il genitore vero: in impersonazione la funzione rifiuterebbe comunque */}
+            {canManagePassword && (
+              <Button variant="outline" size="sm" className="mt-4 w-full" onClick={() => setPasswordOpen(true)}>
+                <KeyRound className="w-4 h-4 mr-2" />
+                Nuova password
+              </Button>
+            )}
           </CardContent>
         </Card>
+        {canManagePassword && (
+          <ChildPasswordDialog open={passwordOpen} onOpenChange={setPasswordOpen} child={child} />
+        )}
 
         <Card className="border-accent/20 bg-gradient-to-br from-card to-accent/5">
           <CardContent className="pt-6">

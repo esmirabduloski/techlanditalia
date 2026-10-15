@@ -519,7 +519,15 @@ export default function AdminUsers() {
         body: { userId: passwordDialog.userId, newPassword }
       });
 
-      if (error) throw error;
+      if (error || data?.error) {
+        // Le risposte 4xx (es. regole password studente) arrivano in error.context
+        let message = data?.error as string | undefined;
+        const ctx = (error as { context?: Response } | null)?.context;
+        if (!message && ctx && typeof ctx.json === 'function') {
+          try { message = (await ctx.clone().json())?.error; } catch { /* corpo non leggibile */ }
+        }
+        throw new Error(message || error?.message || 'Impossibile aggiornare la password');
+      }
 
       toast({ title: 'Successo', description: 'Password aggiornata' });
       setPasswordDialog({ open: false, userId: '', userName: '' });
@@ -1295,9 +1303,6 @@ export default function AdminUsers() {
                                         <span className="font-medium">Username:</span> {child.username}
                                       </span>
                                     )}
-                                    <span className="text-muted-foreground text-xs">
-                                      (usa la password del genitore)
-                                    </span>
                                   </div>
                                   
                                   <div className="flex items-center gap-1 flex-wrap mt-1">
@@ -1343,6 +1348,16 @@ export default function AdminUsers() {
                                   <Edit2 className="w-4 h-4 mr-1" />
                                   Modifica
                                 </Button>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button variant="outline" size="sm" onClick={() => openPasswordDialog(child.id, child.full_name)}>
+                                        <Key className="w-4 h-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Nuova password studente</TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
                                 <Button variant="outline" size="sm" onClick={() => openCourseDialog(child.id, child.full_name)}>
                                   <Plus className="w-4 h-4 mr-1" />
                                   Corsi
@@ -1419,9 +1434,6 @@ export default function AdminUsers() {
                                       <span className="font-medium">Username:</span> {child.username}
                                     </span>
                                   )}
-                                  <span className="text-muted-foreground text-xs">
-                                    (usa la password del genitore)
-                                  </span>
                                 </div>
                                 
                                 <div className="flex items-center gap-1 flex-wrap mt-1">
@@ -1461,6 +1473,16 @@ export default function AdminUsers() {
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>Aggiungi commento</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button variant="outline" size="sm" onClick={() => openPasswordDialog(child.id, child.full_name)}>
+                                      <Key className="w-4 h-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Nuova password studente</TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
                               <Select 
@@ -1609,7 +1631,7 @@ export default function AdminUsers() {
               />
             </div>
             <p className="text-sm text-muted-foreground bg-muted/50 p-2 rounded">
-              Lo studente usa la stessa password del genitore. Per cambiare la password, usa il pulsante "Password" sul genitore.
+              Lo studente ha una password sua, separata da quella del genitore. Per cambiarla usa il pulsante con la chiave sulla riga dello studente; il genitore può farlo anche dalla sua area riservata.
             </p>
           </div>
           <DialogFooter>

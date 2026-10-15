@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeadersFor } from "../_shared/cors.ts";
+import { validateChildPassword } from "../_shared/studentpassword.ts";
 
 
 serve(async (req) => {
@@ -42,7 +43,8 @@ serve(async (req) => {
     
     const { parentId, childName, childUsername, childPassword, courseId } = await req.json();
 
-    // childPassword is now the parent's password
+    // childPassword è la password scelta per il figlio, separata da quella del
+    // genitore (migrazione 0046_student_passwords)
     if (!parentId || !childName || !childUsername || !childPassword) {
       return new Response(JSON.stringify({ error: "Dati mancanti" }), {
         status: 400,
@@ -70,6 +72,14 @@ serve(async (req) => {
       });
     }
 
+    const invalidPassword = validateChildPassword(childPassword);
+    if (invalidPassword) {
+      return new Response(JSON.stringify({ error: invalidPassword }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     console.log(`Creating child account for parent ${parentId}`);
 
     // Check if username already exists
@@ -87,12 +97,11 @@ serve(async (req) => {
     }
 
     // Create a dummy auth user for the child with a random email
-    // The child uses the same password as the parent
     const childEmail = `${childUsername.toLowerCase().replace(/[^a-z0-9]/g, '')}_${Date.now()}@student.techland.local`;
     
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: childEmail,
-      password: childPassword, // Same as parent's password
+      password: childPassword,
       email_confirm: true,
       user_metadata: {
         full_name: childName,
@@ -119,6 +128,18 @@ serve(async (req) => {
 
     if (profileError) {
       console.error("Error updating profile:", profileError);
+    }
+
+    const { error: pwSettingsError } = await supabaseAdmin
+      .from('student_password_settings')
+      .upsert({
+        student_id: authData.user.id,
+        own_password: true,
+        set_by: authenticatedUserId,
+        set_at: new Date().toISOString(),
+      });
+    if (pwSettingsError) {
+      console.error("Error saving child password settings:", pwSettingsError);
     }
 
     // Solo un admin può iscrivere a un corso: per un genitore l'iscrizione

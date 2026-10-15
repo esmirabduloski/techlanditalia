@@ -4,6 +4,7 @@ import { z } from "https://esm.sh/zod@3.23.8";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { rateLimit } from "../_shared/ratelimit.ts";
 import { decodeClaims, mfaRequiredResponse } from "../_shared/mfa.ts";
+import { validateChildPassword } from "../_shared/studentpassword.ts";
 
 const BodySchema = z.object({
   userId: z.string().uuid(),
@@ -156,8 +157,17 @@ serve(async (req) => {
       });
     }
 
-    // Update password in auth.users for the parent
-    const { error: authUpdateError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+    // Stesse regole del pannello genitore per la password dello studente
+    const invalidStudentPassword = profile.role === 'student' ? validateChildPassword(newPassword) : null;
+    if (invalidStudentPassword) {
+      return new Response(JSON.stringify({ error: invalidStudentPassword }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Update password in auth.users
+    const { data: updatedAuth, error: authUpdateError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
       password: newPassword,
     });
 
@@ -169,24 +179,27 @@ serve(async (req) => {
       });
     }
 
-    // If this is a parent, also update all children's passwords
-    if (profile.role === 'parent') {
-      const { data: children } = await supabaseAdmin
-        .from('profiles')
-        .select('id')
-        .eq('parent_id', userId)
-        .eq('role', 'student');
+    // Le password di genitore e figli sono separate (migrazione
+    // 0046_student_passwords): cambiare quella del genitore non tocca i figli.
+    // Per uno studente la nuova password diventa la sua, senza più il
+    // fallback sulla password del genitore, e si sblocca il login.
+    if (profile.role === 'student') {
+      const now = new Date().toISOString();
+      const { error: settingsError } = await supabaseAdmin
+        .from('student_password_settings')
+        .upsert({ student_id: userId, own_password: true, set_by: user.id, set_at: now, updated_at: now });
+      if (settingsError) {
+        console.error("Error saving student password settings:", settingsError);
+      }
 
-      if (children && children.length > 0) {
-        for (const child of children) {
-          const { error: childUpdateError } = await supabaseAdmin.auth.admin.updateUserById(child.id, {
-            password: newPassword,
-          });
-          if (childUpdateError) {
-            console.error(`Error updating child ${child.id} password:`, childUpdateError);
-          }
-        }
-        console.log(`Updated password for ${children.length} children of parent ${userId}`);
+      const studentEmail = updatedAuth.user?.email?.toLowerCase();
+      if (studentEmail) {
+        const { error: unlockError } = await supabaseAdmin
+          .from('login_attempts')
+          .delete()
+          .eq('email', studentEmail)
+          .eq('success', false);
+        if (unlockError) console.error("Error clearing student login attempts:", unlockError);
       }
     }
 

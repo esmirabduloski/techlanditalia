@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { clientIp } from "../_shared/clientip.ts";
+import { parentFallbackAllowed } from "../_shared/studentpassword.ts";
 
 // Login alunno con username: tentativi errati consentiti prima del blocco temporaneo
 const STUDENT_MAX_ATTEMPTS = 10;
@@ -128,7 +129,7 @@ serve(async (req) => {
       if (rl && (rl as any).blocked) {
         const minutes = Math.max(1, Math.ceil(((rl as any).retry_after_seconds ?? 60) / 60));
         return new Response(JSON.stringify({
-          error: `Hai sbagliato la password ${STUDENT_MAX_ATTEMPTS} volte. Riprova tra ${minutes} minuti oppure chiedi a un genitore o a un admin di reimpostare la password.`,
+          error: `Hai sbagliato la password ${STUDENT_MAX_ATTEMPTS} volte. Riprova tra ${minutes} minuti oppure chiedi al tuo genitore di impostare una nuova password dalla sua area riservata.`,
           blocked: true,
           retry_after_seconds: (rl as any).retry_after_seconds,
         }), {
@@ -150,7 +151,26 @@ serve(async (req) => {
       });
     }
 
+    // Fase di transizione (drizzle/migrations/0046_student_passwords.sql): gli
+    // studenti senza password propria entrano ancora con quella del genitore,
+    // solo fino a STUDENT_PARENT_PASSWORD_FALLBACK_UNTIL.
+    let fallbackAllowed = false;
     if (profile.parent_id) {
+      const { data: pwSettings, error: pwSettingsError } = await supabaseAdmin
+        .from("student_password_settings")
+        .select("own_password")
+        .eq("student_id", profile.id)
+        .maybeSingle();
+      // Tabella non ancora creata o errore di lettura: si tratta come legacy
+      if (pwSettingsError) console.error("student_password_settings read failed:", pwSettingsError.message);
+      fallbackAllowed = parentFallbackAllowed(
+        pwSettingsError ? null : pwSettings,
+        new Date(),
+        Deno.env.get("STUDENT_PARENT_PASSWORD_FALLBACK_UNTIL"),
+      );
+    }
+
+    if (profile.parent_id && fallbackAllowed) {
       const { data: parentAuthUser, error: parentAuthError } = await supabaseAdmin.auth.admin.getUserById(profile.parent_id);
 
       if (!parentAuthError && parentAuthUser.user) {
@@ -168,6 +188,15 @@ serve(async (req) => {
           });
 
           if (!retryError) {
+            console.log(`Student ${profile.id} logged in with the parent's password (legacy)`);
+            const now = new Date().toISOString();
+            const { error: trackError } = await supabaseAdmin.from("student_password_settings").upsert({
+              student_id: profile.id,
+              own_password: false,
+              parent_fallback_used_at: now,
+              updated_at: now,
+            });
+            if (trackError) console.error("student_password_settings track failed:", trackError.message);
             await recordAttempt(true);
             return new Response(JSON.stringify({ session: retryData.session }), {
               headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { rateLimit } from "../_shared/ratelimit.ts";
 import { decodeClaims, mfaRequiredResponse } from "../_shared/mfa.ts";
+import { randomUnknownPassword } from "../_shared/studentpassword.ts";
 
 // Il link "Imposta la tua password" deve puntare alla pagina con il form di nuova
 // password, non alla homepage. Stessa allowlist usata da send-password-reset-email.
@@ -222,12 +223,14 @@ serve(async (req) => {
         console.error("Error adding user role:", roleError);
       }
 
-      // Create child account
+      // Create child account. La password del figlio NON è quella del genitore:
+      // nasce casuale e il genitore la imposta dall'area riservata
+      // (parent-set-child-password, migrazione 0046_student_passwords).
       const childEmail = `${childUsername.trim().toLowerCase().replace(/[^a-z0-9]/g, "")}_${Date.now()}@student.techland.local`;
 
       const { data: childAuthData, error: childAuthError } = await supabaseAdmin.auth.admin.createUser({
         email: childEmail,
-        password,
+        password: randomUnknownPassword(),
         email_confirm: true,
         user_metadata: {
           full_name: childName.trim(),
@@ -263,6 +266,13 @@ serve(async (req) => {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
+      }
+
+      const { error: pwSettingsError } = await supabaseAdmin
+        .from("student_password_settings")
+        .upsert({ student_id: childAuthData.user.id, own_password: true, set_at: new Date().toISOString() });
+      if (pwSettingsError) {
+        console.error("Error saving child password settings:", pwSettingsError);
       }
 
       // Enroll child in course if selected

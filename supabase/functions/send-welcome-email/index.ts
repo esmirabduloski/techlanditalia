@@ -77,7 +77,7 @@ const getParentEmailTemplate = (
         <div style="background:linear-gradient(135deg,#f0fdf4 0%,#ecfeff 100%);border-radius:12px;padding:24px;margin:30px 0;border:2px solid #10b981;">
           <h3 style="color:#059669;margin:0 0 15px;font-size:18px;">🔐 Accesso di ${childName}:</h3>
           <p style="color:#1f2937;font-size:16px;font-weight:bold;margin:8px 0;"><strong>Nome utente:</strong> ${childUsername}</p>
-          <p style="color:#4b5563;font-size:15px;margin:8px 0;">L'accesso del figlio verrà gestito tramite il suo account genitore dopo aver impostato la password.</p>
+          <p style="color:#4b5563;font-size:15px;margin:8px 0;">Dopo aver impostato la sua password, entri nell'area riservata e nella sezione «I Tuoi Figli» scelga la password di ${childName} con il pulsante «Nuova password»: ${childName} entrerà con il nome utente qui sopra e quella password.</p>
         </div>
         <div style="text-align:center;margin:30px 0;">
           <a href="https://techlanditalia.it/area-riservata" style="display:inline-block;background:linear-gradient(135deg,#10b981 0%,#06b6d4 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:bold;font-size:16px;">Accedi all'Area Riservata →</a>

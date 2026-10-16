@@ -11,7 +11,7 @@ export const MEDIA_PURPOSES: { id: MediaPurpose; label: string; description: str
   {
     id: 'lesson_recording',
     label: 'Registrazione delle lezioni',
-    description: 'Video, voce e schermo condiviso di tuo figlio nelle registrazioni delle lezioni online.',
+    description: 'Video, voce e schermo condiviso di tuo figlio nelle registrazioni delle lezioni online, solo per riguardarle a casa dall\'area riservata. Cancellate a fine corso, mai diffuse.',
   },
   {
     id: 'open_day',

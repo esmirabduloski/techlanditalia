@@ -95,8 +95,16 @@ export default function Termini() {
                   Tutti i contenuti presenti sul sito e nei corsi (testi, immagini, video, codice, 
                   materiali didattici) sono di proprietà di TECHLAND o dei suoi licenzianti. 
                   È vietata la riproduzione, distribuzione o modifica di tali contenuti senza 
-                  autorizzazione scritta. I progetti creati dagli studenti durante i corsi 
+                  autorizzazione scritta. I progetti creati dagli studenti durante i corsi
                   rimangono di loro proprietà.
+                </p>
+                <p className="text-muted-foreground mt-4">
+                  Le registrazioni delle lezioni, quando il genitore ha dato il consenso, servono solo a
+                  permettere allo studente di riguardarle a casa e sono consultabili esclusivamente
+                  nell&apos;area riservata di techlanditalia.it. È vietato scaricarle, copiarle, registrarle
+                  con altri mezzi, pubblicarle o condividerle con terzi, in tutto o in parte: contengono
+                  materiali protetti dal diritto d&apos;autore e immagini di docenti e altri studenti.
+                  TECHLAND non le usa per altri scopi e le cancella al termine del corso.
                 </p>
               </section>
 

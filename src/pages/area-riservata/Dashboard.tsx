@@ -41,6 +41,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { PushNotificationsCard } from '@/components/notifications/PushNotificationsCard';
 import { CourseProposalCard } from '@/components/dashboard/CourseProposalCard';
 import { SatisfactionSurveyCard } from '@/components/dashboard/SatisfactionSurveyCard';
+import { RecordingConsentPrompt } from '@/components/dashboard/RecordingConsentPrompt';
 
 interface CourseProgress {
   courseId: string;
@@ -329,6 +330,11 @@ export default function Dashboard() {
               </Button>
             </div>
           </div>
+
+          {/* Consenso alla registrazione delle lezioni, chiesto finché il genitore non decide */}
+          {effectiveUserId && effectiveIsParent && (
+            <RecordingConsentPrompt userId={effectiveUserId} readOnly={isImpersonating} />
+          )}
 
           {/* Proposta del corso successivo a fine corso, con lo sconto per chi continua subito */}
           {effectiveUserId && !effectiveIsTeacher && (

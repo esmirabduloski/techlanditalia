@@ -200,6 +200,16 @@ export default function Privacy() {
                   facoltativi e non dandoli lo studente partecipa comunque alle attività. Il genitore li gestisce e li revoca
                   in qualsiasi momento dal proprio profilo nell&apos;area riservata, oppure scrivendoci a <Mail />.
                 </P>
+                <P>
+                  <strong>Registrazione delle lezioni.</strong> Con il consenso del genitore registriamo le lezioni online
+                  con l&apos;unico scopo di permettere allo studente di riguardarle a casa, per ripassare o recuperare una
+                  lezione persa. Il link alla registrazione è visibile solo nell&apos;area riservata dello studente e dei suoi
+                  genitori su techlanditalia.it. Le registrazioni sono cancellate al termine del corso e non sono usate per
+                  nessun altro scopo: niente pubblicità, social o diffusione a terzi. Anche le famiglie si impegnano a non
+                  scaricarle, copiarle o diffonderle fuori dalla piattaforma (vedi i Termini di Servizio), sia per la
+                  riservatezza degli altri partecipanti sia perché i contenuti delle lezioni sono protetti dal diritto
+                  d&apos;autore.
+                </P>
               </section>
 
               <section>

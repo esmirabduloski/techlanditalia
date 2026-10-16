@@ -6,9 +6,9 @@
 -- sempre entrare con la password del genitore.
 --
 -- Ora il genitore imposta la password del figlio dall'area riservata
--- (edge function parent-set-child-password). Il vecchio meccanismo resta solo
--- per gli studenti "legacy" e solo fino alla data in
--- STUDENT_PARENT_PASSWORD_FALLBACK_UNTIL (vedi _shared/studentpassword.ts):
+-- (edge function parent-set-child-password). Il vecchio meccanismo resta,
+-- senza scadenza, per gli studenti "legacy" finché non hanno una password
+-- propria (vedi _shared/studentpassword.ts):
 --   - nessuna riga qui            → studente legacy, fallback ammesso;
 --   - own_password = false        → legacy, il fallback è stato usato
 --                                   (parent_fallback_used_at = ultimo uso);
@@ -31,7 +31,7 @@ CREATE INDEX IF NOT EXISTS idx_student_password_settings_fallback
 
 ALTER TABLE public.student_password_settings ENABLE ROW LEVEL SECURITY;
 
--- Gli admin vedono chi usa ancora la password del genitore prima dello stop
+-- Gli admin vedono chi entra ancora con la password del genitore
 DROP POLICY IF EXISTS "Admins view student_password_settings" ON public.student_password_settings;
 CREATE POLICY "Admins view student_password_settings"
 ON public.student_password_settings FOR SELECT

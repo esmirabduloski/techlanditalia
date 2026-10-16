@@ -151,9 +151,8 @@ serve(async (req) => {
       });
     }
 
-    // Fase di transizione (drizzle/migrations/0046_student_passwords.sql): gli
-    // studenti senza password propria entrano ancora con quella del genitore,
-    // solo fino a STUDENT_PARENT_PASSWORD_FALLBACK_UNTIL.
+    // Gli studenti senza password propria (drizzle/migrations/0046_student_passwords.sql)
+    // entrano anche con quella del genitore, senza scadenza.
     let fallbackAllowed = false;
     if (profile.parent_id) {
       const { data: pwSettings, error: pwSettingsError } = await supabaseAdmin
@@ -163,11 +162,7 @@ serve(async (req) => {
         .maybeSingle();
       // Tabella non ancora creata o errore di lettura: si tratta come legacy
       if (pwSettingsError) console.error("student_password_settings read failed:", pwSettingsError.message);
-      fallbackAllowed = parentFallbackAllowed(
-        pwSettingsError ? null : pwSettings,
-        new Date(),
-        Deno.env.get("STUDENT_PARENT_PASSWORD_FALLBACK_UNTIL"),
-      );
+      fallbackAllowed = parentFallbackAllowed(pwSettingsError ? null : pwSettings);
     }
 
     if (profile.parent_id && fallbackAllowed) {

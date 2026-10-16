@@ -2,14 +2,10 @@
  * Password dello studente, separata da quella del genitore
  * (drizzle/migrations/0046_student_passwords.sql).
  *
- * Fase di transizione: gli studenti creati prima del cambio entravano con la
- * password del genitore. student-login continua ad accettarla solo per loro
- * (nessuna password propria) e solo fino a FALLBACK_UNTIL, poi il genitore
- * deve impostare la password del figlio dall'area riservata.
+ * Gli studenti creati prima del cambio entravano con la password del genitore.
+ * student-login continua ad accettarla per loro, senza scadenza, finché il
+ * genitore (o un admin) non imposta al figlio una password propria.
  */
-
-/** Ultimo giorno (incluso, ora di Roma) in cui vale la password del genitore. */
-export const DEFAULT_PARENT_FALLBACK_UNTIL = "2026-12-31";
 
 export const CHILD_PASSWORD_MIN_LENGTH = 8;
 export const CHILD_PASSWORD_MAX_LENGTH = 72;
@@ -18,26 +14,12 @@ export interface StudentPasswordSettings {
   own_password: boolean;
 }
 
-/** Fine del giorno indicato (YYYY-MM-DD) a Roma, in UTC. Data non valida → default. */
-export function fallbackDeadline(until: string | undefined | null): Date {
-  const day = /^\d{4}-\d{2}-\d{2}$/.test(until ?? "") ? until! : DEFAULT_PARENT_FALLBACK_UNTIL;
-  // 23:59:59 a Roma: in inverno UTC+1, in estate UTC+2. Si prende UTC+1
-  // (al massimo un'ora in più di tolleranza d'estate).
-  const d = new Date(`${day}T22:59:59Z`);
-  return Number.isNaN(d.getTime()) ? new Date(`${DEFAULT_PARENT_FALLBACK_UNTIL}T22:59:59Z`) : d;
-}
-
 /**
- * true se lo studente può ancora entrare con la password del genitore:
- * nessuna password propria e scadenza non passata.
+ * true se lo studente può entrare con la password del genitore: vale finché
+ * non ha una password propria, senza scadenza.
  */
-export function parentFallbackAllowed(
-  settings: StudentPasswordSettings | null | undefined,
-  now: Date,
-  until: string | undefined | null,
-): boolean {
-  if (settings?.own_password) return false;
-  return now.getTime() <= fallbackDeadline(until).getTime();
+export function parentFallbackAllowed(settings: StudentPasswordSettings | null | undefined): boolean {
+  return !settings?.own_password;
 }
 
 /** Messaggio d'errore per una password non valida, oppure null se va bene. */

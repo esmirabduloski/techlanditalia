@@ -22,6 +22,8 @@ const GATEWAY_URL = "https://connector-gateway.lovable.dev/firebase_messaging";
 const SITE_URL = (Deno.env.get("SITE_URL") || "https://techlanditalia.it").replace(/\/$/, "");
 // Al cliente non mandiamo promemoria troppo vecchi (es. rate create con date già passate)
 const CLIENT_MAX_DELAY_DAYS = 3;
+// Stesso numero del footer e di WhatsAppCta.tsx
+const WHATSAPP_NUMBER = "393505813140";
 
 type DunningSettings = {
   enabled: boolean;
@@ -87,6 +89,13 @@ function paymentPhrase(p: PaymentRow): string {
     return `la rata ${p.installment_number}/${p.installment_total}${desc ? ` (${desc})` : ""}`;
   }
   return desc ? `il pagamento per ${desc}` : "il pagamento";
+}
+
+/** Causale del bonifico: "Corso educativo per bambini - rata 3/10". */
+function paymentReference(p: PaymentRow): string {
+  const base = "Corso educativo per bambini";
+  if (!p.installment_number) return base;
+  return `${base} - rata ${p.installment_number}${p.installment_total ? `/${p.installment_total}` : ""}`;
 }
 
 const FN = "send-payment-reminders";
@@ -174,6 +183,8 @@ serve(async (req: Request): Promise<Response> => {
       const { title, text } = clientTexts(p, kind);
       const instructions = rules.payment_instructions?.trim();
       const hasAccount = !!p.crm_leads?.linked_profile_id;
+      const reference = paymentReference(p);
+      const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Ciao! Vi scrivo per ${paymentPhrase(p)} di ${euro(p.amount_cents)}.`)}`;
       const html = `<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
   <body style="margin:0;padding:0;background:#f4f4f4;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
   <table role="presentation" style="width:100%;border-collapse:collapse;"><tr><td align="center" style="padding:32px 12px;">
@@ -186,11 +197,12 @@ serve(async (req: Request): Promise<Response> => {
   <tr><td style="padding:16px;font-size:15px;">
   <strong>Importo:</strong> ${escapeHtml(euro(p.amount_cents))}<br>
   ${p.due_date ? `<strong>Scadenza:</strong> ${escapeHtml(longDate(p.due_date))}<br>` : ""}
-  ${p.description ? `<strong>Descrizione:</strong> ${escapeHtml(p.description)}` : ""}
+  ${p.description ? `<strong>Descrizione:</strong> ${escapeHtml(p.description)}<br>` : ""}
+  <strong>Causale:</strong> ${escapeHtml(reference)}
   </td></tr></table>
   ${instructions ? `<p style="margin:0 0 16px;white-space:pre-line;"><strong>Come pagare</strong><br>${escapeHtml(instructions)}</p>` : ""}
   ${hasAccount ? `<p style="margin:0 0 16px;"><a href="${SITE_URL}/area-riservata/acquisti" style="color:#059669;font-weight:bold;">Vedi i tuoi pagamenti nell'area riservata →</a></p>` : ""}
-  <p style="margin:0;color:#4b5563;font-size:14px;">Per qualsiasi dubbio rispondi pure a questa email.</p>
+  <p style="margin:0;color:#4b5563;font-size:14px;">Per qualsiasi dubbio rispondi pure a questa email, ma per risposte immediate <a href="${whatsappUrl}" style="color:#059669;font-weight:bold;">contattaci su WhatsApp</a>.</p>
   </td></tr>
   <tr><td style="background:#f9fafb;padding:20px;text-align:center;border-top:1px solid #e5e7eb;color:#6b7280;font-size:13px;">Il Team TECHLAND · techlanditalia.it</td></tr>
   </table></td></tr></table></body></html>`;
@@ -204,7 +216,7 @@ serve(async (req: Request): Promise<Response> => {
           reply_to: "info@techlanditalia.it",
           subject: `${title} – ${euro(p.amount_cents)}`,
           html,
-          text: `${text}${instructions ? `\n\nCome pagare:\n${instructions}` : ""}\n\nIl Team TECHLAND`,
+          text: `${text}\n\nCausale: ${reference}${instructions ? `\n\nCome pagare:\n${instructions}` : ""}\n\nPer qualsiasi dubbio rispondi pure a questa email, ma per risposte immediate contattaci su WhatsApp: ${whatsappUrl}\n\nIl Team TECHLAND`,
         }),
       });
       if (!res.ok) {

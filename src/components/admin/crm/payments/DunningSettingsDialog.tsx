@@ -114,12 +114,13 @@ export function DunningSettingsDialog({ open, onOpenChange, settings, onSaved }:
             <Textarea
               id="dunning-instructions"
               rows={3}
-              placeholder={'Es. Bonifico a TECHLAND\nIBAN IT00 X000 0000 0000 0000 0000 000\nCausale: nome dello studente e mese'}
+              placeholder={'Es. Bonifico a TECHLAND\nIBAN IT00 X000 0000 0000 0000 0000 000'}
               value={draft.payment_instructions ?? ''}
               onChange={e => setDraft(d => ({ ...d, payment_instructions: e.target.value }))}
             />
             <p className="text-xs text-muted-foreground">
-              Le email partono quando il cliente non ha l'app o non ha le notifiche attive.
+              Le email partono quando il cliente non ha l'app o non ha le notifiche attive. La causale
+              ("Corso educativo per bambini - rata N") viene aggiunta in automatico.
             </p>
           </div>
 

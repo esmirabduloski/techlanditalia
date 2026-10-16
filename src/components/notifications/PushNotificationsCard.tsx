@@ -64,6 +64,26 @@ export function PushNotificationsCard() {
 
   const configured = isPushConfigured();
 
+  // Già attive e niente da spiegare: una riga sottile invece della card grande
+  if (devices > 0 && !notice && !needsHomeScreen) {
+    return (
+      <div className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-primary/20 px-4 py-2 text-sm">
+        <span className="flex items-center gap-2 flex-1 min-w-0 text-muted-foreground">
+          <Bell className="w-4 h-4 text-primary shrink-0" aria-hidden="true" />
+          Promemoria lezioni attivi su {devices} dispositiv{devices === 1 ? 'o' : 'i'}
+        </span>
+        <span className="flex gap-1">
+          <Button size="sm" variant="ghost" onClick={handleEnable} disabled={loading}>
+            Attiva anche qui
+          </Button>
+          <Button size="sm" variant="ghost" onClick={handleDisable} disabled={loading}>
+            Disattiva
+          </Button>
+        </span>
+      </div>
+    );
+  }
+
   return (
     <Card className="mb-6 border-primary/20">
       <CardHeader className="pb-3">

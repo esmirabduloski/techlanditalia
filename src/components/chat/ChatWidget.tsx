@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Trash2, Headset } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useParentChat } from '@/hooks/useParentChat';
+import { useParentBottomNavVisible } from '@/components/layout/ParentBottomNav';
 
 export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -10,6 +11,8 @@ export function ChatWidget() {
   const [contact, setContact] = useState('');
   const [contactError, setContactError] = useState<string | null>(null);
   const contactRef = useRef<HTMLInputElement>(null);
+  // Sul telefono, con la barra genitori in basso, il pulsante sale sopra di essa
+  const aboveNav = useParentBottomNavVisible();
   const {
     messages,
     isLoading,
@@ -69,7 +72,7 @@ export function ChatWidget() {
       {/* Chat Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-all hover:scale-105 hover:shadow-xl ${isOpen ? 'hidden' : ''}`}
+        className={`fixed ${aboveNav ? 'bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-6' : 'bottom-6'} right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-all hover:scale-105 hover:shadow-xl ${isOpen ? 'hidden' : ''}`}
         aria-label="Apri chat assistenza"
       >
         <MessageCircle className="h-6 w-6" />
@@ -77,7 +80,7 @@ export function ChatWidget() {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 flex h-[500px] w-[380px] max-w-[calc(100vw-2rem)] flex-col rounded-2xl border border-border bg-background shadow-2xl">
+        <div className={`fixed ${aboveNav ? 'bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-6 max-h-[calc(100dvh-11rem)] md:max-h-none' : 'bottom-6'} right-6 z-50 flex h-[500px] w-[380px] max-w-[calc(100vw-2rem)] flex-col rounded-2xl border border-border bg-background shadow-2xl`}>
           {/* Header */}
           <div className="flex items-center justify-between rounded-t-2xl bg-primary px-4 py-3 text-primary-foreground">
             <div className="flex items-center gap-3">

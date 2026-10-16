@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Menu, X, User } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Menu, X, User, Home, UserRound, CreditCard, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useHasEnrollments } from "@/hooks/useHasEnrollments";
 import { useStudentRole } from "@/hooks/useStudentRole";
 import { useTeacherRole } from "@/hooks/useTeacherRole";
+import { useProfileRole } from "@/hooks/useProfileRole";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { FontSizeWidget } from "@/components/accessibility/FontSizeWidget";
 
@@ -21,15 +22,33 @@ const navLinks = [
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const { hasEnrollments } = useHasEnrollments();
   const { isStudent } = useStudentRole();
   const { isTeacher } = useTeacherRole();
+  const { isParent, hasChildren } = useProfileRole();
   const isInAreaRiservata = location.pathname.startsWith('/area-riservata');
   const isInTeacherArea = location.pathname.startsWith('/insegnante');
   
-  // Mostra bottone lezione gratuita solo se non loggato o senza iscrizioni, e non è uno studente né un insegnante
-  const showTrialButton = !user || (!hasEnrollments && !isStudent && !isTeacher);
+  // Mostra bottone lezione gratuita solo se non loggato o senza iscrizioni, e non è uno studente,
+  // un insegnante o un genitore che ha già figli iscritti
+  const showTrialButton = !user || (!hasEnrollments && !isStudent && !isTeacher && !hasChildren);
+
+  // Dentro l'area riservata il menu del telefono porta alle sue pagine
+  const privateLinks = user && isInAreaRiservata
+    ? [
+        { href: "/area-riservata", label: "Area riservata", icon: Home },
+        ...(isParent ? [{ href: "/area-riservata/acquisti", label: "Acquisti", icon: CreditCard }] : []),
+        { href: "/area-riservata/profilo", label: "Profilo", icon: UserRound },
+      ]
+    : [];
+
+  const handleSignOut = async () => {
+    setIsOpen(false);
+    await signOut();
+    navigate("/");
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50" role="navigation" aria-label="Navigazione principale del sito">
@@ -113,7 +132,37 @@ export function Navbar() {
 
         {/* Mobile Menu */}
         {isOpen && (
-          <nav id="mobile-menu" className="lg:hidden py-4 border-t border-border/50 animate-fade-in" aria-label="Menu di navigazione mobile">
+          <nav id="mobile-menu" className="lg:hidden py-4 border-t border-border/50 animate-fade-in max-h-[calc(100dvh-5rem)] overflow-y-auto" aria-label="Menu di navigazione mobile">
+            {privateLinks.length > 0 && (
+              <ul className="flex flex-col gap-1 list-none m-0 p-0 pb-3 mb-3 border-b border-border/50">
+                {privateLinks.map(({ href, label, icon: Icon }) => (
+                  <li key={href}>
+                    <Link
+                      to={href}
+                      onClick={() => setIsOpen(false)}
+                      aria-current={location.pathname === href ? "page" : undefined}
+                      className={cn(
+                        "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium no-underline transition-colors",
+                        location.pathname === href ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted"
+                      )}
+                    >
+                      <Icon className="w-4 h-4" aria-hidden="true" />
+                      {label}
+                    </Link>
+                  </li>
+                ))}
+                <li>
+                  <button
+                    type="button"
+                    onClick={handleSignOut}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" aria-hidden="true" />
+                    Esci
+                  </button>
+                </li>
+              </ul>
+            )}
             <ul className="flex flex-col gap-2 list-none m-0 p-0">
               {navLinks.map((link) => (
                 <li key={link.href}>

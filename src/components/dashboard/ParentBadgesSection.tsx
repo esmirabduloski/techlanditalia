@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Trophy, Lock, ChevronDown } from "lucide-react";
+import { Loader2, ChevronDown } from "lucide-react";
 import { SocialShareButton } from "@/components/gamification/SocialShareButton";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 interface BadgeData {
   id: string;
@@ -24,8 +23,6 @@ interface ParentBadgesSectionProps {
   childId: string;
   childName: string;
 }
-
-const INITIAL_BADGES_COUNT = 10;
 
 export function ParentBadgesSection({ childId, childName }: ParentBadgesSectionProps) {
   const [badges, setBadges] = useState<BadgeData[]>([]);
@@ -81,116 +78,78 @@ export function ParentBadgesSection({ childId, childName }: ParentBadgesSectionP
 
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="py-8 flex justify-center">
-          <Loader2 className="w-6 h-6 animate-spin text-primary" />
-        </CardContent>
-      </Card>
+      <div className="py-6 flex justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      </div>
     );
   }
 
-  const displayBadges = showAll ? badges : badges.slice(0, INITIAL_BADGES_COUNT);
-  const earnedCount = badges.filter((b) => b.isEarned).length;
-  const hasMore = badges.length > INITIAL_BADGES_COUNT;
+  const earned = badges.filter((b) => b.isEarned);
+  const locked = badges.filter((b) => !b.isEarned);
+  const displayBadges = showAll ? badges : earned;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold flex items-center gap-2">
-          <Trophy className="w-5 h-5 text-primary" />
-          🏆 Badge di {childName}
-        </h3>
-        <Badge variant="secondary" className="text-sm">
-          {earnedCount}/{badges.length} sbloccati
-        </Badge>
-      </div>
+    <div className="space-y-3">
+      <p className="text-sm text-muted-foreground">
+        {earned.length} badge sbloccati su {badges.length}. Tocca un badge per i dettagli.
+      </p>
 
       {displayBadges.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="py-8 text-center">
-            <Trophy className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-            <p className="text-muted-foreground">
-              Nessun badge ottenuto ancora
-            </p>
-          </CardContent>
-        </Card>
+        <p className="text-sm text-muted-foreground text-center py-2">{childName} non ha ancora ottenuto badge</p>
       ) : (
-        <>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-            <TooltipProvider>
-              {displayBadges.map((badge) => (
-                <Tooltip key={badge.id}>
-                  <TooltipTrigger asChild>
-                    <Card
-                      className={`cursor-pointer transition-all duration-200 hover:scale-105 ${
-                        badge.isEarned
-                          ? "border-primary/50 bg-gradient-to-br from-card to-primary/10"
-                          : "border-muted bg-muted/20 opacity-60"
-                      }`}
-                    >
-                      <CardContent className="p-3 text-center">
-                        <div className="relative">
-                          <span className="text-3xl md:text-4xl">
-                            {badge.isEarned ? badge.emoji : "🔒"}
-                          </span>
-                          {!badge.isEarned && (
-                            <Lock className="w-3 h-3 absolute -top-1 -right-1 text-muted-foreground" />
-                          )}
-                        </div>
-                        <p className={`text-xs font-medium mt-2 truncate ${
-                          badge.isEarned ? "text-foreground" : "text-muted-foreground"
-                        }`}>
-                          {badge.name}
-                        </p>
-                        {badge.isEarned && badge.points_reward > 0 && (
-                          <Badge variant="outline" className="text-[10px] mt-1 px-1">
-                            +{badge.points_reward}
-                          </Badge>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="max-w-xs">
-                    <div className="text-center">
-                      <p className="font-semibold">{badge.emoji} {badge.name}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {badge.description}
-                      </p>
-                      {badge.isEarned && badge.earned_at && (
-                        <p className="text-xs text-primary mt-2">
-                          Ottenuto: {format(new Date(badge.earned_at), "d MMMM yyyy", { locale: it })}
-                        </p>
-                      )}
-                      {badge.isEarned && (
-                        <div className="mt-2" onClick={(e) => e.stopPropagation()}>
-                          <SocialShareButton
-                            text={`${childName} ha ottenuto il badge "${badge.name}" su TechLand!`}
-                            emoji={badge.emoji}
-                            size="sm"
-                            variant="ghost"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
-              ))}
-            </TooltipProvider>
-          </div>
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+          {displayBadges.map((badge) => (
+            <Popover key={badge.id}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className={cn(
+                    "rounded-xl border p-2 text-center min-h-[88px] active:scale-[0.97] transition-transform",
+                    badge.isEarned
+                      ? "border-primary/50 bg-gradient-to-br from-card to-primary/10"
+                      : "border-muted bg-muted/20 opacity-70",
+                  )}
+                >
+                  <span className="text-3xl block" aria-hidden="true">{badge.isEarned ? badge.emoji : "🔒"}</span>
+                  <span className={cn(
+                    "block text-xs font-medium mt-1 line-clamp-2",
+                    badge.isEarned ? "text-foreground" : "text-muted-foreground",
+                  )}>
+                    {badge.name}
+                  </span>
+                </button>
+              </PopoverTrigger>
+              <PopoverContent side="top" className="w-64 text-center">
+                <p className="font-semibold">{badge.emoji} {badge.name}</p>
+                <p className="text-sm text-muted-foreground mt-1">{badge.description}</p>
+                {badge.isEarned && badge.earned_at && (
+                  <p className="text-xs text-primary mt-2">
+                    Ottenuto il {format(new Date(badge.earned_at), "d MMMM yyyy", { locale: it })}
+                    {badge.points_reward > 0 && ` · +${badge.points_reward} punti`}
+                  </p>
+                )}
+                {!badge.isEarned && <p className="text-xs text-muted-foreground mt-2">Non ancora sbloccato</p>}
+                {badge.isEarned && (
+                  <div className="mt-2">
+                    <SocialShareButton
+                      text={`${childName} ha ottenuto il badge "${badge.name}" su TechLand!`}
+                      emoji={badge.emoji}
+                      size="sm"
+                      variant="ghost"
+                    />
+                  </div>
+                )}
+              </PopoverContent>
+            </Popover>
+          ))}
+        </div>
+      )}
 
-          {hasMore && !showAll && (
-            <div className="flex justify-center">
-              <Button
-                variant="outline"
-                onClick={() => setShowAll(true)}
-                className="gap-2"
-              >
-                <ChevronDown className="w-4 h-4" />
-                Mostra altri ({badges.length - INITIAL_BADGES_COUNT} rimanenti)
-              </Button>
-            </div>
-          )}
-        </>
+      {locked.length > 0 && (
+        <Button variant="outline" className="w-full gap-2" onClick={() => setShowAll((v) => !v)}>
+          <ChevronDown className={cn("w-4 h-4 transition-transform", showAll && "rotate-180")} />
+          {showAll ? "Nascondi quelli da sbloccare" : `Mostra quelli da sbloccare (${locked.length})`}
+        </Button>
       )}
     </div>
   );

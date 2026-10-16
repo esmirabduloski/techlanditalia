@@ -1,37 +1,18 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, CalendarDays, Clock, AlertCircle, RefreshCw, Video, Eye, EyeOff, BookOpen } from "lucide-react";
-import { format, isPast, isToday, isFuture } from "date-fns";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Loader2, Clock, AlertCircle, RefreshCw, Video, BookOpen, ChevronDown } from "lucide-react";
+import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { useNavigate } from "react-router-dom";
 import { formatObjectiveForParent } from "@/lib/lessonObjective";
+import { localDateKey } from "@/lib/childProgress";
+import { useChildSchedule, type ScheduledLesson } from "@/hooks/useChildProgressData";
 
-interface LessonSchedule {
-  id: string;
-  lesson_number: number;
-  lesson_date: string;
-  lesson_title: string | null;
-  lesson_time: string | null;
-  group: {
-    id: string;
-    title: string;
-    lesson_time: string | null;
-    status: string;
-    student_meeting_link: string | null;
-    course: {
-      id: string;
-      title: string;
-      emoji: string;
-    };
-  };
-}
+const INITIAL_COUNT = 4;
 
 interface ChildLessonCalendarProps {
   childId: string;
@@ -39,357 +20,153 @@ interface ChildLessonCalendarProps {
   groupIds?: string[];
 }
 
-export function ChildLessonCalendar({ childId, childName, groupIds: filterGroupIds }: ChildLessonCalendarProps) {
-  const [lessons, setLessons] = useState<LessonSchedule[]>([]);
-  const [existingLessons, setExistingLessons] = useState<Set<string>>(new Set());
-  const [objectives, setObjectives] = useState<Map<string, string>>(new Map());
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [showCompleted, setShowCompleted] = useState(false);
-  const navigate = useNavigate();
-
-  // Confronto per valore: l'array cambia a ogni render del genitore
-  const groupIdsKey = filterGroupIds?.join(',');
-  useEffect(() => {
-    if (childId) {
-      fetchLessonSchedule();
-    }
-  }, [childId, groupIdsKey]);
-
-  const fetchLessonSchedule = async () => {
-    setError(null);
-    setIsLoading(true);
-    try {
-      let groupIds = filterGroupIds;
-
-      if (!groupIds) {
-        // Fallback: fetch all groups the child is in
-        const { data: groupStudentData, error: groupError } = await supabase
-          .from("group_students")
-          .select("group_id")
-          .eq("student_id", childId);
-
-        if (groupError) {
-          console.error("Error fetching group_students:", groupError);
-          setError(`Errore di caricamento gruppi: ${groupError.message}`);
-          setIsLoading(false);
-          return;
-        }
-
-        if (!groupStudentData || groupStudentData.length === 0) {
-          setLessons([]);
-          setIsLoading(false);
-          return;
-        }
-
-        groupIds = groupStudentData.map(gs => gs.group_id);
-      }
-
-      if (groupIds.length === 0) {
-        setLessons([]);
-        setIsLoading(false);
-        return;
-      }
-
-      // Fetch the lesson schedule for those groups
-      const { data: scheduleData, error: scheduleError } = await supabase
-        .from("group_lesson_schedule")
-        .select(`
-          id,
-          lesson_number,
-          lesson_date,
-          lesson_title,
-          lesson_time,
-          group:group_id (
-            id,
-            title,
-            lesson_time,
-            status,
-            student_meeting_link,
-            course:course_id (
-              id,
-              title,
-              emoji
-            )
-          )
-        `)
-        .in("group_id", groupIds)
-        .order("lesson_date", { ascending: true });
-
-      if (scheduleError) {
-        console.error("Error fetching group_lesson_schedule:", scheduleError);
-        setError(`Errore di caricamento calendario: ${scheduleError.message}`);
-        setIsLoading(false);
-        return;
-      }
-
-      if (scheduleData) {
-        const typedLessons: LessonSchedule[] = scheduleData.map((s: any) => ({
-          id: s.id,
-          lesson_number: s.lesson_number,
-          lesson_date: s.lesson_date,
-          lesson_title: s.lesson_title,
-          lesson_time: s.lesson_time,
-          group: {
-            id: s.group.id,
-            title: s.group.title,
-            lesson_time: s.group.lesson_time,
-            status: s.group.status || 'active',
-            student_meeting_link: s.group.student_meeting_link || null,
-            course: {
-              id: s.group.course.id,
-              title: s.group.course.title,
-              emoji: s.group.course.emoji,
-            },
-          },
-        }));
-        setLessons(typedLessons);
-
-        // Fetch which lessons actually have material
-        const courseIds = [...new Set(typedLessons.map(l => l.group.course.id))];
-        if (courseIds.length > 0) {
-          const { data: lessonData } = await supabase
-            .from("lessons")
-            .select("course_id, lesson_number, objective")
-            .in("course_id", courseIds);
-          if (lessonData) {
-            const set = new Set(lessonData.map(l => `${l.course_id}_${l.lesson_number}`));
-            setExistingLessons(set);
-            setObjectives(new Map(
-              lessonData
-                .filter(l => l.objective?.trim())
-                .map(l => [`${l.course_id}_${l.lesson_number}`, l.objective as string])
-            ));
-          }
-        }
-      }
-    } catch (err: any) {
-      console.error("Error fetching lesson schedule:", err);
-      setError(`Errore imprevisto: ${err?.message || 'Sconosciuto'}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const getLessonLabel = (lessonNumber: number, lessonTitle: string | null) => {
-    if (lessonTitle) return lessonTitle;
-    return `Lezione ${lessonNumber}`;
-  };
-
-  const getStatusBadge = (lessonDate: string) => {
-    const date = new Date(lessonDate);
-    if (isToday(date)) {
-      return <Badge className="bg-primary text-primary-foreground">Oggi</Badge>;
-    }
-    if (isPast(date)) {
-      return <Badge variant="secondary">Completata</Badge>;
-    }
-    return <Badge variant="outline">Programmata</Badge>;
-  };
+/**
+ * Calendario lezioni del figlio, pensato per il telefono: le prossime lezioni
+ * in elenco (niente riquadro a scorrimento dentro la pagina) e le passate a richiesta.
+ * Va dentro una sezione dell'area genitore che ne fa da titolo.
+ */
+export function ChildLessonCalendar({ childId, childName, groupIds }: ChildLessonCalendarProps) {
+  const { data: lessons = [], isLoading, error, refetch } = useChildSchedule(childId, groupIds);
+  const [showPast, setShowPast] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="py-8 flex justify-center">
-          <Loader2 className="w-6 h-6 animate-spin text-primary" />
-        </CardContent>
-      </Card>
+      <div className="py-6 flex justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <CalendarDays className="h-5 w-5 text-primary" />
-            Calendario Lezioni di {childName}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center gap-3 py-4 text-center">
-            <AlertCircle className="h-8 w-8 text-destructive" />
-            <p className="text-sm text-destructive">{error}</p>
-            <Button variant="outline" size="sm" onClick={fetchLessonSchedule}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Riprova
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col items-center gap-3 py-4 text-center">
+        <AlertCircle className="h-8 w-8 text-destructive" />
+        <p className="text-sm text-destructive">{(error as Error).message}</p>
+        <Button variant="outline" size="sm" onClick={() => refetch()}>
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Riprova
+        </Button>
+      </div>
     );
   }
 
   if (lessons.length === 0) {
-    return (
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <CalendarDays className="h-5 w-5 text-primary" />
-            Calendario Lezioni di {childName}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-center text-muted-foreground py-4">
-            Nessuna lezione programmata
-          </p>
-        </CardContent>
-      </Card>
-    );
+    return <p className="text-center text-muted-foreground py-4">Nessuna lezione programmata per {childName}</p>;
   }
 
-  // Determine the next upcoming lesson per course (only one unlocked)
-  const nextUnlockedByCourse = new Map<string, string>();
-  const sortedByDate = [...lessons].sort(
-    (a, b) => new Date(a.lesson_date).getTime() - new Date(b.lesson_date).getTime()
-  );
-  for (const l of sortedByDate) {
-    const d = new Date(l.lesson_date);
-    if ((isToday(d) || isFuture(d)) && !nextUnlockedByCourse.has(l.group.course.id)) {
-      nextUnlockedByCourse.set(l.group.course.id, l.id);
-    }
+  const today = localDateKey();
+  // Solo la prossima lezione di ogni corso si può aprire
+  const nextByCourse = new Map<string, string>();
+  for (const l of lessons) {
+    if (l.lesson_date >= today && !nextByCourse.has(l.group.course.id)) nextByCourse.set(l.group.course.id, l.id);
   }
 
-  // Group lessons by course
-  const lessonsByCourse = lessons.reduce((acc, lesson) => {
-    const courseTitle = lesson.group.course.title;
-    if (!acc[courseTitle]) {
-      acc[courseTitle] = {
-        emoji: lesson.group.course.emoji,
-        lessons: [],
-      };
-    }
-    acc[courseTitle].lessons.push(lesson);
-    return acc;
-  }, {} as Record<string, { emoji: string; lessons: LessonSchedule[] }>);
+  const upcoming = lessons.filter((l) => l.lesson_date >= today);
+  const past = lessons.filter((l) => l.lesson_date < today).reverse();
+  const list = showPast ? past : upcoming;
+  const visible = showAll ? list : list.slice(0, INITIAL_COUNT);
+  const archived = lessons.some((l) => l.group.status === "archived");
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <CalendarDays className="h-5 w-5 text-primary" />
-            Calendario Lezioni di {childName}
-          </CardTitle>
-          <div className="flex items-center gap-2">
-            {showCompleted ? <Eye className="w-4 h-4 text-muted-foreground" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
-            <Label htmlFor="show-completed" className="text-xs text-muted-foreground cursor-pointer">
-              Lezioni Completate
-            </Label>
-            <Switch
-              id="show-completed"
-              checked={showCompleted}
-              onCheckedChange={setShowCompleted}
-            />
-          </div>
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        {archived && <Badge variant="secondary" className="text-xs">Corso archiviato</Badge>}
+        <div className="flex items-center gap-2 ml-auto min-h-[44px]">
+          <Label htmlFor={`show-past-${childId}`} className="text-sm text-muted-foreground cursor-pointer">
+            Mostra lezioni passate
+          </Label>
+          <Switch
+            id={`show-past-${childId}`}
+            checked={showPast}
+            onCheckedChange={(v) => { setShowPast(v); setShowAll(false); }}
+          />
         </div>
-      </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-[300px]">
-          <div className="space-y-6">
-            {Object.entries(lessonsByCourse).map(([courseTitle, courseData]) => (
-              <div key={courseTitle} className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">{courseData.emoji}</span>
-                  <h4 className="font-medium text-foreground">{courseTitle}</h4>
-                  {courseData.lessons[0]?.group.status === 'archived' && (
-                    <Badge variant="secondary" className="text-[10px]">Archiviato</Badge>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                  {courseData.lessons
-                    .filter((lesson) => {
-                      if (showCompleted) return true;
-                      const date = new Date(lesson.lesson_date);
-                      return isToday(date) || isFuture(date);
-                    })
-                    .map((lesson) => {
-                    const date = new Date(lesson.lesson_date);
-                    const isPastLesson = isPast(date) && !isToday(date);
-                    const isTodayLesson = isToday(date);
-                    const courseId = lesson.group.course.id;
-                    const hasLessonMaterial = existingLessons.has(`${courseId}_${lesson.lesson_number}`);
-                    const objectiveText = formatObjectiveForParent(objectives.get(`${courseId}_${lesson.lesson_number}`), isPastLesson);
-                    const isUnlocked = nextUnlockedByCourse.get(courseId) === lesson.id;
-                    const isClickable = hasLessonMaterial && isUnlocked;
+      </div>
 
-                    return (
-                      <div
-                        key={lesson.id}
-                        className={cn(
-                          "p-2 rounded-lg border text-center transition-colors relative",
-                          isTodayLesson && "bg-primary/10 border-primary",
-                          isPastLesson && "bg-muted/50 border-muted",
-                          isFuture(date) && !isTodayLesson && "bg-card border-border",
-                          isClickable ? "cursor-pointer hover:shadow-sm hover:border-primary/50" : "opacity-60 cursor-not-allowed"
-                        )}
-                        onClick={() => {
-                          if (isClickable) {
-                            navigate(`/area-riservata/corso/${courseId}/lezione/${lesson.lesson_number}`);
-                          }
-                        }}
-                        title={!isUnlocked ? "Lezione bloccata — disponibile solo per la prossima lezione in arrivo" : undefined}
-                      >
-                        <p className={cn(
-                          "text-sm font-semibold",
-                          isPastLesson ? "text-muted-foreground" : "text-foreground"
-                        )}>
-                          {getLessonLabel(lesson.lesson_number, lesson.lesson_title)}
-                        </p>
-                        {objectiveText && (
-                          <p className="text-[11px] leading-snug text-muted-foreground mt-1 line-clamp-2" title={objectiveText}>
-                            🎯 {objectiveText}
-                          </p>
-                        )}
-                        <p className="text-xs text-muted-foreground flex items-center justify-center gap-1 mt-1">
-                          <Clock className="w-3 h-3" />
-                          {format(date, "d MMM", { locale: it })}
-                          {(lesson.lesson_time || lesson.group.lesson_time) && (
-                            <span>· {(lesson.lesson_time || lesson.group.lesson_time)?.substring(0, 5)}</span>
-                          )}
-                        </p>
-                        {isClickable ? (
-                          <p className="text-[10px] text-primary flex items-center justify-center gap-1 mt-1 font-medium">
-                            <BookOpen className="w-3 h-3" />
-                            Vai alla lezione
-                          </p>
-                        ) : !hasLessonMaterial ? (
-                          <p className="text-[10px] text-muted-foreground mt-1 italic">
-                            Link alla lezione non disponibile
-                          </p>
-                        ) : (
-                          <p className="text-[10px] text-muted-foreground mt-1 italic">
-                            🔒 Bloccata
-                          </p>
-                        )}
-                        {isTodayLesson && (
-                          <div className="flex flex-col items-center gap-1">
-                            <Badge className="text-[10px] bg-primary text-primary-foreground">
-                              Oggi
-                            </Badge>
-                            {lesson.group.student_meeting_link && (
-                              <a
-                                href={lesson.group.student_meeting_link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={(e) => e.stopPropagation()}
-                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary text-primary-foreground text-[10px] font-semibold hover:bg-primary/90 transition-colors"
-                              >
-                                <Video className="w-2.5 h-2.5" />
-                                Entra
-                              </a>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        </ScrollArea>
-      </CardContent>
-    </Card>
+      {list.length === 0 ? (
+        <p className="text-center text-sm text-muted-foreground py-4">
+          {showPast ? "Nessuna lezione ancora svolta" : "Nessuna lezione in programma"}
+        </p>
+      ) : (
+        <ul className="space-y-2 list-none p-0 m-0">
+          {visible.map((lesson) => (
+            <LessonRow
+              key={lesson.id}
+              lesson={lesson}
+              today={today}
+              isUnlocked={nextByCourse.get(lesson.group.course.id) === lesson.id}
+            />
+          ))}
+        </ul>
+      )}
+
+      {list.length > INITIAL_COUNT && !showAll && (
+        <Button variant="outline" className="w-full gap-2" onClick={() => setShowAll(true)}>
+          <ChevronDown className="w-4 h-4" />
+          Mostra tutte ({list.length - INITIAL_COUNT} in più)
+        </Button>
+      )}
+    </div>
+  );
+}
+
+function LessonRow({ lesson, today, isUnlocked }: { lesson: ScheduledLesson; today: string; isUnlocked: boolean }) {
+  const isToday = lesson.lesson_date === today;
+  const isPast = lesson.lesson_date < today;
+  const courseId = lesson.group.course.id;
+  const time = (lesson.lesson_time || lesson.group.lesson_time)?.substring(0, 5);
+  const objective = formatObjectiveForParent(lesson.objective, isPast);
+  const canOpen = lesson.hasMaterial && isUnlocked;
+  const label = lesson.lesson_title || `Lezione ${lesson.lesson_number}`;
+
+  return (
+    <li
+      className={cn(
+        "rounded-xl border p-3",
+        isToday ? "bg-primary/10 border-primary" : isPast ? "bg-muted/40 border-muted" : "bg-card border-border",
+      )}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className={cn("font-semibold", isPast ? "text-muted-foreground" : "text-foreground")}>{label}</p>
+          <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
+            <Clock className="w-3.5 h-3.5 shrink-0" />
+            <span className="capitalize">{format(new Date(`${lesson.lesson_date}T12:00:00`), "EEE d MMM", { locale: it })}</span>
+            {time && <span>· {time}</span>}
+          </p>
+        </div>
+        {isToday ? (
+          <Badge className="bg-primary text-primary-foreground shrink-0">Oggi</Badge>
+        ) : isPast ? (
+          <Badge variant="secondary" className="shrink-0">Svolta</Badge>
+        ) : null}
+      </div>
+
+      {objective && <p className="text-sm text-muted-foreground mt-2">🎯 {objective}</p>}
+
+      {(isToday && lesson.group.student_meeting_link) || canOpen ? (
+        <div className="flex flex-col sm:flex-row gap-2 mt-3">
+          {isToday && lesson.group.student_meeting_link && (
+            <Button asChild className="min-h-[44px] flex-1 no-underline">
+              <a href={lesson.group.student_meeting_link} target="_blank" rel="noopener noreferrer">
+                <Video className="w-4 h-4 mr-2" />
+                Entra in lezione
+              </a>
+            </Button>
+          )}
+          {canOpen && (
+            <Button asChild variant="outline" className="min-h-[44px] flex-1 no-underline">
+              <Link to={`/area-riservata/corso/${courseId}/lezione/${lesson.lesson_number}`}>
+                <BookOpen className="w-4 h-4 mr-2" />
+                Vai alla lezione
+              </Link>
+            </Button>
+          )}
+        </div>
+      ) : !isPast && lesson.hasMaterial ? (
+        <p className="text-xs text-muted-foreground mt-2">🔒 Il materiale si apre quando è la prossima lezione</p>
+      ) : null}
+    </li>
   );
 }

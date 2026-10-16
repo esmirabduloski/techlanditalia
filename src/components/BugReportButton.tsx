@@ -61,6 +61,7 @@ export function BugReportButton() {
         size="icon"
         onClick={() => setOpen(true)}
         title="Segnala un bug"
+        aria-label="Segnala un problema"
         className="text-muted-foreground hover:text-destructive"
       >
         <Bug className="w-4 h-4" />

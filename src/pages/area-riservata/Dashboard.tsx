@@ -270,24 +270,35 @@ export default function Dashboard() {
             <JoinLessonHero studentId={effectiveUserId} />
           )}
 
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-            <div className="flex items-center gap-4">
-              <AvatarDisplay 
-                avatarId={profile.avatar_id} 
-                level={level.level} 
-                size="lg"
-              />
-              <div>
+          {/* Header: per il genitore niente avatar e livelli, che sono del figlio */}
+          <div className={effectiveIsParent
+            ? 'flex flex-row items-start md:items-center justify-between gap-4 mb-6'
+            : 'flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8'}>
+            {effectiveIsParent ? (
+              <div className="min-w-0">
                 <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-                  Ciao, {profile.full_name}! 👋
+                  Ciao, {profile.full_name.split(' ')[0]}! 👋
                 </h1>
-                <p className="text-muted-foreground">
-                  Benvenuto nella tua area riservata
-                </p>
+                <p className="text-muted-foreground">Come vanno le lezioni dei tuoi figli</p>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
+            ) : (
+              <div className="flex items-center gap-4">
+                <AvatarDisplay
+                  avatarId={profile.avatar_id}
+                  level={level.level}
+                  size="lg"
+                />
+                <div>
+                  <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+                    Ciao, {profile.full_name}! 👋
+                  </h1>
+                  <p className="text-muted-foreground">
+                    Benvenuto nella tua area riservata
+                  </p>
+                </div>
+              </div>
+            )}
+            <div className="flex items-center gap-2 flex-wrap">
               {effectiveIsTeacher && (
                 <Button variant="outline" size="sm" asChild>
                   <Link to="/insegnante">
@@ -305,13 +316,14 @@ export default function Dashboard() {
                 </Button>
               )}
               <BugReportButton />
-              <Button variant="outline" size="sm" asChild>
+              {/* Genitore su telefono: Profilo è nella barra in basso, Esci nel menu */}
+              <Button variant="outline" size="sm" asChild className={effectiveIsParent ? 'hidden md:inline-flex' : undefined}>
                 <Link to="/area-riservata/profilo">
                   <Settings className="w-4 h-4 mr-2" />
                   Profilo
                 </Link>
               </Button>
-              <Button variant="ghost" size="sm" onClick={handleSignOut}>
+              <Button variant="ghost" size="sm" onClick={handleSignOut} className={effectiveIsParent ? 'hidden md:inline-flex' : undefined}>
                 <LogOut className="w-4 h-4 mr-2" />
                 Esci
               </Button>
@@ -327,9 +339,6 @@ export default function Dashboard() {
           {effectiveUserId && !effectiveIsTeacher && (
             <SatisfactionSurveyCard userId={effectiveUserId} readOnly={isImpersonating} />
           )}
-
-          {/* Notifiche push promemoria lezioni - solo genitori */}
-          {effectiveIsParent && !isImpersonating && <PushNotificationsCard />}
 
           {/* Stats Cards - Hide for parents and teachers */}
           {!effectiveIsTeacher && !effectiveIsParent && (
@@ -566,6 +575,9 @@ export default function Dashboard() {
             </div>
           )}
 
+          {/* Notifiche push promemoria lezioni - solo genitori */}
+          {effectiveIsParent && !isImpersonating && <PushNotificationsCard />}
+
           {/* Parent Feedback Section */}
           {!effectiveIsTeacher && !effectiveIsParent && (
             <div className="mb-8">
@@ -627,7 +639,8 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Quick Actions */}
+          {/* Quick Actions - non per il genitore */}
+          {!effectiveIsParent && (
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Azioni Rapide</CardTitle>
@@ -679,6 +692,7 @@ export default function Dashboard() {
               </div>
             </CardContent>
           </Card>
+          )}
         </div>
       </div>
     </Layout>

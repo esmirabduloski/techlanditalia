@@ -2,6 +2,9 @@ import * as React from "react";
 import { ReactNode, lazy, Suspense, useEffect, useState } from "react";
 import { Navbar } from "./Navbar";
 import { MobileStickyBar } from "./MobileStickyBar";
+import { ParentBottomNav } from "./ParentBottomNav";
+import { useLocation } from "react-router-dom";
+import { isPrivateAreaPath } from "@/lib/privateAreas";
 
 // Lazy: footer is below-the-fold and triggers a Supabase query for courses
 const Footer = lazy(() =>
@@ -17,6 +20,10 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const [showDeferred, setShowDeferred] = useState(false);
+  // La navbar è alta 80px (h-20): nelle aree private il contenuto parte sotto.
+  // Le pagine pubbliche restano a pt-16 perché i loro hero sono disegnati su quello.
+  const { pathname } = useLocation();
+  const topPadding = isPrivateAreaPath(pathname) ? "pt-20" : "pt-16";
 
   useEffect(() => {
     // Defer footer + chat widget until the browser is idle to keep TBT/FCP low.
@@ -34,7 +41,7 @@ export function Layout({ children }: LayoutProps) {
       <header>
         <Navbar />
       </header>
-      <main id="main-content" role="main" className="flex-1 pt-16 pb-20 md:pb-0" tabIndex={-1}>
+      <main id="main-content" role="main" className={`flex-1 ${topPadding} pb-20 md:pb-0`} tabIndex={-1}>
         {children}
       </main>
       {showDeferred && (
@@ -44,6 +51,7 @@ export function Layout({ children }: LayoutProps) {
         </Suspense>
       )}
       <MobileStickyBar />
+      <ParentBottomNav />
     </div>
   );
 }

@@ -11,7 +11,7 @@ import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { DeleteAccountCard } from '@/components/account/DeleteAccountCard';
 import { MediaConsentCard } from '@/components/account/MediaConsentCard';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, Save, Trophy, RotateCcw } from 'lucide-react';
+import { Loader2, ArrowLeft, Save, Trophy, RotateCcw, ShieldCheck, ChevronRight, UserRound } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function Profile() {
@@ -52,6 +52,8 @@ export default function Profile() {
   const level = getLevelFromPoints(profile.total_points);
   const hasChanges = selectedAvatar !== profile.avatar_id;
   const userRole = profile.role === 'parent' ? 'parent' : 'student';
+  // Avatar, punti e livelli sono del figlio: al genitore non servono
+  const isParent = userRole === 'parent';
 
   const handleReplayTutorial = async () => {
     // Reset onboarding flag then show
@@ -102,11 +104,43 @@ export default function Profile() {
                 Il Tuo Profilo
               </h1>
               <p className="text-muted-foreground">
-                Personalizza il tuo avatar e visualizza i tuoi progressi
+                {isParent
+                  ? 'Account, sicurezza e consensi per i tuoi figli'
+                  : 'Personalizza il tuo avatar e visualizza i tuoi progressi'}
               </p>
             </div>
           </div>
 
+          {isParent ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <UserRound className="w-5 h-5 text-primary" />
+                  Il tuo account
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-sm">
+                  <p className="font-semibold text-foreground">{profile.full_name}</p>
+                  {user.email && <p className="text-muted-foreground break-all">{user.email}</p>}
+                </div>
+                <Link
+                  to="/account/sicurezza"
+                  className="flex items-center justify-between gap-3 rounded-lg border p-3 min-h-[44px] hover:bg-muted/50 transition-colors"
+                >
+                  <span className="flex items-center gap-2 text-sm font-medium">
+                    <ShieldCheck className="w-4 h-4 text-primary" />
+                    Sicurezza e verifica in due passaggi
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                </Link>
+                <Button variant="outline" onClick={handleReplayTutorial} className="w-full min-h-[44px]">
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  Rivedi la guida dell'area riservata
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Avatar & Level Card */}
             <Card className="border-primary/20">
@@ -235,6 +269,7 @@ export default function Profile() {
               </CardContent>
             </Card>
           </div>
+          )}
 
           {/* Solo genitori: consensi foto/video dei figli e cancellazione account self-service (GDPR art. 17) */}
           <div className="mt-8 space-y-6">

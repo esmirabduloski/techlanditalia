@@ -40,10 +40,13 @@
     <meta name="twitter:site" content="@techlanditalia" />
 
     <!-- Iubenda Cookie Solution: banner consenso + auto-blocco script (Clarity, GA, ecc.).
-         Va caricata PRIMA degli altri script di tracciamento. -->
+         Va caricata PRIMA degli altri script di tracciamento.
+         floatingPreferencesButtonDisplay:false nasconde il bottone fisso in basso a destra
+         (copriva la chat AI e la tab "Profilo" dell'area genitori su mobile): la revoca del
+         consenso resta raggiungibile dal link "Preferenze cookie" nel Footer. -->
     <script type="text/javascript">
       var _iub = _iub || [];
-      _iub.csConfiguration = {"siteId":4686056,"cookiePolicyId":92368401,"lang":"it","storage":{"useSiteId":true}};
+      _iub.csConfiguration = {"siteId":4686056,"cookiePolicyId":92368401,"lang":"it","storage":{"useSiteId":true},"floatingPreferencesButtonDisplay":false};
     </script>
     <script type="text/javascript" src="https://cs.iubenda.com/autoblocking/4686056.js"></script>
     <script type="text/javascript" src="https://cdn.iubenda.com/cs/gpp/stub.js"></script>

@@ -168,6 +168,15 @@ export function Footer() {
             <p>P.IVA: 05596490267 — REA: 459874 — Sede legale: Vedelago (TV)</p>
           </div>
           <div className="flex items-center gap-4 text-background/50 text-sm">
+            {/* Sostituisce il bottone flottante di iubenda (disattivato in index.html):
+                l'utente deve poter rivedere/revocare il consenso in ogni momento. */}
+            <button
+              type="button"
+              onClick={() => window._iub?.cs?.api?.openPreferences?.()}
+              className="hover:text-background transition-colors underline"
+            >
+              Preferenze cookie
+            </button>
             <Link to="/accessibilita" className="hover:text-background transition-colors underline">
               Accessibilità
             </Link>

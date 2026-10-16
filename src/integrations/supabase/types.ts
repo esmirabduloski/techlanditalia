@@ -1982,6 +1982,7 @@ export type Database = {
           images: Json | null
           lesson_number: number
           manual_url: string | null
+          objective: string | null
           points_reward: number
           slides_url: string | null
           title: string
@@ -1997,6 +1998,7 @@ export type Database = {
           images?: Json | null
           lesson_number: number
           manual_url?: string | null
+          objective?: string | null
           points_reward?: number
           slides_url?: string | null
           title: string
@@ -2012,6 +2014,7 @@ export type Database = {
           images?: Json | null
           lesson_number?: number
           manual_url?: string | null
+          objective?: string | null
           points_reward?: number
           slides_url?: string | null
           title?: string
@@ -2922,6 +2925,48 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_password_settings: {
+        Row: {
+          own_password: boolean
+          parent_fallback_used_at: string | null
+          set_at: string | null
+          set_by: string | null
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          own_password?: boolean
+          parent_fallback_used_at?: string | null
+          set_at?: string | null
+          set_by?: string | null
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          own_password?: boolean
+          parent_fallback_used_at?: string | null
+          set_at?: string | null
+          set_by?: string | null
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_password_settings_set_by_fkey"
+            columns: ["set_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_password_settings_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

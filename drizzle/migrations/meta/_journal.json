@@ -330,6 +330,20 @@
       "when": 1791970158955,
       "tag": "0046_student_passwords",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1792146413778,
+      "tag": "0047_lesson_objective",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1792146430892,
+      "tag": "0048_student_passwords",
+      "breakpoints": true
     }
   ]
 }

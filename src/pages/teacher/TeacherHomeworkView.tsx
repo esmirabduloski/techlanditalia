@@ -1,7 +1,7 @@
  import { useEffect, useState } from 'react';
  import { useNavigate, useParams } from 'react-router-dom';
  import { useAuth } from '@/hooks/useAuth';
- import { useTeacherCourseAccess } from '@/hooks/useTeacherCourseAccess';
+ import { usePreviewAccess, type PreviewScope } from '@/hooks/useLessonPreview';
  import { supabase } from '@/integrations/supabase/client';
  import { Layout } from '@/components/layout/Layout';
  import { LessonContent } from '@/components/lesson/LessonContent';
@@ -9,6 +9,7 @@
  import { TurtleCompiler } from '@/components/lesson/TurtleCompiler';
  import { PgzeroCompiler } from '@/components/lesson/PgzeroCompiler';
  import { WebCompiler } from '@/components/lesson/WebCompiler';
+ import { EditViewTabs } from '@/components/lesson/ViewModeSwitch';
  import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
  import { Button } from '@/components/ui/button';
  import { Badge } from '@/components/ui/badge';
@@ -52,25 +53,30 @@
  const WEB_COURSES = ['web-development'];
  
  export default function TeacherHomeworkView() {
-  const { courseSlug, homeworkId } = useParams();
+   return <HomeworkPreviewPage scope="teacher" />;
+ }
+
+ /** Compito in sola lettura: vista insegnante oppure anteprima admin ("Visualizza"). */
+ export function HomeworkPreviewPage({ scope }: { scope: PreviewScope }) {
+   const { homeworkId } = useParams();
    const navigate = useNavigate();
    const { user, isLoading: authLoading } = useAuth();
-  const { hasAccess, isLoading: accessLoading } = useTeacherCourseAccess(courseSlug);
+   const { hasAccess, isLoading: accessLoading, courseHref, deniedHref } = usePreviewAccess(scope);
    
    const [homework, setHomework] = useState<HomeworkDetails | null>(null);
    const [isLoading, setIsLoading] = useState(true);
  
    useEffect(() => {
      if (!authLoading && !user) {
-       navigate('/auth');
+       navigate(scope === 'admin' ? deniedHref : '/auth');
      }
-   }, [user, authLoading, navigate]);
+   }, [user, authLoading, navigate, scope, deniedHref]);
  
    useEffect(() => {
      if (!accessLoading && !hasAccess && user) {
-       navigate('/insegnante');
+       navigate(deniedHref);
      }
-   }, [hasAccess, accessLoading, user, navigate]);
+   }, [hasAccess, accessLoading, user, navigate, deniedHref]);
  
    useEffect(() => {
      if (user && homeworkId && hasAccess) {
@@ -161,6 +167,18 @@
      );
    }
  
+   const { lesson } = homework;
+   // Admin: "indietro" torna all'elenco compiti della lezione, "Modifica" all'editor
+   const backHref = scope === 'admin' ? `/admin/corsi/${lesson.course.id}/lezioni/${lesson.id}/compiti` : courseHref;
+   const editTabs = scope === 'admin' && (
+     <EditViewTabs
+       mode="view"
+       compact
+       onEdit={() => navigate(`/admin/corsi/${lesson.course.id}/lezioni/${lesson.id}/compiti/${homework.id}/modifica`)}
+     />
+   );
+   const teacherBadge = scope === 'teacher' && <Badge variant="outline" className="ml-2">Vista Insegnante</Badge>;
+
    const isPythonCourse = PYTHON_COURSES.includes(homework.lesson.course.slug);
    const isWebCourse = WEB_COURSES.includes(homework.lesson.course.slug);
    const hasCompiler = isPythonCourse || isWebCourse;
@@ -171,7 +189,7 @@
        <div className="h-screen flex flex-col bg-background">
          <div className="flex items-center justify-between px-4 py-3 border-b bg-background">
            <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate(`/insegnante/corso/${courseSlug}`)}>
+            <Button variant="ghost" size="icon" onClick={() => navigate(backHref)}>
                <ArrowLeft className="w-5 h-5" />
              </Button>
              <div>
@@ -180,15 +198,18 @@
                  <span>{homework.lesson.course.title}</span>
                  <span>·</span>
                  <span>Lezione {homework.lesson.lesson_number}</span>
-                 <Badge variant="outline" className="ml-2">Vista Insegnante</Badge>
+                 {teacherBadge}
                </div>
                <h1 className="font-semibold">{homework.title}</h1>
              </div>
            </div>
-           <Badge variant="secondary" className="gap-1">
-             <Trophy className="w-3 h-3" />
-             {homework.points_reward} punti
-           </Badge>
+           <div className="flex items-center gap-2">
+             {editTabs}
+             <Badge variant="secondary" className="gap-1">
+               <Trophy className="w-3 h-3" />
+               {homework.points_reward} punti
+             </Badge>
+           </div>
          </div>
  
          <PreviewOnlyFrame
@@ -205,7 +226,7 @@
        <div className="h-screen flex flex-col bg-background">
          <div className="flex items-center justify-between px-4 py-3 border-b bg-background">
            <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate(`/insegnante/corso/${courseSlug}`)}>
+            <Button variant="ghost" size="icon" onClick={() => navigate(backHref)}>
                <ArrowLeft className="w-5 h-5" />
              </Button>
              <div>
@@ -214,15 +235,18 @@
                  <span>{homework.lesson.course.title}</span>
                  <span>·</span>
                  <span>Lezione {homework.lesson.lesson_number}</span>
-                 <Badge variant="outline" className="ml-2">Vista Insegnante</Badge>
+                 {teacherBadge}
                </div>
                <h1 className="font-semibold">{homework.title}</h1>
              </div>
            </div>
-           <Badge variant="secondary" className="gap-1">
-             <Trophy className="w-3 h-3" />
-             {homework.points_reward} punti
-           </Badge>
+           <div className="flex items-center gap-2">
+             {editTabs}
+             <Badge variant="secondary" className="gap-1">
+               <Trophy className="w-3 h-3" />
+               {homework.points_reward} punti
+             </Badge>
+           </div>
          </div>
  
          <ResizablePanelGroup direction="horizontal" className="flex-1">
@@ -289,11 +313,13 @@
    return (
      <Layout>
        <div className="max-w-4xl mx-auto px-4 py-8">
-        <Button variant="ghost" onClick={() => navigate(`/insegnante/corso/${courseSlug}`)} className="mb-4">
-           <ArrowLeft className="w-4 h-4 mr-2" />
-           Torna al corso
-         </Button>
-         <Badge variant="outline" className="mb-4">Vista Insegnante</Badge>
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <Button variant="ghost" onClick={() => navigate(backHref)}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            {scope === 'admin' ? 'Torna ai compiti' : 'Torna al corso'}
+          </Button>
+          {editTabs || <Badge variant="outline">Vista Insegnante</Badge>}
+        </div>
           <LessonContent
             title={homework.title}
             lessonTitle={homework.lesson.title}

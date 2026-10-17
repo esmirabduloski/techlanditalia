@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { AdminHeader } from '@/components/admin/AdminHeader';
+import { EditViewTabs } from '@/components/lesson/ViewModeSwitch';
 import { useToast } from '@/hooks/use-toast';
 import { LogOut, Loader2, ArrowLeft, Save, User, Upload, X, FileText, Calendar } from 'lucide-react';
 import RichTextEditor from '@/components/editor/RichTextEditor';
@@ -333,16 +334,22 @@ function HomeworkEditor() {
     }
   };
 
+  const hasUnsavedChanges = () => isEditing
+    ? JSON.stringify(formData) !== savedSnapshotRef.current
+    : formData.title.trim() !== ''; // un compito nuovo senza titolo si abbandona e basta
+
   // Salva le modifiche (se ce ne sono) e passa a un altro compito della lezione
   const goToHomework = async (target: string | null) => {
-    const hasChanges = isEditing
-      ? JSON.stringify(formData) !== savedSnapshotRef.current
-      : formData.title.trim() !== ''; // un compito nuovo senza titolo si abbandona e basta
-
-    if (hasChanges && !(await saveHomework())) return;
+    if (hasUnsavedChanges() && !(await saveHomework())) return;
 
     const base = `/admin/corsi/${courseId}/lezioni/${lessonId}/compiti`;
     navigate(target ? `${base}/${target}/modifica` : `${base}/nuovo`);
+  };
+
+  // Scheda "Visualizza": salva come sopra e apre il compito come lo vedono gli studenti
+  const openPreview = async () => {
+    if (!homeworkId || (hasUnsavedChanges() && !(await saveHomework()))) return;
+    navigate(`/admin/corsi/${courseId}/anteprima/compito/${homeworkId}`);
   };
 
   const handleSignOut = async () => {
@@ -387,6 +394,13 @@ function HomeworkEditor() {
           </Button>
           <span className="text-muted-foreground">/</span>
           <span className="font-medium">{isEditing ? 'Modifica' : 'Nuovo'} Compito</span>
+          <EditViewTabs
+            mode="edit"
+            className="ml-auto"
+            busy={isSaving}
+            viewDisabledReason={isEditing ? undefined : "Salva il compito per vederne l'anteprima"}
+            onView={openPreview}
+          />
         </div>
 
         <AdminStepper

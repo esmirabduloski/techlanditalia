@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { AdminHeader } from '@/components/admin/AdminHeader';
+import { EditViewTabs } from '@/components/lesson/ViewModeSwitch';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,7 +21,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { 
-  LogOut, Loader2, ArrowLeft, Plus, Edit, Trash2, ClipboardList, Paperclip, Calendar 
+  LogOut, Loader2, ArrowLeft, Plus, Edit, Trash2, ClipboardList, Paperclip, Calendar, MonitorPlay
 } from 'lucide-react';
 
 interface Lesson {
@@ -138,7 +139,7 @@ export default function AdminHomework() {
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 py-8">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 mb-6">
+        <div className="flex flex-wrap items-center gap-2 mb-6">
           <Button variant="ghost" size="sm" asChild>
             <Link to={`/admin/corsi/${courseId}/lezioni`}>
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -147,6 +148,12 @@ export default function AdminHomework() {
           </Button>
           <span className="text-muted-foreground">/</span>
           <span className="font-medium">Lezione {lesson.lesson_number}: {lesson.title}</span>
+          <EditViewTabs
+            mode="edit"
+            className="ml-auto"
+            viewDisabledReason={homework.length === 0 ? 'Nessun compito da visualizzare' : undefined}
+            onView={() => navigate(`/admin/corsi/${courseId}/anteprima/compito/${homework[0].id}`)}
+          />
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 sm:mb-8">
@@ -213,6 +220,11 @@ export default function AdminHomework() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
+                      <Button variant="ghost" size="icon" asChild title="Visualizza come gli studenti">
+                        <Link to={`/admin/corsi/${courseId}/anteprima/compito/${hw.id}`}>
+                          <MonitorPlay className="w-4 h-4" />
+                        </Link>
+                      </Button>
                       <Button variant="ghost" size="icon" asChild>
                         <Link to={`/admin/corsi/${courseId}/lezioni/${lessonId}/compiti/${hw.id}/modifica`}>
                           <Edit className="w-4 h-4" />

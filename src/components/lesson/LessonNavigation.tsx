@@ -10,6 +10,8 @@ interface LessonNavigationProps {
   onPrevious?: () => void;
   onNext?: () => void;
   basePath?: string;
+  /** Destinazione di "Torna al corso" (default: basePath) */
+  courseHref?: string;
   className?: string;
 }
 
@@ -21,6 +23,7 @@ export function LessonNavigation({
   onPrevious,
   onNext,
   basePath,
+  courseHref,
   className,
 }: LessonNavigationProps) {
   const hasPrevious = currentLessonNumber > 1;
@@ -76,7 +79,7 @@ export function LessonNavigation({
           </Button>
         ) : (
           <Button variant="outline" asChild>
-            <Link to={base}>Torna al corso</Link>
+            <Link to={courseHref ?? base}>Torna al corso</Link>
           </Button>
         )}
       </div>

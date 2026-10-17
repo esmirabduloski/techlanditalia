@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { AdminHeader } from '@/components/admin/AdminHeader';
+import { EditViewTabs } from '@/components/lesson/ViewModeSwitch';
 import { useToast } from '@/hooks/use-toast';
 import { LogOut, Loader2, ArrowLeft, Save, User, Clock } from 'lucide-react';
 import RichTextEditor from '@/components/editor/RichTextEditor';
@@ -367,16 +368,22 @@ function TaskEditor() {
     }
   };
 
+  const hasUnsavedChanges = () => isEditing
+    ? JSON.stringify(formData) !== savedSnapshotRef.current
+    : formData.title.trim() !== ''; // un task nuovo senza titolo si abbandona e basta
+
   // Salva le modifiche (se ce ne sono) e passa a un altro task della lezione
   const goToTask = async (target: string | null) => {
-    const hasChanges = isEditing
-      ? JSON.stringify(formData) !== savedSnapshotRef.current
-      : formData.title.trim() !== ''; // un task nuovo senza titolo si abbandona e basta
-
-    if (hasChanges && !(await saveTask())) return;
+    if (hasUnsavedChanges() && !(await saveTask())) return;
 
     const base = `/admin/corsi/${courseId}/lezioni/${lessonId}/task`;
     navigate(target ? `${base}/${target}/modifica` : `${base}/nuovo`);
+  };
+
+  // Scheda "Visualizza": salva come sopra e apre il task come lo vedono gli studenti
+  const openPreview = async () => {
+    if (!lesson || (hasUnsavedChanges() && !(await saveTask()))) return;
+    navigate(`/admin/corsi/${courseId}/anteprima/lezione/${lesson.lesson_number}/task/${formData.task_number}`);
   };
 
   const handleSignOut = async () => {
@@ -421,6 +428,13 @@ function TaskEditor() {
           </Button>
           <span className="text-muted-foreground">/</span>
           <span className="font-medium">{isEditing ? 'Modifica' : 'Nuovo'} Task</span>
+          <EditViewTabs
+            mode="edit"
+            className="ml-auto"
+            busy={isSaving}
+            viewDisabledReason={isEditing ? undefined : "Salva il task per vederne l'anteprima"}
+            onView={openPreview}
+          />
         </div>
 
         <AdminStepper

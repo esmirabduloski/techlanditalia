@@ -114,6 +114,10 @@ export const routes: RouteRecord[] = [
       { path: "admin/corsi/:courseId/lezioni/:lessonId/compiti", lazy: page(() => import("./pages/admin/AdminHomework")) },
       { path: "admin/corsi/:courseId/lezioni/:lessonId/compiti/nuovo", lazy: page(() => import("./pages/admin/HomeworkEditor")) },
       { path: "admin/corsi/:courseId/lezioni/:lessonId/compiti/:homeworkId/modifica", lazy: page(() => import("./pages/admin/HomeworkEditor")) },
+      // Scheda "Visualizza": lezioni, task e compiti come li vedono gli studenti
+      { path: "admin/corsi/:courseId/anteprima/lezione/:lessonNumber", lazy: page(() => import("./pages/admin/AdminLessonPreview")) },
+      { path: "admin/corsi/:courseId/anteprima/lezione/:lessonNumber/task/:taskNumber", lazy: page(() => import("./pages/admin/AdminTaskPreview")) },
+      { path: "admin/corsi/:courseId/anteprima/compito/:homeworkId", lazy: page(() => import("./pages/admin/AdminHomeworkPreview")) },
       { path: "admin/prenotazioni", lazy: page(() => import("./pages/admin/AdminCRM")) },
       { path: "admin/crm", lazy: page(() => import("./pages/admin/AdminCRM")) },
       { path: "admin/contatti", lazy: page(() => import("./pages/admin/AdminContatti")) },

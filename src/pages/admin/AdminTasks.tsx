@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { AdminHeader } from '@/components/admin/AdminHeader';
+import { EditViewTabs } from '@/components/lesson/ViewModeSwitch';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +20,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { 
-  LogOut, Loader2, Plus, Edit, Trash2, ArrowLeft, ListChecks, Eye, EyeOff
+  LogOut, Loader2, Plus, Edit, Trash2, ArrowLeft, ListChecks, Eye, EyeOff, MonitorPlay
 } from 'lucide-react';
 
 interface Course {
@@ -145,6 +146,9 @@ export default function AdminTasks() {
 
   if (!isAdmin || !course || !lesson) return null;
 
+  // Anteprima della lezione: si apre sul primo task visibile, come per gli studenti
+  const previewBase = `/admin/corsi/${courseId}/anteprima/lezione/${lesson.lesson_number}`;
+
   return (
     <div className="min-h-screen bg-muted/30">
       {/* Header */}
@@ -171,6 +175,11 @@ export default function AdminTasks() {
           </Button>
           <span className="text-muted-foreground">/</span>
           <span className="font-medium">L{lesson.lesson_number}: {lesson.title}</span>
+          <EditViewTabs
+            mode="edit"
+            className="ml-auto"
+            onView={() => navigate(previewBase)}
+          />
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 sm:mb-8">
@@ -228,6 +237,11 @@ export default function AdminTasks() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="icon" asChild title="Visualizza come gli studenti">
+                    <Link to={`${previewBase}/task/${task.task_number}`}>
+                      <MonitorPlay className="w-4 h-4" />
+                    </Link>
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"

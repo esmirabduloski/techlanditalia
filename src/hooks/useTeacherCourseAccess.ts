@@ -3,18 +3,22 @@
  import { useAuth } from './useAuth';
  
 export function useTeacherCourseAccess(courseSlug: string | undefined) {
-   const { user, isAdmin } = useAuth();
+   const { user, isAdmin, isLoading: authLoading } = useAuth();
    const [hasAccess, setHasAccess] = useState(false);
    const [isLoading, setIsLoading] = useState(true);
   const [courseId, setCourseId] = useState<string | null>(null);
  
    useEffect(() => {
      const checkAccess = async () => {
+      // Aspetta utente e ruolo: altrimenti, aprendo direttamente la pagina, chi la usa
+      // vede "nessun accesso" per un attimo e rimanda alla dashboard
+      if (authLoading) return;
       if (!user || !courseSlug) {
          setHasAccess(false);
          setIsLoading(false);
          return;
        }
+      setIsLoading(true);
  
       // First resolve the course slug to course ID
       const { data: courseData, error: courseError } = await supabase
@@ -55,7 +59,7 @@ export function useTeacherCourseAccess(courseSlug: string | undefined) {
      };
  
      checkAccess();
-  }, [user, courseSlug, isAdmin]);
+  }, [user, courseSlug, isAdmin, authLoading]);
  
   return { hasAccess, isLoading, courseId };
  }

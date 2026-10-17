@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { AdminHeader } from '@/components/admin/AdminHeader';
+import { EditViewTabs } from '@/components/lesson/ViewModeSwitch';
 import { useToast } from '@/hooks/use-toast';
 import { LogOut, Loader2, ArrowLeft, Save, User } from 'lucide-react';
 import { useAutoBackup } from '@/hooks/useAutoBackup';
@@ -42,8 +43,9 @@ export default function LessonEditor() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const { createCourseSnapshot } = useAutoBackup();
-  
-  
+  // Dati come sono nel DB: se il form è uguale, "Visualizza" non salva nulla
+  const savedSnapshotRef = useRef<string | null>(null);
+
   const [formData, setFormData] = useState<LessonData>({
     title: '',
     objective: '',
@@ -95,7 +97,7 @@ export default function LessonEditor() {
         .maybeSingle();
 
       if (lessonData) {
-        setFormData({
+        const dbData: LessonData = {
           title: lessonData.title || '',
           objective: lessonData.objective || '',
           description: lessonData.description || '',
@@ -106,7 +108,9 @@ export default function LessonEditor() {
           images: Array.isArray(lessonData.images) ? (lessonData.images as string[]) : [],
           points_reward: lessonData.points_reward || 50,
           lesson_number: lessonData.lesson_number || 1,
-        });
+        };
+        savedSnapshotRef.current = JSON.stringify(dbData);
+        setFormData(dbData);
       }
     } else {
       // Get next lesson number
@@ -127,13 +131,13 @@ export default function LessonEditor() {
     setIsLoading(false);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!courseId) return;
+  /** Salva la lezione; false se la validazione o il DB lo impediscono */
+  const saveLesson = async (): Promise<boolean> => {
+    if (!courseId) return false;
     
     if (!formData.title.trim()) {
       toast({ title: 'Errore', description: 'Il titolo è obbligatorio', variant: 'destructive' });
-      return;
+      return false;
     }
 
     setIsSaving(true);
@@ -175,16 +179,30 @@ export default function LessonEditor() {
         toast({ title: 'Successo', description: 'Lezione creata' });
       }
 
-      navigate(`/admin/corsi/${courseId}/lezioni`);
+      return true;
     } catch (error: any) {
       toast({ 
         title: 'Errore', 
         description: error.message || 'Impossibile salvare la lezione', 
         variant: 'destructive' 
       });
+      return false;
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (await saveLesson()) {
+      navigate(`/admin/corsi/${courseId}/lezioni`);
+    }
+  };
+
+  // Scheda "Visualizza": salva le modifiche (se ce ne sono) e apre la lezione come la vedono gli studenti
+  const openPreview = async () => {
+    if (JSON.stringify(formData) !== savedSnapshotRef.current && !(await saveLesson())) return;
+    navigate(`/admin/corsi/${courseId}/anteprima/lezione/${formData.lesson_number}`);
   };
 
 
@@ -215,7 +233,7 @@ export default function LessonEditor() {
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 mb-6">
+        <div className="flex flex-wrap items-center gap-2 mb-6">
           <Button variant="ghost" size="sm" asChild>
             <Link to={`/admin/corsi/${courseId}/lezioni`}>
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -224,6 +242,13 @@ export default function LessonEditor() {
           </Button>
           <span className="text-muted-foreground">/</span>
           <span className="font-medium">{isEditing ? 'Modifica' : 'Nuova'} Lezione</span>
+          <EditViewTabs
+            mode="edit"
+            className="ml-auto"
+            busy={isSaving}
+            viewDisabledReason={isEditing ? undefined : "Salva la lezione per vederne l'anteprima"}
+            onView={openPreview}
+          />
         </div>
 
         <form onSubmit={handleSubmit}>

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { useTeacherCourseAccess } from '@/hooks/useTeacherCourseAccess';
+import { usePreviewAccess, usePreviewAudience, type PreviewScope } from '@/hooks/useLessonPreview';
 import { useCourseOutline, type LessonAccess } from '@/hooks/useCourseOutline';
 import { useLessonKeyboardNav } from '@/hooks/useLessonKeyboardNav';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,10 +12,11 @@ import { LessonWorkspace } from '@/components/lesson/LessonWorkspace';
 import { LessonPageSkeleton } from '@/components/lesson/LessonPageSkeleton';
 import { TaskNavigation } from '@/components/lesson/TaskNavigation';
 import { CourseOutlineSheet } from '@/components/lesson/CourseOutlineSheet';
+import { AudienceSwitch, EditViewTabs } from '@/components/lesson/ViewModeSwitch';
 import { getTaskSidePanel, type TaskAttachment } from '@/components/lesson/taskSidePanel';
 import { QuizTask } from '@/components/lesson/QuizTask';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { EyeOff } from 'lucide-react';
 import { getCourseThemeClass } from '@/lib/lessonTheme';
 
 interface Course {
@@ -37,6 +38,7 @@ interface TaskSummary {
   task_number: number;
   title: string;
   content_type: string | null;
+  is_visible: boolean;
 }
 
 interface Task {
@@ -54,16 +56,23 @@ interface Task {
   default_js_code: string | null;
   python_env: string | null;
   replit_url: string | null;
+  is_visible: boolean;
   attachments: TaskAttachment[];
 }
 
 const TEACHER_ACCESS: LessonAccess = { completed: false, isNext: false, canComplete: false, accessible: true };
 
 export default function TeacherTaskView() {
-  const { courseSlug, lessonNumber, taskNumber } = useParams<{ courseSlug: string; lessonNumber: string; taskNumber: string }>();
+  return <TaskPreviewPage scope="teacher" />;
+}
+
+/** Task in sola lettura: vista insegnante oppure anteprima admin ("Visualizza"). */
+export function TaskPreviewPage({ scope }: { scope: PreviewScope }) {
+  const { lessonNumber, taskNumber } = useParams<{ lessonNumber: string; taskNumber: string }>();
   const { user, isLoading: authLoading } = useAuth();
-  const { hasAccess, isLoading: accessLoading, courseId } = useTeacherCourseAccess(courseSlug);
-  const { lessons: outlineLessons } = useCourseOutline(courseId ?? undefined, null, { includeHiddenTasks: true });
+  const { hasAccess, isLoading: accessLoading, courseId, basePath, courseHref, deniedHref } = usePreviewAccess(scope);
+  const [audience, setAudience] = usePreviewAudience(scope);
+  const { lessons: outlineLessons } = useCourseOutline(courseId ?? undefined, null, { includeHiddenTasks: audience === 'teacher' });
   const navigate = useNavigate();
 
   const [course, setCourse] = useState<Course | null>(null);
@@ -79,28 +88,26 @@ export default function TeacherTaskView() {
   const latestRequest = useRef(requestKey);
   const isStale = loadedKey !== requestKey;
 
-  const basePath = `/insegnante/corso/${courseSlug}`;
-
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate('/auth');
+      navigate(scope === 'admin' ? deniedHref : '/auth');
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, scope, deniedHref]);
 
   useEffect(() => {
     if (!accessLoading && !hasAccess && user) {
-      navigate('/insegnante');
+      navigate(deniedHref);
     }
-  }, [hasAccess, accessLoading, user, navigate]);
+  }, [hasAccess, accessLoading, user, navigate, deniedHref]);
 
   useEffect(() => {
-    if (courseSlug && courseId && lessonNumber && taskNumber && hasAccess) {
+    if (courseId && lessonNumber && taskNumber && hasAccess) {
       fetchData();
     }
-  }, [courseSlug, courseId, lessonNumber, taskNumber, hasAccess]);
+  }, [courseId, lessonNumber, taskNumber, hasAccess]);
 
   const fetchData = async () => {
-    if (!courseSlug || !courseId || !lessonNumber || !taskNumber) return;
+    if (!courseId || !lessonNumber || !taskNumber) return;
     const key = `${courseId}/${lessonNumber}/${taskNumber}`;
     latestRequest.current = key;
     const isCurrent = () => latestRequest.current === key;
@@ -131,10 +138,10 @@ export default function TeacherTaskView() {
         return;
       }
 
-      // L'insegnante vede tutti i task, anche quelli nascosti agli studenti
+      // Tutti i task, anche quelli nascosti: la vista studente li filtra dopo
       const { data: tasksData } = await supabase
         .from('lesson_tasks')
-        .select('id, task_number, title, content_type')
+        .select('id, task_number, title, content_type, is_visible')
         .eq('lesson_id', lessonData.id)
         .order('task_number');
       if (!isCurrent()) return;
@@ -185,13 +192,19 @@ export default function TeacherTaskView() {
   };
 
   const handleNavigateToCourse = () => {
-    navigate(basePath);
+    navigate(courseHref);
   };
 
+  // Vista studente: solo i task visibili agli alunni. Quello aperto resta nell'elenco
+  // anche se nascosto (es. anteprima dall'editor), con un avviso sopra il contenuto.
+  const shownTasks = audience === 'teacher'
+    ? tasks
+    : tasks.filter(t => t.is_visible || t.task_number === task?.task_number);
+
   // Navigazione per posizione: le task possono partire da 0 (es. quiz di ripasso)
-  const currentIndex = task ? tasks.findIndex(t => t.task_number === task.task_number) : -1;
-  const previousTaskNumber = currentIndex > 0 ? tasks[currentIndex - 1].task_number : undefined;
-  const nextTaskNumber = currentIndex >= 0 && currentIndex < tasks.length - 1 ? tasks[currentIndex + 1].task_number : undefined;
+  const currentIndex = task ? shownTasks.findIndex(t => t.task_number === task.task_number) : -1;
+  const previousTaskNumber = currentIndex > 0 ? shownTasks[currentIndex - 1].task_number : undefined;
+  const nextTaskNumber = currentIndex >= 0 && currentIndex < shownTasks.length - 1 ? shownTasks[currentIndex + 1].task_number : undefined;
 
   useLessonKeyboardNav({
     enabled: !!task && !isStale,
@@ -223,7 +236,7 @@ export default function TeacherTaskView() {
   }
 
   const displayPosition = currentIndex >= 0 ? currentIndex + 1 : 1;
-  const totalTasks = tasks.length || 1;
+  const totalTasks = shownTasks.length || 1;
   const isQuizType = task.content_type === 'quiz';
   const showScratch = task.content_type === 'scratch' && !!task.scratch_url;
   const themeClass = getCourseThemeClass(course.slug);
@@ -240,7 +253,7 @@ export default function TeacherTaskView() {
       taskTitle={task.title}
       taskPosition={displayPosition}
       taskType={task.content_type}
-      steps={tasks.map(t => ({
+      steps={shownTasks.map(t => ({
         key: t.id,
         title: t.title,
         completed: false,
@@ -250,7 +263,13 @@ export default function TeacherTaskView() {
       }))}
       onBack={handleNavigateToCourse}
       onOpenOutline={outlineLessons.length > 0 ? () => setOutlineOpen(true) : undefined}
-      actions={<Badge variant="outline" className="hidden sm:inline-flex mr-1">Vista Insegnante</Badge>}
+      modeSwitch={
+        scope === 'admin' ? (
+          <EditViewTabs mode="view" onEdit={() => navigate(`/admin/corsi/${course.id}/lezioni/${lesson.id}/task/${task.id}/modifica`)} />
+        ) : (
+          <AudienceSwitch value={audience} onChange={setAudience} />
+        )
+      }
     />
   );
 
@@ -262,6 +281,12 @@ export default function TeacherTaskView() {
     </div>
   ) : (
     <>
+      {!task.is_visible && (
+        <div className="mx-2 sm:mx-6 mt-4 flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
+          <EyeOff className="w-4 h-4 mt-0.5 shrink-0" />
+          <span>Task nascosto: gli studenti non lo vedono finché non viene reso visibile.</span>
+        </div>
+      )}
       <LessonContent
         title={task.title}
         lessonTitle={lesson.title}
@@ -276,7 +301,12 @@ export default function TeacherTaskView() {
       />
       {isQuizType && (
         <div className="px-2 sm:px-6 pb-6">
-          <QuizTask key={task.id} content={task.content} storageKey={`teacher:${task.id}`} teacherMode />
+          {audience === 'teacher' ? (
+            <QuizTask key={`${task.id}:teacher`} content={task.content} storageKey={`teacher:${task.id}`} teacherMode />
+          ) : (
+            // Quiz giocabile come lo studente, con risposte salvate a parte (non contano come completamento)
+            <QuizTask key={`${task.id}:student`} content={task.content} storageKey={`anteprima:${task.id}`} />
+          )}
         </div>
       )}
     </>

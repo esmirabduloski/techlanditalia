@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { useTeacherCourseAccess } from '@/hooks/useTeacherCourseAccess';
+import { usePreviewAccess, usePreviewAudience, type PreviewScope } from '@/hooks/useLessonPreview';
 import { supabase } from '@/integrations/supabase/client';
 import { Layout } from '@/components/layout/Layout';
 import { LessonContent } from '@/components/lesson/LessonContent';
@@ -10,10 +10,10 @@ import { LessonHeader } from '@/components/lesson/LessonHeader';
 import { LessonWorkspace } from '@/components/lesson/LessonWorkspace';
 import { LessonPageSkeleton } from '@/components/lesson/LessonPageSkeleton';
 import { CourseOutlineSheet } from '@/components/lesson/CourseOutlineSheet';
+import { AudienceSwitch, EditViewTabs } from '@/components/lesson/ViewModeSwitch';
 import { getLessonSidePanel } from '@/components/lesson/taskSidePanel';
 import { useCourseOutline, type LessonAccess } from '@/hooks/useCourseOutline';
 import { useLessonKeyboardNav } from '@/hooks/useLessonKeyboardNav';
-import { Badge } from '@/components/ui/badge';
 import { getCourseThemeClass } from '@/lib/lessonTheme';
 
 interface Course {
@@ -40,12 +40,18 @@ interface Lesson {
 const TEACHER_ACCESS: LessonAccess = { completed: false, isNext: false, canComplete: false, accessible: true };
 
 export default function TeacherLessonView() {
-  const { courseSlug, lessonNumber } = useParams<{ courseSlug: string; lessonNumber: string }>();
+  return <LessonPreviewPage scope="teacher" />;
+}
+
+/** Lezione senza task in sola lettura: vista insegnante oppure anteprima admin ("Visualizza"). */
+export function LessonPreviewPage({ scope }: { scope: PreviewScope }) {
+  const { lessonNumber } = useParams<{ lessonNumber: string }>();
   const { user, isLoading: authLoading } = useAuth();
-  const { hasAccess, isLoading: accessLoading, courseId } = useTeacherCourseAccess(courseSlug);
-  const { lessons: outlineLessons } = useCourseOutline(courseId ?? undefined, null, { includeHiddenTasks: true });
+  const { hasAccess, isLoading: accessLoading, courseId, basePath, courseHref, deniedHref } = usePreviewAccess(scope);
+  const [audience, setAudience] = usePreviewAudience(scope);
+  const { lessons: outlineLessons } = useCourseOutline(courseId ?? undefined, null, { includeHiddenTasks: audience === 'teacher' });
   const navigate = useNavigate();
-  
+
   const [course, setCourse] = useState<Course | null>(null);
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -53,24 +59,24 @@ export default function TeacherLessonView() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate('/auth');
+      navigate(scope === 'admin' ? deniedHref : '/auth');
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, scope, deniedHref]);
 
   useEffect(() => {
     if (!accessLoading && !hasAccess && user) {
-      navigate('/insegnante');
+      navigate(deniedHref);
     }
-  }, [hasAccess, accessLoading, user, navigate]);
+  }, [hasAccess, accessLoading, user, navigate, deniedHref]);
 
   useEffect(() => {
-    if (courseSlug && courseId && lessonNumber && hasAccess) {
+    if (courseId && lessonNumber && hasAccess) {
       fetchData();
     }
-  }, [courseSlug, courseId, lessonNumber, hasAccess]);
+  }, [courseId, lessonNumber, hasAccess, audience]);
 
   const fetchData = async () => {
-    if (!courseSlug || !courseId || !lessonNumber) return;
+    if (!courseId || !lessonNumber) return;
 
     try {
       const { data: courseData } = await supabase
@@ -91,20 +97,23 @@ export default function TeacherLessonView() {
         .maybeSingle();
 
       if (lessonData) {
-        const { data: firstTask } = await supabase
+        // Vista studente: solo i task visibili agli alunni
+        let firstTaskQuery = supabase
           .from('lesson_tasks')
           .select('task_number')
-          .eq('lesson_id', lessonData.id)
+          .eq('lesson_id', lessonData.id);
+        if (audience === 'student') firstTaskQuery = firstTaskQuery.eq('is_visible', true);
+        const { data: firstTask } = await firstTaskQuery
           .order('task_number')
           .limit(1)
           .maybeSingle();
 
         if (firstTask) {
-          navigate(`/insegnante/corso/${courseSlug}/lezione/${lessonNumber}/task/${firstTask.task_number}`, { replace: true });
+          navigate(`${basePath}/lezione/${lessonNumber}/task/${firstTask.task_number}`, { replace: true });
           return;
         }
 
-        const images = lessonData.images 
+        const images = lessonData.images
           ? (Array.isArray(lessonData.images) ? lessonData.images : [])
           : [];
         setLesson({ ...lessonData, images } as Lesson);
@@ -117,7 +126,7 @@ export default function TeacherLessonView() {
   };
 
   const navigateToLesson = (newLessonNumber: number) => {
-    navigate(`/insegnante/corso/${courseSlug}/lezione/${newLessonNumber}`);
+    navigate(`${basePath}/lezione/${newLessonNumber}`);
   };
 
   useLessonKeyboardNav({
@@ -152,7 +161,6 @@ export default function TeacherLessonView() {
   }
 
   const themeClass = getCourseThemeClass(course.slug);
-  const basePath = `/insegnante/corso/${courseSlug}`;
 
   return (
     <LessonWorkspace
@@ -162,9 +170,15 @@ export default function TeacherLessonView() {
           courseEmoji={course.emoji}
           lessonNumber={lesson.lesson_number}
           lessonTitle={lesson.title}
-          onBack={() => navigate(basePath)}
+          onBack={() => navigate(courseHref)}
           onOpenOutline={outlineLessons.length > 0 ? () => setOutlineOpen(true) : undefined}
-          actions={<Badge variant="outline" className="hidden sm:inline-flex mr-1">Vista Insegnante</Badge>}
+          modeSwitch={
+            scope === 'admin' ? (
+              <EditViewTabs mode="view" onEdit={() => navigate(`/admin/corsi/${course.id}/lezioni/${lesson.id}/modifica`)} />
+            ) : (
+              <AudienceSwitch value={audience} onChange={setAudience} />
+            )
+          }
         />
       }
       content={
@@ -188,6 +202,7 @@ export default function TeacherLessonView() {
           onPrevious={lesson.lesson_number > 1 ? () => navigateToLesson(lesson.lesson_number - 1) : undefined}
           onNext={lesson.lesson_number < course.total_lessons ? () => navigateToLesson(lesson.lesson_number + 1) : undefined}
           basePath={basePath}
+          courseHref={courseHref}
           className={variant === 'split' ? 'px-6 mt-0' : undefined}
         />
       )}

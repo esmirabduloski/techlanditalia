@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { AdminHeader } from '@/components/admin/AdminHeader';
+import { EditViewTabs } from '@/components/lesson/ViewModeSwitch';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +20,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { 
-  LogOut, Loader2, Plus, Edit, Trash2, ArrowLeft, BookOpen, ClipboardList, FileText 
+  LogOut, Loader2, Plus, Edit, Trash2, ArrowLeft, BookOpen, ClipboardList, FileText, MonitorPlay
 } from 'lucide-react';
 
 interface Course {
@@ -125,7 +126,7 @@ export default function AdminLessons() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 mb-6">
+        <div className="flex flex-wrap items-center gap-2 mb-6">
           <Button variant="ghost" size="sm" asChild>
             <Link to="/admin/corsi">
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -134,6 +135,12 @@ export default function AdminLessons() {
           </Button>
           <span className="text-muted-foreground">/</span>
           <span className="font-medium">{course.emoji} {course.title}</span>
+          <EditViewTabs
+            mode="edit"
+            className="ml-auto"
+            viewDisabledReason={lessons.length === 0 ? 'Nessuna lezione da visualizzare' : undefined}
+            onView={() => navigate(`/admin/corsi/${courseId}/anteprima/lezione/${lessons[0].lesson_number}`)}
+          />
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 sm:mb-8">
@@ -190,6 +197,11 @@ export default function AdminLessons() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="icon" asChild title="Visualizza come gli studenti">
+                    <Link to={`/admin/corsi/${courseId}/anteprima/lezione/${lesson.lesson_number}`}>
+                      <MonitorPlay className="w-4 h-4" />
+                    </Link>
+                  </Button>
                   <Button variant="ghost" size="icon" asChild title="Task">
                     <Link to={`/admin/corsi/${courseId}/lezioni/${lesson.id}/task`}>
                       <ClipboardList className="w-4 h-4" />

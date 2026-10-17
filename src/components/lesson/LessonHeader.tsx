@@ -32,6 +32,8 @@ interface LessonHeaderProps {
   pointsGained?: { id: number; points: number } | null;
   onBack: () => void;
   onOpenOutline?: () => void;
+  /** Selettore di vista (Modifica/Visualizza, Insegnante/Studente): in linea da `sm`, su una riga sua sui telefoni */
+  modeSwitch?: ReactNode;
   actions?: ReactNode;
   className?: string;
 }
@@ -49,6 +51,7 @@ export function LessonHeader({
   pointsGained,
   onBack,
   onOpenOutline,
+  modeSwitch,
   actions,
   className,
 }: LessonHeaderProps) {
@@ -59,7 +62,7 @@ export function LessonHeader({
 
   return (
     <header className={cn('border-b border-border bg-background', className)}>
-      <div className="flex items-center gap-3 px-4 py-3">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
         <Button variant="ghost" size="icon" onClick={onBack} aria-label="Torna al corso" className="shrink-0">
           <ArrowLeft className="w-5 h-5" />
         </Button>
@@ -106,6 +109,10 @@ export function LessonHeader({
             <LessonObjective objective={lessonObjective} variant="inline" className="hidden sm:flex mt-0.5" />
           )}
         </div>
+
+        {modeSwitch && (
+          <div className="order-last basis-full sm:order-none sm:basis-auto sm:shrink-0">{modeSwitch}</div>
+        )}
 
         <div className="flex items-center gap-1 shrink-0">
           {actions}

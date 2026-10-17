@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Loader2, Plus, Trash2, ArrowLeft, Save, ChevronUp, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { useAutoBackup } from "@/hooks/useAutoBackup";
+import { CERTIFICATE_SKILL_MAX_CHARS, MAX_HARD_SKILLS, MAX_SOFT_SKILLS } from "@/lib/certificate";
 
 interface ProjectExample {
   title: string;
@@ -34,6 +35,8 @@ interface DetailContent {
   topics?: string[];
   projectExamples?: ProjectExample[];
   modules?: Module[];
+  /** Competenze stampate sull'attestato di fine corso (max 5 + 4) */
+  certificate?: { hardSkills?: string[]; softSkills?: string[] };
   sectionsVisibility?: {
     longDescription?: boolean;
     topics?: boolean;
@@ -115,6 +118,11 @@ export default function AdminCourseContent() {
           result: m.result.trim(),
           lessons: m.lessons.filter((l) => l.trim()),
         }));
+    if (content.certificate) {
+      const hardSkills = (content.certificate.hardSkills ?? []).map((t) => t.trim()).filter(Boolean);
+      const softSkills = (content.certificate.softSkills ?? []).map((t) => t.trim()).filter(Boolean);
+      if (hardSkills.length || softSkills.length) cleaned.certificate = { hardSkills, softSkills };
+    }
     if (content.seo) {
       const seo: DetailContent["seo"] = {};
       if (content.seo.title?.trim()) seo.title = content.seo.title.trim();
@@ -197,6 +205,35 @@ export default function AdminCourseContent() {
           onClick={() => update(field, [...items, ""])}
         >
           <Plus className="w-4 h-4 mr-2" /> Aggiungi
+        </Button>
+      </div>
+    );
+  };
+
+  const renderSkillList = (field: "hardSkills" | "softSkills", max: number, placeholder: string) => {
+    const items = content.certificate?.[field] ?? [];
+    const set = (next: string[]) => update("certificate", { ...content.certificate, [field]: next });
+    return (
+      <div className="space-y-2">
+        {items.map((v, i) => (
+          <div key={i} className="flex gap-2">
+            <Input
+              value={v}
+              maxLength={CERTIFICATE_SKILL_MAX_CHARS}
+              onChange={(e) => {
+                const next = [...items];
+                next[i] = e.target.value;
+                set(next);
+              }}
+              placeholder={placeholder}
+            />
+            <Button type="button" variant="ghost" size="icon" onClick={() => set(items.filter((_, j) => j !== i))}>
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        ))}
+        <Button type="button" variant="outline" size="sm" onClick={() => set([...items, ""])} disabled={items.length >= max}>
+          <Plus className="w-4 h-4 mr-2" /> Aggiungi ({items.length}/{max})
         </Button>
       </div>
     );
@@ -329,6 +366,27 @@ export default function AdminCourseContent() {
           </CardHeader>
           <CardContent>
             {renderStringList("topics", "Cosa imparerà l'alunno...", 2)}
+          </CardContent>
+        </Card>
+
+        {/* Competenze per l'attestato */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Competenze per l'attestato</CardTitle>
+            <CardDescription>
+              Stampate sull'attestato di fine corso di ogni alunno. Frasi brevi (max {CERTIFICATE_SKILL_MAX_CHARS} caratteri):
+              cosa sa fare, non i singoli giochi creati. Gli attestati già sbloccati non cambiano.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-6 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Competenze tecniche (hard skill)</Label>
+              {renderSkillList("hardSkills", MAX_HARD_SKILLS, "es. Programmazione in Lua")}
+            </div>
+            <div className="space-y-2">
+              <Label>Competenze trasversali (soft skill)</Label>
+              {renderSkillList("softSkills", MAX_SOFT_SKILLS, "es. Problem solving")}
+            </div>
           </CardContent>
         </Card>
 

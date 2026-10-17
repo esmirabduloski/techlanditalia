@@ -41,6 +41,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { PushNotificationsCard } from '@/components/notifications/PushNotificationsCard';
 import { CourseProposalCard } from '@/components/dashboard/CourseProposalCard';
 import { SatisfactionSurveyCard } from '@/components/dashboard/SatisfactionSurveyCard';
+import { StudentCertificatesCard } from '@/components/dashboard/StudentCertificatesCard';
 import { RecordingConsentPrompt } from '@/components/dashboard/RecordingConsentPrompt';
 
 interface CourseProgress {
@@ -344,6 +345,11 @@ export default function Dashboard() {
           {/* Sondaggio di soddisfazione dopo 3 lezioni e a fine modulo */}
           {effectiveUserId && !effectiveIsTeacher && (
             <SatisfactionSurveyCard userId={effectiveUserId} readOnly={isImpersonating} />
+          )}
+
+          {/* Attestati di fine corso, sbloccati dall'insegnante il giorno dell'ultima lezione */}
+          {effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (
+            <StudentCertificatesCard userId={effectiveUserId} />
           )}
 
           {/* Stats Cards - Hide for parents and teachers */}

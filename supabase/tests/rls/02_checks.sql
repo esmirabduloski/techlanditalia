@@ -455,6 +455,22 @@ BEGIN
   END IF;
 END $$;
 
+-- Attestati di fine corso: ognuno vede solo i propri (o dei figli, o dei
+-- propri gruppi); nessuno li scrive a mano, li crea release_group_certificates()
+SELECT rls_test.expect('genitore P1', 'l''attestato di S1 ma non di S2 (non sbloccato)',
+  'SELECT count(*) FROM public.course_certificates', 1);
+SELECT rls_test.expect('genitore P2', 'l''attestato di S3', 'SELECT count(*) FROM public.course_certificates', 1);
+SELECT rls_test.expect('alunno S1', 'il proprio attestato', 'SELECT count(*) FROM public.course_certificates', 1);
+SELECT rls_test.expect('alunno S2', 'nessun attestato', 'SELECT count(*) FROM public.course_certificates', 0);
+SELECT rls_test.expect('insegnante T1', 'solo gli attestati del proprio gruppo', 'SELECT count(*) FROM public.course_certificates', 1);
+SELECT rls_test.expect_blocked('genitore P1', 'creare da sé l''attestato di S2',
+  $$INSERT INTO public.course_certificates (student_id, group_id, student_name, course_title, teacher_name,
+      lessons_attended, lessons_total, hours_attended, issued_on, code)
+    VALUES ('00000000-0000-0000-0000-000000000102', '00000000-0000-0000-0000-00000000a002', 'Alunno S2', 'Corso C2', 'X',
+      32, 32, 48, current_date, 'TL-FAKE-1')$$);
+SELECT rls_test.expect_blocked('insegnante T1', 'ritoccare le presenze sull''attestato di S1',
+  $$UPDATE public.course_certificates SET lessons_attended = 32 WHERE student_id = '00000000-0000-0000-0000-000000000101'$$);
+
 -- Senza verifica in due passaggi (aal1) un insegnante non vede nulla.
 DO $$
 BEGIN

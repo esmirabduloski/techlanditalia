@@ -93,6 +93,11 @@ verify_jwt = false
 [functions.course-proposal]
 verify_jwt = false
 
+# Avviso alla famiglia quando l'insegnante sblocca gli attestati di fine corso.
+# JWT, ruolo e 2FA verificati dentro la funzione.
+[functions.certificates-released]
+verify_jwt = false
+
 # Report mensile agli admin: chiamato il primo del mese dal cron con x-cron-token,
 # oppure da un admin per riceverlo subito (JWT + 2FA verificati dentro la funzione).
 [functions.monthly-report]

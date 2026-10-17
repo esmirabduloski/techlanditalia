@@ -17,6 +17,7 @@ import {
   type HomeworkComputedStatus,
   type HomeworkCounts,
 } from '@/lib/childProgress';
+import type { CourseCertificate } from '@/lib/certificate';
 
 const STALE_TIME = 60_000;
 
@@ -395,6 +396,24 @@ export function useChildComments(childId: string) {
         .order('created_at', { ascending: false });
       if (error) throw error;
       return ((data || []) as unknown as CommentRow[]).map((c) => ({ id: c.id, content: c.content, created_at: c.created_at, author: c.author ?? null }));
+    },
+  });
+}
+
+/** Attestati di fine corso del figlio: esistono solo dopo lo sblocco dell'insegnante. */
+export function useChildCertificates(childId: string) {
+  return useQuery({
+    queryKey: ['child-certificates', childId],
+    enabled: !!childId,
+    staleTime: STALE_TIME,
+    queryFn: async (): Promise<CourseCertificate[]> => {
+      const { data, error } = await supabase
+        .from('course_certificates')
+        .select('*')
+        .eq('student_id', childId)
+        .order('issued_on', { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as CourseCertificate[];
     },
   });
 }

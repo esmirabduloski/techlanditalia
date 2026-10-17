@@ -135,3 +135,11 @@ if ! out=$(run_sql supabase_admin supabase/tests/rls/09_submit_homework_file.sql
   exit 1
 fi
 echo "$out" | sed -n 's/.*NOTICE: *//p'
+
+echo "▶ Attestati di fine corso"
+if ! out=$(run_sql supabase_admin supabase/tests/rls/10_course_certificates.sql 2>&1); then
+  echo "$out" | sed -nE 's/.*(NOTICE|WARNING|ERROR): *//p'
+  echo "✗ Test degli attestati FALLITI"
+  exit 1
+fi
+echo "$out" | sed -n 's/.*NOTICE: *//p'

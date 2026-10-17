@@ -16,6 +16,7 @@ import {
 import { GroupCertificatesViewer } from "@/components/teacher/GroupCertificatesViewer";
 import { LessonReportForm } from "@/components/teacher/LessonReportForm";
 import { CourseProposalsCard } from "@/components/teacher/CourseProposalsCard";
+import { CertificatesReleaseCard } from "@/components/teacher/CertificatesReleaseCard";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -779,6 +780,15 @@ export default function TeacherGroupDetail() {
             )}
           </CardContent>
         </Card>
+
+        {/* Attestati di fine corso: si sbloccano dal giorno dell'ultima lezione */}
+        <CertificatesReleaseCard
+          groupId={groupId!}
+          maxLessons={totalLessons}
+          lastLessonDate={lessonSchedule.find(l => l.lesson_number === totalLessons)?.lesson_date ?? null}
+          students={students.map(s => ({ student_id: s.student_id, full_name: s.full_name, attendance: s.attendance }))}
+          readOnly={isImpersonating}
+        />
 
         {/* Proposta del corso successivo, da inviare alla famiglia tramite la segreteria */}
         <CourseProposalsCard

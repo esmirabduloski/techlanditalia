@@ -11,7 +11,7 @@ interface Confetti {
 }
 
 interface CelebrationOverlayProps {
-  type: 'badge' | 'level-up';
+  type: 'badge' | 'level-up' | 'certificate';
   title: string;
   subtitle?: string;
   emoji?: string;
@@ -210,7 +210,7 @@ export function CelebrationOverlay({
                   className="text-center"
                 >
                   <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">
-                    {type === 'level-up' ? '🎉 Nuovo Livello!' : '🏅 Nuovo Badge!'}
+                    {type === 'level-up' ? '🎉 Nuovo Livello!' : type === 'certificate' ? '🎓 Corso completato!' : '🏅 Nuovo Badge!'}
                   </p>
                   <h2 className="text-2xl font-bold text-foreground mb-2">
                     {title}

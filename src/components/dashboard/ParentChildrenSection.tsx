@@ -7,7 +7,7 @@ import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { Card, CardContent } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Users, CalendarDays, ClipboardList, CalendarCheck, CreditCard, MessageCircle, Trophy } from "lucide-react";
+import { Loader2, Users, CalendarDays, ClipboardList, CalendarCheck, CreditCard, MessageCircle, Trophy, Award } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AvatarDisplay } from "@/components/gamification/AvatarSelector";
 import { getLevelFromPoints } from "@/components/gamification/LevelBadge";
@@ -20,11 +20,19 @@ import { ChildAttendanceHistory } from "@/components/dashboard/ChildAttendanceHi
 import { ParentPaymentHistory } from "@/components/dashboard/ParentPaymentHistory";
 import { ChildSummaryCard, type ChildSectionId } from "@/components/dashboard/ChildSummaryCard";
 import { ChildPasswordDialog } from "@/components/dashboard/ChildPasswordDialog";
+import { CertificateCard } from "@/components/certificates/CertificateCard";
 import { useStudentStreaks } from "@/hooks/useStudentStreaks";
 import { localDateKey, nextLesson } from "@/lib/childProgress";
+import { addDaysIso, romeToday } from "@/lib/courseProposal";
+import type { CourseCertificate } from "@/lib/certificate";
+
+/** Un attestato sbloccato da meno di così resta "nuovo" e la sezione parte aperta. */
+const NEW_CERTIFICATE_DAYS = 14;
+const isNewCertificate = (c: CourseCertificate) => c.issued_on >= addDaysIso(romeToday(), -NEW_CERTIFICATE_DAYS);
 import {
   useChildAttendance,
   useChildBalance,
+  useChildCertificates,
   useChildComments,
   useChildHomework,
   useChildSchedule,
@@ -61,7 +69,21 @@ export function ParentChildrenSection() {
           .select("id, full_name, email, username, avatar_id, total_points")
           .eq("parent_id", effectiveUserId);
         setChildren(data || []);
-        if (data?.length) setActiveChild(data[0].id);
+        if (data?.length) {
+          let first = data[0].id;
+          // Link dell'email "attestato pronto": apre il figlio con l'attestato più recente
+          if (data.length > 1 && window.location.hash === "#certificazioni") {
+            const { data: latest } = await supabase
+              .from("course_certificates")
+              .select("student_id")
+              .in("student_id", data.map((c) => c.id))
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            if (latest) first = latest.student_id;
+          }
+          setActiveChild(first);
+        }
       } catch (error) {
         console.error("Error fetching children data:", error);
       } finally {
@@ -133,6 +155,14 @@ function ChildDashboard({ child, canManagePassword }: { child: Child; canManageP
     typeof window !== "undefined" && window.matchMedia?.("(min-width: 768px)").matches ? ["calendario"] : [],
   );
   const { hash } = useLocation();
+  const { data: certificates, isLoading: certificatesLoading } = useChildCertificates(child.id);
+
+  // Attestato appena sbloccato: la sezione Certificazioni parte aperta
+  useEffect(() => {
+    if (certificates?.some(isNewCertificate)) {
+      setOpenSections((prev) => (prev.includes("certificazioni") ? prev : ["certificazioni", ...prev]));
+    }
+  }, [certificates]);
 
   useEffect(() => {
     (async () => {
@@ -182,9 +212,12 @@ function ChildDashboard({ child, canManagePassword }: { child: Child; canManageP
   // Link diretti (es. /area-riservata#calendario dalla barra in basso)
   useEffect(() => {
     const id = hash.replace("#", "") as ChildSectionId;
-    if (!coursesLoading && ["calendario", "compiti", "presenze", "saldo", "commenti", "traguardi"].includes(id)) openSection(id);
+    if (coursesLoading || certificatesLoading) return;
+    if (id === "certificazioni" ? certificates?.length : ["calendario", "compiti", "presenze", "saldo", "commenti", "traguardi"].includes(id)) {
+      openSection(id);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hash, coursesLoading]);
+  }, [hash, coursesLoading, certificatesLoading]);
 
   const selectedCourse = courses.find((c) => c.courseId === selectedCourseId);
   const groupIds = selectedCourse?.groupIds;
@@ -227,6 +260,11 @@ function ChildDashboard({ child, canManagePassword }: { child: Child; canManageP
             onOpenSection={openSection}
             onNewPassword={canManagePassword ? () => setPasswordOpen(true) : undefined}
           />
+          {certificates && certificates.length > 0 && (
+            <Accordion type="multiple" value={openSections} onValueChange={setOpenSections} className="space-y-3">
+              <CertificatesSection childId={child.id} childName={child.full_name} certificates={certificates} />
+            </Accordion>
+          )}
           <Card className="border-dashed">
             <CardContent className="py-6 text-center">
               <p className="text-sm text-muted-foreground">Nessun corso attivo per {child.full_name}</p>
@@ -244,6 +282,9 @@ function ChildDashboard({ child, canManagePassword }: { child: Child; canManageP
           />
 
           <Accordion type="multiple" value={openSections} onValueChange={setOpenSections} className="space-y-3">
+            {certificates && certificates.length > 0 && (
+              <CertificatesSection childId={child.id} childName={child.full_name} certificates={certificates} />
+            )}
             <Section childId={child.id} id="calendario" icon={CalendarDays} title="Calendario lezioni" hint={<ScheduleHint childId={child.id} groupIds={groupIds} />}>
               <ChildLessonCalendar childId={child.id} childName={child.full_name} groupIds={groupIds} />
             </Section>
@@ -301,6 +342,28 @@ function Section({
       </AccordionTrigger>
       <AccordionContent>{children}</AccordionContent>
     </AccordionItem>
+  );
+}
+
+/** Attestati di fine corso: la sezione esiste solo dopo lo sblocco dell'insegnante. */
+function CertificatesSection({ childId, childName, certificates }: { childId: string; childName: string; certificates: CourseCertificate[] }) {
+  const hasNew = certificates.some(isNewCertificate);
+  const hint = hasNew ? (
+    <span className="text-primary font-medium">🎓 Nuovo!</span>
+  ) : certificates.length === 1 ? "1 attestato" : `${certificates.length} attestati`;
+  return (
+    <Section childId={childId} id="certificazioni" icon={Award} title="Certificazioni" hint={hint}>
+      <div className="space-y-3 pb-1" data-testid="parent-certificates">
+        {hasNew && (
+          <p className="text-sm text-muted-foreground">
+            Complimenti a {childName.split(" ")[0]}! Ecco il suo attestato di fine corso: scaricalo, stampalo o condividilo con chi vuoi.
+          </p>
+        )}
+        <div className="grid gap-4 md:grid-cols-2">
+          {certificates.map((c) => <CertificateCard key={c.id} certificate={c} />)}
+        </div>
+      </div>
+    </Section>
   );
 }
 

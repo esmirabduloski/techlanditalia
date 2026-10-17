@@ -165,6 +165,11 @@ INSERT INTO public.streak_bonuses (student_id, streak_type, milestone, points_aw
 INSERT INTO public.streak_freezes (student_id, freeze_type) SELECT s, 'homework' FROM seed_students ON CONFLICT DO NOTHING;
 INSERT INTO public.lesson_balance_log (student_id, operation_type, amount, balance_before, balance_after) SELECT s, 'test', 1, 0, 1 FROM seed_students ON CONFLICT DO NOTHING;
 INSERT INTO public.user_achievements (user_id, badge_id) SELECT s, '00000000-0000-0000-0000-0000000ba001' FROM seed_students ON CONFLICT DO NOTHING;
+-- Password degli alunni: S1 con la propria, S2 ancora con quella del genitore
+INSERT INTO public.student_password_settings (student_id, own_password) VALUES
+  ('00000000-0000-0000-0000-000000000101', true),
+  ('00000000-0000-0000-0000-000000000102', false)
+ON CONFLICT DO NOTHING;
 -- Consensi media: la migrazione che li crea può non essere ancora nel repo.
 DO $$
 BEGIN
@@ -213,6 +218,12 @@ INSERT INTO public.course_proposals (student_id, group_id, proposed_course_id, t
   ('00000000-0000-0000-0000-000000000101', '00000000-0000-0000-0000-00000000a001', '00000000-0000-0000-0000-00000000c002', 'Pronto per il corso C2, ottimi progressi', 'sent', current_date + 10, now()),
   ('00000000-0000-0000-0000-000000000103', '00000000-0000-0000-0000-00000000a002', '00000000-0000-0000-0000-00000000c001', 'Pronto per il corso C1, ottimi progressi', 'sent', current_date + 10, now()),
   ('00000000-0000-0000-0000-000000000102', '00000000-0000-0000-0000-00000000a002', '00000000-0000-0000-0000-00000000c001', 'Bozza: da rivedere in segreteria', 'draft', NULL, NULL);
+
+-- Attestati di fine corso: S1 (G1) e S3 (G2) già sbloccati, S2 e S4 no
+INSERT INTO public.course_certificates (student_id, group_id, student_name, course_title, teacher_name,
+                                        lessons_attended, lessons_total, hours_attended, issued_on, code) VALUES
+  ('00000000-0000-0000-0000-000000000101', '00000000-0000-0000-0000-00000000a001', 'Alunno S1', 'Corso C1', 'Insegnante T1', 30, 32, 45, current_date, 'TL-TEST-S1G1'),
+  ('00000000-0000-0000-0000-000000000103', '00000000-0000-0000-0000-00000000a002', 'Alunno S3', 'Corso C2', 'Insegnante T2', 28, 32, 42, current_date, 'TL-TEST-S3G2');
 
 -- Pause dell'abbonamento: S2 programmata, S3 già finita (nessuna in corso, per
 -- non cambiare i risultati di 03 e 04)

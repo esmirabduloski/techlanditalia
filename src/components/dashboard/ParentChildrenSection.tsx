@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
+import { certificateClient } from "@/lib/certificateClient";
 import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { Card, CardContent } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -73,7 +74,7 @@ export function ParentChildrenSection() {
           let first = data[0].id;
           // Link dell'email "attestato pronto": apre il figlio con l'attestato più recente
           if (data.length > 1 && window.location.hash === "#certificazioni") {
-            const { data: latest } = await supabase
+            const { data: latest } = await certificateClient
               .from("course_certificates")
               .select("student_id")
               .in("student_id", data.map((c) => c.id))

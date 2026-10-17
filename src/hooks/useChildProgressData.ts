@@ -18,6 +18,7 @@ import {
   type HomeworkCounts,
 } from '@/lib/childProgress';
 import type { CourseCertificate } from '@/lib/certificate';
+import { certificateClient } from '@/lib/certificateClient';
 
 const STALE_TIME = 60_000;
 
@@ -407,7 +408,7 @@ export function useChildCertificates(childId: string) {
     enabled: !!childId,
     staleTime: STALE_TIME,
     queryFn: async (): Promise<CourseCertificate[]> => {
-      const { data, error } = await supabase
+      const { data, error } = await certificateClient
         .from('course_certificates')
         .select('*')
         .eq('student_id', childId)

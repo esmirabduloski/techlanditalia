@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Award, Loader2, Lock, PartyPopper } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { certificateClient } from '@/lib/certificateClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -42,14 +43,16 @@ export function CertificatesReleaseCard({ groupId, maxLessons, lastLessonDate, s
   const [releasing, setReleasing] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [showAll, setShowAll] = useState(false);
+  const [available, setAvailable] = useState(true);
 
   const load = useCallback(async () => {
-    const { data } = await supabase
+    const { data, error } = await certificateClient
       .from('course_certificates')
       .select('*')
       .eq('group_id', groupId)
       .order('student_name');
     setCertificates((data ?? []) as CourseCertificate[]);
+    setAvailable(!error);
     setLoading(false);
   }, [groupId]);
 
@@ -57,7 +60,7 @@ export function CertificatesReleaseCard({ groupId, maxLessons, lastLessonDate, s
     load();
   }, [load]);
 
-  if (students.length === 0 || maxLessons <= 0) return null;
+  if (students.length === 0 || maxLessons <= 0 || !available) return null;
 
   const lastLessonMarked = students.some((s) => s.attendance[maxLessons]);
   const unlocked = certificatesUnlocked({ today: romeToday(), lastLessonDate, lastLessonMarked });
@@ -69,7 +72,7 @@ export function CertificatesReleaseCard({ groupId, maxLessons, lastLessonDate, s
     setConfirming(false);
     setReleasing(true);
     try {
-      const { data, error } = await supabase.rpc('release_group_certificates', { p_group_id: groupId });
+      const { data, error } = await certificateClient.rpc('release_group_certificates', { p_group_id: groupId });
       if (error) throw new Error(error.message);
       const created = data?.length ?? 0;
       // L'avviso non blocca: gli attestati ci sono già, al massimo manca l'email

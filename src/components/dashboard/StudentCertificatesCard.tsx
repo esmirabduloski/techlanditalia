@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Award } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { certificateClient } from '@/lib/certificateClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CertificateCard } from '@/components/certificates/CertificateCard';
 import { CelebrationOverlay } from '@/components/gamification/CelebrationOverlay';
@@ -40,7 +40,7 @@ export function StudentCertificatesCard({ userId }: Props) {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
+      const { data } = await certificateClient
         .from('course_certificates')
         .select('*')
         .eq('student_id', userId)

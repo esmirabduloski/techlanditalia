@@ -3,10 +3,28 @@
  * Qui solo logica pura: riempire il modello SVG (src/assets/certificates/attestato.svg)
  * e decidere quando si sbloccano. Il PDF lo genera certificatePdf.ts nel browser.
  */
-import type { Tables } from '@/integrations/supabase/types';
 import { shortDate } from '@/lib/courseProposal';
 
-export type CourseCertificate = Tables<'course_certificates'>;
+/** Contratto della 0050, disponibile anche prima di applicarla al database. */
+export type CourseCertificate = {
+  id: string;
+  student_id: string;
+  group_id: string;
+  student_name: string;
+  course_title: string;
+  course_emoji: string | null;
+  teacher_name: string;
+  lessons_attended: number;
+  lessons_total: number;
+  hours_attended: number;
+  hard_skills: string[];
+  soft_skills: string[];
+  issued_on: string;
+  code: string;
+  released_by: string | null;
+  notified_at: string | null;
+  created_at: string;
+};
 
 /** Campi dell'attestato usati dal modello. */
 export type CertificateData = Pick<

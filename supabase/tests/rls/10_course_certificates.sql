@@ -1,4 +1,4 @@
--- Verifica di public.release_group_certificates() (drizzle/migrations/0049_course_certificates.sql).
+-- Verifica di public.release_group_certificates() (drizzle/migrations/0050_course_certificates.sql).
 -- Gira come supabase_admin sul database usa-e-getta e chiama la RPC come i vari utenti:
 --   - prima del giorno dell'ultima lezione non si sblocca nulla;
 --   - solo l'insegnante del gruppo (con la verifica in due passaggi) o un admin;
@@ -126,6 +126,18 @@ BEGIN
   -- Gli anonimi non possono chiamarla
   IF has_function_privilege('anon', 'public.release_group_certificates(uuid)', 'EXECUTE') THEN
     RAISE EXCEPTION 'certificates: gli utenti anonimi possono sbloccare gli attestati';
+  END IF;
+
+  -- La migrazione degli attestati richiama ensure_mfa_policies(): non deve
+  -- rimettere il blocco 2FA in lettura su courses (0049, elenco corsi pubblico)
+  IF EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'courses' AND policyname = 'mfa_required') THEN
+    RAISE EXCEPTION 'certificates: ensure_mfa_policies() ha rimesso mfa_required su courses';
+  END IF;
+  SELECT count(*) INTO n FROM pg_policies
+  WHERE schemaname = 'public' AND tablename = 'courses' AND policyname LIKE 'mfa\_required\_%';
+  IF n <> 3 THEN RAISE EXCEPTION 'certificates: su courses attese 3 regole 2FA in scrittura, trovate %', n; END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'course_certificates' AND policyname = 'mfa_required') THEN
+    RAISE EXCEPTION 'certificates: manca la regola 2FA su course_certificates';
   END IF;
 
   RAISE NOTICE 'Attestati: sblocco, permessi e fotografia OK';

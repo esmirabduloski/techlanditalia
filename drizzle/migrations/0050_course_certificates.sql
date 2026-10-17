@@ -74,6 +74,33 @@ USING (auth.uid() = student_id);
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.course_certificates TO authenticated;
 GRANT ALL ON public.course_certificates TO service_role;
 
+-- ensure_mfa_policies() non tocca più le tabelle che hanno le regole 2FA
+-- divise per comando (mfa_required_insert/_update/_delete...): è il caso di
+-- courses (0049), leggibile anche senza 2FA. Prima la funzione, non trovando
+-- una policy chiamata esattamente mfa_required, rimetteva il blocco su tutto.
+CREATE OR REPLACE FUNCTION public.ensure_mfa_policies()
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
+AS $$
+DECLARE t record;
+BEGIN
+  FOR t IN
+    SELECT n.nspname AS schema_name, c.relname AS table_name
+    FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE c.relkind IN ('r', 'p')
+      AND (n.nspname = 'public' OR (n.nspname = 'storage' AND c.relname = 'objects'))
+      AND NOT EXISTS (SELECT 1 FROM pg_policies p WHERE p.schemaname = n.nspname
+          AND p.tablename = c.relname
+          AND (p.policyname = 'mfa_required' OR p.policyname LIKE 'mfa\_required\_%'))
+  LOOP
+    EXECUTE format(
+      'CREATE POLICY mfa_required ON %I.%I AS RESTRICTIVE FOR ALL TO authenticated '
+      'USING ((SELECT public.mfa_ok())) WITH CHECK ((SELECT public.mfa_ok()))',
+      t.schema_name, t.table_name);
+  END LOOP;
+END;
+$$;
+REVOKE ALL ON FUNCTION public.ensure_mfa_policies() FROM PUBLIC, anon, authenticated;
+
 SELECT public.ensure_mfa_policies();
 
 -- Codice dell'attestato: TL-<anno>-<5 caratteri senza 0/O/1/I>

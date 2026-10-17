@@ -1,5 +1,5 @@
 /**
- * Attestati di fine corso (drizzle/migrations/0049_course_certificates.sql).
+ * Attestati di fine corso (drizzle/migrations/0050_course_certificates.sql).
  *
  * Testi dell'avviso alla famiglia (email e push) usati dalla edge function
  * certificates-released quando l'insegnante sblocca gli attestati.

@@ -1,6 +1,6 @@
 /**
  * Avviso alla famiglia quando gli attestati di fine corso sono disponibili
- * (drizzle/migrations/0049_course_certificates.sql).
+ * (drizzle/migrations/0050_course_certificates.sql).
  *
  * La chiama l'insegnante del gruppo (o un admin), con verifica in due
  * passaggi, subito dopo release_group_certificates(). Per ogni attestato non

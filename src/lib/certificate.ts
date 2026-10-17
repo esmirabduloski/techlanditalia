@@ -1,5 +1,5 @@
 /**
- * Attestati di fine corso (drizzle/migrations/0049_course_certificates.sql).
+ * Attestati di fine corso (drizzle/migrations/0050_course_certificates.sql).
  * Qui solo logica pura: riempire il modello SVG (src/assets/certificates/attestato.svg)
  * e decidere quando si sbloccano. Il PDF lo genera certificatePdf.ts nel browser.
  */

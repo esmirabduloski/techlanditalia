@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { CertificateCard } from '@/components/certificates/CertificateCard';
 import { useToast } from '@/hooks/use-toast';
-import { certificatesUnlocked, formatHours, hoursForLessons, type CourseCertificate } from '@/lib/certificate';
+import { CERTIFICATE_HOURS, CERTIFICATE_LESSONS, certificatesUnlocked, type CourseCertificate } from '@/lib/certificate';
 import { romeToday, shortDate } from '@/lib/courseProposal';
 import { cn } from '@/lib/utils';
 
@@ -59,8 +59,6 @@ export function CertificatesReleaseCard({ groupId, maxLessons, lastLessonDate, s
 
   if (students.length === 0 || maxLessons <= 0) return null;
 
-  const presentCount = (s: Props['students'][number]) =>
-    Object.entries(s.attendance).filter(([n, st]) => st === 'present' && Number(n) >= 1 && Number(n) <= maxLessons).length;
   const lastLessonMarked = students.some((s) => s.attendance[maxLessons]);
   const unlocked = certificatesUnlocked({ today: romeToday(), lastLessonDate, lastLessonMarked });
   const issued = new Set(certificates.map((c) => c.student_id));
@@ -104,7 +102,7 @@ export function CertificatesReleaseCard({ groupId, maxLessons, lastLessonDate, s
         </CardTitle>
         <p className="text-sm text-muted-foreground">
           {unlocked
-            ? 'Ogni alunno riceve il proprio attestato con lezioni, ore e competenze del corso. Le famiglie lo trovano nella sezione Certificazioni.'
+            ? `Ogni alunno riceve il proprio attestato con ${CERTIFICATE_LESSONS} lezioni, ${CERTIFICATE_HOURS} ore e le competenze del corso. Le famiglie lo trovano nella sezione Certificazioni.`
             : lastLessonDate
               ? `Gli attestati si sbloccano il giorno della lezione ${maxLessons} (${shortDate(lastLessonDate)}): fino ad allora restano nascosti alle famiglie.`
               : `Gli attestati si sbloccano alla lezione ${maxLessons}, dopo aver segnato le presenze.`}
@@ -117,17 +115,14 @@ export function CertificatesReleaseCard({ groupId, maxLessons, lastLessonDate, s
           <>
             {missing.length > 0 && (
               <div className="rounded-lg border divide-y">
-                {missing.map((s) => {
-                  const lessons = presentCount(s);
-                  return (
-                    <div key={s.student_id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
-                      <span className="font-medium">{s.full_name}</span>
-                      <span className="text-muted-foreground">
-                        {lessons} lezioni · {formatHours(hoursForLessons(lessons))} ore
-                      </span>
-                    </div>
-                  );
-                })}
+                {missing.map((s) => (
+                  <div key={s.student_id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                    <span className="font-medium">{s.full_name}</span>
+                    <span className="text-muted-foreground">
+                      {CERTIFICATE_LESSONS} lezioni · {CERTIFICATE_HOURS} ore
+                    </span>
+                  </div>
+                ))}
               </div>
             )}
 
@@ -171,8 +166,8 @@ export function CertificatesReleaseCard({ groupId, maxLessons, lastLessonDate, s
             <AlertDialogTitle>Rendere disponibili gli attestati?</AlertDialogTitle>
             <AlertDialogDescription>
               {missing.length === 1 ? `${missing[0].full_name} riceverà` : `${missing.length} alunni riceveranno`} il
-              proprio attestato con le presenze segnate finora, e le famiglie un avviso via email e notifica. Dopo lo
-              sblocco l'attestato non cambia: controlla prima che le presenze siano complete.
+              proprio attestato ({CERTIFICATE_LESSONS} lezioni, {CERTIFICATE_HOURS} ore) e le famiglie un avviso via email e
+              notifica. Dopo lo sblocco l'attestato non cambia.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

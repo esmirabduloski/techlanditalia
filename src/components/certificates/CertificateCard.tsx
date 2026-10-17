@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Award, Download, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { formatHours, type CertificateData } from '@/lib/certificate';
+import { CERTIFICATE_HOURS, CERTIFICATE_LESSONS, formatHours, type CertificateData } from '@/lib/certificate';
 import { shortDate } from '@/lib/courseProposal';
 import { cn } from '@/lib/utils';
 
@@ -74,7 +74,7 @@ export function CertificateCard({ certificate: c, className }: Props) {
             {c.course_title}
           </p>
           <p className="text-sm text-muted-foreground">
-            {c.lessons_attended} lezioni · {formatHours(Number(c.hours_attended))} ore di coding · {shortDate(c.issued_on)}
+            {CERTIFICATE_LESSONS} lezioni · {formatHours(CERTIFICATE_HOURS)} ore di coding · {shortDate(c.issued_on)}
           </p>
         </div>
         <Button onClick={download} disabled={busy} className="w-full sm:w-auto min-h-[48px]">

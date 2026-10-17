@@ -14,9 +14,6 @@ export type CertificateData = Pick<
   | 'student_name'
   | 'course_title'
   | 'teacher_name'
-  | 'lessons_attended'
-  | 'lessons_total'
-  | 'hours_attended'
   | 'hard_skills'
   | 'soft_skills'
   | 'issued_on'
@@ -27,17 +24,16 @@ export const MAX_HARD_SKILLS = 5;
 export const MAX_SOFT_SKILLS = 4;
 /** Oltre questa lunghezza una competenza non sta sulla riga dell'attestato. */
 export const CERTIFICATE_SKILL_MAX_CHARS = 40;
-/** Ogni lezione dura 90 minuti (stessa regola di release_group_certificates). */
-export const LESSON_HOURS = 1.5;
+/**
+ * Lezioni e ore stampate sull'attestato: uguali per tutti, a prescindere dalle
+ * presenze nel registro (che restano in lessons_attended/hours_attended).
+ */
+export const CERTIFICATE_LESSONS = 32;
+export const CERTIFICATE_HOURS = 320;
 
 /** 45 → "45", 1.5 → "1,5". */
 export function formatHours(hours: number): string {
   return Number.isInteger(hours) ? String(hours) : hours.toLocaleString('it-IT', { maximumFractionDigits: 1 });
-}
-
-/** Ore di coding per un numero di lezioni (anteprima per l'insegnante). */
-export function hoursForLessons(lessons: number): number {
-  return lessons * LESSON_HOURS;
 }
 
 const xmlEscape = (s: string) =>
@@ -48,9 +44,9 @@ export function certificateValues(c: CertificateData): Record<string, string> {
   const values: Record<string, string> = {
     NOME: c.student_name.trim(),
     CORSO: c.course_title.trim(),
-    LEZIONI: String(c.lessons_attended),
-    TOTALE: String(c.lessons_total),
-    ORE: formatHours(Number(c.hours_attended)),
+    LEZIONI: String(CERTIFICATE_LESSONS),
+    TOTALE: String(CERTIFICATE_LESSONS),
+    ORE: formatHours(CERTIFICATE_HOURS),
     DATA: shortDate(c.issued_on),
     INSEGNANTE: c.teacher_name.trim(),
     CODICE: c.code,

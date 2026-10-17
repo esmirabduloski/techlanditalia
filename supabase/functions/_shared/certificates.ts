@@ -13,10 +13,9 @@ export type CertificateMessage = {
   paragraphs: string[];
 };
 
-/** 45 → "45", 1.5 → "1,5". */
-export function formatHours(hours: number): string {
-  return Number.isInteger(hours) ? String(hours) : hours.toLocaleString("it-IT", { maximumFractionDigits: 1 });
-}
+/** Lezioni e ore stampate sull'attestato: uguali per tutti (come in src/lib/certificate.ts). */
+export const CERTIFICATE_LESSONS = 32;
+export const CERTIFICATE_HOURS = 320;
 
 const firstName = (name: string) => name.trim().split(/\s+/)[0] || name;
 
@@ -26,19 +25,16 @@ export function certificateMessage(opts: {
   studentName: string;
   courseTitle: string;
   teacherName: string;
-  lessonsAttended: number;
-  hoursAttended: number;
 }): CertificateMessage {
   const first = firstName(opts.studentName);
   const hello = opts.parentName ? `Ciao ${firstName(opts.parentName)},` : "Ciao,";
-  const lessons = opts.lessonsAttended === 1 ? "1 lezione" : `${opts.lessonsAttended} lezioni`;
   return {
     subject: `🎓 L'attestato di ${first} è pronto`,
     pushTitle: `🎓 L'attestato di ${first} è pronto`,
     pushBody: `${first} ha completato ${opts.courseTitle}: scarica l'attestato dall'area riservata.`,
     paragraphs: [
       hello,
-      `${first} ha completato il corso ${opts.courseTitle}! ${lessons} e ${formatHours(opts.hoursAttended)} ore di coding, ` +
+      `${first} ha completato il corso ${opts.courseTitle}! ${CERTIFICATE_LESSONS} lezioni e ${CERTIFICATE_HOURS} ore di coding, ` +
         `insieme a ${opts.teacherName}: oggi è il giorno della festa.`,
       `Nell'area riservata, alla sezione Certificazioni, trovate il suo attestato con le competenze imparate: ` +
         `potete scaricarlo in PDF, stamparlo o condividerlo con chi volete.`,

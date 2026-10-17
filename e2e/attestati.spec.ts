@@ -80,7 +80,8 @@ test("il genitore trova l'attestato nuovo e scarica il PDF", async ({ page, fake
   await expect(page.getByRole("button", { name: /Certificazioni.*Nuovo!/ })).toBeVisible();
   await expect(section.getByText("Complimenti a Luca!", { exact: false })).toBeVisible();
   await expect(section.getByText("🐍 Python Base")).toBeVisible();
-  await expect(section.getByText("30 lezioni · 45 ore di coding · 16/10/2026")).toBeVisible();
+  // 32 lezioni e 320 ore per tutti, anche con 30 presenze nel registro
+  await expect(section.getByText("32 lezioni · 320 ore di coding · 16/10/2026")).toBeVisible();
   const preview = section.getByRole("img", { name: "Attestato di Luca Bianchi: Python Base" });
   await expect(preview).toBeVisible();
   await expect.poll(() => preview.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
@@ -161,7 +162,7 @@ test.describe("insegnante", () => {
 
     const card = page.getByTestId("certificates-release-card");
     await expect(card.getByText("Gli attestati si sbloccano il giorno della lezione 32 (17/10/2026)", { exact: false })).toBeVisible();
-    await expect(card.getByText("30 lezioni · 45 ore")).toBeVisible();
+    await expect(card.getByText("32 lezioni · 320 ore")).toBeVisible();
     await expect(card.getByRole("button", { name: "Rendi disponibili gli attestati" })).toBeDisabled();
   });
 

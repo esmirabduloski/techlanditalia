@@ -1,12 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { certificateMessage, formatHours, studentPush } from "./certificates.ts";
-
-describe("formatHours", () => {
-  it("intere senza decimali, mezze ore con la virgola", () => {
-    expect(formatHours(48)).toBe("48");
-    expect(formatHours(1.5)).toBe("1,5");
-  });
-});
+import { certificateMessage, studentPush } from "./certificates.ts";
 
 describe("certificateMessage", () => {
   const base = {
@@ -14,24 +7,21 @@ describe("certificateMessage", () => {
     studentName: "Luca Rossi",
     courseTitle: "Sviluppo giochi con Roblox",
     teacherName: "Giulia Verdi",
-    lessonsAttended: 31,
-    hoursAttended: 46.5,
   };
 
-  it("saluta il genitore e racconta lezioni e ore", () => {
+  it("saluta il genitore e racconta lezioni e ore (32 e 320 per tutti)", () => {
     const msg = certificateMessage(base);
     expect(msg.subject).toBe("🎓 L'attestato di Luca è pronto");
     expect(msg.paragraphs[0]).toBe("Ciao Maria,");
-    expect(msg.paragraphs[1]).toContain("31 lezioni e 46,5 ore di coding");
+    expect(msg.paragraphs[1]).toContain("32 lezioni e 320 ore di coding");
     expect(msg.paragraphs[1]).toContain("Giulia Verdi");
     expect(msg.paragraphs[2]).toContain("Certificazioni");
     expect(msg.pushBody).toContain("Sviluppo giochi con Roblox");
   });
 
-  it("senza genitore un saluto generico, una lezione al singolare", () => {
-    const msg = certificateMessage({ ...base, parentName: null, lessonsAttended: 1, hoursAttended: 1.5 });
+  it("senza genitore un saluto generico", () => {
+    const msg = certificateMessage({ ...base, parentName: null });
     expect(msg.paragraphs[0]).toBe("Ciao,");
-    expect(msg.paragraphs[1]).toContain("1 lezione e 1,5 ore");
   });
 });
 

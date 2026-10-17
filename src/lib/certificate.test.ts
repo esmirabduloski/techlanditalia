@@ -13,9 +13,6 @@ const cert: CertificateData = {
   student_name: ' Giulia Bianchi ',
   course_title: 'Sviluppo giochi con Roblox',
   teacher_name: 'Marco Rossi',
-  lessons_attended: 31,
-  lessons_total: 32,
-  hours_attended: 46.5,
   hard_skills: ['Programmazione in Lua', 'Modellazione 3D'],
   soft_skills: ['Problem solving'],
   issued_on: '2026-10-16',
@@ -31,13 +28,13 @@ describe('formatHours', () => {
 });
 
 describe('certificateValues', () => {
-  it('riempie tutti i segnaposto, competenze mancanti vuote', () => {
+  it('riempie tutti i segnaposto: 32 lezioni e 320 ore per tutti, competenze mancanti vuote', () => {
     const v = certificateValues(cert);
     expect(v).toMatchObject({
       NOME: 'Giulia Bianchi',
-      LEZIONI: '31',
+      LEZIONI: '32',
       TOTALE: '32',
-      ORE: '46,5',
+      ORE: '320',
       DATA: '16/10/2026',
       HARD_1: 'Programmazione in Lua',
       HARD_3: '',
@@ -74,7 +71,7 @@ describe('fillCertificateSvg', () => {
     expect(svg).toContain('>Giulia Bianchi<');
     expect(svg).toContain('>Modellazione 3D<');
     expect(svg).not.toContain('data-slot="HARD_3"');
-    expect(svg).toContain('46,5 ore');
+    expect(svg).toContain('320 ore');
     // Un segnaposto sconosciuto resta visibile
     expect(svg).toContain('{{SCONOSCIUTO}}');
   });

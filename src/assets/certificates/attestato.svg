@@ -5,7 +5,7 @@
   Si può modificare liberamente con Figma, Illustrator, Inkscape o Canva:
   basta lasciare intatti i segnaposto tra doppie graffe, che l'app sostituisce
   con i dati di ogni alunno:
-    {{NOME}} {{CORSO}} {{LEZIONI}} {{TOTALE}} {{ORE}} {{DATA}}
+    {{NOME}} {{CORSO}} {{LEZIONI}} {{ORE}} {{DATA}}
     {{HARD_1}}..{{HARD_5}} {{SOFT_1}}..{{SOFT_4}} {{INSEGNANTE}} {{CODICE}}
   I gruppi con data-slot (una competenza ciascuno) spariscono se la
   competenza è vuota. Il nome ha id="cert-name": se è lungo l'app riduce il
@@ -94,7 +94,7 @@
     <g transform="translate(185.0 274)">
       <rect width="148" height="50" rx="14" fill="#ffffff" stroke="#10b981" stroke-opacity=".35"/>
       <text x="74" y="26" font-size="20" font-weight="800" fill="#059669">{{LEZIONI}}</text>
-      <text x="74" y="41" font-size="9.5" font-weight="600" fill="#4b6b61">lezioni svolte su {{TOTALE}}</text>
+      <text x="74" y="41" font-size="9.5" font-weight="600" fill="#4b6b61">lezioni svolte</text>
     </g>
     <g transform="translate(347.0 274)">
       <rect width="148" height="50" rx="14" fill="url(#tl-brand)"/>

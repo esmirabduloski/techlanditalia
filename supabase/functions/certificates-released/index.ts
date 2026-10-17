@@ -29,7 +29,6 @@ type CertificateRow = {
   course_title: string;
   teacher_name: string;
   lessons_attended: number;
-  hours_attended: number;
   student: { parent_id: string | null; email: string | null } | null;
 };
 
@@ -168,7 +167,7 @@ serve(async (req: Request): Promise<Response> => {
       .eq("group_id", body.group_id)
       .is("notified_at", null)
       .select(
-        "id, student_id, student_name, course_title, teacher_name, lessons_attended, hours_attended, " +
+        "id, student_id, student_name, course_title, teacher_name, lessons_attended, " +
           "student:profiles!course_certificates_student_id_fkey(parent_id, email)",
       );
     if (error) throw new Error(`course_certificates: ${error.message}`);
@@ -189,8 +188,6 @@ serve(async (req: Request): Promise<Response> => {
         studentName: c.student_name,
         courseTitle: c.course_title,
         teacherName: c.teacher_name,
-        lessonsAttended: c.lessons_attended,
-        hoursAttended: Number(c.hours_attended),
       });
       const pushed = await sendPush(supabase, recipientId, msg.pushTitle, msg.pushBody);
       let studentPushed = 0;
@@ -209,7 +206,7 @@ serve(async (req: Request): Promise<Response> => {
           admin_id: adminRole ? user.id : null,
           type: mailed ? "email" : "note",
           subject: `Attestato disponibile: ${c.student_name} – ${c.course_title}`,
-          content: `${c.lessons_attended} lezioni, ${c.hours_attended} ore. ` +
+          content: `Presenze nel registro: ${c.lessons_attended}. ` +
             (mailed ? "Email inviata" : "Email NON inviata (manca l'indirizzo o errore)") +
             (pushed + studentPushed ? `, push su ${pushed + studentPushed} dispositivi.` : ", nessuna push."),
           metadata: { course_certificate_id: c.id, step: "released" },

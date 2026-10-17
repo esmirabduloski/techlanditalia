@@ -6,7 +6,7 @@
 import { shortDate } from '@/lib/courseProposal';
 
 /** Contratto della 0050, disponibile anche prima di applicarla al database. */
-export interface CourseCertificate {
+export type CourseCertificate = {
   id: string;
   student_id: string;
   group_id: string;
@@ -24,7 +24,7 @@ export interface CourseCertificate {
   released_by: string | null;
   notified_at: string | null;
   created_at: string;
-}
+};
 
 /** Campi dell'attestato usati dal modello. */
 export type CertificateData = Pick<

@@ -174,6 +174,9 @@ Deno.serve(async (req) => {
     const basicAuth = btoa(`${jiraEmail}:${jiraApiToken}`);
 
     let lastJiraError: JiraErrorResponse | null = null;
+    // Errors are assigned inside async helpers; read through a function so
+    // control-flow narrowing does not treat the initial null as permanent.
+    const getLastJiraError = (): JiraErrorResponse | null => lastJiraError;
     const triedProjects: string[] = [];
     let availableIssueTypesForProject: JiraIssueType[] = [];
     let serviceDeskDiagnostics: Record<string, unknown> | null = null;
@@ -354,7 +357,7 @@ Deno.serve(async (req) => {
         });
       }
 
-      const projectError = lastJiraError?.errors?.project;
+      const projectError = getLastJiraError()?.errors?.project;
       if (!projectError) {
         break;
       }
@@ -372,7 +375,7 @@ Deno.serve(async (req) => {
       availableProjects.find((p) => p.key.toUpperCase().startsWith(normalizedConfiguredProjectKey))?.key ??
       normalizedConfiguredProjectKey;
 
-    if (lastJiraError?.errors?.issuetype || lastJiraError?.errors?.project) {
+    if (getLastJiraError()?.errors?.issuetype || getLastJiraError()?.errors?.project) {
       const serviceDeskResult = await tryCreateViaServiceDesk(resolvedProjectKey);
       if (serviceDeskResult?.key) {
         console.log("Jira Service Desk request created:", serviceDeskResult.key);

@@ -10,7 +10,7 @@
  * POST { action: "reject", runId, note? }                    (solo admin)
  */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { notifyAdmins } from "../_shared/adminpush.ts";
@@ -68,7 +68,8 @@ function cutoffFor(c: Category): string {
   return d.toISOString();
 }
 
-type Db = ReturnType<typeof createClient>;
+// A generic factory's ReturnType loses the default schema parameters.
+type Db = SupabaseClient;
 
 /** Query base per categoria: la stessa per contare e per cancellare. */
 // deno-lint-ignore no-explicit-any

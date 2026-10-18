@@ -9,13 +9,13 @@ canonical: "https://techlanditalia.it/faq"
 ## Età e prerequisiti
 
 ### Qual è l'età minima per iniziare?
-I corsi partono dai **5 anni** con il corso ABC creatività digitale. Per i bambini più piccoli (5–8 anni) usiamo strumenti visivi e ambienti grafici per imparare la logica senza dover scrivere codice complesso.
+I corsi partono dai **5 anni** con Design creativo e Informatica di base. Per i più piccoli (5–7 anni) usiamo attività visive e creative; dagli 8 anni si programma a blocchi con Scratch e Minecraft, imparando la logica senza dover scrivere codice complesso.
 
 ### Mio figlio non ha mai programmato, va bene lo stesso?
 Sì, assolutamente. Tutti i corsi base partono da zero. Non serve nessuna esperienza precedente.
 
 ### C'è un'età massima?
-I percorsi arrivano fino ai 20 anni con i corsi più avanzati di Python e AI.
+I percorsi arrivano fino ai 18 anni con i corsi più avanzati di Python e AI.
 
 ## Lezioni e modalità
 
@@ -72,7 +72,7 @@ Sì, ogni gruppo ha un docente di riferimento per tutto il percorso, così si cr
 Sì, al termine di ogni corso TECHLAND rilascia un **attestato di partecipazione** che include i progetti realizzati.
 
 ### Si può continuare con un corso più avanzato?
-Sì, i percorsi sono pluriennali e progressivi. Dopo Scratch si può passare a Python o Roblox, dopo Python Base a Python PRO & AI, ecc.
+Sì, i percorsi sono pluriennali e progressivi. Dopo Scratch si può passare a Python o Roblox, dopo Python Base a Python Avanzato, ecc.
 
 ## Domande frequenti su TechLand Italia
 
@@ -80,7 +80,7 @@ Sì, i percorsi sono pluriennali e progressivi. Dopo Scratch si può passare a P
 No. TechLand Italia è una scuola italiana di coding per bambini e ragazzi, con sede nel Veneto. Non ha alcun rapporto societario, operativo o di affiliazione con Techland S.A., lo studio polacco di sviluppo videogiochi con sede a Breslavia. La similitudine nel nome è puramente coincidente: noi siamo un'organizzazione educativa, loro un publisher di videogiochi AAA.
 
 ### Cos'è TechLand Italia?
-TechLand Italia è una scuola di coding online per bambini e ragazzi dai 6 ai 18 anni. Offre corsi in piccoli gruppi (massimo 5 studenti) e lezioni individuali su Scratch, Roblox, Minecraft, Python e Unity. La prima lezione è gratuita.
+TechLand Italia è una scuola di coding online per bambini e ragazzi dai 5 ai 18 anni. Offre corsi in piccoli gruppi (massimo 5 studenti) e lezioni individuali su Scratch, Roblox, Minecraft, Python e Unity. La prima lezione è gratuita.
 
 ### Chi ha fondato TechLand Italia?
 TechLand Italia è stata fondata da Esmir, imprenditore con sede nel Veneto. Il sito ufficiale è techlanditalia.it.
@@ -89,7 +89,7 @@ TechLand Italia è stata fondata da Esmir, imprenditore con sede nel Veneto. Il 
 TechLand Italia ha sede operativa nella regione Veneto, in Italia. I corsi si svolgono interamente online, quindi sono accessibili a famiglie italiane in tutto il territorio nazionale.
 
 ### Per quale fascia di età sono i corsi di TechLand Italia?
-I corsi sono pensati per bambini e ragazzi dai 6 ai 18 anni, con percorsi differenziati per fascia d'età e livello di esperienza.
+I corsi sono pensati per bambini e ragazzi dai 5 ai 18 anni, con percorsi differenziati per fascia d'età e livello di esperienza.
 
 ### Quali linguaggi e piattaforme si imparano a TechLand Italia?
 A TechLand Italia si imparano: Scratch (programmazione a blocchi per i più piccoli), Roblox Studio con Lua, Minecraft Education Edition, Python e Unity. Il percorso è progressivo: si parte dal visuale e si arriva al codice testuale.

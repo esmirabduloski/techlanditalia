@@ -5,62 +5,24 @@ import { ArrowRight, Clock, Users } from "lucide-react";
 import { CourseEmoji } from "@/components/ui/CourseEmoji";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
 import { StaggerContainer, StaggerItem } from "@/components/animations/StaggerContainer";
+import { BUILD_COURSES } from "@/lib/buildCourseFacts";
 
-const courses = [
-  {
-    id: "roblox",
-    title: "Sviluppo giochi con Roblox",
-    description: "Crea giochi con Roblox Studio e pubblica il tuo primo videogame online.",
-    age: "8+ anni",
-    level: "Principiante",
-    duration: "8 mesi",
-    emoji: "🏗️",
-    color: "tech-cyan",
-  },
-  {
-    id: "roblox-avanzato",
-    title: "Roblox Avanzato",
-    description: "Script Lua complessi, multiplayer e monetizzazione: diventa un pro developer Roblox.",
-    age: "10-14 anni",
-    level: "Avanzato",
-    duration: "8 mesi",
-    emoji: "🚀",
-    color: "tech-cyan",
-  },
-  {
-    id: "web-development",
-    title: "Web Development",
-    description: "HTML, CSS e JavaScript da zero per creare siti web moderni e responsive.",
-    age: "12-16 anni",
-    level: "Principiante",
-    duration: "8 mesi",
-    emoji: "🌐",
-    color: "tech-blue",
-  },
-  {
-    id: "python-base",
-    title: "Python Base",
-    description: "Impara Python e crea le tue prime app, giochi e progetti.",
-    age: "12-16 anni",
-    level: "Principiante",
-    duration: "8 mesi",
-    emoji: "🐍",
-    color: "tech-emerald",
-  },
-  {
-    id: "python-ai",
-    title: "Python PRO & AI",
-    description: "Crea bot, siti web e progetti con intelligenza artificiale.",
-    age: "13+ anni",
-    level: "Avanzato",
-    duration: "8 mesi",
-    emoji: "🤖",
-    color: "tech-emerald",
-  },
+// Corsi in evidenza e colore della card. Nome, emoji, descrizione, livello,
+// durata ed età vengono dalla tabella courses (letta a build-time), come in
+// ogni altra pagina: un corso senza dati non viene mostrato.
+const featured = [
+  { id: "roblox", color: "tech-cyan" },
+  { id: "roblox-avanzato", color: "tech-cyan" },
+  { id: "web-development", color: "tech-blue" },
+  { id: "python-base", color: "tech-emerald" },
+  { id: "python-ai", color: "tech-emerald" },
 ];
+
+const courses = featured.flatMap(({ id, color }) => (BUILD_COURSES[id] ? [{ ...BUILD_COURSES[id], color }] : []));
 
 const levelColors: Record<string, string> = {
   Principiante: "bg-tech-green/10 text-tech-green",
+  Intermedio: "bg-tech-blue/10 text-tech-blue",
   Avanzato: "bg-tech-cyan/10 text-tech-cyan",
 };
 
@@ -85,8 +47,8 @@ export function CoursesPreviewSection() {
 
         <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {courses.slice(0, 6).map((course) => (
-            <StaggerItem key={course.id}>
-              <Link to={`/corsi/${course.id}`} className="tech-card tech-card-hover p-6 group block h-full">
+            <StaggerItem key={course.slug}>
+              <Link to={`/corsi/${course.slug}`} className="tech-card tech-card-hover p-6 group block h-full">
                 <div className="flex items-start justify-between mb-4">
                   <div className={`w-14 h-14 rounded-2xl bg-${course.color}/10 flex items-center justify-center`}>
                     <CourseEmoji emoji={course.emoji} size="lg" />
@@ -101,10 +63,12 @@ export function CoursesPreviewSection() {
                 <p className="text-muted-foreground mb-4 line-clamp-2">{course.description}</p>
 
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Users className="w-4 h-4" />
-                    <span>{course.age}</span>
-                  </div>
+                  {course.ageRange && (
+                    <div className="flex items-center gap-1">
+                      <Users className="w-4 h-4" />
+                      <span>{course.ageRange}</span>
+                    </div>
+                  )}
                   <div className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
                     <span>{course.duration}</span>

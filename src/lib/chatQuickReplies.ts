@@ -119,7 +119,7 @@ export const QUICK_REPLY_CATEGORIES: QuickReplyCategory[] = [
       {
         id: 'info-courses',
         label: 'Catalogo corsi',
-        text: 'Trovi tutti i corsi divisi per età (5-8, 9-12, 13-18 anni) su https://techlanditalia.it/corsi — se mi dici l\'età ti indico io i 2-3 più adatti.',
+        text: 'Trovi tutti i corsi divisi per età (5-7, 8-12, 13-18 anni) su https://techlanditalia.it/corsi — se mi dici l\'età ti indico io i 2-3 più adatti.',
       },
       {
         id: 'info-online',

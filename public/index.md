@@ -1,12 +1,12 @@
 ---
 title: "TECHLAND | Corsi di Programmazione e Coding per Bambini e Ragazzi Online"
-description: "Scuola di coding online per alunni 6-18 anni. Scratch, Roblox, Minecraft, Python, AI. Piccoli gruppi, prima lezione gratis."
+description: "Scuola di coding online per alunni 5-18 anni. Scratch, Roblox, Minecraft, Python, AI. Piccoli gruppi, prima lezione gratis."
 canonical: "https://techlanditalia.it/"
 ---
 
 # TECHLAND — Corsi di Programmazione per Bambini e Ragazzi
 
-TECHLAND è la **scuola di coding online italiana** per alunni dai **6 ai 18 anni**. Lezioni live in piccoli gruppi (max 6 alunni), docenti esperti, prima lezione **gratuita e senza impegno**.
+TECHLAND è la **scuola di coding online italiana** per alunni dai **5 ai 18 anni**. Lezioni live in piccoli gruppi (max 6 alunni), docenti esperti, prima lezione **gratuita e senza impegno**.
 
 👉 [Prenota la lezione di prova gratuita](https://techlanditalia.it/prenota)
 
@@ -21,17 +21,17 @@ TECHLAND è la **scuola di coding online italiana** per alunni dai **6 ai 18 ann
 
 ## I nostri percorsi
 
-| Età | Corso | Linguaggio |
+| Età | Corso | Livello |
 |---|---|---|
-| 5–7 | [ABC creatività digitale](https://techlanditalia.it/corsi/abc-creativita-digitale) | Canva, Google Docs |
-| 6–8 | [ABC informatica](https://techlanditalia.it/corsi/abc-informatica) | Fondamenti |
-| 8–10 | [Scratch](https://techlanditalia.it/corsi/scratch) | Programmazione visiva |
-| 8–9 | [Minecraft Education](https://techlanditalia.it/corsi/minecraft-education) | MakeCode |
-| 10–14 | [Roblox](https://techlanditalia.it/corsi/roblox) | Lua |
-| 12–16 | [Roblox Avanzato](https://techlanditalia.it/corsi/roblox-avanzato) | Lua avanzato |
-| 12–16 | [Web Development](https://techlanditalia.it/corsi/web-development) | HTML, CSS, JS |
-| 12–16 | [Python Base](https://techlanditalia.it/corsi/python-base) | Python |
-| 14–18 | [Python PRO & AI](https://techlanditalia.it/corsi/python-ai) | Python, ML, AI |
+| 5-7 anni | [Design creativo](https://techlanditalia.it/corsi/design-creativo) | Principiante |
+| 5+ anni | [Informatica di base](https://techlanditalia.it/corsi/informatica-di-base) | Principiante |
+| 8+ anni | [Programmazione visiva con Minecraft](https://techlanditalia.it/corsi/minecraft) | Principiante |
+| 8-10 anni | [Programmazione visiva con Scratch](https://techlanditalia.it/corsi/scratch) | Principiante |
+| 8+ anni | [Sviluppo giochi con Roblox](https://techlanditalia.it/corsi/roblox) | Principiante |
+| 10+ anni | [Roblox Avanzato](https://techlanditalia.it/corsi/roblox-avanzato) | Avanzato |
+| 13+ anni | [Python Avanzato](https://techlanditalia.it/corsi/python-ai) | Avanzato |
+| 13+ anni | [Python Base](https://techlanditalia.it/corsi/python-base) | Principiante |
+| 13+ anni | [Web Development](https://techlanditalia.it/corsi/web-development) | Principiante |
 
 [Vedi tutti i corsi →](https://techlanditalia.it/corsi)
 
@@ -44,7 +44,7 @@ TECHLAND è la **scuola di coding online italiana** per alunni dai **6 ai 18 ann
 
 ## Domande frequenti
 
-**Da che età si può iniziare?** Dai 5 anni con il corso ABC creatività digitale.
+**Da che età si può iniziare?** Dai 5 anni con Design creativo e Informatica di base.
 
 **Quanto costa?** Piani mensili da €99/mese. Prima lezione **gratuita**.
 

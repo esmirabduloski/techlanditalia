@@ -112,7 +112,7 @@ ${data.cover_image_url ? `![${data.title}](${data.cover_image_url})\n\n` : ''}${
 ---
 
 **Articolo originale**: [${canonical}](${canonical})
-**Pubblicato da**: TECHLAND — Scuola di coding online per alunni 5-20 anni
+**Pubblicato da**: TECHLAND — Scuola di coding online per alunni 5-18 anni
 **Sito**: https://techlanditalia.it
 **Prenota lezione gratuita**: https://techlanditalia.it/prenota
 `;

@@ -23,7 +23,7 @@ const textSizeMap = {
 const logoMap: Record<string, { src: string; alt: string }> = {
   '⛏️': { src: minecraftLogo, alt: 'Minecraft' },
   '🐍': { src: pythonLogo, alt: 'Python' },
-  '🤖': { src: pythonLogo, alt: 'Python PRO & AI' },
+  '🤖': { src: pythonLogo, alt: 'Python Avanzato' },
   '🧩': { src: scratchLogo, alt: 'Scratch' },
   '🐱': { src: scratchLogo, alt: 'Scratch' },
   '🏗️': { src: robloxLogo, alt: 'Roblox' },

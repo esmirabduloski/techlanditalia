@@ -108,7 +108,7 @@ export const organizationSchema = {
   "alternateName": ["TECHLAND Italia", "Techland", "Techland Corsi", "Techland Coding"],
   "url": "https://techlanditalia.it",
   "logo": "https://techlanditalia.it/logo.png",
-  "description": "TECHLAND è la scuola di coding online per bambini e ragazzi dai 6 ai 18 anni. Corsi di programmazione in piccoli gruppi con docenti esperti.",
+  "description": "TECHLAND è la scuola di coding online per bambini e ragazzi dai 5 ai 18 anni. Corsi di programmazione in piccoli gruppi con docenti esperti.",
   "foundingDate": "2023",
   "contactPoint": {
     "@type": "ContactPoint",
@@ -168,7 +168,7 @@ export function generateCourseSchema(course: {
     "audience": {
       "@type": "EducationalAudience",
       "educationalRole": "student",
-      "audienceType": `Bambini e ragazzi ${course.age}`
+      "audienceType": course.age ? `Bambini e ragazzi ${course.age}` : "Bambini e ragazzi"
     },
     "educationalLevel": course.level,
     "timeRequired": course.duration,

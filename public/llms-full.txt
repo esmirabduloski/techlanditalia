@@ -1,6 +1,6 @@
 # TECHLAND — Documentazione completa per LLM
 
-> TECHLAND è la scuola di coding online italiana per alunni dai 6 ai 18 anni. Lezioni live in piccoli gruppi (max 6 alunni) con docenti esperti. Prima lezione gratuita.
+> TECHLAND è la scuola di coding online italiana per alunni dai 5 ai 18 anni. Lezioni live in piccoli gruppi (max 6 alunni) con docenti esperti. Prima lezione gratuita.
 
 Sito: https://techlanditalia.it
 Email: info@techlanditalia.it
@@ -10,7 +10,7 @@ Telefono: +39 350 581 3140
 
 ## Chi è TECHLAND
 
-TECHLAND è una scuola di programmazione e coding 100% online dedicata a bambini, ragazzi e giovani adulti dai 6 ai 18 anni. Operiamo in tutta Italia dal 2023 con un metodo strutturato per età e livello, dal pensiero computazionale con Scratch fino a percorsi avanzati di Python, Intelligenza Artificiale, Game Development e Web Development.
+TECHLAND è una scuola di programmazione e coding 100% online dedicata a bambini e ragazzi dai 5 ai 18 anni. Operiamo in tutta Italia dal 2023 con un metodo strutturato per età e livello, dal pensiero computazionale con Scratch fino a percorsi avanzati di Python, Intelligenza Artificiale, Game Development e Web Development.
 
 ### Cosa ci rende diversi
 
@@ -20,11 +20,11 @@ TECHLAND è una scuola di programmazione e coding 100% online dedicata a bambini
 - **Dashboard genitori**: report settimanali, feedback dei docenti, progetti realizzati
 - **Prima lezione gratuita**: prova senza impegno prima di iscriversi
 - **Nessun vincolo**: si può disdire o mettere in pausa in qualsiasi momento
-- **Percorsi pluriennali**: dai 6 anni fino al diploma, con curriculum strutturato
+- **Percorsi pluriennali**: dai 5 anni fino al diploma, con curriculum strutturato
 
 ### Target
 
-Alunni dai 6 ai 18 anni residenti in Italia (lezioni in italiano).
+Alunni dai 5 ai 18 anni residenti in Italia (lezioni in italiano).
 
 ### Modalità
 
@@ -35,74 +35,74 @@ Lezioni live online via piattaforma dedicata. Servono PC/Mac, connessione intern
 ## Catalogo Corsi Completo
 
 ### Design creativo
-- **Età**: dai 5 anni
-- **Livello**: Base
+- **Età**: 5-7 anni
+- **Livello**: Principiante
 - **Durata**: 8 mesi
-- **Descrizione**: Corso pensato per bambini piccoli, incentrato sulle basi del design digitale e dell'alfabetizzazione informatica. I bambini imparano a usare editor grafici, creare biglietti di auguri, poster, animazioni e semplici presentazioni. Sviluppa pensiero creativo e logico in formato ludico.
+- **Descrizione**: Un corso online pensato per i più piccoli, dove i bambini scoprono il mondo della creatività digitale attraverso attività pratiche e divertenti. Imparano a realizzare disegni, semplici progetti grafici e presentazioni, sviluppando fantasia, logica e sicurezza nell’uso del computer.
 - **URL**: https://techlanditalia.it/corsi/design-creativo
 
 ### Informatica di base
-- **Età**: dai 6 anni
-- **Livello**: Base
+- **Età**: 5+ anni
+- **Livello**: Principiante
 - **Durata**: 8 mesi
-- **Descrizione**: Corso introduttivo ai fondamenti dell'informatica: come funziona un computer, file, cartelle, internet sicuro, primi passi con strumenti digitali e logica computazionale.
+- **Descrizione**: Corso base per imparare i fondamenti dell'informatica
 - **URL**: https://techlanditalia.it/corsi/informatica-di-base
 
-### Programmazione visiva con Scratch
-- **Età**: dai 7 anni
-- **Livello**: Base
-- **Durata**: 8 mesi
-- **Descrizione**: Primo vero corso di coding. Con Scratch i bambini imparano la logica della programmazione (cicli, condizioni, variabili, eventi) creando giochi, animazioni e storie interattive senza dover scrivere codice testuale.
-- **URL**: https://techlanditalia.it/corsi/scratch
-
 ### Programmazione visiva con Minecraft
-- **Età**: dagli 8 anni
-- **Livello**: Base
-- **Durata**: 10 mesi
-- **Descrizione**: Logica, programmazione e automazione dentro il mondo di Minecraft. Si programma a blocchi, si costruiscono fattorie automatizzate e minigiochi personalizzati.
+- **Età**: 8+ anni
+- **Livello**: Principiante
+- **Durata**: 8 mesi
+- **Descrizione**: Scopri il mondo del coding divertendoti con Minecraft Education! Attraverso sfide interattive e costruzioni creative, i bambini imparano a usare la programmazione a blocchi per automatizzare azioni, inventare mini-esperienze di gioco e trasformare le proprie idee in progetti digitali.
 - **URL**: https://techlanditalia.it/corsi/minecraft
 
-### Sviluppo giochi con Roblox
-- **Età**: dagli 8 anni
-- **Livello**: Intermedio
+### Programmazione visiva con Scratch
+- **Età**: 8-10 anni
+- **Livello**: Principiante
 - **Durata**: 8 mesi
-- **Descrizione**: Creazione di videogiochi con Roblox Studio. Si imparano gli strumenti di modellazione 3D, scripting in Lua, gestione di player e oggetti, pubblicazione di esperienze sulla piattaforma Roblox.
+- **Descrizione**: Scopri come trasformare le tue idee in giochi e animazioni con Scratch
+- **URL**: https://techlanditalia.it/corsi/scratch
+
+### Sviluppo giochi con Roblox
+- **Età**: 8+ anni
+- **Livello**: Principiante
+- **Durata**: 8 mesi
+- **Descrizione**: Crea giochi con Roblox Studio: progetta mondi e personaggi, imposta le tue regole e pubblica il tuo primo videogame online.
 - **URL**: https://techlanditalia.it/corsi/roblox
 
 ### Roblox Avanzato
-- **Età**: 10–14 anni
+- **Età**: 10+ anni
 - **Livello**: Avanzato
 - **Durata**: 8 mesi
-- **Descrizione**: Per chi ha già basi di Roblox. Sviluppo avanzato in Lua, sistemi multiplayer, monetizzazione, ottimizzazione delle performance, deploy professionale.
+- **Descrizione**: Un corso pensato per chi usa già Roblox Studio: affina le tue abilità e crea giochi più complessi, originali e coinvolgenti.
 - **URL**: https://techlanditalia.it/corsi/roblox-avanzato
 
-### Web Development
-- **Età**: dai 13 anni
-- **Livello**: Intermedio
-- **Durata**: 8 mesi
-- **Descrizione**: HTML, CSS e JavaScript per costruire siti web da zero. Si imparano responsive design, animazioni, manipolazione del DOM e si pubblica online il proprio primo sito.
-- **URL**: https://techlanditalia.it/corsi/web-development
-
-### Python Base
-- **Età**: dai 13 anni
-- **Livello**: Base
-- **Durata**: 8 mesi
-- **Descrizione**: Introduzione al linguaggio Python, oggi il più richiesto al mondo. Variabili, strutture dati, funzioni, OOP, primi mini-progetti (giochi, automazioni, calcolatrici).
-- **URL**: https://techlanditalia.it/corsi/python-base
-
-### Python PRO & AI
-- **Età**: dai 13 anni
+### Python Avanzato
+- **Età**: 13+ anni
 - **Livello**: Avanzato
 - **Durata**: 8 mesi
-- **Descrizione**: Curriculum 8 moduli x 4 lezioni. Python avanzato (decoratori, generatori, async), librerie di Data Science (NumPy, Pandas), Machine Learning con scikit-learn, introduzione al Deep Learning e ai Large Language Models.
+- **Descrizione**: Un percorso avanzato per creare bot, siti web e progetti con IA. Con Python Avanzato lavori su progetti reali e partecipi a un hackathon sul clima.
 - **URL**: https://techlanditalia.it/corsi/python-ai
+
+### Python Base
+- **Età**: 13+ anni
+- **Livello**: Principiante
+- **Durata**: 8 mesi
+- **Descrizione**: Impara Python, il linguaggio scelto dagli sviluppatori di tutto il mondo, e crea giochi, app e siti web trasformando le tue idee in progetti reali.
+- **URL**: https://techlanditalia.it/corsi/python-base
+
+### Web Development
+- **Età**: 13+ anni
+- **Livello**: Principiante
+- **Durata**: 8 mesi
+- **Descrizione**: Immergiti nel mondo dello sviluppo web: impara linguaggi e stili di markup, collega siti a database, crea design e costruisci il tuo sito web.
+- **URL**: https://techlanditalia.it/corsi/web-development
 
 ---
 
 ## FAQ — Domande frequenti
 
 **Qual è l'età minima per iniziare?**
-I corsi partono dai 6 anni. Per i più piccoli (6–8 anni) usiamo strumenti visivi come Scratch e ambienti grafici per imparare la logica senza scrivere codice complesso.
+I corsi partono dai 5 anni. Per i più piccoli (5–7 anni) ci sono Design creativo e Informatica di base, con attività visive e creative; dagli 8 anni si programma a blocchi con Scratch e Minecraft, imparando la logica senza scrivere codice complesso. L'età consigliata di ogni corso è nel catalogo qui sopra.
 
 **Quanto costano i corsi?**
 I prezzi variano in base al corso e alla durata. Piani mensili a partire da €99/mese con lezioni settimanali. La prima lezione è sempre gratuita e senza impegno.

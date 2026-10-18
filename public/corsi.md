@@ -1,91 +1,92 @@
 ---
-title: "TECHLAND | Corso di Coding per Bambini e Ragazzi (5–20 anni)"
-description: "Corso di coding per bambini e ragazzi online: Scratch, Roblox, Minecraft, Python, Web Development, AI. Piccoli gruppi, docenti esperti. Prima lezione gratuita."
+title: "TECHLAND | Corsi di Coding per Bambini e Ragazzi (5–18 anni)"
+description: "Corsi di coding per bambini e ragazzi online: Scratch, Roblox, Minecraft, Python, Web Development, AI. Piccoli gruppi, docenti esperti. Prima lezione gratuita."
 canonical: "https://techlanditalia.it/corsi"
 ---
 
-# TECHLAND — Corso di Coding per Bambini e Ragazzi
+# TECHLAND — Corsi di Coding per Bambini e Ragazzi
 
-Tutti i nostri corsi di coding online per alunni dai **6 ai 18 anni**. Lezioni live in piccoli gruppi (max 6), prima lezione **gratuita**.
+Tutti i nostri corsi di coding online per alunni dai **5 ai 18 anni**. Lezioni live in piccoli gruppi (max 6), prima lezione **gratuita**. L'età consigliata di ogni corso è la stessa indicata sul sito.
 
 👉 [Prenota la lezione di prova gratuita](https://techlanditalia.it/prenota)
 
 ---
 
-## Corsi per fascia d'età
+## Catalogo corsi
 
-### 5–8 anni — Primi passi nel digitale
+### Design creativo
+- **Età**: 5-7 anni
+- **Livello**: Principiante
+- **Durata**: 8 mesi
+- **Descrizione**: Un corso online pensato per i più piccoli, dove i bambini scoprono il mondo della creatività digitale attraverso attività pratiche e divertenti. Imparano a realizzare disegni, semplici progetti grafici e presentazioni, sviluppando fantasia, logica e sicurezza nell’uso del computer.
+- **URL**: https://techlanditalia.it/corsi/design-creativo
 
-#### L'ABC della creatività digitale (5–7 anni)
-**Livello**: Base · **Durata**: 8 mesi
-Corso di alfabetizzazione informatica e design digitale: editor grafici, biglietti, poster, animazioni, Google Docs, Canva. Sviluppa pensiero creativo e logico in formato ludico.
-🔗 https://techlanditalia.it/corsi/abc-creativita-digitale
+### Informatica di base
+- **Età**: 5+ anni
+- **Livello**: Principiante
+- **Durata**: 8 mesi
+- **Descrizione**: Corso base per imparare i fondamenti dell'informatica
+- **URL**: https://techlanditalia.it/corsi/informatica-di-base
 
-#### L'ABC dell'informatica (6–8 anni)
-**Livello**: Base · **Durata**: 8 mesi
-Fondamenti dell'informatica: come funziona un computer, file, internet sicuro, logica computazionale.
-🔗 https://techlanditalia.it/corsi/abc-informatica
+### Programmazione visiva con Minecraft
+- **Età**: 8+ anni
+- **Livello**: Principiante
+- **Durata**: 8 mesi
+- **Descrizione**: Scopri il mondo del coding divertendoti con Minecraft Education! Attraverso sfide interattive e costruzioni creative, i bambini imparano a usare la programmazione a blocchi per automatizzare azioni, inventare mini-esperienze di gioco e trasformare le proprie idee in progetti digitali.
+- **URL**: https://techlanditalia.it/corsi/minecraft
 
----
+### Programmazione visiva con Scratch
+- **Età**: 8-10 anni
+- **Livello**: Principiante
+- **Durata**: 8 mesi
+- **Descrizione**: Scopri come trasformare le tue idee in giochi e animazioni con Scratch
+- **URL**: https://techlanditalia.it/corsi/scratch
 
-### 8–10 anni — Prima programmazione
+### Sviluppo giochi con Roblox
+- **Età**: 8+ anni
+- **Livello**: Principiante
+- **Durata**: 8 mesi
+- **Descrizione**: Crea giochi con Roblox Studio: progetta mondi e personaggi, imposta le tue regole e pubblica il tuo primo videogame online.
+- **URL**: https://techlanditalia.it/corsi/roblox
 
-#### Programmazione visiva con Scratch (8–10 anni)
-**Livello**: Base · **Durata**: 8 mesi
-Primo vero corso di coding. Con Scratch si impara la logica della programmazione (cicli, condizioni, variabili) creando giochi e animazioni.
-🔗 https://techlanditalia.it/corsi/scratch
+### Roblox Avanzato
+- **Età**: 10+ anni
+- **Livello**: Avanzato
+- **Durata**: 8 mesi
+- **Descrizione**: Un corso pensato per chi usa già Roblox Studio: affina le tue abilità e crea giochi più complessi, originali e coinvolgenti.
+- **URL**: https://techlanditalia.it/corsi/roblox-avanzato
 
-#### Minecraft Education (8–9 anni)
-**Livello**: Base · **Durata**: 10 mesi
-Programmazione e automazione dentro Minecraft. Coding con MakeCode, fattorie automatizzate, minigiochi.
-🔗 https://techlanditalia.it/corsi/minecraft-education
+### Python Avanzato
+- **Età**: 13+ anni
+- **Livello**: Avanzato
+- **Durata**: 8 mesi
+- **Descrizione**: Un percorso avanzato per creare bot, siti web e progetti con IA. Con Python Avanzato lavori su progetti reali e partecipi a un hackathon sul clima.
+- **URL**: https://techlanditalia.it/corsi/python-ai
 
----
+### Python Base
+- **Età**: 13+ anni
+- **Livello**: Principiante
+- **Durata**: 8 mesi
+- **Descrizione**: Impara Python, il linguaggio scelto dagli sviluppatori di tutto il mondo, e crea giochi, app e siti web trasformando le tue idee in progetti reali.
+- **URL**: https://techlanditalia.it/corsi/python-base
 
-### 10–14 anni — Game development
-
-#### Sviluppo giochi con Roblox (10–14 anni)
-**Livello**: Intermedio · **Durata**: 8 mesi
-Creazione videogiochi con Roblox Studio: modellazione 3D, scripting in Lua, pubblicazione sulla piattaforma Roblox.
-🔗 https://techlanditalia.it/corsi/roblox
-
----
-
-### 12–18 anni — Programmazione avanzata
-
-#### Roblox Avanzato (12–16 anni)
-**Livello**: Avanzato · **Durata**: 8 mesi
-Per chi ha già basi di Roblox. Lua avanzato, sistemi multiplayer, monetizzazione, ottimizzazione.
-🔗 https://techlanditalia.it/corsi/roblox-avanzato
-
-#### Web Development (12–16 anni)
-**Livello**: Intermedio · **Durata**: 8 mesi
-HTML, CSS e JavaScript da zero. Responsive design, animazioni, DOM, pubblicazione del proprio sito.
-🔗 https://techlanditalia.it/corsi/web-development
-
-#### Python Base (12–16 anni)
-**Livello**: Base · **Durata**: 8 mesi
-Introduzione a Python, il linguaggio più richiesto al mondo. Variabili, funzioni, OOP, mini-progetti.
-🔗 https://techlanditalia.it/corsi/python-base
-
-#### Python PRO & AI (14–18 anni)
-**Livello**: Avanzato · **Durata**: 8 mesi
-Curriculum 8 moduli x 4 lezioni. Python avanzato, NumPy, Pandas, Machine Learning con scikit-learn, introduzione al Deep Learning e ai Large Language Models.
-🔗 https://techlanditalia.it/corsi/python-ai
+### Web Development
+- **Età**: 13+ anni
+- **Livello**: Principiante
+- **Durata**: 8 mesi
+- **Descrizione**: Immergiti nel mondo dello sviluppo web: impara linguaggi e stili di markup, collega siti a database, crea design e costruisci il tuo sito web.
+- **URL**: https://techlanditalia.it/corsi/web-development
 
 ---
 
 ## Come scegliere il corso giusto
 
-- **5–7 anni** → ABC creatività digitale
-- **6–8 anni** → ABC informatica
-- **8–10 anni con zero esperienza** → Scratch o Minecraft Education
-- **10–14 anni che amano i videogiochi** → Roblox
-- **12–16 anni che vogliono creare siti** → Web Development
-- **12–16 anni che vogliono imparare il linguaggio del futuro** → Python Base
-- **14–18 anni con basi di Python** → Python PRO & AI
-- **12–16 anni con basi di Roblox** → Roblox Avanzato
+- **Primi passi con il computer** → Design creativo o Informatica di base
+- **Prima programmazione, a blocchi** → Scratch o Minecraft
+- **Ama i videogiochi** → Sviluppo giochi con Roblox, poi Roblox Avanzato
+- **Vuole creare siti web** → Web Development
+- **Vuole imparare il linguaggio del futuro** → Python Base, poi Python Avanzato
 
-Non sai quale scegliere? [Contattaci](https://techlanditalia.it/contatti) e ti aiutiamo a scegliere il percorso giusto.
+Scegli tra i corsi adatti all'età di tuo figlio (indicata in ogni scheda). Non sai quale scegliere? [Contattaci](https://techlanditalia.it/contatti) e ti aiutiamo a scegliere il percorso giusto.
 
 [← Torna alla homepage](https://techlanditalia.it/)

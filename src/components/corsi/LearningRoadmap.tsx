@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Sparkles, Gamepad2, Code2, Brain } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { BUILD_COURSES } from "@/lib/buildCourseFacts";
+import { combinedAgeRange } from "@/lib/courseFacts";
 
 interface Stage {
   id: string;
   title: string;
-  age: string;
   description: string;
   badge: string;
   icon: typeof Sparkles;
@@ -17,7 +18,6 @@ const stages: Stage[] = [
   {
     id: "digital-creativity",
     title: "Creatività digitale",
-    age: "5-7 anni",
     description: "Primi passi nel mondo digitale: disegno, logica e creatività digitale.",
     badge: "Livello 1",
     icon: Sparkles,
@@ -30,25 +30,23 @@ const stages: Stage[] = [
   {
     id: "block-coding",
     title: "Programmazione a blocchi",
-    age: "7-9 anni",
     description: "Coding visivo con Scratch e prime costruzioni in Minecraft Education.",
     badge: "Livello 2",
     icon: Code2,
     courses: [
-      { label: "Scratch", slug: "programmazione-visiva-con-scratch" },
-      { label: "Minecraft", slug: "programmazione-visiva-con-minecraft" },
+      { label: "Programmazione visiva con Scratch", slug: "scratch" },
+      { label: "Programmazione visiva con Minecraft", slug: "minecraft" },
     ],
     accent: "from-tech-blue to-tech-blue/40",
   },
   {
     id: "game-design-coding",
     title: "Game design + coding",
-    age: "9-12 anni",
     description: "Costruire mondi e giochi con Roblox Studio, dal livello base all'avanzato.",
     badge: "Livello 3",
     icon: Gamepad2,
     courses: [
-      { label: "Roblox Base", slug: "sviluppo-giochi-con-roblox" },
+      { label: "Sviluppo giochi con Roblox", slug: "roblox" },
       { label: "Roblox Avanzato", slug: "roblox-avanzato" },
     ],
     accent: "from-tech-cyan to-tech-cyan/40",
@@ -56,18 +54,22 @@ const stages: Stage[] = [
   {
     id: "real-coding-ai",
     title: "Coding reale + AI",
-    age: "12+ anni",
     description: "Python base e avanzato, intelligenza artificiale e progetti con modelli generativi.",
     badge: "Livello 4",
     icon: Brain,
     courses: [
       { label: "Python Base", slug: "python-base" },
-      { label: "Python Avanzato", slug: "python-avanzato" },
+      { label: "Python Avanzato", slug: "python-ai" },
     ],
     accent: "from-primary to-tech-cyan",
   },
 ];
 
+// Fascia della tappa ricavata dalle età dei suoi corsi (courses.age_range):
+// non può contraddire le schede corso.
+const ageOf = (stage: Stage) => combinedAgeRange(stage.courses.map((c) => BUILD_COURSES[c.slug]?.ageRange));
+// Nome del corso dalla tabella courses; l'etichetta breve resta solo come ripiego.
+const courseName = (c: Stage["courses"][number]) => BUILD_COURSES[c.slug]?.title || c.label;
 
 export function LearningRoadmap() {
   const itemListSchema = {
@@ -75,12 +77,12 @@ export function LearningRoadmap() {
     "@type": "ItemList",
     name: "Percorso di apprendimento TECHLAND: da Scratch a Python a AI",
     description:
-      "Roadmap pedagogica per imparare a programmare dai 6 ai 18 anni: dal coding visuale fino all'intelligenza artificiale.",
+      "Roadmap pedagogica per imparare a programmare dai 5 ai 18 anni: dal coding visuale fino all'intelligenza artificiale.",
     itemListElement: stages.map((s, i) => ({
       "@type": "ListItem",
       position: i + 1,
       name: s.title,
-      description: `${s.description} (${s.age})`,
+      description: ageOf(s) ? `${s.description} (${ageOf(s)})` : s.description,
     })),
   };
 
@@ -124,7 +126,7 @@ export function LearningRoadmap() {
                   {stage.badge}
                 </Badge>
                 <h3 className="font-semibold text-lg mb-1">{stage.title}</h3>
-                <p className="text-xs text-primary font-medium mb-2">{stage.age}</p>
+                {ageOf(stage) && <p className="text-xs text-primary font-medium mb-2">{ageOf(stage)}</p>}
                 <p className="text-sm text-muted-foreground mb-4 px-2">{stage.description}</p>
                 <div className="flex flex-col gap-1.5 w-full mt-auto">
                   {stage.courses.map((c) => (
@@ -133,7 +135,7 @@ export function LearningRoadmap() {
                       to={`/corsi/${c.slug}`}
                       className="text-sm font-medium text-primary hover:text-primary/80 flex items-center justify-center gap-1 group/link"
                     >
-                      {c.label}
+                      {courseName(c)}
                       <ArrowRight className="w-3 h-3 group-hover/link:translate-x-1 transition-transform" />
                     </Link>
                   ))}
@@ -163,7 +165,7 @@ export function LearningRoadmap() {
                     <Badge variant="secondary" className="text-xs">
                       {stage.badge}
                     </Badge>
-                    <span className="text-xs text-primary font-medium">{stage.age}</span>
+                    {ageOf(stage) && <span className="text-xs text-primary font-medium">{ageOf(stage)}</span>}
                   </div>
                   <h3 className="font-semibold text-lg mb-1">{stage.title}</h3>
                   <p className="text-sm text-muted-foreground mb-3">{stage.description}</p>
@@ -174,7 +176,7 @@ export function LearningRoadmap() {
                         to={`/corsi/${c.slug}`}
                         className="text-sm font-medium text-primary hover:text-primary/80 flex items-center gap-1"
                       >
-                        {c.label}
+                        {courseName(c)}
                         <ArrowRight className="w-3 h-3" />
                       </Link>
                     ))}

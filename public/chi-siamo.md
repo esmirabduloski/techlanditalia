@@ -37,7 +37,7 @@ Tutti i docenti TECHLAND sono **professionisti del settore tech** (sviluppatori,
 
 - **150+** recensioni a 5 stelle
 - **9** percorsi formativi attivi
-- **5–20 anni** la fascia d'età servita
+- **5–18 anni** la fascia d'età servita
 - **Tutta Italia** la copertura
 
 ## Vuoi conoscerci?

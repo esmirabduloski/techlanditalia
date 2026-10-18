@@ -14,6 +14,7 @@ import { Loader2, Plus, Trash2, ArrowLeft, Save, ChevronUp, ChevronDown } from "
 import { toast } from "sonner";
 import { useAutoBackup } from "@/hooks/useAutoBackup";
 import { CERTIFICATE_SKILL_MAX_CHARS, MAX_HARD_SKILLS, MAX_SOFT_SKILLS } from "@/lib/certificate";
+import { levelLabel } from "@/lib/courseFacts";
 
 interface ProjectExample {
   title: string;
@@ -28,9 +29,6 @@ interface Module {
 
 interface DetailContent {
   longDescription?: string;
-  age?: string;
-  level?: string;
-  duration?: string;
   tags?: string[];
   topics?: string[];
   projectExamples?: ProjectExample[];
@@ -56,6 +54,9 @@ interface CourseRow {
   title: string;
   slug: string;
   emoji: string;
+  age_range: string | null;
+  level: string | null;
+  duration: string | null;
   detail_content: DetailContent | null;
 }
 
@@ -79,7 +80,7 @@ export default function AdminCourseContent() {
     (async () => {
       const { data, error } = await supabase
         .from("courses")
-        .select("id, title, slug, emoji, detail_content")
+        .select("id, title, slug, emoji, age_range, level, duration, detail_content")
         .eq("id", courseId)
         .maybeSingle();
       if (error || !data) {
@@ -103,9 +104,6 @@ export default function AdminCourseContent() {
     // Strip empty arrays/strings to keep JSON tidy
     const cleaned: DetailContent = {};
     if (content.longDescription?.trim()) cleaned.longDescription = content.longDescription.trim();
-    if (content.age?.trim()) cleaned.age = content.age.trim();
-    if (content.level?.trim()) cleaned.level = content.level.trim();
-    if (content.duration?.trim()) cleaned.duration = content.duration.trim();
     if (content.tags?.length) cleaned.tags = content.tags.filter((t) => t.trim());
     if (content.topics?.length) cleaned.topics = content.topics.filter((t) => t.trim());
     if (content.projectExamples?.length)
@@ -313,20 +311,24 @@ export default function AdminCourseContent() {
         <Card>
           <CardHeader>
             <CardTitle>Informazioni hero</CardTitle>
-            <CardDescription>Sovrascrive i campi mostrati in alto nella pagina del corso.</CardDescription>
+            <CardDescription>
+              Nome, descrizione, età, livello e durata si modificano in Corsi e valgono per tutto il sito:
+              schede /corsi, pagina del corso, homepage, blog e llms.txt.
+            </CardDescription>
           </CardHeader>
+          {/* Unica fonte: le colonne di courses (vedi src/lib/courseFacts.ts) */}
           <CardContent className="grid sm:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Età</Label>
-              <Input value={content.age ?? ""} placeholder="es. 8-10 anni" onChange={(e) => update("age", e.target.value)} />
+              <Input value={course?.age_range ?? ""} placeholder="Non impostata" disabled />
             </div>
             <div className="space-y-2">
               <Label>Livello</Label>
-              <Input value={content.level ?? ""} placeholder="es. Principiante" onChange={(e) => update("level", e.target.value)} />
+              <Input value={levelLabel(course?.level)} placeholder="Non impostato" disabled />
             </div>
             <div className="space-y-2">
               <Label>Durata</Label>
-              <Input value={content.duration ?? ""} placeholder="es. 32 lezioni" onChange={(e) => update("duration", e.target.value)} />
+              <Input value={course?.duration ?? ""} placeholder="Non impostata" disabled />
             </div>
           </CardContent>
         </Card>

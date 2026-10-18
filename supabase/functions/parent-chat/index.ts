@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { notifyAdmins } from "../_shared/adminpush.ts";
 import { clientIp, rateLimit } from "../_shared/ratelimit.ts";
+import { courseCatalogLines, type CatalogCourse } from "../_shared/coursecatalog.ts";
 
 /** Frasi con cui un visitatore chiede di parlare con una persona reale. */
 const OPERATOR_PATTERNS = [
@@ -129,21 +130,16 @@ async function getOrCreateConversation(
   return newConv.id;
 }
 
-const SYSTEM_PROMPT = `Sei l'assistente virtuale di TECHLAND, una scuola di coding online per bambini e ragazzi dai 5 ai 18 anni. Il tuo compito è aiutare i genitori a trovare informazioni sui nostri corsi e rispondere alle loro domande in modo amichevole e professionale.
+// L'elenco corsi (con le età) arriva dalla tabella courses a ogni richiesta:
+// nessuna età scritta a mano qui, così la chat dice le stesse cose del sito.
+const systemPrompt = (courseCatalog: string) => `Sei l'assistente virtuale di TECHLAND, una scuola di coding online per bambini e ragazzi dai 5 ai 18 anni. Il tuo compito è aiutare i genitori a trovare informazioni sui nostri corsi e rispondere alle loro domande in modo amichevole e professionale.
 
 INFORMAZIONI SUI CORSI:
 
-📚 CATEGORIE DI CORSI:
-- Coding Base: Introduzione alla programmazione con Scratch e blocchi visuali
-- Sviluppo Giochi: Creazione di videogiochi con Unity e Godot
-- Roblox Studio: Creazione di mondi e giochi su Roblox
-- Sviluppo Web: HTML, CSS, JavaScript per creare siti web
-- Python & AI: Programmazione Python e introduzione all'intelligenza artificiale (per ragazzi 13-18)
+📚 CORSI DISPONIBILI (età consigliata, livello e durata tra parentesi):
+${courseCatalog}
 
-👶 FASCE D'ETÀ:
-- 5-8 anni: Coding Base con Scratch Jr, attività ludiche e creative
-- 9-12 anni: Scratch avanzato, Roblox Studio, Game Development base
-- 13-18 anni: Web Development, Python, AI, Game Development avanzato
+Consiglia solo questi corsi, con l'età indicata qui sopra: non proporre altri corsi o altre fasce d'età.
 
 📋 LIVELLI:
 - Principiante: Per chi inizia da zero
@@ -344,6 +340,11 @@ serve(async (req) => {
       .in('role', ['user', 'assistant'])
       .order('created_at', { ascending: false })
       .limit(MAX_MESSAGES);
+    const { data: courseRows } = await supabase
+      .from('courses')
+      .select('title, age_range, level, duration, description')
+      .eq('is_visible', true);
+    const courses = (courseRows ?? []) as CatalogCourse[];
     const modelMessages = ((history ?? []) as { role: string; content: string }[])
       .reverse()
       .map((m) => ({ role: m.role, content: String(m.content).slice(0, MAX_MSG_CHARS) }));
@@ -357,7 +358,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'system', content: systemPrompt(courseCatalogLines(courses)) },
           ...modelMessages,
         ],
         stream: true,

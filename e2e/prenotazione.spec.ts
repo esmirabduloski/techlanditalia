@@ -18,7 +18,7 @@ async function fillForm(page: import("@playwright/test").Page) {
   await page.getByRole("option", { name: "10 anni" }).click();
   await page.getByRole("combobox").filter({ hasText: "Non sono sicuro" }).click();
   // Le opzioni arrivano dalla tabella courses
-  await page.getByRole("option", { name: "🐍 Python Base (10+)" }).click();
+  await page.getByRole("option", { name: "🐍 Python Base (10-14 anni)" }).click();
 
   await page.getByRole("checkbox").check();
 }

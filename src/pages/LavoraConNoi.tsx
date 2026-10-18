@@ -10,6 +10,7 @@ import { Briefcase, Heart, Rocket, Users, CheckCircle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { BUILD_COURSES } from "@/lib/buildCourseFacts";
 
 const benefits = [
   {
@@ -38,7 +39,7 @@ const positions = [
   {
     title: "Insegnante di Scratch",
     type: "Part-time / Remoto",
-    description: "Cerchiamo insegnanti appassionati per tenere corsi di programmazione visiva con Scratch per bambini 7-10 anni."
+    description: `Cerchiamo insegnanti appassionati per tenere corsi di programmazione visiva con Scratch per bambini${BUILD_COURSES.scratch?.ageRange ? ` ${BUILD_COURSES.scratch.ageRange}` : ""}.`
   },
   {
     title: "Insegnante di Python",
@@ -107,7 +108,7 @@ export default function LavoraConNoi() {
             "@context": "https://schema.org",
             "@type": "JobPosting",
             "title": pos.title,
-            "description": `<p>${pos.description}</p><p>Posizione part-time in modalità remota presso TECHLAND, scuola di coding online per alunni dai 6 ai 18 anni.</p>`,
+            "description": `<p>${pos.description}</p><p>Posizione part-time in modalità remota presso TECHLAND, scuola di coding online per alunni dai 5 ai 18 anni.</p>`,
             "identifier": {
               "@type": "PropertyValue",
               "name": "TECHLAND",

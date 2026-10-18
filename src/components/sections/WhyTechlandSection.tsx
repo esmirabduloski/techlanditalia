@@ -12,7 +12,7 @@ const features = [
   {
     icon: Users,
     title: "Percorsi per ogni età",
-    description: "Corsi studiati per 3 fasce d'età (6-8, 9-12, 13-18) con contenuti adatti al livello di sviluppo cognitivo.",
+    description: "Corsi studiati per 3 fasce d'età (5-7, 8-12, 13-18) con contenuti adatti al livello di sviluppo cognitivo.",
     color: "tech-teal",
   },
   {

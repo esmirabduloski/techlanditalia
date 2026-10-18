@@ -19,7 +19,7 @@ const faqCategories = [
     faqs: [
       {
         question: "A quali fasce d'età si riferisce il corso?",
-        answer: "I nostri corsi sono pensati per bambini e ragazzi dai 6 ai 18 anni. Abbiamo programmi specifici per ogni fascia d'età: 6-9 anni (corsi base con Scratch), 10-12 anni (programmazione visuale avanzata e Roblox), 13-18 anni (Python, sviluppo web e game design)."
+        answer: "I nostri corsi sono pensati per bambini e ragazzi dai 5 ai 18 anni, con programmi specifici per ogni fascia d'età: dai 5 anni Design creativo e Informatica di base, dagli 8 anni Scratch, Minecraft e Roblox (Roblox Avanzato dai 10), dai 13 anni Python, Intelligenza Artificiale e sviluppo web. L'età consigliata è indicata nella pagina di ogni corso."
       },
       {
         question: "Quali competenze otterrà mio/a figlio/a?",
@@ -121,7 +121,7 @@ const moreFaqs = [
   },
   {
     question: "Cos'è TechLand Italia?",
-    answer: "TechLand Italia è una scuola di coding online per bambini e ragazzi dai 6 ai 18 anni. Offre corsi in piccoli gruppi (massimo 5 studenti) e lezioni individuali su Scratch, Roblox, Minecraft, Python e Unity. La prima lezione è gratuita."
+    answer: "TechLand Italia è una scuola di coding online per bambini e ragazzi dai 5 ai 18 anni. Offre corsi in piccoli gruppi (massimo 5 studenti) e lezioni individuali su Scratch, Roblox, Minecraft, Python e Unity. La prima lezione è gratuita."
   },
   {
     question: "Chi ha fondato TechLand Italia?",
@@ -133,7 +133,7 @@ const moreFaqs = [
   },
   {
     question: "Per quale fascia di età sono i corsi di TechLand Italia?",
-    answer: "I corsi sono pensati per bambini e ragazzi dai 6 ai 18 anni, con percorsi differenziati per fascia d'età e livello di esperienza."
+    answer: "I corsi sono pensati per bambini e ragazzi dai 5 ai 18 anni, con percorsi differenziati per fascia d'età e livello di esperienza."
   },
   {
     question: "Quali linguaggi e piattaforme si imparano a TechLand Italia?",

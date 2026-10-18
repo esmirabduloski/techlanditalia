@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { publicCourseSlug } from "@/lib/courseCatalog";
+import { levelLabel } from "@/lib/courseFacts";
 import { Layout } from "@/components/layout/Layout";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Users, ArrowRight, Loader2 } from "lucide-react";
@@ -29,11 +30,6 @@ const levelColors: Record<string, string> = {
   avanzato: "bg-tech-cyan/10 text-tech-cyan",
 };
 
-const levelLabels: Record<string, string> = {
-  base: "Principiante",
-  intermedio: "Intermedio",
-  avanzato: "Avanzato",
-};
 
 const parseAgeRange = (ageRange: string | null): [number, number] | null => {
   if (!ageRange) return null;
@@ -83,7 +79,7 @@ export default function Corsi() {
     "@context": "https://schema.org",
     "@type": "ItemList",
     "name": "Corsi di Programmazione per Bambini e Ragazzi TECHLAND",
-    "description": "Tutti i corsi di coding e programmazione per bambini e ragazzi dai 6 ai 18 anni",
+    "description": "Tutti i corsi di coding e programmazione per bambini e ragazzi dai 5 ai 18 anni",
     "itemListElement": courses.map((course, index) => ({
       "@type": "ListItem",
       "position": index + 1,
@@ -104,7 +100,7 @@ export default function Corsi() {
   // statico generato a build-time, quando il fetch client-side non è ancora partito.
   const seoHead = (
     <SEOHead
-      title="TECHLAND | Corsi di Coding per Bambini e Ragazzi 6-18"
+      title="TECHLAND | Corsi di Coding per Bambini e Ragazzi 5-18"
       description="Tutti i corsi di coding per bambini e ragazzi online: Scratch, Roblox, Minecraft, Python, Web e AI. Piccoli gruppi, docenti esperti. Prima lezione gratis!"
       canonical="/corsi"
       structuredData={[breadcrumbSchema, coursesListSchema]}
@@ -138,7 +134,7 @@ export default function Corsi() {
               TECHLAND: corsi di <span className="tech-gradient-text">coding per bambini</span> e ragazzi online
             </h1>
             <p className="text-lg text-muted-foreground">
-              Tutti i nostri <strong>corsi di coding online per bambini e ragazzi</strong> dai 6 ai 18 anni:
+              Tutti i nostri <strong>corsi di coding online per bambini e ragazzi</strong> dai 5 ai 18 anni:
               <strong> Scratch</strong>, <strong>Roblox</strong>, <strong>Minecraft</strong>,
               <strong> Python</strong>, <strong>Web Development</strong> e <strong>informatica</strong>.
               Trova il corso perfetto e prenota la prima lezione gratuita.
@@ -169,7 +165,7 @@ export default function Corsi() {
                     <CourseEmoji emoji={course.emoji} size="lg" />
                   </div>
                   <Badge variant="outline" className={levelColors[course.level]}>
-                    {levelLabels[course.level] || course.level}
+                    {levelLabel(course.level)}
                   </Badge>
                 </div>
                 

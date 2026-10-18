@@ -1,11 +1,11 @@
 # TECHLAND
 
-> TECHLAND è la scuola di coding online italiana per bambini e ragazzi dai 6 ai 18 anni. Lezioni live in piccoli gruppi (max 6 alunni) con docenti esperti: dal pensiero computazionale con Scratch e Minecraft fino a Python, Intelligenza Artificiale, Roblox e sviluppo web. Prima lezione di prova sempre gratuita e senza impegno. Da non confondere con Techland S.A., lo studio polacco di videogiochi: TECHLAND Italia è una scuola di programmazione per ragazzi.
+> TECHLAND è la scuola di coding online italiana per bambini e ragazzi dai 5 ai 18 anni. Lezioni live in piccoli gruppi (max 6 alunni) con docenti esperti: dal pensiero computazionale con Scratch e Minecraft fino a Python, Intelligenza Artificiale, Roblox e sviluppo web. Prima lezione di prova sempre gratuita e senza impegno. Da non confondere con Techland S.A., lo studio polacco di videogiochi: TECHLAND Italia è una scuola di programmazione per ragazzi.
 
 TECHLAND opera in tutta Italia con corsi 100% online, lezioni settimanali registrate, dashboard genitori per monitorare i progressi e percorsi pluriennali strutturati per età e livello.
 
 - **Sede**: Italia (online) — sede operativa in Veneto
-- **Età alunni**: 6–18 anni
+- **Età alunni**: 5–18 anni
 - **Modalità**: Lezioni live online in piccoli gruppi (max 6 alunni)
 - **Lingua**: Italiano
 - **Sito**: https://techlanditalia.it
@@ -22,15 +22,15 @@ TECHLAND opera in tutta Italia con corsi 100% online, lezioni settimanali regist
 
 ## Corsi di programmazione
 
-- [Design creativo (dai 5 anni)](https://techlanditalia.it/corsi/design-creativo): Primo approccio alla creatività digitale per i più piccoli
-- [Informatica di base (dai 6 anni)](https://techlanditalia.it/corsi/informatica-di-base): Fondamenti dell'informatica e alfabetizzazione digitale
-- [Programmazione visiva con Scratch (dai 7 anni)](https://techlanditalia.it/corsi/scratch): Primo corso di coding con Scratch per imparare la logica della programmazione divertendosi
-- [Programmazione visiva con Minecraft (dagli 8 anni)](https://techlanditalia.it/corsi/minecraft): Logica e programmazione a blocchi dentro il mondo di Minecraft
-- [Sviluppo giochi con Roblox (dagli 8 anni)](https://techlanditalia.it/corsi/roblox): Creazione videogiochi con Roblox Studio e linguaggio Lua
-- [Roblox Avanzato (10-14 anni)](https://techlanditalia.it/corsi/roblox-avanzato): Sviluppo avanzato di esperienze Roblox e monetizzazione
-- [Web Development (dai 13 anni)](https://techlanditalia.it/corsi/web-development): HTML, CSS e JavaScript per costruire siti web da zero
-- [Python Base (dai 13 anni)](https://techlanditalia.it/corsi/python-base): Introduzione a Python, il linguaggio più richiesto al mondo
-- [Python e Intelligenza Artificiale (dai 13 anni)](https://techlanditalia.it/corsi/python-ai): Python avanzato e introduzione all'AI e al Machine Learning
+- [Design creativo (5-7 anni)](https://techlanditalia.it/corsi/design-creativo): Un corso online pensato per i più piccoli, dove i bambini scoprono il mondo della creatività digitale attraverso attività pratiche e divertenti. Imparano a realizzare disegni, semplici progetti grafici e presentazioni, sviluppando fantasia, logica e sicurezza nell’uso del computer.
+- [Informatica di base (5+ anni)](https://techlanditalia.it/corsi/informatica-di-base): Corso base per imparare i fondamenti dell'informatica
+- [Programmazione visiva con Minecraft (8+ anni)](https://techlanditalia.it/corsi/minecraft): Scopri il mondo del coding divertendoti con Minecraft Education! Attraverso sfide interattive e costruzioni creative, i bambini imparano a usare la programmazione a blocchi per automatizzare azioni, inventare mini-esperienze di gioco e trasformare le proprie idee in progetti digitali.
+- [Programmazione visiva con Scratch (8-10 anni)](https://techlanditalia.it/corsi/scratch): Scopri come trasformare le tue idee in giochi e animazioni con Scratch
+- [Sviluppo giochi con Roblox (8+ anni)](https://techlanditalia.it/corsi/roblox): Crea giochi con Roblox Studio: progetta mondi e personaggi, imposta le tue regole e pubblica il tuo primo videogame online.
+- [Roblox Avanzato (10+ anni)](https://techlanditalia.it/corsi/roblox-avanzato): Un corso pensato per chi usa già Roblox Studio: affina le tue abilità e crea giochi più complessi, originali e coinvolgenti.
+- [Python Avanzato (13+ anni)](https://techlanditalia.it/corsi/python-ai): Un percorso avanzato per creare bot, siti web e progetti con IA. Con Python Avanzato lavori su progetti reali e partecipi a un hackathon sul clima.
+- [Python Base (13+ anni)](https://techlanditalia.it/corsi/python-base): Impara Python, il linguaggio scelto dagli sviluppatori di tutto il mondo, e crea giochi, app e siti web trasformando le tue idee in progetti reali.
+- [Web Development (13+ anni)](https://techlanditalia.it/corsi/web-development): Immergiti nel mondo dello sviluppo web: impara linguaggi e stili di markup, collega siti a database, crea design e costruisci il tuo sito web.
 
 ## Blog
 

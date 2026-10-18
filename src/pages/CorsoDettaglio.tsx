@@ -1,5 +1,7 @@
 import { useParams, Link, useNavigate, Navigate } from "react-router-dom";
 import { DB_TO_SHORT_SLUG, dbCourseSlug } from "@/lib/courseCatalog";
+import { BUILD_COURSES } from "@/lib/buildCourseFacts";
+import { agePhrase, COURSE_FACTS_COLUMNS, courseFactsFromRow, type CourseFacts } from "@/lib/courseFacts";
 import { useState, useEffect } from "react";
 import NotFound from "./NotFound";
 import { useFormAntiSpam } from "@/hooks/useFormAntiSpam";
@@ -31,29 +33,21 @@ import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
 import { TrialReassurance } from "@/components/sections/TrialReassurance";
 import { WhatsAppCta } from "@/components/sections/WhatsAppCta";
 
-// Course data based on Kodland content
-const coursesData: Record<string, {
-  title: string;
-  emoji: string;
-  description: string;
+// Contenuti di pagina dei corsi storici (Kodland): programma, moduli, progetti.
+// Nome, emoji, descrizione, livello, durata ed età NON stanno qui: vengono solo
+// dalla tabella courses (vedi src/lib/courseFacts.ts).
+interface CourseContent {
   longDescription: string;
   tags: string[];
-  age: string;
-  level: string;
-  duration: string;
   topics: string[];
   projectExamples: { title: string; image?: string }[];
   modules: { title: string; lessons: string[]; result: string }[];
-}> = {
+}
+
+const coursesData: Record<string, CourseContent> = {
   "roblox": {
-    title: "Sviluppo giochi con Roblox",
-    emoji: "🏗️",
-    description: "Crea giochi con Roblox Studio: progetta mondi e personaggi, imposta le tue regole e pubblica il tuo primo videogame online.",
     longDescription: "Il corso si concentra sull'apprendimento del linguaggio di programmazione LUA così come sulla modellazione in 3D degli scenari. Il corso insegna le basi della programmazione, utili come punto di partenza per gli studenti che intendono diventare programmatori professionisti. Il corso sviluppa il pensiero creativo e spaziale attraverso la modellazione di diversi oggetti in 3D. Gli studenti creeranno i loro giochi e svilupperanno il pensiero progettuale (design thinking).",
     tags: ["Roblox", "LUA", "Programmazione", "Game design"],
-    age: "8+ anni",
-    level: "Principiante",
-    duration: "32 lezioni",
     topics: [
       "Conoscenza di base del linguaggio LUA",
       "Creazione di giochi su Roblox Studio",
@@ -150,14 +144,8 @@ const coursesData: Record<string, {
     ],
   },
   "roblox-avanzato": {
-    title: "Roblox Avanzato",
-    emoji: "🚀",
-    description: "Un corso pensato per chi usa già Roblox Studio: affina le tue abilità e crea giochi più complessi, originali e coinvolgenti.",
     longDescription: "Il corso si concentra sull'apprendimento avanzato del linguaggio di programmazione LUA così come sulla modellazione in 3D degli scenari. Il corso sviluppa il pensiero creativo e spaziale attraverso la modellazione di diversi oggetti in 3D. Gli studenti creeranno i loro giochi complessi e svilupperanno il pensiero progettuale (design thinking).",
     tags: ["Script complessi", "Programmazione avanzata", "Meccaniche di gioco"],
-    age: "10-14 anni",
-    level: "Avanzato",
-    duration: "32 lezioni",
     topics: [
       "Game design avanzato con modellazione 3D, creatività e programmazione",
       "Creare giochi propri in Roblox Studio partendo dai tipi più popolari",
@@ -254,14 +242,8 @@ const coursesData: Record<string, {
     ],
   },
   "web-development": {
-    title: "Web Development",
-    emoji: "🌐",
-    description: "Immergiti nel mondo dello sviluppo web: impara linguaggi e stili di markup, collega siti a database, crea design e costruisci il tuo sito web.",
     longDescription: "Web Development: questa è un'immersione nel mondo dello sviluppo web. I ragazzi impareranno linguaggi e stili di markup, impareranno a collegare il sito a database, creeranno design e costruiranno il proprio sito web. Il corso copre HTML, CSS, JavaScript, PHP e WordPress.",
     tags: ["HTML", "CSS", "Sviluppo web", "Programmazione"],
-    age: "13+ anni",
-    level: "Principiante",
-    duration: "32 lezioni",
     topics: [
       "Creare layout in Figma",
       "Database e motori di siti",
@@ -360,14 +342,8 @@ const coursesData: Record<string, {
     ],
   },
   "python-base": {
-    title: "Python Base",
-    emoji: "🐍",
-    description: "Impara Python, il linguaggio scelto dagli sviluppatori di tutto il mondo, e crea giochi, app e siti web trasformando le tue idee in progetti reali.",
     longDescription: "In questo corso per adolescenti imparerai le basi di Python, uno dei linguaggi di programmazione più versatili e richiesti nel mondo del lavoro. Creerai applicazioni come chatbot e programmi interattivi. Acquisirai esperienza pratica con strumenti e tecniche standard, imparando anche a sviluppare e pubblicare i tuoi progetti.",
     tags: ["Python", "Programmazione", "Logica", "Progetti pratici"],
-    age: "13+ anni",
-    level: "Principiante",
-    duration: "32 lezioni",
     topics: [
       "Fondamenti del linguaggio Python",
       "Variabili, funzioni e strutture dati",
@@ -464,14 +440,8 @@ const coursesData: Record<string, {
     ],
   },
   "python-ai": {
-    title: "Python PRO & AI",
-    emoji: "🤖",
-    description: "Un percorso avanzato per creare bot, siti web e progetti con IA. Con Python PRO lavori su progetti reali e partecipi a un hackathon sul clima.",
     longDescription: "In questo corso per adolescenti libererai la tua creatività e scoprirai le potenzialità avanzate del linguaggio Python! Creerai applicazioni avanzate come chatbot, siti web e programmi basati sull'intelligenza artificiale. Acquisirai non solo esperienza pratica con strumenti e tecniche standard, ma imparerai anche a sviluppare e pubblicare i tuoi progetti open source. Le competenze acquisite ti permetteranno di fare un passo importante nel mondo della tecnologia!",
     tags: ["API", "HTML", "Estrazione dati", "Intelligenza artificiale"],
-    age: "13+ anni",
-    level: "Avanzato",
-    duration: "32 lezioni",
     topics: [
       "Programmazione back-end",
       "Introduzione allo sviluppo web",
@@ -572,8 +542,12 @@ const coursesData: Record<string, {
 
 const levelColors: Record<string, string> = {
   Principiante: "bg-tech-green/10 text-tech-green border-tech-green/20",
+  Intermedio: "bg-tech-blue/10 text-tech-blue border-tech-blue/20",
   Avanzato: "bg-tech-cyan/10 text-tech-cyan border-tech-cyan/20",
 };
+
+// Campi di detail_content ignorati: questi dati vengono solo dalla tabella courses.
+const PUBLIC_FACT_KEYS = new Set(["title", "emoji", "description", "level", "duration", "age"]);
 
 const howItWorksSteps = [
   {
@@ -616,36 +590,38 @@ function CorsoDettaglio() {
   const [isHidden, setIsHidden] = useState(false);
   const [dbLoaded, setDbLoaded] = useState(false);
   const [dbContent, setDbContent] = useState<Record<string, any>>({});
-  const [dbCourseRow, setDbCourseRow] = useState<{
-    title?: string; emoji?: string; description?: string | null;
-    age_range?: string | null; level?: string | null; duration?: string | null;
-  } | null>(null);
+  const [dbFacts, setDbFacts] = useState<CourseFacts | null>(null);
+  // Nome, emoji, descrizione, livello, durata ed età: solo dalla tabella courses,
+  // come /corsi, homepage e llms.txt (SEO-005). Prima del fetch (HTML
+  // prerenderato) valgono i dati letti dal DB a build-time.
+  const facts = dbFacts ?? (id ? BUILD_COURSES[id] : undefined) ?? null;
   const hardcodedBase = id ? coursesData[id] : null;
-  // Synthesize a base course from the DB row when there is no hardcoded entry
+  // Synthesize empty page content when there is no hardcoded entry
   // (e.g. admin renamed the course → new slug not present in coursesData).
-  const baseCourse = hardcodedBase ?? (dbCourseRow ? {
-    title: dbCourseRow.title ?? "",
-    emoji: dbCourseRow.emoji ?? "📚",
-    description: dbCourseRow.description ?? "",
+  const baseCourse: CourseContent | null = hardcodedBase ?? (facts ? {
     longDescription: "",
-    tags: [] as string[],
-    age: dbCourseRow.age_range ?? "",
-    level: dbCourseRow.level ?? "",
-    duration: dbCourseRow.duration ?? "",
-    topics: [] as string[],
-    projectExamples: [] as { title: string; image?: string }[],
-    modules: [] as { title: string; lessons: string[]; result: string }[],
+    tags: [],
+    topics: [],
+    projectExamples: [],
+    modules: [],
   } : null);
-  // Merge DB overrides over base. Empty/missing fields fall back.
-  const course = baseCourse
+  // Merge DB page overrides (detail_content) over base. Empty/missing fields fall
+  // back; the public facts can't be overridden there.
+  const course = baseCourse && facts
     ? {
         ...baseCourse,
-        ...Object.fromEntries(
-          Object.entries(dbContent).filter(([_, v]) =>
-            Array.isArray(v) ? v.length > 0 : v !== null && v !== undefined && v !== ""
+        ...(Object.fromEntries(
+          Object.entries(dbContent).filter(([key, v]) =>
+            !PUBLIC_FACT_KEYS.has(key) && (Array.isArray(v) ? v.length > 0 : v !== null && v !== undefined && v !== "")
           )
-        ),
-      } as typeof baseCourse
+        ) as Partial<CourseContent>),
+        title: facts.title,
+        emoji: facts.emoji || "📚",
+        description: facts.description,
+        level: facts.level,
+        duration: facts.duration,
+        age: facts.ageRange,
+      }
     : null;
   const seoOverrides = (dbContent?.seo ?? {}) as { title?: string; description?: string; keywords?: string };
   const visibility = (dbContent?.sectionsVisibility ?? {}) as {
@@ -663,7 +639,7 @@ function CorsoDettaglio() {
     (async () => {
       const { data, error } = await supabase
         .from("courses")
-        .select("is_visible, detail_content, title, emoji, description, age_range, level, duration")
+        .select(`is_visible, detail_content, ${COURSE_FACTS_COLUMNS}`)
         .eq("slug", dbCourseSlug(id))
         .maybeSingle();
       if (cancelled) return;
@@ -672,14 +648,7 @@ function CorsoDettaglio() {
         if (data.detail_content && typeof data.detail_content === "object") {
           setDbContent(data.detail_content as Record<string, any>);
         }
-        setDbCourseRow({
-          title: data.title,
-          emoji: data.emoji,
-          description: data.description,
-          age_range: data.age_range,
-          level: data.level,
-          duration: data.duration,
-        });
+        setDbFacts(courseFactsFromRow(data));
       }
       setDbLoaded(true);
     })();
@@ -774,31 +743,34 @@ function CorsoDettaglio() {
     return <NotFound />;
   }
 
-  // SEO meta data generation
-  // NOTE: age ranges here are aligned with the on-page `age` field of each course
-  // (tampone in attesa della matrice età unica — FASE 2 dell'audit SEO).
+  // SEO meta data generation: l'età in title e description è sempre quella del
+  // corso (courses.age_range), mai scritta a mano qui.
   const getSEOTitle = () => {
+    const age = course?.age ? ` ${course.age}` : "";
     const titleMap: Record<string, string> = {
-      "scratch": "TECHLAND | Corso Scratch: Coding per Bambini 6-10 anni",
-      "minecraft": "TECHLAND | Corso Minecraft: Coding per Bambini Online",
-      "roblox": "TECHLAND | Corso Roblox: Coding per Bambini 8+ anni",
-      "roblox-avanzato": "TECHLAND | Corso Roblox Avanzato: Coding per Ragazzi",
-      "web-development": "TECHLAND | Web Development: Coding per Ragazzi 13+",
-      "python-base": "TECHLAND | Corso Python: Coding per Ragazzi 13+ anni",
-      "python-ai": "TECHLAND | Python e AI: Coding per Ragazzi 13+ anni"
+      "scratch": `TECHLAND | Corso Scratch: Coding per Bambini${age}`,
+      "minecraft": `TECHLAND | Corso Minecraft: Coding per Bambini${age}`,
+      "roblox": `TECHLAND | Corso Roblox: Coding per Bambini${age}`,
+      "roblox-avanzato": `TECHLAND | Corso Roblox Avanzato: Coding per Ragazzi${age}`,
+      "web-development": `TECHLAND | Web Development: Coding per Ragazzi${age}`,
+      "python-base": `TECHLAND | Corso Python: Coding per Ragazzi${age}`,
+      "python-ai": `TECHLAND | Python Avanzato e AI: Coding per Ragazzi${age}`
     };
-    return seoOverrides.title || titleMap[id!] || `TECHLAND | ${course?.title}: Coding per Bambini e Ragazzi`;
+    return seoOverrides.title || titleMap[id!] || `TECHLAND | ${course?.title}: Coding per Bambini e Ragazzi${age}`;
   };
 
   const getSEODescription = () => {
+    const eta = agePhrase(course?.age);
+    const inParens = eta ? ` (${eta})` : "";
+    const after = eta ? ` ${eta}` : "";
     const descMap: Record<string, string> = {
-      "scratch": "Corso di coding per bambini con Scratch, online e live in piccoli gruppi. Il primo passo nella programmazione, giocando. Prima lezione gratis!",
-      "minecraft": "Coding per bambini con Minecraft: imparano a programmare costruendo mondi. Lezioni online live in piccoli gruppi. Prima lezione gratuita!",
-      "roblox": "Coding per bambini con Roblox (dagli 8 anni): crea videogiochi con Roblox Studio e Lua. Lezioni live in piccoli gruppi. Prima lezione gratis!",
-      "roblox-avanzato": "Corso di coding Roblox avanzato per ragazzi 10-14 anni: script Lua, multiplayer, giochi completi. Online in piccoli gruppi. Prova gratis!",
-      "web-development": "Corso di coding per ragazzi dai 13 anni: HTML, CSS e JavaScript da zero per creare il proprio sito. Online in piccoli gruppi. Prova gratis!",
-      "python-base": "Corso di coding Python per ragazzi dai 13 anni: il linguaggio più richiesto, con progetti pratici. Lezioni live online. Prima lezione gratis!",
-      "python-ai": "Coding per ragazzi con Python e Intelligenza Artificiale (dai 13 anni): machine learning, AI e LLM. Lezioni live online. Prova gratis!"
+      "scratch": `Coding per bambini con Scratch${inParens}: il primo passo nella programmazione, giocando. Lezioni live in piccoli gruppi. Prima lezione gratis!`,
+      "minecraft": `Coding per bambini con Minecraft${inParens}: imparano a programmare costruendo mondi. Lezioni online live in piccoli gruppi. Prima lezione gratuita!`,
+      "roblox": `Coding per bambini con Roblox${inParens}: crea videogiochi con Roblox Studio e Lua. Lezioni live in piccoli gruppi. Prima lezione gratis!`,
+      "roblox-avanzato": `Corso di coding Roblox avanzato per ragazzi${after}: script Lua, multiplayer, giochi completi. Online in piccoli gruppi. Prova gratis!`,
+      "web-development": `Corso di coding per ragazzi${after}: HTML, CSS e JavaScript da zero per creare il proprio sito. Online in piccoli gruppi. Prova gratis!`,
+      "python-base": `Corso di coding Python per ragazzi${after}: il linguaggio più richiesto, con progetti pratici. Lezioni live online. Prima lezione gratis!`,
+      "python-ai": `Coding per ragazzi con Python Avanzato e IA${inParens}: machine learning, AI e LLM. Lezioni live online. Prova gratis!`
     };
     return seoOverrides.description || descMap[id!] || course?.description || "";
   };
@@ -858,10 +830,12 @@ function CorsoDettaglio() {
 
             {/* Course info */}
             <div className="flex flex-wrap gap-6 text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                <span>Età: {course.age}</span>
-              </div>
+              {course.age && (
+                <div className="flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  <span>Età: {course.age}</span>
+                </div>
+              )}
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className={levelColors[course.level]}>
                   {course.level}

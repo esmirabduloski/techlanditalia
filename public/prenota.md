@@ -14,7 +14,7 @@ La **prima lezione TECHLAND è sempre gratuita** e senza impegno. È il modo mig
 
 - Un **computer** (PC o Mac) con webcam
 - **Connessione internet** stabile
-- **Età dell'alunno** tra i 5 e i 20 anni
+- **Età dell'alunno** tra i 5 e i 18 anni
 - Un **corso di interesse** (se non sai quale, ti aiutiamo noi)
 
 ## Come funziona

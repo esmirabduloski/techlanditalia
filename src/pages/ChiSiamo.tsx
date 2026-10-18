@@ -74,7 +74,7 @@ const organizationSchema = {
   "@type": "EducationalOrganization",
   name: "TECHLAND",
   description:
-    "Scuola di programmazione e coding per bambini e ragazzi dai 6 ai 18 anni. Corsi online di Roblox, Minecraft, Python, Scratch e sviluppo web.",
+    "Scuola di programmazione e coding per bambini e ragazzi dai 5 ai 18 anni. Corsi online di Roblox, Minecraft, Python, Scratch e sviluppo web.",
   url: "https://techlanditalia.it",
   logo: "https://techlanditalia.it/logo.png",
   foundingDate: "2023",
@@ -98,7 +98,7 @@ export default function ChiSiamo() {
     <Layout>
       <SEOHead
         title="Chi Siamo - Scuola di Coding per Bambini | TECHLAND"
-        description="Scopri TECHLAND: la scuola italiana di corsi di programmazione per bambini e ragazzi 6-18 anni. 1.200+ studenti formati, docenti esperti. La nostra missione."
+        description="Scopri TECHLAND: la scuola italiana di corsi di programmazione per bambini e ragazzi 5-18 anni. 1.200+ studenti formati, docenti esperti. La nostra missione."
         canonical="/chi-siamo"
         schemaData={organizationSchema}
       />
@@ -146,7 +146,7 @@ export default function ChiSiamo() {
             </div>
             <div className="space-y-6 text-lg text-muted-foreground">
               <p className="text-xl text-foreground font-medium text-center">
-                La nostra missione è accompagnare bambini e ragazzi dai 6 ai 18 anni a diventare protagonisti del
+                La nostra missione è accompagnare bambini e ragazzi dai 5 ai 18 anni a diventare protagonisti del
                 proprio futuro digitale.
               </p>
               <p>

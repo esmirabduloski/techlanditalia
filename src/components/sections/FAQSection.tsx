@@ -9,7 +9,7 @@ import { ScrollReveal } from "@/components/animations/ScrollReveal";
 const faqs = [
   {
     question: "Qual è l'età minima per iniziare?",
-    answer: "I nostri corsi partono dai 5 anni. Per i bambini più piccoli (5-8 anni) utilizziamo strumenti visivi come Scratch JR e Scratch, che permettono di imparare la logica della programmazione senza dover scrivere codice complesso.",
+    answer: "I nostri corsi partono dai 5 anni. Per i più piccoli (5-7 anni) ci sono Design creativo e Informatica di base, con attività visive e creative per prendere confidenza con il computer. Dagli 8 anni si passa alla programmazione a blocchi con Scratch e Minecraft, che insegna la logica senza dover scrivere codice complesso.",
   },
   {
     question: "Quanto costano i corsi?",

@@ -64,7 +64,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-background/70 mb-6 max-w-sm">
-              La scuola leader in Italia per i <strong>corsi di programmazione per bambini</strong> e ragazzi dai 6 ai 18 anni. Corsi di coding, Roblox, Minecraft, Python e sviluppo web.
+              La scuola leader in Italia per i <strong>corsi di programmazione per bambini</strong> e ragazzi dai 5 ai 18 anni. Corsi di coding, Roblox, Minecraft, Python e sviluppo web.
             </p>
             <div className="flex gap-4">
               {socialLinks.map((social) => (

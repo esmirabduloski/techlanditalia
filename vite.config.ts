@@ -1,5 +1,6 @@
-import { defineConfig, type Plugin } from "vite";
+import { defineConfig, loadEnv, type Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
+import fs from "fs";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/supabase/vite";
@@ -7,6 +8,7 @@ import type {} from "vite-react-ssg"; // augmentation di UserConfig.ssgOptions
 // Fonte unica di verità, condivisa con src/main.tsx (guardia anti-hydration).
 // /lp/ escluse di proposito: sono noindex (keyword cannibalization, vedi SEO_AUDIT_2026.md SEO-006).
 import { NO_PRERENDER_PREFIXES } from "./src/lib/prerender";
+import { LLM_CATALOG_SECTIONS, fetchCourseFacts, replaceSection, type CourseFactsMap } from "./src/lib/courseFacts";
 
 
 /**
@@ -70,6 +72,50 @@ function deferEntryModule(): Plugin {
   };
 }
 
+/**
+ * Dati pubblici dei corsi dalla tabella `courses` (unica fonte: nome, emoji,
+ * descrizione, livello, durata, età) per le parti statiche:
+ * - modulo `virtual:course-facts` (src/lib/buildCourseFacts.ts) per l'HTML
+ *   prerenderato delle pagine corso, la homepage, il blog e i testi;
+ * - a fine build client rigenera la sezione catalogo di dist/llms.txt,
+ *   llms-full.txt, corsi.md e index.md (i file in public/ restano il fallback).
+ * Se il DB non risponde il modulo è vuoto: le pagine nascondono i dati statici
+ * e li caricano dal DB nel browser, i file per LLM restano quelli di public/.
+ */
+function courseFacts(env: Record<string, string>): Plugin {
+  const virtualId = "virtual:course-facts";
+  let facts: Promise<CourseFactsMap> | undefined;
+  let clientOutDir: string | null = null;
+  const getFacts = () =>
+    (facts ??= fetchCourseFacts(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_PUBLISHABLE_KEY).catch((err: Error) => {
+      console.warn(`[course-facts] corsi non letti dal DB: ${err.message}`);
+      return {};
+    }));
+  return {
+    name: "techland:course-facts",
+    configResolved(config) {
+      clientOutDir =
+        config.command === "build" && !config.build.ssr ? path.resolve(config.root, config.build.outDir) : null;
+    },
+    resolveId: (source) => (source === virtualId ? `\0${virtualId}` : undefined),
+    async load(id) {
+      if (id === `\0${virtualId}`) return `export default ${JSON.stringify(await getFacts())};`;
+    },
+    async closeBundle() {
+      if (!clientOutDir) return;
+      const courses = Object.values(await getFacts());
+      if (courses.length === 0) return;
+      for (const [file, section] of Object.entries(LLM_CATALOG_SECTIONS)) {
+        const target = path.join(clientOutDir, file);
+        if (!fs.existsSync(target)) continue;
+        const text = replaceSection(fs.readFileSync(target, "utf8"), section.heading, section.body(courses));
+        if (text === null) console.warn(`[course-facts] ${file}: sezione "${section.heading}" non trovata`);
+        else fs.writeFileSync(target, text);
+      }
+    },
+  };
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode, isSsrBuild }) => ({
   server: {
@@ -77,7 +123,13 @@ export default defineConfig(({ mode, isSsrBuild }) => ({
     port: 8080,
   },
   // mcpPlugin rigenera supabase/functions/mcp/index.ts: non nei test e2e (playwright.config.ts)
-  plugins: [react(), mode !== "e2e" && mcpPlugin(), deferEntryModule(), mode === "development" && componentTagger()].filter(Boolean),
+  plugins: [
+    react(),
+    mode !== "e2e" && mcpPlugin(),
+    deferEntryModule(),
+    courseFacts(loadEnv(mode, process.cwd(), "VITE_")),
+    mode === "development" && componentTagger(),
+  ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

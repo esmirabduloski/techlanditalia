@@ -98,9 +98,8 @@ export default function Prenota() {
 
       if (!error && data && data.length > 0) {
         const courseInterests = data.map(c => {
-          // Extract the first number from age_range to show as "X+"
-          const ageMatch = c.age_range?.match(/(\d+)/);
-          const ageLabel = ageMatch ? ` (${ageMatch[1]}+)` : '';
+          // Età mostrata così com'è nel DB, come nelle schede /corsi
+          const ageLabel = c.age_range ? ` (${c.age_range})` : '';
           return {
             value: c.slug,
             label: `${c.emoji} ${c.title}${ageLabel}`,
@@ -285,7 +284,7 @@ export default function Prenota() {
     <Layout>
       <SEOHead
         title="Prenota la Lezione di Prova Gratuita | TECHLAND"
-        description="Prenota una lezione di prova gratuita per il tuo bambino. Scopri i nostri corsi di programmazione per bambini e ragazzi 6-18 anni. Nessun impegno!"
+        description="Prenota una lezione di prova gratuita per il tuo bambino. Scopri i nostri corsi di programmazione per bambini e ragazzi 5-18 anni. Nessun impegno!"
         canonical="/prenota"
         structuredData={[
           {
@@ -428,7 +427,7 @@ export default function Prenota() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {Array.from({ length: 16 }, (_, i) => i + 5).map((age) => (
+                              {Array.from({ length: 14 }, (_, i) => i + 5).map((age) => (
                                 <SelectItem key={age} value={String(age)}>
                                   {age} anni
                                 </SelectItem>

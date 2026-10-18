@@ -1,6 +1,11 @@
 import { Link } from "react-router-dom";
 import { ScrollReveal } from "@/components/animations/ScrollReveal";
 import { StaggerContainer, StaggerItem } from "@/components/animations/StaggerContainer";
+import { BUILD_COURSES } from "@/lib/buildCourseFacts";
+import { agePhrase } from "@/lib/courseFacts";
+
+// "ragazzi" + età del corso dal DB → "ragazzi dai 13 anni" (senza età se manca)
+const forAge = (who: string, slug: string) => [who, agePhrase(BUILD_COURSES[slug]?.ageRange)].filter(Boolean).join(" ");
 
 /**
  * Sezione testuale ricca di keyword per migliorare il posizionamento SEO
@@ -20,7 +25,7 @@ export function SEOKeywordsSection() {
               Cerchi <strong>corsi online per bambini</strong>,
               <strong> corsi di informatica per bambini</strong> o
               <strong> corsi di coding</strong>? TECHLAND propone percorsi live
-              in piccoli gruppi (max 6 alunni) per ogni età, dai 6 ai 18 anni.
+              in piccoli gruppi (max 6 alunni) per ogni età, dai 5 ai 18 anni.
             </p>
           </ScrollReveal>
 
@@ -33,7 +38,7 @@ export function SEOKeywordsSection() {
                   </Link>
                 </h3>
                 <p className="text-muted-foreground">
-                  Con i <strong>corsi di Roblox online</strong> ragazzi dai 10 ai 14 anni imparano
+                  Con i <strong>corsi di Roblox online</strong> {forAge("bambini e ragazzi", "roblox")} imparano
                   a creare videogiochi 3D in Roblox Studio con il linguaggio Lua. Disponibile anche
                   un corso Roblox avanzato per chi ha già le basi.
                 </p>
@@ -48,7 +53,7 @@ export function SEOKeywordsSection() {
                   </Link>
                 </h3>
                 <p className="text-muted-foreground">
-                  I <strong>corsi di Python online</strong> sono indicati per ragazzi 12-18 anni.
+                  I <strong>corsi di Python online</strong> sono indicati per {forAge("ragazzi", "python-base")}.
                   Python è il linguaggio di programmazione più richiesto al mondo e la base per
                   imparare l'<strong>intelligenza artificiale</strong> e il machine learning.
                 </p>
@@ -63,7 +68,7 @@ export function SEOKeywordsSection() {
                   </Link>
                 </h3>
                 <p className="text-muted-foreground">
-                  Con il <strong>corso di Web Development</strong> ragazzi 12-16 anni imparano
+                  Con il <strong>corso di Web Development</strong> {forAge("ragazzi", "web-development")} imparano
                   HTML, CSS e JavaScript da zero per creare siti web responsive e pubblicarli online.
                 </p>
               </article>
@@ -77,7 +82,7 @@ export function SEOKeywordsSection() {
               </h3>
               <p className="text-muted-foreground mb-4">
                 TECHLAND è una <strong>scuola di coding online italiana</strong> specializzata in
-                <strong> corsi di programmazione per bambini e ragazzi</strong> dai 6 ai 18 anni.
+                <strong> corsi di programmazione per bambini e ragazzi</strong> dai 5 ai 18 anni.
                 Tutti i nostri <strong>corsi di coding</strong> e <strong>corsi di informatica per bambini</strong>
                 si svolgono in diretta, in piccoli gruppi di massimo 6 alunni, con docenti professionisti
                 del settore tech formati sulla didattica per i più giovani.

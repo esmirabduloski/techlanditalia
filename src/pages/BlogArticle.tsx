@@ -7,7 +7,8 @@ import { SEOBreadcrumb } from '@/components/seo/SEOBreadcrumb';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { recommendCourseForPost } from '@/lib/courseCatalog';
+import { recommendCourseSlugForPost } from '@/lib/courseCatalog';
+import { BUILD_COURSES } from '@/lib/buildCourseFacts';
 import { ArrowLeft, ArrowRight, Clock, Calendar, Loader2, GraduationCap } from 'lucide-react';
 
 interface BlogPost {
@@ -276,7 +277,10 @@ export default function BlogArticle() {
       <section className="tech-container pb-4">
         <div className="max-w-3xl mx-auto">
           {(() => {
-            const suggestion = recommendCourseForPost(post);
+            // Nome e descrizione dalla tabella courses, come nella pagina del corso
+            const slug = recommendCourseSlugForPost(post);
+            const suggestion = BUILD_COURSES[slug];
+            if (!suggestion) return null;
             return (
               <div className="tech-card p-6 md:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
@@ -285,14 +289,14 @@ export default function BlogArticle() {
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-primary mb-1">Corso consigliato</p>
                   <h2 className="text-lg font-bold mb-1">
-                    <Link to={`/corsi/${suggestion.slug}`} className="hover:text-primary transition-colors">
+                    <Link to={`/corsi/${slug}`} className="hover:text-primary transition-colors">
                       {suggestion.title}
                     </Link>
                   </h2>
-                  <p className="text-sm text-muted-foreground">{suggestion.blurb}</p>
+                  <p className="text-sm text-muted-foreground">{suggestion.description}</p>
                 </div>
                 <Button asChild variant="outline" className="shrink-0">
-                  <Link to={`/corsi/${suggestion.slug}`} title={`Scopri il corso ${suggestion.title}`}>
+                  <Link to={`/corsi/${slug}`} title={`Scopri il corso ${suggestion.title}`}>
                     Scopri il corso
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Link>

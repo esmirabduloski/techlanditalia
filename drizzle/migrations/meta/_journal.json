@@ -372,6 +372,13 @@
       "when": 1792315587177,
       "tag": "0052_course_certificates",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1792315606705,
+      "tag": "0053_course_single_source",
+      "breakpoints": true
     }
   ]
 }

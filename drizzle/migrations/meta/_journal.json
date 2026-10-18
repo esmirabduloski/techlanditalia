@@ -379,6 +379,13 @@
       "when": 1792315606705,
       "tag": "0053_course_single_source",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1792317474080,
+      "tag": "0054_ai_parental_consent",
+      "breakpoints": true
     }
   ]
 }

@@ -49,6 +49,7 @@ INSERT INTO rls_test.shared_tables VALUES
   ('site_settings',           'impostazioni pubbliche del sito'),
   ('featured_products',       'prodotti in evidenza'),
   ('legal_document_versions', 'versioni di privacy e termini'),
+  ('ai_consent_versions',     'versioni dell''informativa sugli strumenti AI'),
   ('teacher_links',           'link utili per i docenti');
 
 -- Tabelle solo-admin anche se hanno una colonna che punta a un utente
@@ -349,6 +350,15 @@ SELECT rls_test.expect_blocked('genitore P1', 'collegarsi come genitore di S3',
   $$UPDATE public.profiles SET parent_id = '00000000-0000-0000-0000-000000000201' WHERE id = '00000000-0000-0000-0000-000000000103'$$);
 SELECT rls_test.expect_blocked('genitore P1', 'dare il consenso media per S3',
   $$INSERT INTO public.media_consents (student_id, purpose, granted) VALUES ('00000000-0000-0000-0000-000000000103', 'open_day', true)$$);
+-- Consenso AI: si scrive solo con set_ai_consent / set_student_birth_year (11_ai_consent.sql)
+SELECT rls_test.expect_blocked('genitore P1', 'scrivere il consenso AI di S2 senza la funzione',
+  $$INSERT INTO public.ai_consents (student_id, granted, version, decided_as) VALUES ('00000000-0000-0000-0000-000000000102', true, 'test-ai-1', 'parent')$$);
+SELECT rls_test.expect_blocked('alunno S1', 'riattivarsi il consenso AI senza la funzione',
+  $$UPDATE public.ai_consents SET granted = true WHERE student_id = '00000000-0000-0000-0000-000000000101'$$);
+SELECT rls_test.expect_blocked('alunno S2', 'cambiarsi l''anno di nascita',
+  $$UPDATE public.student_birth_years SET birth_year = 2000 WHERE student_id = '00000000-0000-0000-0000-000000000102'$$);
+SELECT rls_test.expect_blocked('alunno S1', 'pubblicare una versione dell''informativa AI',
+  $$INSERT INTO public.ai_consent_versions (version, published_at) VALUES ('finta', current_date)$$);
 SELECT rls_test.expect_blocked('genitore P1', 'iscrivere il figlio S1 al gruppo G2',
   $$INSERT INTO public.group_students (group_id, student_id) VALUES ('00000000-0000-0000-0000-00000000a002', '00000000-0000-0000-0000-000000000101')$$);
 SELECT rls_test.expect_blocked('insegnante T1', 'prendersi il gruppo G2',
@@ -388,6 +398,10 @@ BEGIN
     PERFORM rls_test.expect('genitore P1', 'i consensi media dei figli', 'SELECT count(*) FROM public.media_consents', 2);
   END IF;
 END $$;
+SELECT rls_test.expect('genitore P1', 'gli anni di nascita dei figli', 'SELECT count(*) FROM public.student_birth_years', 2);
+SELECT rls_test.expect('genitore P1', 'il consenso AI dei figli (solo S1)', 'SELECT count(*) FROM public.ai_consents', 1);
+SELECT rls_test.expect('genitore P2', 'il consenso AI del figlio S3', 'SELECT count(*) FROM public.ai_consents', 1);
+SELECT rls_test.expect('alunno S1', 'il proprio consenso AI e il suo storico', 'SELECT count(*) FROM public.ai_consent_events', 1);
 SELECT rls_test.expect('insegnante T1', 'il proprio gruppo', 'SELECT count(*) FROM public.student_groups WHERE teacher_id = auth.uid()', 1);
 SELECT rls_test.expect('insegnante T1', 'gli alunni del proprio gruppo', $$SELECT count(*) FROM public.group_students WHERE group_id = '00000000-0000-0000-0000-00000000a001'$$, 2);
 SELECT rls_test.expect('insegnante T1', 'i profili dei propri alunni', $$SELECT count(*) FROM public.profiles WHERE id <> auth.uid()$$, 2);

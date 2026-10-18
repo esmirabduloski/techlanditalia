@@ -10,6 +10,8 @@ import { LevelBadge, PointsDisplay, getLevelFromPoints, LEVELS } from '@/compone
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { DeleteAccountCard } from '@/components/account/DeleteAccountCard';
 import { MediaConsentCard } from '@/components/account/MediaConsentCard';
+import { AiConsentCard } from '@/components/account/AiConsentCard';
+import { StudentAiConsentCard } from '@/components/account/StudentAiConsentCard';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ArrowLeft, Save, Trophy, RotateCcw, ShieldCheck, ChevronRight, UserRound } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -271,9 +273,11 @@ export default function Profile() {
           </div>
           )}
 
-          {/* Solo genitori: consensi foto/video dei figli e cancellazione account self-service (GDPR art. 17) */}
+          {/* Consensi foto/video e AI (genitori per i figli, studenti per gli strumenti AI) e cancellazione account self-service (GDPR art. 17) */}
           <div className="mt-8 space-y-6">
             <MediaConsentCard />
+            <AiConsentCard />
+            <StudentAiConsentCard />
             <DeleteAccountCard />
           </div>
         </div>

@@ -47,7 +47,7 @@ const navItems: NavItem[] = [
   { to: '/admin/notifiche-push', label: 'Notifiche', icon: Bell },
   { to: '/admin/chat-live', label: 'Chat live', icon: Headset },
   { to: '/admin/privacy', label: 'Privacy', icon: ShieldCheck, notificationKey: 'pendingRetention' },
-  { to: '/admin/consensi-foto-video', label: 'Foto e video', icon: Camera },
+  { to: '/admin/consensi-foto-video', label: 'Foto, video e AI', icon: Camera },
   { to: '/admin/impostazioni', label: 'Impostazioni', icon: Settings },
   { to: '/account/sicurezza', label: 'Il mio 2FA', icon: ShieldCheck },
   { to: '/admin/sentry-log-error', label: 'Sentry Log error', icon: Bug },

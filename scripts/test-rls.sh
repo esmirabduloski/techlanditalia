@@ -143,3 +143,11 @@ if ! out=$(run_sql supabase_admin supabase/tests/rls/10_course_certificates.sql 
   exit 1
 fi
 echo "$out" | sed -n 's/.*NOTICE: *//p'
+
+echo "▶ Consenso agli strumenti AI"
+if ! out=$(run_sql supabase_admin supabase/tests/rls/11_ai_consent.sql 2>&1); then
+  echo "$out" | sed -nE 's/.*(NOTICE|WARNING|ERROR): *//p'
+  echo "✗ Test del consenso AI FALLITI"
+  exit 1
+fi
+echo "$out" | sed -n 's/.*NOTICE: *//p'

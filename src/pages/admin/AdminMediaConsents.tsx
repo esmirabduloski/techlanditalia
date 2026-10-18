@@ -21,6 +21,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
+import { AiConsentsAdminCard } from '@/components/admin/AiConsentsAdminCard';
 import {
   MEDIA_PURPOSES,
   type MediaConsent,
@@ -130,7 +131,7 @@ export default function AdminMediaConsents() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Camera className="w-6 h-6 text-primary" /> Consensi foto e video
+              <Camera className="w-6 h-6 text-primary" /> Consensi foto, video e AI
             </h1>
             <p className="text-sm text-muted-foreground">
               Controlla qui prima di registrare una lezione o pubblicare foto e video. Ogni finalità ha un consenso a sé:
@@ -278,6 +279,8 @@ export default function AdminMediaConsents() {
                 ))}
               </CardContent>
             </Card>
+
+            <AiConsentsAdminCard students={visible} />
           </>
         )}
       </div>

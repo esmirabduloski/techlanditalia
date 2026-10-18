@@ -178,6 +178,18 @@ BEGIN
     INSERT INTO public.media_consent_events (student_id, purpose, granted) SELECT s, 'social', true FROM seed_students ON CONFLICT DO NOTHING;
   END IF;
 END $$;
+-- Strumenti AI (0054): versione test-ai-1; S1 con 15 anni, S2 con 10, S3 senza
+-- anno; consenso attivo per S1 (dato da lui) e S3 (dal genitore P2). Il
+-- trigger ne scrive lo storico in ai_consent_events.
+INSERT INTO public.ai_consent_versions (version, published_at) VALUES ('test-ai-1', current_date) ON CONFLICT DO NOTHING;
+INSERT INTO public.student_birth_years (student_id, birth_year) VALUES
+  ('00000000-0000-0000-0000-000000000101', extract(year FROM now())::int - 15),
+  ('00000000-0000-0000-0000-000000000102', extract(year FROM now())::int - 10)
+ON CONFLICT DO NOTHING;
+INSERT INTO public.ai_consents (student_id, granted, version, decided_by, decided_as) VALUES
+  ('00000000-0000-0000-0000-000000000101', true, 'test-ai-1', '00000000-0000-0000-0000-000000000101', 'student'),
+  ('00000000-0000-0000-0000-000000000103', true, 'test-ai-1', '00000000-0000-0000-0000-000000000202', 'parent')
+ON CONFLICT DO NOTHING;
 
 -- Dati per utente (alunni, genitori, insegnanti)
 CREATE TEMP TABLE seed_users AS

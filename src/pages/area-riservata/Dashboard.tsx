@@ -43,6 +43,7 @@ import { CourseProposalCard } from '@/components/dashboard/CourseProposalCard';
 import { SatisfactionSurveyCard } from '@/components/dashboard/SatisfactionSurveyCard';
 import { StudentCertificatesCard } from '@/components/dashboard/StudentCertificatesCard';
 import { RecordingConsentPrompt } from '@/components/dashboard/RecordingConsentPrompt';
+import { AiConsentPrompt } from '@/components/dashboard/AiConsentPrompt';
 
 interface CourseProgress {
   courseId: string;
@@ -335,6 +336,11 @@ export default function Dashboard() {
           {/* Consenso alla registrazione delle lezioni, chiesto finché il genitore non decide */}
           {effectiveUserId && effectiveIsParent && (
             <RecordingConsentPrompt userId={effectiveUserId} readOnly={isImpersonating} />
+          )}
+
+          {/* Consenso agli strumenti AI (L. 132/2025), solo quando ne esiste almeno uno */}
+          {effectiveUserId && effectiveIsParent && (
+            <AiConsentPrompt userId={effectiveUserId} readOnly={isImpersonating} />
           )}
 
           {/* Proposta del corso successivo a fine corso, con lo sconto per chi continua subito */}

@@ -577,6 +577,81 @@ export type Database = {
         }
         Relationships: []
       }
+      course_certificates: {
+        Row: {
+          code: string
+          course_emoji: string | null
+          course_title: string
+          created_at: string
+          group_id: string
+          hard_skills: string[]
+          hours_attended: number
+          id: string
+          issued_on: string
+          lessons_attended: number
+          lessons_total: number
+          notified_at: string | null
+          released_by: string | null
+          soft_skills: string[]
+          student_id: string
+          student_name: string
+          teacher_name: string
+        }
+        Insert: {
+          code: string
+          course_emoji?: string | null
+          course_title: string
+          created_at?: string
+          group_id: string
+          hard_skills?: string[]
+          hours_attended: number
+          id?: string
+          issued_on: string
+          lessons_attended: number
+          lessons_total: number
+          notified_at?: string | null
+          released_by?: string | null
+          soft_skills?: string[]
+          student_id: string
+          student_name: string
+          teacher_name: string
+        }
+        Update: {
+          code?: string
+          course_emoji?: string | null
+          course_title?: string
+          created_at?: string
+          group_id?: string
+          hard_skills?: string[]
+          hours_attended?: number
+          id?: string
+          issued_on?: string
+          lessons_attended?: number
+          lessons_total?: number
+          notified_at?: string | null
+          released_by?: string | null
+          soft_skills?: string[]
+          student_id?: string
+          student_name?: string
+          teacher_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_certificates_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "student_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_certificates_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       course_proposals: {
         Row: {
           created_at: string
@@ -3580,6 +3655,7 @@ export type Database = {
         Returns: Json
       }
       my_mfa_required: { Args: never; Returns: boolean }
+      new_certificate_code: { Args: { _year: number }; Returns: string }
       pending_legal_consents: {
         Args: never
         Returns: {
@@ -3591,6 +3667,34 @@ export type Database = {
         }[]
       }
       record_legal_consents: { Args: { _items: Json }; Returns: number }
+      release_group_certificates: {
+        Args: { p_group_id: string }
+        Returns: {
+          code: string
+          course_emoji: string | null
+          course_title: string
+          created_at: string
+          group_id: string
+          hard_skills: string[]
+          hours_attended: number
+          id: string
+          issued_on: string
+          lessons_attended: number
+          lessons_total: number
+          notified_at: string | null
+          released_by: string | null
+          soft_skills: string[]
+          student_id: string
+          student_name: string
+          teacher_name: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "course_certificates"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       reward_referral: {
         Args: { _credits_each?: number; _reason?: string; _referral_id: string }
         Returns: Json

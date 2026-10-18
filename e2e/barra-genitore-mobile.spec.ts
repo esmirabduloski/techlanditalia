@@ -29,7 +29,7 @@ test.describe("telefono", () => {
     await expect(bar(page)).toBeVisible();
     await expect(bar(page).getByRole("link", { name: "Home" })).toHaveAttribute("aria-current", "page");
     // Il pulsante della chat sta sopra la barra, non la copre
-    const chat = page.getByRole("button", { name: "Apri chat assistenza" });
+    const chat = page.getByRole("button", { name: "Apri chat con l'assistente AI" });
     await expect(chat).toBeVisible();
     const [chatBox, barBox] = [await chat.boundingBox(), await bar(page).boundingBox()];
     expect(chatBox!.y + chatBox!.height).toBeLessThanOrEqual(barBox!.y);

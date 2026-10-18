@@ -1,10 +1,25 @@
 import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Trash2, Headset } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { MessageCircle, X, Send, Trash2, Headset, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useParentChat } from '@/hooks/useParentChat';
 import { useParentBottomNavVisible } from '@/components/layout/ParentBottomNav';
+import { useProfileRole } from '@/hooks/useProfileRole';
 
+/**
+ * Chat del sito: risponde un assistente AI, su richiesta un operatore.
+ * Che sia un'AI lo diciamo in intestazione, in un avviso fisso e su ogni
+ * risposta (art. 50 AI Act). Agli studenti (minori) non la mostriamo: è pensata
+ * per i genitori e sotto i 14 anni l'AI richiede il consenso del genitore
+ * (L. 132/2025, art. 4).
+ */
 export function ChatWidget() {
+  const { role, isLoading } = useProfileRole();
+  if (isLoading || role === 'student') return null;
+  return <ParentChatWindow />;
+}
+
+function ParentChatWindow() {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [showContactForm, setShowContactForm] = useState(false);
@@ -73,7 +88,7 @@ export function ChatWidget() {
       <button
         onClick={() => setIsOpen(true)}
         className={`fixed ${aboveNav ? 'bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-6' : 'bottom-6'} right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-all hover:scale-105 hover:shadow-xl ${isOpen ? 'hidden' : ''}`}
-        aria-label="Apri chat assistenza"
+        aria-label="Apri chat con l'assistente AI"
       >
         <MessageCircle className="h-6 w-6" />
       </button>
@@ -94,7 +109,7 @@ export function ChatWidget() {
                     ? 'Un operatore è in chat con te'
                     : operatorRequested
                       ? 'Operatore richiesto, attendi…'
-                      : 'Siamo qui per aiutarti'}
+                      : 'Assistente virtuale AI · risposte automatiche'}
                 </p>
               </div>
             </div>
@@ -121,6 +136,27 @@ export function ChatWidget() {
             </div>
           </div>
 
+          {/* Avviso AI: sempre visibile, prima della prima risposta */}
+          <div role="note" className="flex items-start gap-2 border-b border-border bg-muted/60 px-4 py-2 text-xs text-muted-foreground">
+            {operatorActive ? (
+              <>
+                <Headset className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <p>Ora ti risponde una persona del team TECHLAND.</p>
+              </>
+            ) : (
+              <>
+                <Bot className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <p>
+                  Stai scrivendo a un assistente di intelligenza artificiale, non a una persona. Le risposte sono generate
+                  automaticamente e possono contenere errori: per conferme chiedi un operatore.{' '}
+                  <Link to="/privacy" className="underline hover:text-foreground">
+                    Privacy
+                  </Link>
+                </p>
+              </>
+            )}
+          </div>
+
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((msg, i) => (
@@ -140,6 +176,9 @@ export function ChatWidget() {
                   {msg.role === 'operator' && (
                     <span className="mb-1 block text-xs font-semibold opacity-70">Operatore TECHLAND</span>
                   )}
+                  {msg.role === 'assistant' && (
+                    <span className="mb-1 block text-xs font-semibold opacity-70">Assistente AI</span>
+                  )}
                   {msg.content}
                 </div>
               </div>
@@ -147,6 +186,7 @@ export function ChatWidget() {
             {isLoading && messages[messages.length - 1]?.role === 'user' && (
               <div className="flex justify-start">
                 <div className="max-w-[85%] rounded-2xl rounded-bl-md bg-muted px-4 py-2.5 text-sm text-foreground">
+                  <span className="mb-1 block text-xs font-semibold opacity-70">Assistente AI</span>
                   <span className="inline-flex gap-1">
                     <span className="animate-bounce">●</span>
                     <span className="animate-bounce" style={{ animationDelay: '0.1s' }}>●</span>

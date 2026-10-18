@@ -132,7 +132,7 @@ async function getOrCreateConversation(
 
 // L'elenco corsi (con le età) arriva dalla tabella courses a ogni richiesta:
 // nessuna età scritta a mano qui, così la chat dice le stesse cose del sito.
-const systemPrompt = (courseCatalog: string) => `Sei l'assistente virtuale di TECHLAND, una scuola di coding online per bambini e ragazzi dai 5 ai 18 anni. Il tuo compito è aiutare i genitori a trovare informazioni sui nostri corsi e rispondere alle loro domande in modo amichevole e professionale.
+const systemPrompt = (courseCatalog: string) => `Sei l'assistente virtuale di TECHLAND, un sistema di intelligenza artificiale. TECHLAND è una scuola di coding online per bambini e ragazzi dai 5 ai 18 anni. Il tuo compito è aiutare i genitori a trovare informazioni sui nostri corsi e rispondere alle loro domande in modo amichevole e professionale.
 
 INFORMAZIONI SUI CORSI:
 
@@ -178,7 +178,8 @@ LINEE GUIDA:
 4. Se non conosci una risposta specifica (es. prezzi esatti), invita a contattarci o prenotare una consulenza
 5. Mantieni risposte concise ma complete
 6. Usa emoji occasionalmente per rendere la conversazione più amichevole
-7. NON inventare mai link o pagine che non esistono. Usa SOLO i link elencati sopra.`;
+7. NON inventare mai link o pagine che non esistono. Usa SOLO i link elencati sopra.
+8. Sei un'intelligenza artificiale e non devi mai fingere di essere una persona: se ti chiedono se sei umano o chi sei, dillo chiaramente e proponi di parlare con un operatore. Non inventare un nome o una vita personale.`;
 
 serve(async (req) => {
   const corsHeaders = corsHeadersFor(req);

@@ -12,7 +12,7 @@ import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
  * pagamenti Stripe, statistiche di prima parte e log di sicurezza. Se aggiungi un
  * fornitore o un nuovo trattamento, aggiorna anche questa pagina e la data.
  */
-const LAST_UPDATE = "11 ottobre 2026";
+const LAST_UPDATE = "18 ottobre 2026";
 const PRIVACY_EMAIL = "info@techlanditalia.it";
 
 const H2 = ({ children }: { children: React.ReactNode }) => (
@@ -85,11 +85,8 @@ export default function Privacy() {
                     <strong>Conservazione:</strong> 24 mesi dall&apos;ultimo contatto, salvo che tu diventi cliente (vedi 2.3).
                   </li>
                   <li>
-                    <strong>Chat con assistente virtuale:</strong> le domande poste nella chat del sito ricevono una prima
-                    risposta da un assistente basato su intelligenza artificiale (modello Google Gemini, erogato tramite Lovable
-                    AI Gateway) e, se lo chiedi, da un operatore umano. I messaggi sono conservati per gestire la richiesta e
-                    migliorare il servizio per un massimo di 24 mesi dall&apos;ultimo messaggio. Ti chiediamo di non inserire in chat
-                    dati sensibili (es. salute).
+                    <strong>Chat del sito:</strong> risponde in prima battuta un assistente di intelligenza artificiale, vedi
+                    il punto 2.8.
                   </li>
                 </UL>
 
@@ -177,6 +174,35 @@ export default function Privacy() {
                     browser e sull&apos;errore (Sentry), senza indirizzo IP, per correggere i problemi.
                   </li>
                 </UL>
+
+                <h3 className="text-xl font-semibold mt-6 mb-2">2.8 Chat con assistente di intelligenza artificiale</h3>
+                <UL>
+                  <li>
+                    <strong>Chi ti risponde:</strong> le domande poste nella chat del sito ricevono una prima risposta
+                    generata automaticamente da un sistema di intelligenza artificiale (modello Google Gemini, erogato tramite
+                    Lovable AI Gateway), non da una persona. In chat lo indichiamo nell&apos;intestazione, nel messaggio di
+                    benvenuto e accanto a ogni risposta, come previsto dall&apos;art. 50 del Regolamento (UE) 2024/1689
+                    (&quot;AI Act&quot;).
+                  </li>
+                  <li>
+                    <strong>Limiti:</strong> le risposte possono contenere errori o imprecisioni. Prezzi, disponibilità e
+                    iscrizioni li conferma sempre il nostro staff. L&apos;assistente non prende decisioni che ti riguardano:
+                    non ci sono decisioni basate unicamente su un trattamento automatizzato (art. 22 GDPR).
+                  </li>
+                  <li>
+                    <strong>Operatore umano:</strong> puoi chiedere in qualsiasi momento di parlare con una persona del nostro
+                    team; i suoi messaggi in chat sono indicati come &quot;Operatore TECHLAND&quot;.
+                  </li>
+                  <li>
+                    <strong>A chi è rivolta:</strong> ai genitori e ai visitatori adulti. Non è disponibile negli account
+                    studente.
+                  </li>
+                  <li>
+                    <strong>Dati e conservazione:</strong> i messaggi sono conservati per gestire la richiesta e migliorare il
+                    servizio per un massimo di 24 mesi dall&apos;ultimo messaggio. Ti chiediamo di non inserire in chat dati
+                    sensibili (es. salute).
+                  </li>
+                </UL>
               </section>
 
               <section>
@@ -228,7 +254,7 @@ export default function Privacy() {
                   </li>
                   <li>
                     <strong>Google</strong> — Firebase Cloud Messaging per le notifiche push; modello Gemini (tramite Lovable AI
-                    Gateway) per le risposte dell&apos;assistente in chat; YouTube per i video didattici incorporati nelle lezioni
+                    Gateway) per le risposte dell&apos;assistente AI in chat; YouTube per i video didattici incorporati nelle lezioni
                     (in modalità privacy-enhanced).
                   </li>
                   <li>

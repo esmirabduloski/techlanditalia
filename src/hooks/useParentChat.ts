@@ -14,8 +14,9 @@ const AUTH_HEADERS = {
   Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
 };
 
+// Primo messaggio della chat: dice subito che risponde un'AI (art. 50 AI Act)
 const WELCOME =
-  'Ciao! 👋 Sono l\'assistente di TECHLAND. Come posso aiutarti oggi? Posso rispondere a domande sui nostri corsi di coding per bambini e ragazzi.';
+  'Ciao! 👋 Sono l\'assistente virtuale di TECHLAND, un sistema di intelligenza artificiale: le mie risposte sono generate automaticamente. Posso rispondere alle domande sui nostri corsi di coding per bambini e ragazzi. Se preferisci parlare con una persona, chiedi un operatore.';
 
 // Generate a unique session ID for this chat session
 const generateSessionId = () => crypto.randomUUID();
@@ -219,7 +220,7 @@ export function useParentChat() {
             {
               role: 'assistant',
               content: wasActive
-                ? "L'operatore ha terminato la chat. Grazie per averci scritto! Se hai altre domande sono di nuovo qui io, oppure puoi richiedere ancora un operatore. 👋"
+                ? "L'operatore ha terminato la chat. Grazie per averci scritto! Se hai altre domande ti risponde di nuovo l'assistente AI, oppure puoi richiedere ancora un operatore. 👋"
                 : 'La richiesta di operatore è stata chiusa. Puoi continuare con me oppure richiedere di nuovo un operatore quando vuoi. 🙏',
             },
           ]);

@@ -9,7 +9,7 @@ import { AdminNav } from '@/components/admin/AdminNav';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import {
   Loader2, Download, RotateCcw, Trash2, Plus, Database, BookOpen, FileText, ClipboardList,
-  ChevronDown
+  ChevronDown, FileCode
 } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -24,6 +24,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAutoBackup } from '@/hooks/useAutoBackup';
+import { exportCompilerCorpus } from '@/lib/compilerCorpusExport';
 
 interface Snapshot {
   id: string;
@@ -61,6 +62,7 @@ export default function AdminBackups() {
   const [isCreating, setIsCreating] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [isBackingUpAll, setIsBackingUpAll] = useState(false);
+  const [isExportingCorpus, setIsExportingCorpus] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<string>('');
   const [snapshotLabel, setSnapshotLabel] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
@@ -200,6 +202,26 @@ export default function AdminBackups() {
     URL.revokeObjectURL(url);
   };
 
+  // Task e compiti con codice per i test automatici dei compilatori (e2e/compilatori/task-reali.json)
+  const handleExportCorpus = async () => {
+    setIsExportingCorpus(true);
+    try {
+      const corpus = await exportCompilerCorpus();
+      const blob = new Blob([JSON.stringify(corpus, null, 2) + '\n'], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'task-reali.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      toast({ title: `Esportati ${corpus.task.length} task e compiti`, description: 'Il file va in e2e/compilatori/task-reali.json' });
+    } catch (e) {
+      toast({ title: 'Errore', description: e instanceof Error ? e.message : 'Export non riuscito', variant: 'destructive' });
+    } finally {
+      setIsExportingCorpus(false);
+    }
+  };
+
   const handleBackupAll = async () => {
     setIsBackingUpAll(true);
     try {
@@ -254,6 +276,10 @@ export default function AdminBackups() {
                 <SelectItem value="homework">Compiti</SelectItem>
               </SelectContent>
             </Select>
+            <Button variant="outline" onClick={handleExportCorpus} disabled={isExportingCorpus} title="Scarica task e compiti con codice per i test automatici dei compilatori">
+              {isExportingCorpus ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileCode className="w-4 h-4 mr-2" />}
+              Esporta task per i test
+            </Button>
             <Button variant="outline" onClick={handleBackupAll} disabled={isBackingUpAll}>
               {isBackingUpAll ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Database className="w-4 h-4 mr-2" />}
               Backup Tutti i Corsi

@@ -71,7 +71,7 @@ export function TestCasesPanel({ cases, results, running, error, onRun, disabled
             const expanded = open[c.id] ?? true;
             const hasDetails = !!failed;
             return (
-              <li key={c.id} className={cn('rounded-md border text-sm', failed ? 'border-red-200 bg-red-50/60 dark:border-red-900 dark:bg-red-950/30' : r?.passed ? 'border-green-200 bg-green-50/60 dark:border-green-900 dark:bg-green-950/30' : 'border-border bg-background')}>
+              <li key={c.id} data-test-status={r ? (r.passed ? 'passed' : 'failed') : 'pending'} className={cn('rounded-md border text-sm', failed ? 'border-red-200 bg-red-50/60 dark:border-red-900 dark:bg-red-950/30' : r?.passed ? 'border-green-200 bg-green-50/60 dark:border-green-900 dark:bg-green-950/30' : 'border-border bg-background')}>
                 <button
                   type="button"
                   className="w-full flex items-start gap-2 px-3 py-2 text-left"

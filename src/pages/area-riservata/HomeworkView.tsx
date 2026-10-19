@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useCodeDraft } from '@/hooks/useCodeDraft';
 import { flushCodeDrafts } from '@/lib/codeDrafts';
 import { parseTestCases, pythonCases, scoreResults, webCases, type TestCase, type TestResult } from '@/lib/testCases';
+import { resolveCompiler } from '@/lib/compilerKind';
 
 interface Attachment {
   name: string;
@@ -79,9 +80,6 @@ const SUBMIT_ERRORS: Record<string, string> = {
   too_large: 'Il codice è troppo lungo per essere consegnato.',
   mfa_required: 'Completa la verifica in due passaggi per consegnare.',
 };
-
-const PYTHON_COURSES = ['python-base', 'python-ai', 'python-avanzato'];
-const WEB_COURSES = ['web-development'];
 
 export default function HomeworkView() {
   const { homeworkId } = useParams();
@@ -319,8 +317,9 @@ export default function HomeworkView() {
     );
   }
 
-  const isPythonCourse = PYTHON_COURSES.includes(homework.lesson.course.slug);
-  const isWebCourse = WEB_COURSES.includes(homework.lesson.course.slug);
+  const compiler = resolveCompiler(homework.lesson.course.slug, homework);
+  const isPythonCourse = compiler === 'python' || compiler === 'turtle' || compiler === 'pgzero';
+  const isWebCourse = compiler === 'web';
   const hasCompiler = isPythonCourse || isWebCourse;
 
   // Preview-only mode for Web courses with preview_only flag
@@ -486,12 +485,12 @@ export default function HomeworkView() {
           {/* Right Panel - Compiler */}
           <ResizablePanel defaultSize={50} minSize={30}>
             {isPythonCourse && (
-              homework.python_env === 'turtle' ? (
+              compiler === 'turtle' ? (
                 <TurtleCompiler
                   defaultCode={homework.default_python_code || undefined}
                   taskId={`homework-${homework.id}`}
                 />
-              ) : homework.python_env === 'pgzero' ? (
+              ) : compiler === 'pgzero' ? (
                 <PgzeroCompiler defaultCode={homework.default_python_code || undefined} replitUrl={homework.replit_url || undefined} />
               ) : (
                 <PythonCompiler

@@ -22,8 +22,11 @@ jobs:
           cache: npm
       - run: npm ci --legacy-peer-deps
       - run: npx playwright install --with-deps chromium
-      - name: Flussi incassi (Playwright)
-        run: npm run test:e2e
+      - name: Test unitari (Vitest)
+        run: npm test
+      - name: Flussi incassi e compilatori (Playwright)
+        # I task veri dei corsi girano a parte, in compilatori.yml
+        run: npm run test:e2e -- --project=chromium
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

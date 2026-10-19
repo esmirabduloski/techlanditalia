@@ -22,6 +22,7 @@ import { useAutoBackup } from '@/hooks/useAutoBackup';
 import { AdminStepper, type AdminStep } from '@/components/admin/AdminStepper';
 import { TestCasesEditor } from '@/components/admin/TestCasesEditor';
 import { countIncompleteCases, parseTestCases, toEditableCases, type EditableTestCase } from '@/lib/testCases';
+import { PYTHON_COURSES, WEB_COURSES } from '@/lib/compilerKind';
 
 interface Course {
   id: string;
@@ -59,9 +60,6 @@ interface HomeworkFormData {
   preview_only: boolean;
   test_cases: EditableTestCase[];
 }
-
-const PYTHON_COURSES = ['python-base', 'python-ai', 'python-avanzato'];
-const WEB_COURSES = ['web-development'];
 
 // La chiave rimonta l'editor a ogni cambio compito: stato e caricamento
 // ripartono da zero invece di mescolare i dati del compito precedente.

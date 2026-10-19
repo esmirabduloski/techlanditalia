@@ -6,6 +6,7 @@ import { useCodeDraft } from '@/hooks/useCodeDraft';
 import { CodeEditor } from './CodeEditor';
 import { FriendlyError } from './FriendlyError';
 import { explainPythonError, type FriendlyError as FriendlyErrorData } from '@/lib/friendlyErrors';
+import { SKULPT_URLS } from '@/lib/runtimes';
 
 interface TurtleCompilerProps {
   defaultCode?: string;
@@ -33,11 +34,6 @@ const CANVAS_W = 800;
 const CANVAS_H = 600;
 const MIN_ZOOM = 0.2;
 const MAX_ZOOM = 4;
-
-const SKULPT_URLS = [
-  'https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js',
-  'https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js',
-];
 
 let skulptPromise: Promise<void> | null = null;
 function loadScript(src: string) {
@@ -308,6 +304,7 @@ export function TurtleCompiler({ defaultCode, taskId }: TurtleCompilerProps) {
 
             {output && (
               <pre
+                data-testid="turtle-output"
                 aria-live="polite"
                 className="max-h-28 overflow-auto px-4 py-2 text-xs font-mono border-t bg-muted text-foreground whitespace-pre-wrap"
               >

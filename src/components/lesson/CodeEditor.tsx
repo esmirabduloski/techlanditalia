@@ -7,7 +7,16 @@ interface CodeEditorProps {
   language: 'html' | 'css' | 'javascript' | 'python';
   className?: string;
   placeholder?: string;
+  /** Nome accessibile dell'area di testo (di default dal linguaggio) */
+  label?: string;
 }
+
+const LANGUAGE_LABELS: Record<CodeEditorProps['language'], string> = {
+  python: 'Codice Python',
+  html: 'Codice HTML',
+  css: 'Codice CSS',
+  javascript: 'Codice JavaScript',
+};
 
 // Autocomplete suggestions per linguaggio
 const AUTOCOMPLETE_SUGGESTIONS = {
@@ -50,7 +59,7 @@ const AUTOCOMPLETE_SUGGESTIONS = {
   },
 };
 
-export function CodeEditor({ code, onChange, language, className = '', placeholder }: CodeEditorProps) {
+export function CodeEditor({ code, onChange, language, className = '', placeholder, label }: CodeEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const preRef = useRef<HTMLPreElement>(null);
   const lineNumbersRef = useRef<HTMLDivElement>(null);
@@ -349,6 +358,7 @@ export function CodeEditor({ code, onChange, language, className = '', placehold
           onKeyDown={handleKeyDown}
           onScroll={handleScroll}
           placeholder={placeholder}
+          aria-label={label ?? LANGUAGE_LABELS[language]}
           className="absolute inset-0 w-full h-full p-4 font-mono text-sm bg-transparent text-transparent caret-white resize-none focus:outline-none"
           spellCheck={false}
           style={{

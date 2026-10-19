@@ -4,9 +4,9 @@ import { PgzeroCompiler } from './PgzeroCompiler';
 import { WebCompiler } from './WebCompiler';
 import type { WorkspaceSidePanel } from './LessonWorkspace';
 import { parseTestCases, type TestResult } from '@/lib/testCases';
+import { PYTHON_COURSES, WEB_COURSES, resolveCompiler } from '@/lib/compilerKind';
 
-export const PYTHON_COURSES = ['python-base', 'python-ai', 'python-avanzato'];
-export const WEB_COURSES = ['web-development'];
+export { PYTHON_COURSES, WEB_COURSES };
 export const SPLIT_LAYOUT_COURSES = [...PYTHON_COURSES, ...WEB_COURSES];
 
 export interface TaskAttachment {
@@ -73,12 +73,11 @@ export function getTaskSidePanel(
   const taskId = saveDrafts ? task.id : undefined;
   const testCases = parseTestCases(task.test_cases);
 
-  if (PYTHON_COURSES.includes(courseSlug)) {
-    // Turtle anche quando l'ambiente non è impostato ma il codice di partenza importa turtle
-    const usesTurtle = task.python_env === 'turtle' || /^\s*(import turtle|from turtle)/m.test(task.default_python_code || '');
-    const node = usesTurtle ? (
+  const kind = resolveCompiler(courseSlug, task);
+  if (kind === 'python' || kind === 'turtle' || kind === 'pgzero') {
+    const node = kind === 'turtle' ? (
       <TurtleCompiler defaultCode={task.default_python_code || undefined} taskId={taskId} />
-    ) : task.python_env === 'pgzero' ? (
+    ) : kind === 'pgzero' ? (
       <PgzeroCompiler defaultCode={task.default_python_code || undefined} replitUrl={task.replit_url || undefined} />
     ) : (
       <PythonCompiler defaultCode={task.default_python_code || undefined} taskId={taskId} testCases={testCases} onTestResults={onTestResults} />
@@ -86,7 +85,7 @@ export function getTaskSidePanel(
     return { label: 'Codice', emoji: '💻', node };
   }
 
-  if (WEB_COURSES.includes(courseSlug)) {
+  if (kind === 'web') {
     return {
       label: 'Codice',
       emoji: '💻',
@@ -111,12 +110,9 @@ export function getTaskSidePanel(
 export function getRunnableTaskTests(courseSlug: string, task: SidePanelTask) {
   if (task.content_type !== 'mixed') return [];
   const cases = parseTestCases(task.test_cases);
-  if (PYTHON_COURSES.includes(courseSlug)) {
-    const usesTurtle = task.python_env === 'turtle' || /^\s*(import turtle|from turtle)/m.test(task.default_python_code || '');
-    if (usesTurtle || task.python_env === 'pgzero') return [];
-    return cases.filter(c => c.kind === 'io' || c.kind === 'assert');
-  }
-  if (WEB_COURSES.includes(courseSlug)) return cases.filter(c => c.kind !== 'io' && c.kind !== 'assert');
+  const kind = resolveCompiler(courseSlug, task);
+  if (kind === 'python') return cases.filter(c => c.kind === 'io' || c.kind === 'assert');
+  if (kind === 'web') return cases.filter(c => c.kind !== 'io' && c.kind !== 'assert');
   return [];
 }
 

@@ -23,7 +23,7 @@ import { QuizTaskEditor } from '@/components/admin/QuizTaskEditor';
 import { parseQuizContent } from '@/lib/quiz';
 import { AdminStepper, type AdminStep } from '@/components/admin/AdminStepper';
 import { TestCasesEditor } from '@/components/admin/TestCasesEditor';
-import { PYTHON_COURSES, WEB_COURSES } from '@/components/lesson/taskSidePanel';
+import { PYTHON_COURSES, WEB_COURSES } from '@/lib/compilerKind';
 import { countIncompleteCases, parseTestCases, toEditableCases, type EditableTestCase } from '@/lib/testCases';
 interface Attachment {
   name: string;

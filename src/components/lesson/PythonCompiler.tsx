@@ -10,6 +10,7 @@ import { useTestRunner } from '@/hooks/useTestRunner';
 import { pythonCases, type TestCase, type TestResult } from '@/lib/testCases';
 import { preloadPythonTests, runPythonTests } from '@/lib/pythonTestRunner';
 import { explainPythonError, type FriendlyError as FriendlyErrorData } from '@/lib/friendlyErrors';
+import { PYODIDE_INDEX_URL } from '@/lib/runtimes';
 import { FriendlyError } from './FriendlyError';
 
 declare global {
@@ -76,7 +77,7 @@ export function PythonCompiler({ defaultCode, taskId, testCases, onTestResults, 
     try {
       if (!window.loadPyodide) {
         const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js';
+        script.src = `${PYODIDE_INDEX_URL}pyodide.js`;
         script.async = true;
         document.head.appendChild(script);
         
@@ -87,7 +88,7 @@ export function PythonCompiler({ defaultCode, taskId, testCases, onTestResults, 
       }
 
       pyodideRef.current = await window.loadPyodide({
-        indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.24.1/full/'
+        indexURL: PYODIDE_INDEX_URL
       });
 
       setIsLoadingPyodide(false);
@@ -304,7 +305,7 @@ builtins.input = _js_input
                 </div>
                 <div className="overflow-auto flex-1">
                   {output && (
-                    <pre className="p-4 text-sm font-mono text-foreground whitespace-pre-wrap">
+                    <pre data-testid="python-output" className="p-4 text-sm font-mono text-foreground whitespace-pre-wrap">
                       {output}
                     </pre>
                   )}

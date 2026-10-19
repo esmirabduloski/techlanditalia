@@ -16,7 +16,9 @@
     "verify:prerender": "node scripts/verify-prerender.mjs",
     "indexnow": "node scripts/indexnow-submit.mjs",
     "sentry:alerts": "node scripts/sentry-alerts.mjs",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:compilatori": "playwright test e2e/compilatori && npm run test:pgzero",
+    "test:pgzero": "${PYTHON:-python3} e2e/compilatori/pgzero/esegui.py"
   },
   "dependencies": {
     "@fontsource/plus-jakarta-sans": "^5.2.8",

@@ -5,15 +5,17 @@
  */
 import { test as base, expect } from "@playwright/test";
 import { FakeSupabase } from "./fakeSupabase";
+import { PYODIDE_INDEX_URL, SKULPT_URLS } from "../../src/lib/runtimes";
 
-// Host esterni permessi: Pyodide (esecuzione del codice Python) viene da jsDelivr.
-const ALLOWED_EXTERNAL = [/^https:\/\/cdn\.jsdelivr\.net\/pyodide\//];
+// Host esterni permessi: i runtime dei compilatori da jsDelivr, nelle versioni
+// usate dal sito (Pyodide per Python, Skulpt per Turtle).
+const ALLOWED_EXTERNAL = [PYODIDE_INDEX_URL, ...SKULPT_URLS];
 
 export const test = base.extend<{ fake: FakeSupabase }>({
   fake: async ({ page, baseURL }, use) => {
     const origin = new URL(baseURL!).origin;
     await page.route(
-      (url) => url.origin !== origin && !url.hostname.endsWith("e2e.test") && !ALLOWED_EXTERNAL.some((re) => re.test(url.href)),
+      (url) => url.origin !== origin && !url.hostname.endsWith("e2e.test") && !ALLOWED_EXTERNAL.some((prefix) => url.href.startsWith(prefix)),
       (route) => route.abort("blockedbyclient"),
     );
     const fake = new FakeSupabase();

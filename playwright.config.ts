@@ -26,7 +26,17 @@ export default defineConfig({
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    { name: "chromium", use: { ...devices["Desktop Chrome"] }, testIgnore: /task-reali\.spec\.ts$/ },
+    // Regressione sui task veri dei corsi (e2e/compilatori/task-reali.spec.ts): più lunga, va a parte.
+    // Gli snapshot di testo sono uguali su Mac e Linux: niente {platform} nel percorso.
+    {
+      name: "task-reali",
+      use: { ...devices["Desktop Chrome"] },
+      testMatch: /task-reali\.spec\.ts$/,
+      snapshotPathTemplate: "{testDir}/{testFileDir}/__snapshots__/{arg}{ext}",
+    },
+  ],
   webServer: {
     command: `npx vite --mode e2e --port ${PORT} --strictPort`,
     url: `http://localhost:${PORT}`,

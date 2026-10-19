@@ -1,0 +1,3 @@
+# Versioni usate per eseguire i programmi Pygame Zero in CI (Replit può averne altre)
+pygame==2.6.1
+pgzero==1.2.1

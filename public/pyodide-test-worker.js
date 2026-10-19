@@ -5,7 +5,12 @@
 //   -> { type: 'init' }                         <- { type: 'ready' } | { type: 'fatal', error }
 //   -> { type: 'run', runId, code, test }       <- { type: 'started', runId } poi { type: 'result', runId, result }
 /* eslint-disable no-undef */
-const PYODIDE_URL = 'https://cdn.jsdelivr.net/pyodide/v0.24.1/full/';
+// Versione da src/lib/runtimes.ts (?v=); il ripiego serve solo a una pagina vecchia
+// ancora in cache che apre il worker senza parametro. Tienilo uguale a PYODIDE_VERSION.
+const FALLBACK_PYODIDE_VERSION = '0.24.1';
+const REQUESTED_VERSION = new URL(self.location.href).searchParams.get('v');
+const PYODIDE_VERSION = /^\d+\.\d+\.\d+$/.test(REQUESTED_VERSION || '') ? REQUESTED_VERSION : FALLBACK_PYODIDE_VERSION;
+const PYODIDE_URL = 'https://cdn.jsdelivr.net/pyodide/v' + PYODIDE_VERSION + '/full/';
 
 let pyodideReady = null;
 

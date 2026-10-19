@@ -2,9 +2,11 @@
 // Un worker solo, riusato tra le esecuzioni; se un test supera il tempo
 // massimo il worker viene terminato e ricreato al test successivo.
 import { compareOutput, TEST_TIMEOUT_MS, TIMEOUT_ERROR, type PythonTestCase, type TestResult } from './testCases';
+import { PYODIDE_VERSION } from './runtimes';
 
 const INIT_TIMEOUT_MS = 90_000;
-const WORKER_URL = '/pyodide-test-worker.js';
+// ?v= dice al worker quale Pyodide caricare (e cambia la cache a ogni aggiornamento)
+const WORKER_URL = `/pyodide-test-worker.js?v=${PYODIDE_VERSION}`;
 
 interface WorkerResult { id: string; passed: boolean | null; actual?: string; error?: string }
 

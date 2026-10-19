@@ -14,6 +14,7 @@
  import { Button } from '@/components/ui/button';
  import { Badge } from '@/components/ui/badge';
  import { Loader2, ArrowLeft, Trophy } from 'lucide-react';
+ import { resolveCompiler } from '@/lib/compilerKind';
  
  interface Attachment {
    name: string;
@@ -48,9 +49,6 @@
      };
    };
  }
- 
- const PYTHON_COURSES = ['python-base', 'python-ai', 'python-avanzato'];
- const WEB_COURSES = ['web-development'];
  
  export default function TeacherHomeworkView() {
    return <HomeworkPreviewPage scope="teacher" />;
@@ -179,8 +177,9 @@
    );
    const teacherBadge = scope === 'teacher' && <Badge variant="outline" className="ml-2">Vista Insegnante</Badge>;
 
-   const isPythonCourse = PYTHON_COURSES.includes(homework.lesson.course.slug);
-   const isWebCourse = WEB_COURSES.includes(homework.lesson.course.slug);
+   const compiler = resolveCompiler(homework.lesson.course.slug, homework);
+   const isPythonCourse = compiler === 'python' || compiler === 'turtle' || compiler === 'pgzero';
+   const isWebCourse = compiler === 'web';
    const hasCompiler = isPythonCourse || isWebCourse;
  
    // Preview-only mode for Web courses
@@ -288,9 +287,9 @@
  
            <ResizablePanel defaultSize={50} minSize={30}>
              {isPythonCourse && (
-               (homework.python_env === 'turtle' || /^\s*(import turtle|from turtle)/m.test(homework.default_python_code || '')) ? (
+               compiler === 'turtle' ? (
                  <TurtleCompiler defaultCode={homework.default_python_code || undefined} />
-               ) : homework.python_env === 'pgzero' ? (
+               ) : compiler === 'pgzero' ? (
                  <PgzeroCompiler defaultCode={homework.default_python_code || undefined} replitUrl={homework.replit_url || undefined} />
                ) : (
                  <PythonCompiler defaultCode={homework.default_python_code || undefined} />

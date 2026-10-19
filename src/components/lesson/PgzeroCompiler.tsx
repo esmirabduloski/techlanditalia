@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Copy, ExternalLink, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { DEFAULT_REPLIT_URL, toReplitMain } from '@/lib/pgzero';
 
 interface PgzeroCompilerProps {
   defaultCode?: string;
@@ -37,9 +38,8 @@ def update():
 
 export function PgzeroCompiler({ defaultCode, replitUrl }: PgzeroCompilerProps) {
   const rawCode = defaultCode || FALLBACK_CODE;
-  // Replace "#pgzero" with "#pgzero main.py" in the first line (only if not already present)
-  const code = rawCode.replace(/^(#\s*pgzero)(?!\s+main\.py)/im, '#pgzero main.py');
-  const replitLink = replitUrl || 'https://replit.com/@esmir1475/Pygame';
+  const code = toReplitMain(rawCode);
+  const replitLink = replitUrl || DEFAULT_REPLIT_URL;
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
 
@@ -113,7 +113,7 @@ export function PgzeroCompiler({ defaultCode, replitUrl }: PgzeroCompilerProps) 
 
       {/* Code display */}
       <div className="flex-1 overflow-auto">
-        <pre className="p-4 font-mono text-sm leading-relaxed text-foreground whitespace-pre-wrap bg-muted/30">
+        <pre data-testid="pgzero-code" className="p-4 font-mono text-sm leading-relaxed text-foreground whitespace-pre-wrap bg-muted/30">
           {code}
         </pre>
       </div>

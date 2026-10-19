@@ -47,6 +47,86 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_consent_events: {
+        Row: {
+          decided_as: string
+          decided_at: string
+          decided_by: string | null
+          granted: boolean
+          id: string
+          student_id: string
+          version: string
+        }
+        Insert: {
+          decided_as: string
+          decided_at?: string
+          decided_by?: string | null
+          granted: boolean
+          id?: string
+          student_id: string
+          version: string
+        }
+        Update: {
+          decided_as?: string
+          decided_at?: string
+          decided_by?: string | null
+          granted?: boolean
+          id?: string
+          student_id?: string
+          version?: string
+        }
+        Relationships: []
+      }
+      ai_consent_versions: {
+        Row: {
+          published_at: string
+          version: string
+        }
+        Insert: {
+          published_at: string
+          version: string
+        }
+        Update: {
+          published_at?: string
+          version?: string
+        }
+        Relationships: []
+      }
+      ai_consents: {
+        Row: {
+          decided_as: string
+          decided_at: string
+          decided_by: string | null
+          granted: boolean
+          student_id: string
+          version: string
+        }
+        Insert: {
+          decided_as: string
+          decided_at?: string
+          decided_by?: string | null
+          granted: boolean
+          student_id: string
+          version: string
+        }
+        Update: {
+          decided_as?: string
+          decided_at?: string
+          decided_by?: string | null
+          granted?: boolean
+          student_id?: string
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_consents_version_fkey"
+            columns: ["version"]
+            isOneToOne: false
+            referencedRelation: "ai_consent_versions"
+            referencedColumns: ["version"]
+          },
+        ]
+      }
       analytics_events: {
         Row: {
           browser: string | null
@@ -2823,6 +2903,27 @@ export type Database = {
           },
         ]
       }
+      student_birth_years: {
+        Row: {
+          birth_year: number
+          set_at: string
+          set_by: string | null
+          student_id: string
+        }
+        Insert: {
+          birth_year: number
+          set_at?: string
+          set_by?: string | null
+          student_id: string
+        }
+        Update: {
+          birth_year?: number
+          set_at?: string
+          set_by?: string | null
+          student_id?: string
+        }
+        Relationships: []
+      }
       student_code_drafts: {
         Row: {
           code_type: string
@@ -3512,6 +3613,8 @@ export type Database = {
           verified_factors: number
         }[]
       }
+      ai_access_allowed: { Args: { _student: string }; Returns: boolean }
+      ai_self_consent_age: { Args: { _student: string }; Returns: boolean }
       check_login_rate_limit: {
         Args: {
           _email: string
@@ -3552,6 +3655,7 @@ export type Database = {
         }[]
       }
       cron_health_report: { Args: { _since?: string }; Returns: Json }
+      current_ai_consent_version: { Args: never; Returns: string }
       ensure_mfa_policies: { Args: never; Returns: undefined }
       generate_slug: { Args: { title: string }; Returns: string }
       get_children_ids: { Args: { _parent_id: string }; Returns: string[] }
@@ -3654,6 +3758,7 @@ export type Database = {
         Args: { _from: string; _to: string }
         Returns: Json
       }
+      my_ai_access: { Args: never; Returns: Json }
       my_mfa_required: { Args: never; Returns: boolean }
       new_certificate_code: { Args: { _year: number }; Returns: string }
       pending_legal_consents: {
@@ -3710,6 +3815,15 @@ export type Database = {
           student_id: string
         }[]
       }
+      set_ai_consent: {
+        Args: { _granted: boolean; _student: string; _version: string }
+        Returns: undefined
+      }
+      set_student_birth_year: {
+        Args: { _student: string; _year: number }
+        Returns: undefined
+      }
+      storage_folder_user: { Args: { _name: string }; Returns: string }
       student_risk_signals: {
         Args: { _rules?: Json }
         Returns: {

@@ -2827,6 +2827,39 @@ export type Database = {
           },
         ]
       }
+      school_closures: {
+        Row: {
+          created_at: string
+          end_date: string
+          id: string
+          note: string | null
+          notified_at: string | null
+          start_date: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          id?: string
+          note?: string | null
+          notified_at?: string | null
+          start_date: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          id?: string
+          note?: string | null
+          notified_at?: string | null
+          start_date?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       security_events: {
         Row: {
           created_at: string
@@ -3873,6 +3906,13 @@ export type Database = {
           module_number: number
           module_title: string
           student_id: string
+        }[]
+      }
+      school_closure_audience: {
+        Args: { p_closure_id: string }
+        Returns: {
+          recipient_id: string
+          student_ids: string[]
         }[]
       }
       set_ai_consent: {

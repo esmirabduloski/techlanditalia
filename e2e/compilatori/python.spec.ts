@@ -209,12 +209,12 @@ test("Esegui: input() chiede con una finestra e riporta le risposte nell'output"
   // La seconda domanda mostra anche quello che il programma ha già scritto
   expect(prompt.messaggi).toEqual(["Come ti chiami? ", "Come ti chiami? Luca\nQuanti anni hai? "]);
 
-  // "Annulla" ferma il programma con un messaggio chiaro
+  // "Annulla" ferma il programma con un messaggio chiaro, sulla riga dell'input()
   await editor.fill('print("inizio")\nx = input("Numero? ")\nprint("mai")');
   const annulla = rispondiAiPrompt(page, [null]);
   const interrotto = await eseguiPython(page);
   annulla.stop();
-  expect(interrotto.errore).toContain("Programma interrotto");
+  expect(interrotto.errore).toContain("Programma interrotto · riga 2");
   expect(interrotto.output).not.toContain("mai");
 });
 
@@ -252,4 +252,10 @@ test("Verifica: i casi di prova io e assert passano con la soluzione", async ({ 
   await verifica.click();
   await expect(panel.getByText("4/4 test superati")).toBeVisible({ timeout: 30_000 });
   expect(await esitoCasiDiProva(page)).toBe("✓✓✓✓");
+
+  // Il programma chiede più input di quelli del test: l'errore indica la riga dell'input() in più
+  await page.getByPlaceholder("Scrivi il tuo codice Python...").fill('def doppio(n):\n    return n * 2\n\nprimo = input()\nsecondo = input()\nprint(primo, secondo)');
+  await verifica.click();
+  await expect(panel.getByText("0/4 test superati")).toBeVisible({ timeout: 30_000 });
+  await expect(panel.getByTestId("friendly-error").first()).toContainText("Mancano dati in input · riga 5");
 });

@@ -33,6 +33,32 @@ interface PythonCompilerProps {
 
 const FALLBACK_CODE = '# Scrivi il tuo codice Python qui\nprint("Ciao, mondo!")\n';
 
+// Preparato a ogni esecuzione: output catturato e input() con la finestra del browser.
+// Compilato come "<techland>" (vedi runPython più sotto): così negli errori l'ultima
+// riga "<exec>" del traceback è quella dell'alunno, anche se l'errore nasce qui dentro.
+const RUN_PRELUDE = `
+import sys, builtins
+from io import StringIO
+sys.stdout = StringIO()
+sys.stderr = StringIO()
+
+def _js_input(prompt_text=""):
+    from js import prompt as _js_prompt
+    # Flush pending stdout to the browser output before showing the prompt
+    pending = sys.stdout.getvalue()
+    msg = str(prompt_text)
+    if pending:
+        msg = pending + msg
+    result = _js_prompt(msg)
+    if result is None:
+        raise KeyboardInterrupt("Input annullato dall'utente")
+    # Echo the input into stdout so it appears in the output panel
+    print(str(prompt_text) + str(result))
+    return str(result)
+
+builtins.input = _js_input
+`;
+
 export function PythonCompiler({ defaultCode, taskId, testCases, onTestResults, testRunnerRef }: PythonCompilerProps) {
   const [output, setOutput] = useState<string>('');
   const [runError, setRunError] = useState<{ error: FriendlyErrorData; code: string } | null>(null);
@@ -112,28 +138,8 @@ export function PythonCompiler({ defaultCode, taskId, testCases, onTestResults, 
     setOutput('Esecuzione in corso...');
 
     try {
-      pyodideRef.current.runPython(`
-import sys, builtins
-from io import StringIO
-sys.stdout = StringIO()
-sys.stderr = StringIO()
-
-def _js_input(prompt_text=""):
-    from js import prompt as _js_prompt
-    # Flush pending stdout to the browser output before showing the prompt
-    pending = sys.stdout.getvalue()
-    msg = str(prompt_text)
-    if pending:
-        msg = pending + msg
-    result = _js_prompt(msg)
-    if result is None:
-        raise KeyboardInterrupt("Input annullato dall'utente")
-    # Echo the input into stdout so it appears in the output panel
-    print(str(prompt_text) + str(result))
-    return str(result)
-
-builtins.input = _js_input
-      `);
+      pyodideRef.current.globals.set('_tl_src', RUN_PRELUDE);
+      pyodideRef.current.runPython('exec(compile(_tl_src, "<techland>", "exec"))');
 
       await pyodideRef.current.runPythonAsync(code);
 

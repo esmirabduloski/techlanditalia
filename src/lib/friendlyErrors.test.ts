@@ -25,6 +25,15 @@ describe('explainPythonError', () => {
     expect(explainPythonError("NameError: name 'gatto' is not defined")?.tip).toContain('"gatto"');
   });
 
+  it('la riga è quella dell\'alunno anche se l\'errore nasce nel codice di servizio (<techland>)', () => {
+    const annullato = `Traceback (most recent call last):
+  File "/lib/python311.zip/_pyodide/_base.py", line 571, in eval_code_async
+  File "<exec>", line 2, in <module>
+  File "<techland>", line 16, in _js_input
+KeyboardInterrupt: Input annullato dall'utente`;
+    expect(explainPythonError(annullato, 'print(1)\nx = input()\n')).toMatchObject({ type: 'KeyboardInterrupt', line: 2 });
+  });
+
   it('legge la riga dal worker e da Skulpt', () => {
     expect(explainPythonError('ZeroDivisionError: division by zero (riga 4)')).toMatchObject({ type: 'ZeroDivisionError', line: 4, original: 'ZeroDivisionError: division by zero' });
     expect(explainPythonError("NameError: name 'x' is not defined on line 3")).toMatchObject({ type: 'NameError', line: 3 });

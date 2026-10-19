@@ -12,14 +12,9 @@ const REQUESTED_VERSION = new URL(self.location.href).searchParams.get('v');
 const PYODIDE_VERSION = /^\d+\.\d+\.\d+$/.test(REQUESTED_VERSION || '') ? REQUESTED_VERSION : FALLBACK_PYODIDE_VERSION;
 const PYODIDE_URL = 'https://cdn.jsdelivr.net/pyodide/v' + PYODIDE_VERSION + '/full/';
 
-let pyodideReady = null;
-
-function loadRuntime() {
-  if (!pyodideReady) {
-    pyodideReady = (async () => {
-      importScripts(PYODIDE_URL + 'pyodide.js');
-      const pyodide = await loadPyodide({ indexURL: PYODIDE_URL });
-      pyodide.runPython(`
+// Codice di servizio, compilato come "<techland>": negli errori l'ultima riga "<exec>"
+// del traceback resta quella dell'alunno, anche se l'errore nasce qui (es. input() finiti).
+const PRELUDE = `
 import sys, builtins
 from io import StringIO
 
@@ -43,7 +38,17 @@ def _tl_prepare(stdin_text):
 
 def _tl_output():
     return sys.stdout.getvalue()
-`);
+`;
+
+let pyodideReady = null;
+
+function loadRuntime() {
+  if (!pyodideReady) {
+    pyodideReady = (async () => {
+      importScripts(PYODIDE_URL + 'pyodide.js');
+      const pyodide = await loadPyodide({ indexURL: PYODIDE_URL });
+      pyodide.globals.set('_tl_src', PRELUDE);
+      pyodide.runPython('exec(compile(_tl_src, "<techland>", "exec"))');
       return pyodide;
     })();
   }

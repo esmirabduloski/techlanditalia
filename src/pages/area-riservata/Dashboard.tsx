@@ -269,9 +269,9 @@ export default function Dashboard() {
         return {};
       })()}>
         <div className="max-w-6xl mx-auto px-4 py-8">
-          {/* Big "Entra a Lezione" CTA at top center for students */}
-          {effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (
-            <JoinLessonHero studentId={effectiveUserId} />
+          {/* Big "Entra a Lezione" CTA at top center: anche per il genitore, i più piccoli entrano dal suo dispositivo */}
+          {effectiveUserId && !effectiveIsTeacher && (
+            <JoinLessonHero userId={effectiveUserId} forParent={effectiveIsParent} />
           )}
 
           {/* Header: per il genitore niente avatar e livelli, che sono del figlio */}

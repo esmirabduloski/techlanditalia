@@ -2188,6 +2188,7 @@ export type Database = {
       }
       lessons: {
         Row: {
+          concepts: string[]
           content: string | null
           content_type: string | null
           course_id: string
@@ -2204,6 +2205,7 @@ export type Database = {
           video_url: string | null
         }
         Insert: {
+          concepts?: string[]
           content?: string | null
           content_type?: string | null
           course_id: string
@@ -2220,6 +2222,7 @@ export type Database = {
           video_url?: string | null
         }
         Update: {
+          concepts?: string[]
           content?: string | null
           content_type?: string | null
           course_id?: string
@@ -3240,6 +3243,54 @@ export type Database = {
           },
         ]
       }
+      student_skill_assessments: {
+        Row: {
+          assessed_by: string | null
+          concept: string
+          created_at: string
+          id: string
+          level: number
+          note: string | null
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          assessed_by?: string | null
+          concept: string
+          created_at?: string
+          id?: string
+          level: number
+          note?: string | null
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          assessed_by?: string | null
+          concept?: string
+          created_at?: string
+          id?: string
+          level?: number
+          note?: string | null
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_skill_assessments_assessed_by_fkey"
+            columns: ["assessed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_skill_assessments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_streaks: {
         Row: {
           attendance_streak: number | null
@@ -3931,6 +3982,23 @@ export type Database = {
           signals: Json
           student_id: string
           student_name: string
+        }[]
+      }
+      student_skill_evidence: {
+        Args: { p_student_id: string }
+        Returns: {
+          assessed_at: string
+          assessed_by_name: string
+          concept: string
+          course_ids: string[]
+          homework_avg: number
+          homework_scored: number
+          last_activity: string
+          lessons_completed: number
+          lessons_met: number
+          lessons_tagged: number
+          teacher_level: number
+          teacher_note: string
         }[]
       }
       submit_homework_code: {

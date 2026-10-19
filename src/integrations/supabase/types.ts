@@ -1311,6 +1311,66 @@ export type Database = {
           },
         ]
       }
+      email_log: {
+        Row: {
+          created_at: string
+          error: string | null
+          html: string | null
+          id: string
+          kind: string
+          lead_id: string | null
+          provider_id: string | null
+          recipient_id: string | null
+          source: string
+          status: string
+          subject: string
+          to_email: string
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          html?: string | null
+          id?: string
+          kind: string
+          lead_id?: string | null
+          provider_id?: string | null
+          recipient_id?: string | null
+          source: string
+          status: string
+          subject: string
+          to_email: string
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          html?: string | null
+          id?: string
+          kind?: string
+          lead_id?: string | null
+          provider_id?: string | null
+          recipient_id?: string | null
+          source?: string
+          status?: string
+          subject?: string
+          to_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_log_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_log_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       enrollments: {
         Row: {
           course_id: string

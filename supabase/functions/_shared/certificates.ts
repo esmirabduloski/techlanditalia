@@ -4,6 +4,7 @@
  * Testi dell'avviso alla famiglia (email e push) usati dalla edge function
  * certificates-released quando l'insegnante sblocca gli attestati.
  */
+import { brandedEmail, escapeHtml, type EmailContent } from "./emaillayout.ts";
 
 export type CertificateMessage = {
   subject: string;
@@ -40,6 +41,26 @@ export function certificateMessage(opts: {
         `potete scaricarlo in PDF, stamparlo o condividerlo con chi volete.`,
       "Complimenti da tutto il team TECHLAND!",
     ],
+  };
+}
+
+/** Sezione dell'area riservata con gli attestati. */
+export const CERTIFICATES_PATH = "/area-riservata#certificazioni";
+
+/** Email alla famiglia con il pulsante per scaricare l'attestato. */
+export function certificateEmail(msg: CertificateMessage, siteUrl: string): EmailContent {
+  const [hello, ...rest] = msg.paragraphs.map(escapeHtml);
+  const url = `${siteUrl}${CERTIFICATES_PATH}`;
+  return {
+    subject: msg.subject,
+    html: brandedEmail({
+      title: msg.pushTitle.replace(/^🎓\s*/, ""),
+      emoji: "🎓",
+      bodyHtml: `<p style="margin:0 0 16px;">${hello}</p>
+  ${rest.map((p) => `<p style="margin:0 0 16px;">${p}</p>`).join("\n  ")}
+  <p style="margin:8px 0 20px;text-align:center;"><a href="${url}" style="display:inline-block;background:#059669;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 24px;border-radius:10px;">Scarica l'attestato →</a></p>`,
+    }),
+    text: [...msg.paragraphs, url, "Il Team TECHLAND"].join("\n\n"),
   };
 }
 

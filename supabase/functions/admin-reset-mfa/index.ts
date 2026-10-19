@@ -17,6 +17,7 @@ import { corsHeadersFor } from "../_shared/cors.ts";
 import { rateLimit } from "../_shared/ratelimit.ts";
 import { decodeClaims, hasRecentAuth } from "../_shared/mfa.ts";
 import { sendSecurityEmail } from "../_shared/securityemail.ts";
+import { mfaResetEmail } from "../_shared/emailtemplates.ts";
 
 const BodySchema = z.object({
   userId: z.string().uuid(),
@@ -101,13 +102,7 @@ serve(async (req) => {
 
     let emailSent = false;
     if (target.user.email) {
-      emailSent = await sendSecurityEmail(
-        target.user.email,
-        "La verifica in due passaggi è stata reimpostata - TECHLAND",
-        "Verifica in due passaggi reimpostata",
-        `<p>Un amministratore di TECHLAND ha reimpostato la verifica in due passaggi del tuo account, come da tua richiesta.</p>
-         <p>Tutte le sessioni aperte sono state chiuse. Al prossimo accesso con email e password ti verrà chiesto di configurare di nuovo un'app di autenticazione.</p>`,
-      );
+      emailSent = await sendSecurityEmail("security_mfa_reset", "admin-reset-mfa", target.user.email, mfaResetEmail(), userId);
     }
 
     console.log(`[admin-reset-mfa] ${factors.length} fattori rimossi per ${userId} da ${user.id}`);

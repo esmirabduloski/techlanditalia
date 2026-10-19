@@ -1,44 +1,20 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "https://esm.sh/resend@2.0.0";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { rateLimit } from "../_shared/ratelimit.ts";
+import { sendEmail } from "../_shared/email.ts";
+import { TRUSTPILOT_AFS_ADDRESS, trustpilotInviteEmail, welcomeEmail } from "../_shared/emailtemplates.ts";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-
-
-function escapeHtml(text: string): string {
-  const htmlEntities: Record<string, string> = {
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;",
-  };
-  return text.replace(/[&<>"']/g, (char) => htmlEntities[char] || char);
-}
-
-/** Indirizzo del servizio inviti automatici (AFS) di Trustpilot per techlanditalia.it. */
-const TRUSTPILOT_AFS_ADDRESS = "techlanditalia.it+af31baed12@invite.trustpilot.com";
+const FN = "send-welcome-email";
 
 /**
  * Trustpilot legge i dati dell'invito dallo snippet JSON: riceve solo nome ed
  * email del genitore (più un riferimento), nient'altro.
  */
 async function sendTrustpilotInvitation(email: string, fullName: string) {
-  const data = {
-    recipientEmail: email.trim().toLowerCase(),
-    recipientName: fullName.trim(),
-    referenceId: `account-${Date.now()}`,
-  };
-  // "<" escapato: lo snippet resta JSON valido e non può chiudere il tag script
-  const snippet = JSON.stringify(data).replace(/</g, "\\u003c");
-  await resend.emails.send({
-    from: "TECHLAND <info@techlanditalia.it>",
-    to: [TRUSTPILOT_AFS_ADDRESS],
-    subject: "Invito recensione",
-    html: `<script type="application/json+trustpilot">${snippet}</script>`,
-  });
+  const mail = trustpilotInviteEmail({ email, fullName, referenceId: `account-${Date.now()}` });
+  const result = await sendEmail({ kind: "trustpilot_invite", source: FN, to: TRUSTPILOT_AFS_ADDRESS, ...mail });
+  if (!result.ok) throw new Error(result.error);
 }
 
 interface WelcomeEmailRequest {
@@ -48,50 +24,9 @@ interface WelcomeEmailRequest {
   childName?: string;
   childUsername?: string;
   setupLink?: string;
+  /** Profilo appena creato, per il registro email. */
+  userId?: string;
 }
-
-const getParentEmailTemplate = (
-  fullName: string,
-  childName: string,
-  childUsername: string,
-  email: string,
-  setupLink: string,
-) => `
-<!DOCTYPE html>
-<html lang="it">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background-color:#f4f4f4;">
-  <table role="presentation" style="width:100%;border-collapse:collapse;"><tr><td align="center" style="padding:40px 0;">
-    <table role="presentation" style="width:600px;max-width:100%;border-collapse:collapse;background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,0.1);">
-      <tr><td style="background:linear-gradient(135deg,#10b981 0%,#06b6d4 100%);padding:40px 30px;text-align:center;"><h1 style="color:#ffffff;margin:0;font-size:28px;font-weight:bold;">Benvenuto in TECHLAND</h1></td></tr>
-      <tr><td style="padding:40px 30px;">
-        <h2 style="color:#1f2937;margin:0 0 20px;font-size:22px;">Gentile ${fullName},</h2>
-        <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 20px;">La ringraziamo per aver scelto TECHLAND per l'educazione tecnologica di ${childName}.</p>
-        <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 20px;">Il suo account e quello di ${childName} sono stati creati con successo.</p>
-        <div style="background:linear-gradient(135deg,#eff6ff 0%,#f0f9ff 100%);border-radius:12px;padding:24px;margin:30px 0;border:2px solid #3b82f6;">
-          <h3 style="color:#1d4ed8;margin:0 0 15px;font-size:18px;">🔑 Le sue credenziali di accesso (genitore):</h3>
-          <p style="color:#1f2937;font-size:16px;font-weight:bold;margin:8px 0;"><strong>Email:</strong> ${email}</p>
-          <p style="color:#4b5563;font-size:15px;line-height:1.6;margin:8px 0 16px;">Per motivi di sicurezza la password non viene inviata via email. Usi il pulsante qui sotto per impostare la sua password personale (link valido una sola volta).</p>
-          ${setupLink ? `<div style="text-align:center;margin:8px 0 0;"><a href="${setupLink}" style="display:inline-block;background:#1d4ed8;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold;font-size:15px;">Imposta la tua password →</a></div>` : `<p style="color:#1f2937;font-size:14px;margin:8px 0;">Acceda a <a href="https://techlanditalia.it/area-riservata">techlanditalia.it/area-riservata</a> e usi "Password dimenticata" per impostare la sua password.</p>`}
-        </div>
-        <div style="background:linear-gradient(135deg,#f0fdf4 0%,#ecfeff 100%);border-radius:12px;padding:24px;margin:30px 0;border:2px solid #10b981;">
-          <h3 style="color:#059669;margin:0 0 15px;font-size:18px;">🔐 Accesso di ${childName}:</h3>
-          <p style="color:#1f2937;font-size:16px;font-weight:bold;margin:8px 0;"><strong>Nome utente:</strong> ${childUsername}</p>
-          <p style="color:#4b5563;font-size:15px;margin:8px 0;">Dopo aver impostato la sua password, entri nell'area riservata e nella sezione «I Tuoi Figli» scelga la password di ${childName} con il pulsante «Nuova password»: ${childName} entrerà con il nome utente qui sopra e quella password.</p>
-        </div>
-        <div style="text-align:center;margin:30px 0;">
-          <a href="https://techlanditalia.it/area-riservata" style="display:inline-block;background:linear-gradient(135deg,#10b981 0%,#06b6d4 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:bold;font-size:16px;">Accedi all'Area Riservata →</a>
-        </div>
-        <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0;">Cordiali saluti,</p>
-      </td></tr>
-      <tr><td style="background-color:#f9fafb;padding:30px;text-align:center;border-top:1px solid #e5e7eb;">
-        <p style="color:#6b7280;font-size:14px;margin:0 0 10px;font-weight:600;">Il Team TECHLAND</p>
-        <p style="color:#9ca3af;font-size:12px;margin:0;">Corsi di coding per bambini e ragazzi | techlanditalia.it</p>
-      </td></tr>
-    </table>
-  </td></tr></table>
-</body></html>
-`;
 
 const handler = async (req: Request): Promise<Response> => {
   const corsHeaders = corsHeadersFor(req);
@@ -136,26 +71,20 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    const { email, fullName, role, childName, childUsername, setupLink }: WelcomeEmailRequest = await req.json();
+    const { email, fullName, role, childName, childUsername, setupLink, userId }: WelcomeEmailRequest = await req.json();
+    const recipientId = typeof userId === "string" && /^[0-9a-f-]{36}$/i.test(userId) ? userId : null;
 
     console.log(`Sending welcome email (${role})`);
 
-    const safeFullName = escapeHtml(fullName || "");
-    const safeChildName = escapeHtml(childName || "");
-    const safeChildUsername = escapeHtml(childUsername || "");
-    const safeEmail = escapeHtml(email || "");
-    // setupLink is a Supabase-generated URL; only allow http(s) URLs and do not HTML-escape (used as href)
-    const safeSetupLink = typeof setupLink === "string" && /^https?:\/\//i.test(setupLink) ? setupLink : "";
-
-    const htmlContent = getParentEmailTemplate(safeFullName, safeChildName, safeChildUsername, safeEmail, safeSetupLink);
-    const subject = "Benvenuto in TECHLAND - Account creato con successo";
-
-    const emailResponse = await resend.emails.send({
-      from: "TECHLAND <info@techlanditalia.it>",
-      to: [email],
-      subject: subject,
-      html: htmlContent,
+    const mail = welcomeEmail({
+      fullName: fullName || "",
+      email: email || "",
+      childName: childName || "",
+      childUsername: childUsername || "",
+      setupLink: setupLink || "",
     });
+    const emailResponse = await sendEmail({ kind: "welcome", source: FN, to: email, recipientId, ...mail });
+    if (!emailResponse.ok) throw new Error(emailResponse.error);
 
     console.log("Welcome email sent successfully");
 

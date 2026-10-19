@@ -159,3 +159,11 @@ if ! out=$(run_sql supabase_admin supabase/tests/rls/12_student_files.sql 2>&1);
   exit 1
 fi
 echo "$out" | sed -n 's/.*NOTICE: *//p'
+
+echo "▶ Registro delle email inviate"
+if ! out=$(run_sql supabase_admin supabase/tests/rls/13_email_log.sql 2>&1); then
+  echo "$out" | sed -nE 's/.*(NOTICE|WARNING|ERROR): *//p'
+  echo "✗ Test del registro email FALLITI"
+  exit 1
+fi
+echo "$out" | sed -n 's/.*NOTICE: *//p'

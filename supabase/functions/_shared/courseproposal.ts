@@ -5,6 +5,7 @@
  * per la famiglia (email e push) e se lo sconto per chi continua subito vale
  * ancora.
  */
+import { escapeHtml, type EmailContent } from "./emaillayout.ts";
 
 /** Giorni di validità dell'offerta proposti all'admin quando invia. */
 export const DEFAULT_OFFER_DAYS = 10;
@@ -76,4 +77,38 @@ export function proposalMessage(opts: {
     quote: opts.reason.trim(),
     quoteAuthor: opts.teacherName,
   };
+}
+
+/** Email della proposta: citazione dell'insegnante, badge dello sconto e pulsante per rispondere. */
+export function proposalEmail(msg: ProposalMessage, opts: { discountCents: number; expiresOn: string; siteUrl: string }): EmailContent {
+  const [hello, intro, offer, cta] = msg.paragraphs.map(escapeHtml);
+  const badge = opts.discountCents > 0
+    ? `<tr><td style="padding:0 24px 8px;"><div style="background:#ecfdf5;border:2px dashed #10b981;border-radius:12px;padding:16px;text-align:center;">
+       <div style="font-size:28px;font-weight:bold;color:#047857;">-${escapeHtml(formatEuro(opts.discountCents))}</div>
+       <div style="font-size:14px;color:#065f46;">per chi conferma entro il ${escapeHtml(formatDate(opts.expiresOn))}</div></div></td></tr>`
+    : "";
+  const html = `<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+  <body style="margin:0;padding:0;background:#f4f4f4;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
+  <table role="presentation" style="width:100%;border-collapse:collapse;"><tr><td align="center" style="padding:32px 12px;">
+  <table role="presentation" style="width:560px;max-width:100%;border-collapse:collapse;background:#ffffff;border-radius:16px;overflow:hidden;">
+  <tr><td style="background:linear-gradient(135deg,#10b981 0%,#06b6d4 100%);padding:28px 24px;text-align:center;">
+  <h1 style="color:#ffffff;margin:0;font-size:22px;">${escapeHtml(msg.pushTitle)}</h1></td></tr>
+  <tr><td style="padding:28px 24px 8px;color:#1f2937;font-size:16px;line-height:1.6;">
+  <p style="margin:0 0 16px;">${hello}</p>
+  <p style="margin:0 0 16px;">${intro}</p>
+  <blockquote style="margin:0 0 16px;padding:12px 16px;border-left:4px solid #10b981;background:#f9fafb;font-style:italic;">
+  ${escapeHtml(msg.quote).replace(/\n/g, "<br>")}<br><span style="font-style:normal;color:#6b7280;font-size:14px;">— ${escapeHtml(msg.quoteAuthor)}</span></blockquote>
+  </td></tr>
+  ${badge}
+  <tr><td style="padding:8px 24px 28px;color:#1f2937;font-size:16px;line-height:1.6;">
+  <p style="margin:0 0 16px;">${offer}</p>
+  <p style="margin:0 0 20px;">${cta}</p>
+  <p style="margin:0 0 20px;text-align:center;"><a href="${opts.siteUrl}/area-riservata" style="display:inline-block;background:#059669;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 24px;border-radius:10px;">Rispondi alla proposta →</a></p>
+  <p style="margin:0;color:#4b5563;font-size:14px;">Per qualsiasi dubbio rispondi pure a questa email.</p>
+  </td></tr>
+  <tr><td style="background:#f9fafb;padding:20px;text-align:center;border-top:1px solid #e5e7eb;color:#6b7280;font-size:13px;">Il Team TECHLAND · techlanditalia.it</td></tr>
+  </table></td></tr></table></body></html>`;
+  const text = [...msg.paragraphs.slice(0, 2), `"${msg.quote}" — ${msg.quoteAuthor}`, ...msg.paragraphs.slice(2),
+    `${opts.siteUrl}/area-riservata`, "Il Team TECHLAND"].join("\n\n");
+  return { subject: msg.subject, html, text };
 }

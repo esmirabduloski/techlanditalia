@@ -198,6 +198,8 @@ SELECT id AS u FROM auth.users WHERE email LIKE '%@test.local' AND email <> 'adm
 INSERT INTO public.push_devices (user_id, token) SELECT u, 'tok-' || u FROM seed_users ON CONFLICT DO NOTHING;
 INSERT INTO public.push_notification_log (user_id, notification_type) SELECT u, 'test' FROM seed_users ON CONFLICT DO NOTHING;
 INSERT INTO public.mfa_reset_requests (user_id) SELECT u FROM seed_users ON CONFLICT DO NOTHING;
+INSERT INTO public.email_log (kind, to_email, recipient_id, subject, status, source)
+SELECT 'pause_ending', 'seed-' || u || '@test.local', u, 'Seed', 'sent', 'seed' FROM seed_users;
 INSERT INTO public.analytics_events (user_id, event_type, event_category, event_action, session_id) SELECT u, 't', 't', 't', 'sess-' || u FROM seed_users ON CONFLICT DO NOTHING;
 INSERT INTO public.page_views (user_id, page_url, session_id) SELECT u, '/test', 'sess-' || u FROM seed_users ON CONFLICT DO NOTHING;
 INSERT INTO public.conversion_funnels (user_id, funnel_name, step_number, step_name, session_id) SELECT u, 'f', 1, 's', 'sess-' || u FROM seed_users ON CONFLICT DO NOTHING;

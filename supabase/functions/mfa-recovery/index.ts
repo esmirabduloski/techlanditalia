@@ -19,7 +19,8 @@ import { corsHeadersFor } from "../_shared/cors.ts";
 import { rateLimit } from "../_shared/ratelimit.ts";
 import { notifyAdmins } from "../_shared/adminpush.ts";
 import { decodeClaims, hasRecentAuth, hasVerifiedFactor } from "../_shared/mfa.ts";
-import { codeBlock, sendSecurityEmail } from "../_shared/securityemail.ts";
+import { sendSecurityEmail } from "../_shared/securityemail.ts";
+import { mfaCodeEmail } from "../_shared/emailtemplates.ts";
 
 const BodySchema = z.object({
   action: z.enum(["send-code", "submit"]),
@@ -68,14 +69,7 @@ serve(async (req) => {
         console.error("[mfa-recovery] generateLink:", error);
         return json({ error: "Impossibile generare il codice" }, 500);
       }
-      const sent = await sendSecurityEmail(
-        user.email,
-        "Codice per recuperare l'accesso - TECHLAND",
-        "Recupero della verifica in due passaggi",
-        `<p>Hai chiesto di recuperare l'accesso perché non puoi più usare la tua app di autenticazione.</p>
-         <p>Inserisci questo codice nella pagina di TECHLAND:</p>${codeBlock(code)}
-         <p style="font-size:13px;color:#6b7280">Il codice scade a breve. Dopo la conferma un amministratore verificherà la richiesta prima di reimpostare la 2FA.</p>`,
-      );
+      const sent = await sendSecurityEmail("security_mfa_code", "mfa-recovery", user.email, mfaCodeEmail(code), user.id);
       if (!sent) return json({ error: "Impossibile inviare l'email" }, 500);
       return json({ success: true });
     }

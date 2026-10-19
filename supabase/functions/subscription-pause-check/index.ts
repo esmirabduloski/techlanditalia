@@ -14,7 +14,8 @@ import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supa
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { decodeClaims, mfaRequiredResponse } from "../_shared/mfa.ts";
 import { captureServerError, withCronMonitor } from "../_shared/sentry.ts";
-import { pauseEndingMessage, reminderDue, romeToday } from "../_shared/subscriptionpause.ts";
+import { pauseEndingEmail, pauseEndingMessage, reminderDue, romeToday } from "../_shared/subscriptionpause.ts";
+import { REPLY_TO, sendEmail } from "../_shared/email.ts";
 
 const FN = "subscription-pause-check";
 // Stesso crontab del job pg_cron subscription-pause-check-daily
@@ -39,9 +40,6 @@ type Summary = {
   emails_sent: number;
   skipped: { student: string; reason: string }[];
 };
-
-const escapeHtml = (s: string) =>
-  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 async function sendPush(supabase: SupabaseClient, userId: string, title: string, body: string): Promise<number> {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -73,48 +71,6 @@ async function sendPush(supabase: SupabaseClient, userId: string, title: string,
     }
   }
   return ok;
-}
-
-async function sendEmail(to: string, title: string, body: string): Promise<boolean> {
-  const key = Deno.env.get("RESEND_API_KEY");
-  if (!key) {
-    console.warn(`[${FN}] RESEND_API_KEY mancante, email non inviata`);
-    return false;
-  }
-  const html = `<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-  <body style="margin:0;padding:0;background:#f4f4f4;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
-  <table role="presentation" style="width:100%;border-collapse:collapse;"><tr><td align="center" style="padding:32px 12px;">
-  <table role="presentation" style="width:560px;max-width:100%;border-collapse:collapse;background:#ffffff;border-radius:16px;overflow:hidden;">
-  <tr><td style="background:linear-gradient(135deg,#10b981 0%,#06b6d4 100%);padding:28px 24px;text-align:center;">
-  <h1 style="color:#ffffff;margin:0;font-size:22px;">${escapeHtml(title)}</h1></td></tr>
-  <tr><td style="padding:28px 24px;color:#1f2937;font-size:16px;line-height:1.6;">
-  <p style="margin:0 0 16px;">${escapeHtml(body)}</p>
-  <p style="margin:0 0 16px;"><a href="${SITE_URL}/area-riservata" style="color:#059669;font-weight:bold;">Vai all'area riservata →</a></p>
-  <p style="margin:0;color:#4b5563;font-size:14px;">Per qualsiasi dubbio rispondi pure a questa email.</p>
-  </td></tr>
-  <tr><td style="background:#f9fafb;padding:20px;text-align:center;border-top:1px solid #e5e7eb;color:#6b7280;font-size:13px;">Il Team TECHLAND · techlanditalia.it</td></tr>
-  </table></td></tr></table></body></html>`;
-
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from: "TECHLAND <info@techlanditalia.it>",
-      to: [to],
-      reply_to: "info@techlanditalia.it",
-      subject: title,
-      html,
-      text: `${body}\n\nIl Team TECHLAND`,
-    }),
-  });
-  if (!res.ok) {
-    await captureServerError(new Error(`Resend ${res.status}: ${(await res.text()).slice(0, 300)}`), {
-      fn: FN,
-      fingerprint: [FN, "resend"],
-    });
-    return false;
-  }
-  return true;
 }
 
 /** Lead della famiglia: prima quello collegato al genitore, poi allo studente. */
@@ -199,7 +155,16 @@ async function run(supabase: SupabaseClient): Promise<Summary> {
     if (!claimed || claimed.length === 0) continue;
 
     const pushed = await sendPush(supabase, recipientId, title, body);
-    const mailed = email ? await sendEmail(email, title, body) : false;
+    const mailed = email
+      ? (await sendEmail({
+        kind: "pause_ending",
+        source: FN,
+        to: email,
+        replyTo: REPLY_TO,
+        recipientId,
+        ...pauseEndingEmail({ title, body }, SITE_URL),
+      })).ok
+      : false;
     summary.reminders++;
     summary.push_sent += pushed;
     if (mailed) summary.emails_sent++;

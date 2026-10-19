@@ -141,6 +141,7 @@ export const routes: RouteRecord[] = [
       { path: "admin/referral", lazy: page(() => import("./pages/admin/AdminReferrals")) },
       { path: "admin/sentry-log-error", lazy: page(() => import("./pages/admin/AdminSentryLogError")) },
       { path: "admin/notifiche-push", lazy: page(() => import("./pages/admin/AdminPushNotifications")) },
+      { path: "admin/email", lazy: page(() => import("./pages/admin/AdminEmail")) },
       { path: "admin/chat-live", lazy: page(() => import("./pages/admin/AdminLiveChat")) },
       { path: "admin/privacy", lazy: page(() => import("./pages/admin/AdminDataRetention")) },
       { path: "admin/consensi-foto-video", lazy: page(() => import("./pages/admin/AdminMediaConsents")) },

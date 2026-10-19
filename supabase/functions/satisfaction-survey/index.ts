@@ -18,6 +18,7 @@ import { decodeClaims, mfaRequiredResponse } from "../_shared/mfa.ts";
 import { captureServerError, withCronMonitor } from "../_shared/sentry.ts";
 import { notifyAdmins } from "../_shared/adminpush.ts";
 import { pausedStudentIds } from "../_shared/subscriptionpause.ts";
+import { REPLY_TO, sendEmail as sendMail } from "../_shared/email.ts";
 import {
   LOW_SATISFACTION_TASK_KIND,
   TRUSTPILOT_REVIEW_URL,
@@ -29,6 +30,7 @@ import {
   planSurvey,
   referralLink,
   scoreOutcome,
+  surveyEmail,
   surveyInviteMessage,
   surveyTopic,
   thankYouMessage,
@@ -70,13 +72,6 @@ type ScanSummary = {
   problems: { student: string; reason: string }[];
 };
 
-const escapeHtml = (s: string) =>
-  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-
-/** Link nel testo resi cliccabili (il testo è già escapato). */
-const linkify = (s: string) =>
-  s.replace(/https?:\/\/[^\s<]+/g, (url) => `<a href="${url}" style="color:#059669;font-weight:bold;">${url}</a>`);
-
 async function sendPush(supabase: SupabaseClient, userId: string, title: string, body: string, path: string): Promise<number> {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   const CONNECTION_KEY = Deno.env.get("FIREBASE_MESSAGING_API_KEY");
@@ -110,57 +105,17 @@ async function sendPush(supabase: SupabaseClient, userId: string, title: string,
 }
 
 async function sendEmail(opts: {
+  kind: "survey_invite" | "survey_thanks";
   to: string;
+  recipientId: string | null;
   subject: string;
   paragraphs: string[];
   text: string;
   cta?: { label: string; url: string };
 }): Promise<boolean> {
-  const key = Deno.env.get("RESEND_API_KEY");
-  if (!key) {
-    console.warn(`[${FN}] RESEND_API_KEY mancante, email non inviata`);
-    return false;
-  }
-  const { to, subject, paragraphs, text, cta } = opts;
-  const body = paragraphs
-    .map((p) => `<p style="margin:0 0 16px;">${linkify(escapeHtml(p)).replace(/\n/g, "<br>")}</p>`)
-    .join("");
-  const button = cta
-    ? `<p style="margin:8px 0 20px;text-align:center;"><a href="${cta.url}" style="display:inline-block;background:#059669;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 24px;border-radius:10px;">${escapeHtml(cta.label)}</a></p>`
-    : "";
-  const html = `<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-  <body style="margin:0;padding:0;background:#f4f4f4;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
-  <table role="presentation" style="width:100%;border-collapse:collapse;"><tr><td align="center" style="padding:32px 12px;">
-  <table role="presentation" style="width:560px;max-width:100%;border-collapse:collapse;background:#ffffff;border-radius:16px;overflow:hidden;">
-  <tr><td style="background:linear-gradient(135deg,#10b981 0%,#06b6d4 100%);padding:28px 24px;text-align:center;">
-  <h1 style="color:#ffffff;margin:0;font-size:22px;">${escapeHtml(subject)}</h1></td></tr>
-  <tr><td style="padding:28px 24px;color:#1f2937;font-size:16px;line-height:1.6;">
-  ${body}${button}
-  <p style="margin:0;color:#4b5563;font-size:14px;">Per qualsiasi dubbio rispondi pure a questa email.</p>
-  </td></tr>
-  <tr><td style="background:#f9fafb;padding:20px;text-align:center;border-top:1px solid #e5e7eb;color:#6b7280;font-size:13px;">Il Team TECHLAND · techlanditalia.it</td></tr>
-  </table></td></tr></table></body></html>`;
-
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from: "TECHLAND <info@techlanditalia.it>",
-      to: [to],
-      reply_to: "info@techlanditalia.it",
-      subject,
-      html,
-      text,
-    }),
-  });
-  if (!res.ok) {
-    await captureServerError(new Error(`Resend ${res.status}: ${(await res.text()).slice(0, 300)}`), {
-      fn: FN,
-      fingerprint: [FN, "resend"],
-    });
-    return false;
-  }
-  return true;
+  const { kind, to, recipientId, ...content } = opts;
+  const result = await sendMail({ kind, source: FN, to, replyTo: REPLY_TO, recipientId, ...surveyEmail(content) });
+  return result.ok;
 }
 
 async function loadRules(supabase: SupabaseClient): Promise<SurveyRules> {
@@ -281,7 +236,9 @@ async function scan(supabase: SupabaseClient): Promise<ScanSummary & { disabled?
     const pushed = await sendPush(supabase, recipientId, title, body, path);
     const mailed = email
       ? await sendEmail({
+        kind: "survey_invite",
         to: email,
+        recipientId,
         subject: title,
         paragraphs: [body],
         text: `${body}\n\nRispondi qui: ${SITE_URL}${path}\n\nIl Team TECHLAND`,
@@ -408,7 +365,9 @@ async function respond(
     if (email && (trustpilotUrl || referral)) {
       const msg = thankYouMessage({ studentName, trustpilotUrl, referralLink: referral, rewardText });
       await sendEmail({
+        kind: "survey_thanks",
         to: email,
+        recipientId: recipient?.id ?? null,
         subject: msg.subject,
         paragraphs: msg.paragraphs,
         text: msg.text,

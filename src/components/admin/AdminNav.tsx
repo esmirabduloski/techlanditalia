@@ -3,7 +3,7 @@ import { useRef, useState, useEffect } from 'react';
 import { 
   FileText, GraduationCap, BookOpen, Mail, User, BarChart3, 
   Award, Calendar, ClipboardCheck, Users, Newspaper, UsersRound, CalendarClock, Link as LinkIcon,
-  ChevronLeft, ChevronRight, Menu, X, Database, ClipboardList, BookText, Megaphone, Briefcase, Shield, Settings, Gift, Bug, Bell, Headset, ShieldCheck, Camera
+  ChevronLeft, ChevronRight, Menu, X, Database, ClipboardList, BookText, Megaphone, Briefcase, Shield, Settings, Gift, Bug, Bell, Headset, ShieldCheck, Camera, MailCheck
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -45,6 +45,7 @@ const navItems: NavItem[] = [
   { to: '/admin/glossario', label: 'Glossario', icon: BookOpen },
   { to: '/admin/referral', label: 'Referral', icon: Gift },
   { to: '/admin/notifiche-push', label: 'Notifiche', icon: Bell },
+  { to: '/admin/email', label: 'Email', icon: MailCheck },
   { to: '/admin/chat-live', label: 'Chat live', icon: Headset },
   { to: '/admin/privacy', label: 'Privacy', icon: ShieldCheck, notificationKey: 'pendingRetention' },
   { to: '/admin/consensi-foto-video', label: 'Foto, video e AI', icon: Camera },

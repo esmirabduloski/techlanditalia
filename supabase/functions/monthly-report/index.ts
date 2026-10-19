@@ -16,6 +16,7 @@ import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supa
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { decodeClaims, mfaRequiredResponse } from "../_shared/mfa.ts";
 import { captureServerError, withCronMonitor } from "../_shared/sentry.ts";
+import { sendEmail } from "../_shared/email.ts";
 import {
   buildReportEmail,
   isMonth,
@@ -45,33 +46,6 @@ async function adminEmails(supabase: SupabaseClient): Promise<string[]> {
   return [...new Set((profiles ?? []).map((p) => (p.email as string | null)?.trim().toLowerCase()).filter((e): e is string => !!e))];
 }
 
-async function sendEmail(to: string, mail: { subject: string; html: string; text: string }): Promise<boolean> {
-  const key = Deno.env.get("RESEND_API_KEY");
-  if (!key) {
-    console.warn(`[${FN}] RESEND_API_KEY mancante, email non inviata`);
-    return false;
-  }
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from: "TECHLAND <info@techlanditalia.it>",
-      to: [to],
-      subject: mail.subject,
-      html: mail.html,
-      text: mail.text,
-    }),
-  });
-  if (!res.ok) {
-    await captureServerError(new Error(`Resend ${res.status}: ${(await res.text()).slice(0, 300)}`), {
-      fn: FN,
-      fingerprint: [FN, "resend"],
-    });
-    return false;
-  }
-  return true;
-}
-
 async function run(supabase: SupabaseClient, month: string, recipients: string[], isCron: boolean) {
   if (isCron) {
     const { data: existing } = await supabase
@@ -84,7 +58,7 @@ async function run(supabase: SupabaseClient, month: string, recipients: string[]
 
   const sentTo: string[] = [];
   for (const to of recipients) {
-    if (await sendEmail(to, mail)) sentTo.push(to);
+    if ((await sendEmail({ kind: "staff_monthly_report", source: FN, to, ...mail })).ok) sentTo.push(to);
   }
 
   if (isCron) {

@@ -1,11 +1,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "https://esm.sh/resend@2.0.0";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { clientIp } from "../_shared/clientip.ts";
+import { sendEmail } from "../_shared/email.ts";
+import { newsletterConfirmEmail } from "../_shared/emailtemplates.ts";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 
 const SubscribeSchema = z.object({
@@ -104,28 +104,14 @@ const handler = async (req: Request): Promise<Response> => {
     const siteUrl = Deno.env.get("SITE_URL") || "https://techlanditalia.it";
     const confirmUrl = `${supabaseUrl}/functions/v1/newsletter-confirm?token=${confirmationToken}`;
 
-    const { error: emailError } = await resend.emails.send({
+    const sent = await sendEmail({
+      kind: "newsletter_confirm",
+      source: "newsletter-subscribe",
       from: "TECHLAND <noreply@techlanditalia.it>",
-      to: [email],
-      subject: "Conferma la tua iscrizione alla newsletter TECHLAND",
-      html: `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="text-align: center; margin-bottom: 30px;"><h1 style="color: #10b981; margin: 0;">🚀 TECHLAND</h1><p style="color: #666; margin-top: 5px;">Coding per Ragazzi</p></div>
-          <div style="background: #f8fafc; border-radius: 12px; padding: 30px; margin-bottom: 20px;">
-            <h2 style="margin-top: 0; color: #1f2937;">Conferma la tua iscrizione</h2>
-            <p>Ciao! 👋</p>
-            <p>Grazie per aver richiesto di iscriverti alla newsletter di TECHLAND. Per completare l'iscrizione, clicca sul pulsante qui sotto:</p>
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${confirmUrl}" style="display: inline-block; background: #10b981; color: white; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600;">✅ Conferma Iscrizione</a>
-            </div>
-            <p style="color: #666; font-size: 14px;">Se non hai richiesto questa iscrizione, puoi ignorare questa email.</p>
-          </div>
-          <div style="text-align: center; color: #999; font-size: 12px;">
-            <p>© ${new Date().getFullYear()} TECHLAND - Tutti i diritti riservati</p>
-            <p><a href="${siteUrl}" style="color: #10b981;">techlanditalia.it</a></p>
-          </div>
-        </body></html>`,
+      to: email,
+      ...newsletterConfirmEmail({ confirmUrl, siteUrl, year: new Date().getFullYear() }),
     });
+    const emailError = sent.ok ? null : sent.error;
 
     if (emailError) {
       console.error("Email send error:", emailError);

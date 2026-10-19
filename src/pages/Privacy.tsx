@@ -9,10 +9,10 @@ import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
  * Il testo descrive i trattamenti EFFETTIVAMENTE presenti nel codice: form di
  * prenotazione/contatto/candidatura, newsletter (double opt-in), account genitore
  * e studente dell'area riservata, chat con assistente AI, notifiche push,
- * pagamenti Stripe, statistiche di prima parte e log di sicurezza. Se aggiungi un
+ * pagamenti Stripe, statistiche di prima parte, log di sicurezza e registro email. Se aggiungi un
  * fornitore o un nuovo trattamento, aggiorna anche questa pagina e la data.
  */
-const LAST_UPDATE = "18 ottobre 2026";
+const LAST_UPDATE = "19 ottobre 2026";
 const PRIVACY_EMAIL = "info@techlanditalia.it";
 
 const H2 = ({ children }: { children: React.ReactNode }) => (
@@ -160,6 +160,13 @@ export default function Privacy() {
                     agent e timestamp delle richieste ai nostri form e dei tentativi di accesso (legittimo interesse, art. 6.1.f).
                     Conservazione: limiti di frequenza 24 ore, tentativi di accesso 7 giorni, eventi di sicurezza e accessi
                     amministrativi 90 giorni.
+                  </li>
+                  <li>
+                    <strong>Registro delle email:</strong> per sapere quali email ti abbiamo mandato e risolvere problemi di
+                    consegna registriamo destinatario, tipo di email, oggetto, data ed esito dell&apos;invio e, tranne per le
+                    email con link o codici di accesso (password, verifica in due passaggi, conferma newsletter), anche il
+                    testo (legittimo interesse, art. 6.1.f). Lo vedono solo gli amministratori. Conservazione: 12 mesi; il
+                    registro collegato a un account viene cancellato insieme all&apos;account.
                   </li>
                   <li>
                     <strong>Statistiche di navigazione:</strong> misuriamo pagine viste, click sui pulsanti, tempo di lettura e

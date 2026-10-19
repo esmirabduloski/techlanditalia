@@ -6,6 +6,7 @@
  * uniche notifiche sono gli avvisi di fine pausa (14 e 7 giorni prima) del job
  * subscription-pause-check.
  */
+import { brandedEmail, escapeHtml, type EmailContent } from "./emaillayout.ts";
 
 export type PauseReason = "summer" | "exams" | "illness" | "other";
 
@@ -66,6 +67,19 @@ export function pauseEndingMessage(opts: { studentName: string; endsOn: string; 
     title: `⏯️ La pausa di ${studentName} finisce ${when}`,
     body: `Dal ${formatDate(endsOn)} riprendono le lezioni di ${studentName} con TECHLAND. ` +
       "Se vi serve più tempo o volete cambiare orario, scriveteci.",
+  };
+}
+
+/** Email dell'avviso di fine pausa, con il link all'area riservata. */
+export function pauseEndingEmail(msg: { title: string; body: string }, siteUrl: string): EmailContent {
+  return {
+    subject: msg.title,
+    html: brandedEmail({
+      title: msg.title,
+      bodyHtml: `<p style="margin:0 0 16px;">${escapeHtml(msg.body)}</p>
+  <p style="margin:0 0 16px;"><a href="${siteUrl}/area-riservata" style="color:#059669;font-weight:bold;">Vai all'area riservata →</a></p>`,
+    }),
+    text: `${msg.body}\n\nIl Team TECHLAND`,
   };
 }
 

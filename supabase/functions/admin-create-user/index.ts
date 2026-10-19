@@ -296,6 +296,8 @@ serve(async (req) => {
         email: email.trim().toLowerCase(),
         fullName: fullName.trim(),
         role: userRole,
+        // Collega l'email al profilo nel registro email (sparisce con l'account)
+        userId: newUserId,
       };
       if (role === "parent" && childName && childUsername) {
         welcomeBody.childName = childName.trim();

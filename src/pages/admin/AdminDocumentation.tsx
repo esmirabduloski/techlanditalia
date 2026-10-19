@@ -119,6 +119,7 @@ const sections: FeatureSection[] = [
       { name: 'Prenotazioni', description: 'Gestione prenotazioni prove gratuite con notifiche per nuove richieste.', route: '/admin/prenotazioni' },
       { name: 'Contatti', description: 'Visualizzazione messaggi dal form contatti con notifiche.', route: '/admin/contatti' },
       { name: 'Newsletter', description: 'Gestione iscritti newsletter con invio email e conferma double opt-in.', route: '/admin/newsletter' },
+      { name: 'Email', description: 'Centro di controllo email: catalogo di tutte le email con anteprima ed email di prova, invii previsti nei prossimi giorni (solleciti, fine pausa, report) e storico degli invii con destinatario ed esito.', route: '/admin/email' },
       { name: 'Utenti', description: 'Gestione profili utenti, creazione account, reset password e toggle ruoli.', route: '/admin/utenti' },
       { name: 'Disponibilità Insegnanti', description: 'Calendario disponibilità insegnanti con gestione turni.', route: '/admin/disponibilita' },
       { name: 'Valutazioni', description: 'Panoramica valutazioni compiti con filtri per corso e gruppo.', route: '/admin/valutazioni' },

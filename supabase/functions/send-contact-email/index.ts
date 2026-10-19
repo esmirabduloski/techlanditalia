@@ -5,16 +5,12 @@ import { corsHeadersFor } from "../_shared/cors.ts";
 import { clientIp } from "../_shared/clientip.ts";
 import { notifyAdmins } from "../_shared/adminpush.ts";
 import { captureServerError } from "../_shared/sentry.ts";
+import { sendEmail } from "../_shared/email.ts";
+import { contactStaffEmail } from "../_shared/emailtemplates.ts";
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-
-function escapeHtml(text: string): string {
-  const ent: Record<string, string> = { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' };
-  return text.replace(/[&<>"']/g, (c) => ent[c] || c);
-}
 
 const ContactSchema = z.object({
   nome: z.string().trim().min(1).max(100),
@@ -25,21 +21,6 @@ const ContactSchema = z.object({
   website: z.string().max(0).optional().or(z.literal("")),
   formOpenedAt: z.number().optional(),
 });
-
-async function sendEmail(to: string[], subject: string, html: string, replyTo?: string, text?: string) {
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
-    body: JSON.stringify({
-      from: "TechLand Italia <info@techlanditalia.it>",
-      to, subject, html,
-      ...(text ? { text } : {}),
-      reply_to: replyTo,
-    }),
-  });
-  if (!response.ok) throw new Error(`Failed to send email: ${await response.text()}`);
-  return response.json();
-}
 
 const BOT_UA_PATTERNS = /(curl|wget|python-requests|scrapy|httpclient|go-http-client|java\/|libwww|httrack|nikto|sqlmap|nmap|masscan|zgrab|acunetix|nessus|burpsuite)/i;
 
@@ -105,44 +86,18 @@ const handler = async (req: Request): Promise<Response> => {
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
 
-    const safeNome = escapeHtml(nome);
-    const safeEmail = escapeHtml(email);
-    const safeOggetto = escapeHtml(oggetto);
-    const safeMessaggio = escapeHtml(messaggio);
-
-    let emailSent = false;
-    let errorMessage: string | null = null;
-
-    try {
-      await sendEmail(
-        ["info@techlanditalia.it"],
-        `[Contatto] ${oggetto.substring(0, 100)}`,
-        `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #0ea5e9;">Nuovo messaggio dal form contatti</h2>
-          <div style="background: #f4f4f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <p><strong>Nome:</strong> ${safeNome}</p>
-            <p><strong>Email:</strong> ${safeEmail}</p>
-            <p><strong>Oggetto:</strong> ${safeOggetto}</p>
-          </div>
-          <h3>Messaggio:</h3>
-          <div style="background: #ffffff; padding: 20px; border: 1px solid #e4e4e7; border-radius: 8px;">
-            <p style="white-space: pre-wrap;">${safeMessaggio}</p>
-          </div>
-          <hr style="margin: 30px 0; border: none; border-top: 1px solid #e4e4e7;">
-          <p style="color: #71717a; font-size: 12px;">Puoi rispondere direttamente a questa email per contattare ${safeNome}.</p>
-        </div>`,
-        email,
-        `Nuovo messaggio\n\nNome: ${nome}\nEmail: ${email}\nOggetto: ${oggetto}\n\nMessaggio:\n${messaggio}`
-      );
-
-      // Nessuna email automatica all'indirizzo inserito dal visitatore:
-      // eviterebbe che il form venga usato per inviare messaggi a terzi.
-
-      emailSent = true;
-    } catch (emailError: any) {
-      await captureServerError(emailError, { fn: "send-contact-email", tags: { step: "resend" } });
-      errorMessage = emailError.message;
-    }
+    // Nessuna email automatica all'indirizzo inserito dal visitatore:
+    // eviterebbe che il form venga usato per inviare messaggi a terzi.
+    const result = await sendEmail({
+      kind: "staff_contact",
+      source: "send-contact-email",
+      from: "TechLand Italia <info@techlanditalia.it>",
+      to: "info@techlanditalia.it",
+      replyTo: email,
+      ...contactStaffEmail({ nome, email, oggetto, messaggio }),
+    });
+    const emailSent = result.ok;
+    const errorMessage = result.ok ? null : result.error;
 
     await supabase.from('contact_submissions').insert({
       nome, email, oggetto, messaggio,

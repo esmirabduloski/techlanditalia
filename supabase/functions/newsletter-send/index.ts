@@ -1,11 +1,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "https://esm.sh/resend@2.0.0";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { rateLimit } from "../_shared/ratelimit.ts";
 import { captureServerError } from "../_shared/sentry.ts";
+import { sendEmail } from "../_shared/email.ts";
+import { newsletterEmail } from "../_shared/emailtemplates.ts";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 
 interface SendNewsletterRequest {
@@ -123,44 +123,18 @@ const handler = async (req: Request): Promise<Response> => {
         const oneClickUrl = `${supabaseUrl}/functions/v1/newsletter-unsubscribe?token=${subscriber.unsubscribe_token}`;
         
         try {
-          const { error: emailError } = await resend.emails.send({
+          const sent = await sendEmail({
+            kind: "newsletter",
+            source: "newsletter-send",
             from: "TECHLAND <newsletter@techlanditalia.it>",
-            to: [subscriber.email],
-            subject: subject.trim(),
+            to: subscriber.email,
             headers: {
               "List-Unsubscribe": `<${oneClickUrl}>`,
               "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
             },
-            html: `
-              <!DOCTYPE html>
-              <html>
-              <head>
-                <meta charset="utf-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              </head>
-              <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-                <div style="text-align: center; margin-bottom: 30px;">
-                  <h1 style="color: #10b981; margin: 0;">🚀 TECHLAND</h1>
-                  <p style="color: #666; margin-top: 5px;">Coding per Bambini</p>
-                </div>
-                
-                <div style="background: #f8fafc; border-radius: 12px; padding: 30px; margin-bottom: 20px;">
-                  ${content}
-                </div>
-                
-                <div style="text-align: center; color: #999; font-size: 12px; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee;">
-                  <p>© ${new Date().getFullYear()} TECHLAND - Tutti i diritti riservati</p>
-                  <p>
-                    <a href="${siteUrl}" style="color: #10b981;">techlanditalia.it</a>
-                  </p>
-                  <p style="margin-top: 20px;">
-                    <a href="${unsubscribeUrl}" style="color: #999; text-decoration: underline;">Disiscriviti dalla newsletter</a>
-                  </p>
-                </div>
-              </body>
-              </html>
-            `,
+            ...newsletterEmail({ subject, contentHtml: content, siteUrl, unsubscribeUrl, year: new Date().getFullYear() }),
           });
+          const emailError = sent.ok ? null : sent.error;
 
           if (emailError) {
             console.error(`Error sending to ${subscriber.email}:`, emailError);

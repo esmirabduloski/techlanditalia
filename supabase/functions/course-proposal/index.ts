@@ -17,7 +17,8 @@ import { decodeClaims, mfaRequiredResponse } from "../_shared/mfa.ts";
 import { captureServerError } from "../_shared/sentry.ts";
 import { notifyAdmins } from "../_shared/adminpush.ts";
 import { romeToday } from "../_shared/subscriptionpause.ts";
-import { discountStillValid, formatDate, formatEuro, proposalMessage, type ProposalMessage } from "../_shared/courseproposal.ts";
+import { discountStillValid, formatDate, formatEuro, proposalEmail, proposalMessage } from "../_shared/courseproposal.ts";
+import { REPLY_TO, sendEmail } from "../_shared/email.ts";
 
 const FN = "course-proposal";
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/firebase_messaging";
@@ -42,9 +43,6 @@ const PROPOSAL_SELECT =
   "student:profiles!course_proposals_student_id_fkey(full_name, email, parent_id), " +
   "group:student_groups!course_proposals_group_id_fkey(title, teacher_id, course:courses(title)), " +
   "course:courses!course_proposals_proposed_course_id_fkey(title)";
-
-const escapeHtml = (s: string) =>
-  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 async function sendPush(supabase: SupabaseClient, userId: string, title: string, body: string): Promise<number> {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -76,65 +74,6 @@ async function sendPush(supabase: SupabaseClient, userId: string, title: string,
     }
   }
   return ok;
-}
-
-async function sendEmail(to: string, msg: ProposalMessage, discountCents: number, expiresOn: string): Promise<boolean> {
-  const key = Deno.env.get("RESEND_API_KEY");
-  if (!key) {
-    console.warn(`[${FN}] RESEND_API_KEY mancante, email non inviata`);
-    return false;
-  }
-  const [hello, intro, offer, cta] = msg.paragraphs.map(escapeHtml);
-  const badge = discountCents > 0
-    ? `<tr><td style="padding:0 24px 8px;"><div style="background:#ecfdf5;border:2px dashed #10b981;border-radius:12px;padding:16px;text-align:center;">
-       <div style="font-size:28px;font-weight:bold;color:#047857;">-${escapeHtml(formatEuro(discountCents))}</div>
-       <div style="font-size:14px;color:#065f46;">per chi conferma entro il ${escapeHtml(formatDate(expiresOn))}</div></div></td></tr>`
-    : "";
-  const html = `<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-  <body style="margin:0;padding:0;background:#f4f4f4;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
-  <table role="presentation" style="width:100%;border-collapse:collapse;"><tr><td align="center" style="padding:32px 12px;">
-  <table role="presentation" style="width:560px;max-width:100%;border-collapse:collapse;background:#ffffff;border-radius:16px;overflow:hidden;">
-  <tr><td style="background:linear-gradient(135deg,#10b981 0%,#06b6d4 100%);padding:28px 24px;text-align:center;">
-  <h1 style="color:#ffffff;margin:0;font-size:22px;">${escapeHtml(msg.pushTitle)}</h1></td></tr>
-  <tr><td style="padding:28px 24px 8px;color:#1f2937;font-size:16px;line-height:1.6;">
-  <p style="margin:0 0 16px;">${hello}</p>
-  <p style="margin:0 0 16px;">${intro}</p>
-  <blockquote style="margin:0 0 16px;padding:12px 16px;border-left:4px solid #10b981;background:#f9fafb;font-style:italic;">
-  ${escapeHtml(msg.quote).replace(/\n/g, "<br>")}<br><span style="font-style:normal;color:#6b7280;font-size:14px;">— ${escapeHtml(msg.quoteAuthor)}</span></blockquote>
-  </td></tr>
-  ${badge}
-  <tr><td style="padding:8px 24px 28px;color:#1f2937;font-size:16px;line-height:1.6;">
-  <p style="margin:0 0 16px;">${offer}</p>
-  <p style="margin:0 0 20px;">${cta}</p>
-  <p style="margin:0 0 20px;text-align:center;"><a href="${SITE_URL}/area-riservata" style="display:inline-block;background:#059669;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 24px;border-radius:10px;">Rispondi alla proposta →</a></p>
-  <p style="margin:0;color:#4b5563;font-size:14px;">Per qualsiasi dubbio rispondi pure a questa email.</p>
-  </td></tr>
-  <tr><td style="background:#f9fafb;padding:20px;text-align:center;border-top:1px solid #e5e7eb;color:#6b7280;font-size:13px;">Il Team TECHLAND · techlanditalia.it</td></tr>
-  </table></td></tr></table></body></html>`;
-
-  const text = [...msg.paragraphs.slice(0, 2), `"${msg.quote}" — ${msg.quoteAuthor}`, ...msg.paragraphs.slice(2),
-    `${SITE_URL}/area-riservata`, "Il Team TECHLAND"].join("\n\n");
-
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from: "TECHLAND <info@techlanditalia.it>",
-      to: [to],
-      reply_to: "info@techlanditalia.it",
-      subject: msg.subject,
-      html,
-      text,
-    }),
-  });
-  if (!res.ok) {
-    await captureServerError(new Error(`Resend ${res.status}: ${(await res.text()).slice(0, 300)}`), {
-      fn: FN,
-      fingerprint: [FN, "resend"],
-    });
-    return false;
-  }
-  return true;
 }
 
 /** Lead della famiglia: prima quello collegato al genitore, poi all'alunno. */
@@ -277,12 +216,22 @@ serve(async (req: Request): Promise<Response> => {
         expiresOn: p.offer_expires_on,
       });
       const pushed = await sendPush(supabase, recipientId, msg.pushTitle, msg.pushBody);
-      const mailed = email ? await sendEmail(email, msg, p.discount_cents, p.offer_expires_on) : false;
+      const leadId = await familyLeadId(supabase, p.student_id, parentId);
+      const mailed = email
+        ? (await sendEmail({
+          kind: "course_proposal",
+          source: FN,
+          to: email,
+          replyTo: REPLY_TO,
+          recipientId,
+          leadId,
+          ...proposalEmail(msg, { discountCents: p.discount_cents, expiresOn: p.offer_expires_on, siteUrl: SITE_URL }),
+        })).ok
+        : false;
       if (mailed) {
         await supabase.from("course_proposals").update({ email_sent_at: new Date().toISOString() }).eq("id", p.id);
       }
 
-      const leadId = await familyLeadId(supabase, p.student_id, parentId);
       if (leadId) {
         const discount = p.discount_cents > 0 ? `sconto ${formatEuro(p.discount_cents)}` : "senza sconto";
         await supabase.from("crm_interactions").insert({

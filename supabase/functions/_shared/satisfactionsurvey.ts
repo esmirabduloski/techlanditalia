@@ -4,6 +4,7 @@
  * (drizzle/migrations/0038_satisfaction_surveys.sql); qui si decide se mandarlo,
  * cosa fare con la risposta e si preparano i testi in italiano.
  */
+import { brandedEmail, ctaButton, paragraph, type EmailContent } from "./emaillayout.ts";
 
 export type SurveyKind = "after_3_lessons" | "module_end";
 
@@ -162,6 +163,24 @@ export function thankYouMessage(opts: {
     subject: `Grazie per il vostro parere su ${studentName}`,
     paragraphs,
     text: `${paragraphs.join("\n\n")}\n\nIl Team TECHLAND`,
+  };
+}
+
+/** Email del sondaggio (invito o ringraziamento): paragrafi con link cliccabili e pulsante. */
+export function surveyEmail(opts: {
+  subject: string;
+  paragraphs: string[];
+  text: string;
+  cta?: { label: string; url: string };
+}): EmailContent {
+  return {
+    subject: opts.subject,
+    html: brandedEmail({
+      title: opts.subject,
+      bodyHtml: opts.paragraphs.map((p) => paragraph(p, { linkify: true })).join("") +
+        (opts.cta ? ctaButton(opts.cta.label, opts.cta.url) : ""),
+    }),
+    text: opts.text,
   };
 }
 

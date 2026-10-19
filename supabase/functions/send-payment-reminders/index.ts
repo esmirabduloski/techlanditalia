@@ -4,6 +4,17 @@ import { corsHeadersFor } from "../_shared/cors.ts";
 import { notifyAdmins } from "../_shared/adminpush.ts";
 import { captureServerError, withCronMonitor } from "../_shared/sentry.ts";
 import { silencedProfileIds } from "../_shared/subscriptionpause.ts";
+import { REPLY_TO, sendEmail as sendMail } from "../_shared/email.ts";
+import {
+  capitalize,
+  CLIENT_MAX_DELAY_DAYS,
+  clientTexts,
+  euro,
+  parseDunning,
+  paymentEmail,
+  paymentPhrase,
+  shortDate,
+} from "../_shared/paymentreminders.ts";
 
 /**
  * Promemoria dei pagamenti CRM (tabella crm_payments).
@@ -20,28 +31,6 @@ import { silencedProfileIds } from "../_shared/subscriptionpause.ts";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/firebase_messaging";
 const SITE_URL = (Deno.env.get("SITE_URL") || "https://techlanditalia.it").replace(/\/$/, "");
-// Al cliente non mandiamo promemoria troppo vecchi (es. rate create con date già passate)
-const CLIENT_MAX_DELAY_DAYS = 3;
-// Stesso numero del footer e di WhatsAppCta.tsx
-const WHATSAPP_NUMBER = "393505813140";
-
-type DunningSettings = {
-  enabled: boolean;
-  first_after_days: number;
-  repeat_every_days: number;
-  max_reminders: number;
-  notify_client: boolean;
-  /** Testo aggiunto alle email al cliente, es. IBAN o modalità di pagamento */
-  payment_instructions?: string;
-};
-
-const DEFAULT_DUNNING: DunningSettings = {
-  enabled: true,
-  first_after_days: 3,
-  repeat_every_days: 7,
-  max_reminders: 3,
-  notify_client: false,
-};
 
 type PaymentRow = {
   id: string;
@@ -61,18 +50,6 @@ type PaymentRow = {
   crm_leads: { full_name: string | null; email: string | null; linked_profile_id: string | null } | null;
 };
 
-const euro = (cents: number) =>
-  new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(cents / 100);
-
-const shortDate = (iso: string | null) =>
-  iso ? new Date(`${iso}T12:00:00Z`).toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit" }) : "";
-
-const longDate = (iso: string) =>
-  new Date(`${iso}T12:00:00Z`).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
-
-const escapeHtml = (value: string) =>
-  value.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
-
 /** Data di oggi (YYYY-MM-DD) nel fuso di Roma. */
 function todayRome(): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Rome" }).format(new Date());
@@ -82,27 +59,9 @@ function daysBetween(fromIso: string, toIso: string): number {
   return Math.round((Date.parse(`${toIso}T00:00:00Z`) - Date.parse(`${fromIso}T00:00:00Z`)) / 86_400_000);
 }
 
-/** "la rata 3/10 (Corso Python Base)", "il pagamento per Corso Scratch", "il pagamento". */
-function paymentPhrase(p: PaymentRow): string {
-  const desc = p.description?.trim();
-  if (p.installment_number && p.installment_total) {
-    return `la rata ${p.installment_number}/${p.installment_total}${desc ? ` (${desc})` : ""}`;
-  }
-  return desc ? `il pagamento per ${desc}` : "il pagamento";
-}
-
-/** Causale del bonifico: "Corso educativo per bambini - rata 3/10". */
-function paymentReference(p: PaymentRow): string {
-  const base = "Corso educativo per bambini";
-  if (!p.installment_number) return base;
-  return `${base} - rata ${p.installment_number}${p.installment_total ? `/${p.installment_total}` : ""}`;
-}
-
 const FN = "send-payment-reminders";
 // Stesso crontab del job pg_cron send-payment-reminders-daily (0006_crm_payments.sql)
 const MONITOR = { slug: FN, schedule: "0 7 * * *", marginMinutes: 30, maxRuntimeMinutes: 10 };
-
-const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
 serve(async (req: Request): Promise<Response> => {
   const corsHeaders = corsHeadersFor(req);
@@ -153,21 +112,10 @@ serve(async (req: Request): Promise<Response> => {
     // Push e email sono indipendenti: se manca Firebase si usa solo l'email e viceversa
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const CONNECTION_KEY = Deno.env.get("FIREBASE_MESSAGING_API_KEY");
-    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
     const { data: settingRow } = await supabase
       .from("site_settings").select("value").eq("key", "crm_payment_dunning").maybeSingle();
-    const rules: DunningSettings = { ...DEFAULT_DUNNING, ...((settingRow?.value as Partial<DunningSettings>) ?? {}) };
-
-    const clientTexts = (p: PaymentRow, kind: "reminder" | "overdue") => {
-      const firstName = p.crm_leads?.full_name?.trim().split(/\s+/)[0] ?? "";
-      const greeting = firstName ? `Ciao ${firstName}, ` : "";
-      const title = kind === "overdue" ? "Pagamento da saldare" : "Promemoria pagamento";
-      const text = kind === "overdue"
-        ? `${greeting}risulta ancora da saldare ${paymentPhrase(p)} di ${euro(p.amount_cents)}${p.due_date ? `, con scadenza il ${shortDate(p.due_date)}` : ""}. Se hai già pagato, ignora questo messaggio. Grazie!`
-        : `${greeting}${firstName ? "ti" : "Ti"} ricordiamo ${paymentPhrase(p)} di ${euro(p.amount_cents)}${p.due_date ? ` in scadenza il ${shortDate(p.due_date)}` : ""}. Grazie!`;
-      return { title, text };
-    };
+    const rules = parseDunning(settingRow?.value);
 
     /** Account con l'abbonamento in pausa, caricati al primo promemoria del cron. */
     let silenced: Set<string> | null = null;
@@ -176,57 +124,17 @@ serve(async (req: Request): Promise<Response> => {
     const sendEmail = async (p: PaymentRow, kind: "reminder" | "overdue"): Promise<"email_sent" | "no_email" | "failed"> => {
       const to = p.crm_leads?.email?.trim();
       if (!to) return "no_email";
-      if (!RESEND_API_KEY) {
-        console.warn("[send-payment-reminders] RESEND_API_KEY mancante, email non inviata");
-        return "failed";
-      }
-      const { title, text } = clientTexts(p, kind);
-      const instructions = rules.payment_instructions?.trim();
-      const hasAccount = !!p.crm_leads?.linked_profile_id;
-      const reference = paymentReference(p);
-      const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Ciao! Vi scrivo per ${paymentPhrase(p)} di ${euro(p.amount_cents)}.`)}`;
-      const html = `<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-  <body style="margin:0;padding:0;background:#f4f4f4;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
-  <table role="presentation" style="width:100%;border-collapse:collapse;"><tr><td align="center" style="padding:32px 12px;">
-  <table role="presentation" style="width:560px;max-width:100%;border-collapse:collapse;background:#ffffff;border-radius:16px;overflow:hidden;">
-  <tr><td style="background:linear-gradient(135deg,#10b981 0%,#06b6d4 100%);padding:28px 24px;text-align:center;">
-  <h1 style="color:#ffffff;margin:0;font-size:22px;">${escapeHtml(title)}</h1></td></tr>
-  <tr><td style="padding:28px 24px;color:#1f2937;font-size:16px;line-height:1.6;">
-  <p style="margin:0 0 16px;">${escapeHtml(text)}</p>
-  <table role="presentation" style="width:100%;border-collapse:collapse;background:#f0fdf4;border-radius:12px;margin:0 0 16px;">
-  <tr><td style="padding:16px;font-size:15px;">
-  <strong>Importo:</strong> ${escapeHtml(euro(p.amount_cents))}<br>
-  ${p.due_date ? `<strong>Scadenza:</strong> ${escapeHtml(longDate(p.due_date))}<br>` : ""}
-  ${p.description ? `<strong>Descrizione:</strong> ${escapeHtml(p.description)}<br>` : ""}
-  <strong>Causale:</strong> ${escapeHtml(reference)}
-  </td></tr></table>
-  ${instructions ? `<p style="margin:0 0 16px;white-space:pre-line;"><strong>Come pagare</strong><br>${escapeHtml(instructions)}</p>` : ""}
-  ${hasAccount ? `<p style="margin:0 0 16px;"><a href="${SITE_URL}/area-riservata/acquisti" style="color:#059669;font-weight:bold;">Vedi i tuoi pagamenti nell'area riservata →</a></p>` : ""}
-  <p style="margin:0;color:#4b5563;font-size:14px;">Per qualsiasi dubbio rispondi pure a questa email, ma per risposte immediate <a href="${whatsappUrl}" style="color:#059669;font-weight:bold;">contattaci su WhatsApp</a>.</p>
-  </td></tr>
-  <tr><td style="background:#f9fafb;padding:20px;text-align:center;border-top:1px solid #e5e7eb;color:#6b7280;font-size:13px;">Il Team TECHLAND · techlanditalia.it</td></tr>
-  </table></td></tr></table></body></html>`;
-
-      const res = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          from: "TECHLAND <info@techlanditalia.it>",
-          to: [to],
-          reply_to: "info@techlanditalia.it",
-          subject: `${title} – ${euro(p.amount_cents)}`,
-          html,
-          text: `${text}\n\nCausale: ${reference}${instructions ? `\n\nCome pagare:\n${instructions}` : ""}\n\nPer qualsiasi dubbio rispondi pure a questa email, ma per risposte immediate contattaci su WhatsApp: ${whatsappUrl}\n\nIl Team TECHLAND`,
-        }),
+      const result = await sendMail({
+        kind: kind === "overdue" ? "payment_overdue" : "payment_reminder",
+        source: FN,
+        to,
+        replyTo: REPLY_TO,
+        recipientId: p.crm_leads?.linked_profile_id ?? null,
+        leadId: p.lead_id,
+        extra: { paymentId: p.id },
+        ...paymentEmail(p, kind, { siteUrl: SITE_URL, instructions: rules.payment_instructions }),
       });
-      if (!res.ok) {
-        await captureServerError(new Error(`Resend ${res.status}: ${(await res.text()).slice(0, 300)}`), {
-          fn: FN,
-          extra: { paymentId: p.id, kind },
-          fingerprint: [FN, "resend"],
-        });
-        return "failed";
-      }
+      if (!result.ok) return "failed";
       return "email_sent";
     };
 

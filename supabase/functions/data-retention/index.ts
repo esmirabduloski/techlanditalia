@@ -16,15 +16,15 @@ import { corsHeadersFor } from "../_shared/cors.ts";
 import { notifyAdmins } from "../_shared/adminpush.ts";
 import { decodeClaims, mfaRequiredResponse } from "../_shared/mfa.ts";
 import { captureServerError, withCronMonitor } from "../_shared/sentry.ts";
+import { sendEmail as sendMail } from "../_shared/email.ts";
+import { dataRetentionEmail, DEFAULT_RETENTION_NOTIFY_EMAILS, emailList } from "../_shared/emailtemplates.ts";
 
 const FN = "data-retention";
 // Stesso crontab del job pg_cron data-retention-monthly-scan (0015_cron_tokens_blog_retention.sql)
 const SCAN_MONITOR = { slug: "data-retention-scan", schedule: "0 6 1 * *", marginMinutes: 60, maxRuntimeMinutes: 5 };
 
 const SITE_URL = (Deno.env.get("SITE_URL") || "https://techlanditalia.it").replace(/\/$/, "");
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const NOTIFY_EMAILS = (Deno.env.get("RETENTION_NOTIFY_EMAILS") || "info@techlanditalia.it,infotechlanditalia@gmail.com")
-  .split(",").map((e) => e.trim()).filter(Boolean);
+const NOTIFY_EMAILS = emailList(Deno.env.get("RETENTION_NOTIFY_EMAILS") || DEFAULT_RETENTION_NOTIFY_EMAILS);
 /** Un avviso al mese basta: niente nuove email/push se l'ultimo è più recente di così. */
 const RENOTIFY_AFTER_HOURS = 24 * 20;
 
@@ -109,39 +109,14 @@ async function buildSummary(db: Db) {
 type SummaryRow = { id: string; label: string; basis: string; cutoff: string; count: number };
 
 async function sendEmail(runId: string, summary: SummaryRow[], total: number) {
-  if (!RESEND_API_KEY || NOTIFY_EMAILS.length === 0) {
-    console.warn("[data-retention] RESEND_API_KEY mancante: email non inviata");
-    return;
-  }
-  const link = `${SITE_URL}/admin/privacy?run=${runId}`;
-  const fmt = (iso: string) => new Date(iso).toLocaleDateString("it-IT");
-  const rowsHtml = summary.map((r) =>
-    `<tr><td style="padding:6px 10px;border-bottom:1px solid #eee">${r.label}</td>` +
-    `<td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:right"><strong>${r.count}</strong></td>` +
-    `<td style="padding:6px 10px;border-bottom:1px solid #eee;color:#666">prima del ${fmt(r.cutoff)}</td></tr>`).join("");
-  const html = `
-    <div style="font-family:Arial,sans-serif;max-width:640px;margin:0 auto;color:#1f2937">
-      <h2 style="color:#1d724a">Pulizia dati: ${total} record oltre i termini di conservazione</h2>
-      <p>La scansione mensile ha trovato dati che hanno superato i termini dichiarati nella Privacy Policy.
-      <strong>Non è stato cancellato nulla</strong>: la cancellazione parte solo dopo la tua approvazione.</p>
-      <table style="border-collapse:collapse;width:100%;font-size:14px">
-        <thead><tr style="background:#f3f4f6"><th style="text-align:left;padding:6px 10px">Categoria</th><th style="padding:6px 10px">Record</th><th style="text-align:left;padding:6px 10px">Soglia</th></tr></thead>
-        <tbody>${rowsHtml}</tbody>
-      </table>
-      <p style="margin:24px 0"><a href="${link}" style="background:#1d724a;color:#fff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:bold">Rivedi e approva</a></p>
-      <p style="font-size:12px;color:#6b7280">Puoi scegliere quali categorie cancellare o rifiutare la run. Finché non approvi, i dati restano dove sono. Riceverai un nuovo promemoria alla prossima scansione mensile.</p>
-    </div>`;
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
-    body: JSON.stringify({
-      from: "TechLand Italia <info@techlanditalia.it>",
-      to: NOTIFY_EMAILS,
-      subject: `[TECHLAND] Pulizia dati da approvare: ${total} record oltre i termini`,
-      html,
-    }),
+  if (NOTIFY_EMAILS.length === 0) return;
+  await sendMail({
+    kind: "staff_data_retention",
+    source: FN,
+    from: "TechLand Italia <info@techlanditalia.it>",
+    to: NOTIFY_EMAILS,
+    ...dataRetentionEmail({ summary, total, link: `${SITE_URL}/admin/privacy?run=${runId}` }),
   });
-  if (!res.ok) console.error("[data-retention] Resend", res.status, await res.text());
 }
 
 async function notify(runId: string, summary: SummaryRow[]) {

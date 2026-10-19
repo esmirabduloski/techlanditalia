@@ -93,7 +93,7 @@ export function DeleteAccountCard() {
               {children.length > 0
                 ? `gli account di ${children.map((c) => c.full_name).filter(Boolean).join(', ') || `${children.length} studenti`}`
                 : 'gli eventuali account studente collegati'}
-              , con progressi, compiti consegnati, presenze, badge e commenti.
+              , con progressi, compiti consegnati e file caricati, presenze, badge e commenti.
             </li>
             <li>Le lezioni residue non ancora utilizzate vengono perse: contattaci prima se vuoi chiarimenti.</li>
             <li>Conserviamo solo i documenti contabili obbligatori per legge (fatture), per 10 anni.</li>

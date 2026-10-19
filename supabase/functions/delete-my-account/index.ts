@@ -5,13 +5,16 @@
  * Solo i GENITORI possono usarla: elimina prima gli account degli studenti
  * collegati, poi il genitore. Le tabelle collegate (profili, iscrizioni,
  * progressi, compiti…) si cancellano a cascata come nell'eliminazione da admin
- * (admin-set-password, action "delete"). Studenti e insegnanti passano dal
- * genitore o dalla scuola; gli admin non possono auto-eliminarsi.
+ * (admin-set-password, action "delete"); i file nello storage (compiti
+ * consegnati, compilatore web) li cancella removeUserFiles prima di ogni
+ * account. Studenti e insegnanti passano dal genitore o dalla scuola; gli
+ * admin non possono auto-eliminarsi.
  */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { notifyAdmins } from "../_shared/adminpush.ts";
+import { removeUserFiles } from "../_shared/userfiles.ts";
 
 serve(async (req: Request): Promise<Response> => {
   const corsHeaders = corsHeadersFor(req);
@@ -48,8 +51,16 @@ serve(async (req: Request): Promise<Response> => {
       .eq("parent_id", user.id)
       .eq("role", "student");
 
+    // Un file non cancellato non blocca l'eliminazione: lo segnaliamo agli admin
+    const fileErrors: string[] = [];
+    const removeFilesOf = async (id: string) => {
+      const { errors } = await removeUserFiles(admin.storage, id);
+      fileErrors.push(...errors.map((e) => `${id} ${e}`));
+    };
+
     const failed: string[] = [];
     for (const child of children ?? []) {
+      await removeFilesOf(child.id);
       const { error } = await admin.auth.admin.deleteUser(child.id);
       if (error) {
         console.error(`[delete-my-account] figlio ${child.id}:`, error.message);
@@ -60,7 +71,9 @@ serve(async (req: Request): Promise<Response> => {
       return json({ error: `Non sono riuscito a eliminare gli account di: ${failed.join(", ")}. Scrivici a info@techlanditalia.it.` }, 500);
     }
 
+    await removeFilesOf(user.id);
     const { error: deleteError } = await admin.auth.admin.deleteUser(user.id);
+    if (fileErrors.length > 0) console.error("[delete-my-account] file non cancellati:", fileErrors);
     if (deleteError) {
       console.error("[delete-my-account] genitore:", deleteError.message);
       return json({ error: "Impossibile eliminare l'account. Scrivici a info@techlanditalia.it." }, 500);
@@ -71,7 +84,8 @@ serve(async (req: Request): Promise<Response> => {
     // Avviso interno agli admin (contabilità/CRM potrebbero avere riferimenti da aggiornare)
     const task = notifyAdmins({
       title: "Account genitore eliminato",
-      body: `${profile?.full_name ?? user.email ?? "Un genitore"} ha eliminato il proprio account (${children?.length ?? 0} studenti).`,
+      body: `${profile?.full_name ?? user.email ?? "Un genitore"} ha eliminato il proprio account (${children?.length ?? 0} studenti).` +
+        (fileErrors.length > 0 ? " Attenzione: alcuni file nello storage non sono stati cancellati (log di delete-my-account)." : ""),
       path: "/admin/utenti",
       type: "account_deleted",
     });

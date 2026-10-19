@@ -850,13 +850,22 @@ export default function AdminUsers() {
     setIsSaving(true);
     try {
       // Delete the user from auth (this will cascade delete the profile due to the foreign key)
-      const { error } = await supabase.functions.invoke('admin-set-password', {
+      const { data, error } = await supabase.functions.invoke('admin-set-password', {
         body: { userId: deleteDialog.userId, action: 'delete' }
       });
 
       if (error) throw error;
 
-      toast({ title: 'Successo', description: 'Utente eliminato' });
+      const fileErrors: string[] = data?.fileErrors ?? [];
+      if (fileErrors.length > 0) {
+        toast({
+          title: 'Utente eliminato, ma non tutti i file',
+          description: `${fileErrors.length} cartelle nello storage non sono state cancellate: ${fileErrors.join('; ')}`,
+          variant: 'destructive',
+        });
+      } else {
+        toast({ title: 'Successo', description: 'Utente eliminato' });
+      }
       setDeleteDialog({ open: false, userId: '', userName: '' });
       fetchData();
     } catch (error: any) {

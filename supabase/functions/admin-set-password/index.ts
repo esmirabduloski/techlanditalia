@@ -5,6 +5,7 @@ import { corsHeadersFor } from "../_shared/cors.ts";
 import { rateLimit } from "../_shared/ratelimit.ts";
 import { decodeClaims, mfaRequiredResponse } from "../_shared/mfa.ts";
 import { validateChildPassword } from "../_shared/studentpassword.ts";
+import { removeUserFiles } from "../_shared/userfiles.ts";
 
 const BodySchema = z.object({
   userId: z.string().uuid(),
@@ -97,6 +98,14 @@ serve(async (req) => {
         .eq('id', userId)
         .single();
 
+      // File nello storage (compiti consegnati, compilatore web): con l'account si
+      // cancellano le righe del database, non i file. Un errore non blocca l'eliminazione.
+      const fileErrors: string[] = [];
+      const removeFilesOf = async (id: string) => {
+        const { errors } = await removeUserFiles(supabaseAdmin.storage, id);
+        fileErrors.push(...errors.map((e) => `${id} ${e}`));
+      };
+
       if (profile?.role === 'parent') {
         // Get children
         const { data: children } = await supabaseAdmin
@@ -108,6 +117,7 @@ serve(async (req) => {
         // Delete children first
         if (children && children.length > 0) {
           for (const child of children) {
+            await removeFilesOf(child.id);
             const { error: childDeleteError } = await supabaseAdmin.auth.admin.deleteUser(child.id);
             if (childDeleteError) {
               console.error(`Error deleting child ${child.id}:`, childDeleteError);
@@ -118,7 +128,9 @@ serve(async (req) => {
       }
 
       // Delete the user
+      await removeFilesOf(userId);
       const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
+      if (fileErrors.length > 0) console.error("File non cancellati:", fileErrors);
 
       if (deleteError) {
         console.error("Error deleting user:", deleteError);
@@ -130,7 +142,7 @@ serve(async (req) => {
 
       console.log(`User ${userId} deleted by admin ${user.id}`);
 
-      return new Response(JSON.stringify({ success: true }), {
+      return new Response(JSON.stringify({ success: true, fileErrors }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

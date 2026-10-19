@@ -21,16 +21,20 @@ import { sendEmail } from "../_shared/email.ts";
 import { isEmailKind, type EmailKind } from "../_shared/emailkinds.ts";
 import { emailCatalog, emailSample } from "../_shared/emailcatalog.ts";
 import {
+  addDays,
+  forecastClosures,
   forecastDataRetention,
   forecastMonthlyReport,
   forecastPauses,
   forecastPayments,
   sortUpcoming,
+  type ForecastClosure,
   type ForecastPause,
   type ForecastPayment,
 } from "../_shared/emailforecast.ts";
+import { NOTICE_DAYS_BEFORE } from "../_shared/closurenotice.ts";
 import { parseDunning } from "../_shared/paymentreminders.ts";
-import { silencedProfileIds } from "../_shared/subscriptionpause.ts";
+import { romeToday, silencedProfileIds } from "../_shared/subscriptionpause.ts";
 import { DEFAULT_RETENTION_NOTIFY_EMAILS, emailList } from "../_shared/emailtemplates.ts";
 
 const FN = "admin-email-center";
@@ -70,6 +74,58 @@ async function catalog(supabase: SupabaseClient) {
       failed30d: counts.get(e.kind)?.failed ?? 0,
     })),
   };
+}
+
+/**
+ * Chiusure che il job school-closure-notice annuncerà nella finestra, con le
+ * famiglie da avvisare. Best effort: se la tabella non c'è ancora (migrazione
+ * 0060 non applicata) la scheda mostra il resto.
+ */
+async function loadClosures(supabase: SupabaseClient, now: Date, days: number, silenced: Set<string>): Promise<ForecastClosure[]> {
+  const today = romeToday(now);
+  const { data, error } = await supabase
+    .from("school_closures")
+    .select("id, title, start_date, end_date, note, notified_at")
+    .is("notified_at", null)
+    .gte("start_date", today)
+    .lte("start_date", addDays(today, days + NOTICE_DAYS_BEFORE));
+  if (error) {
+    console.warn(`[${FN}] school_closures: ${error.message}`);
+    return [];
+  }
+  const out: ForecastClosure[] = [];
+  for (const c of (data ?? []) as (ForecastClosure & { id: string })[]) {
+    const { data: audience, error: audienceErr } = await supabase.rpc("school_closure_audience", { p_closure_id: c.id });
+    if (audienceErr) {
+      console.warn(`[${FN}] school_closure_audience: ${audienceErr.message}`);
+      continue;
+    }
+    const rows = (audience ?? []) as { recipient_id: string; student_ids: string[] }[];
+    const ids = [...new Set(rows.flatMap((r) => [r.recipient_id, ...r.student_ids]))];
+    const { data: profileRows } = ids.length
+      ? await supabase.from("profiles").select("id, full_name, email").in("id", ids)
+      : { data: [] };
+    const profiles = new Map(((profileRows ?? []) as Profile[]).map((p) => [p.id, p]));
+    out.push({
+      title: c.title,
+      start_date: c.start_date,
+      end_date: c.end_date,
+      note: c.note,
+      notified_at: c.notified_at,
+      recipients: rows.flatMap((r) => {
+        const students = r.student_ids.filter((id) => !silenced.has(id));
+        if (students.length === 0) return [];
+        const recipient = profiles.get(r.recipient_id);
+        return [{
+          recipientId: r.recipient_id,
+          recipientName: recipient?.full_name ?? null,
+          recipientEmail: recipient?.email ?? null,
+          studentNames: students.map((id) => profiles.get(id)?.full_name).filter((n): n is string => !!n),
+        }];
+      }),
+    });
+  }
+  return out;
 }
 
 async function upcoming(supabase: SupabaseClient, days: number) {
@@ -143,6 +199,7 @@ async function upcoming(supabase: SupabaseClient, days: number) {
       silenced,
     }),
     ...forecastPauses({ pauses, now, days, pushUsers }),
+    ...forecastClosures({ closures: await loadClosures(supabase, now, days, silenced), now, days, pushUsers }),
     ...forecastMonthlyReport({
       now,
       days,

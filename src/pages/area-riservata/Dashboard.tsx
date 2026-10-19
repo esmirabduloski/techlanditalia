@@ -44,6 +44,7 @@ import { SatisfactionSurveyCard } from '@/components/dashboard/SatisfactionSurve
 import { StudentCertificatesCard } from '@/components/dashboard/StudentCertificatesCard';
 import { RecordingConsentPrompt } from '@/components/dashboard/RecordingConsentPrompt';
 import { AiConsentPrompt } from '@/components/dashboard/AiConsentPrompt';
+import { SchoolClosureBanner, SchoolClosuresCard } from '@/components/dashboard/SchoolClosuresCard';
 
 interface CourseProgress {
   courseId: string;
@@ -333,6 +334,9 @@ export default function Dashboard() {
             </div>
           </div>
 
+          {/* Chiusura in corso o entro una settimana: avviso in cima, il calendario completo è più in basso */}
+          {effectiveIsParent && <SchoolClosureBanner />}
+
           {/* Consenso alla registrazione delle lezioni, chiesto finché il genitore non decide */}
           {effectiveUserId && effectiveIsParent && (
             <RecordingConsentPrompt userId={effectiveUserId} readOnly={isImpersonating} />
@@ -592,6 +596,9 @@ export default function Dashboard() {
               <ParentChildrenSection />
             </div>
           )}
+
+          {/* Calendario di chiusure e festività (gestito in /admin/chiusure) */}
+          {effectiveIsParent && <SchoolClosuresCard />}
 
           {/* Notifiche push promemoria lezioni - solo genitori */}
           {effectiveIsParent && !isImpersonating && <PushNotificationsCard />}

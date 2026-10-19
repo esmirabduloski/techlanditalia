@@ -421,6 +421,13 @@
       "when": 1792400401812,
       "tag": "0059_ai_consent_versions_authenticated_read",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1792441688140,
+      "tag": "0060_school_closures",
+      "breakpoints": true
     }
   ]
 }

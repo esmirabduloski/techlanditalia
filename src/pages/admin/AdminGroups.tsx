@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import type { TablesInsert } from "@/integrations/supabase/types";
-import { addDays, format, parseISO } from "date-fns";
+import { buildLessonDates } from "@/lib/schoolClosures";
+import { fetchClosures } from "@/lib/schoolClosuresClient";
 import { useAuth } from "@/hooks/useAuth";
 import { GroupCertificatesManager } from "@/components/admin/GroupCertificatesManager";
 import { Button } from "@/components/ui/button";
@@ -366,27 +367,19 @@ export default function AdminGroups() {
 
         // Auto-generate lesson calendar if start_date and lesson_days are set
         if (formData.start_date && formData.lesson_days.length > 0) {
-          const scheduleItems: TablesInsert<"group_lesson_schedule">[] = [];
-          // Date in ora locale (come LessonCalendarManager): con toISOString() le
-          // lezioni dopo il passaggio all'ora legale finivano il giorno prima.
-          let currentDate = parseISO(formData.start_date);
-          let lessonCount = 0;
-          const maxLessons = formData.max_lessons || 32;
-
-          while (lessonCount < maxLessons) {
-            const dayOfWeek = currentDate.getDay();
-            if (formData.lesson_days.includes(dayOfWeek)) {
-              lessonCount++;
-              scheduleItems.push({
-                group_id: newGroup.id,
-                lesson_number: lessonCount,
-                lesson_date: format(currentDate, 'yyyy-MM-dd'),
-                lesson_title: `${lessonCount}.`,
-                lesson_time: formData.lesson_time || null
-              });
-            }
-            currentDate = addDays(currentDate, 1);
-          }
+          // Date come giorni di calendario (niente fusi orari) e senza i giorni di chiusura
+          const scheduleItems: TablesInsert<"group_lesson_schedule">[] = buildLessonDates({
+            startDate: formData.start_date,
+            count: formData.max_lessons || 32,
+            lessonDays: formData.lesson_days,
+            closures: await fetchClosures(formData.start_date),
+          }).map((lessonDate, i) => ({
+            group_id: newGroup.id,
+            lesson_number: i + 1,
+            lesson_date: lessonDate,
+            lesson_title: `${i + 1}.`,
+            lesson_time: formData.lesson_time || null
+          }));
 
           if (scheduleItems.length > 0) {
             await supabase.from('group_lesson_schedule').insert(scheduleItems);

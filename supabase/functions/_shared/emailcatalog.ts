@@ -11,6 +11,7 @@ import { buildReportEmail, type MonthlyStats } from "./monthlyreport.ts";
 import { paymentEmail, type PaymentForText } from "./paymentreminders.ts";
 import { surveyEmail, surveyInviteMessage, thankYouMessage, TRUSTPILOT_REVIEW_URL } from "./satisfactionsurvey.ts";
 import { pauseEndingEmail, pauseEndingMessage } from "./subscriptionpause.ts";
+import { closureNoticeEmail, closureNoticeMessage } from "./closurenotice.ts";
 import {
   bookingEmails,
   contactStaffEmail,
@@ -91,6 +92,20 @@ const SAMPLES: Record<EmailKind, (siteUrl: string) => EmailContent> = {
   payment_overdue: (siteUrl) =>
     paymentEmail(samplePayment, "overdue", { siteUrl, instructions: "Bonifico su IBAN IT00 X000 0000 0000 0000 0000 000" }),
   pause_ending: (siteUrl) => pauseEndingEmail(pauseEndingMessage({ studentName: STUDENT, endsOn: "2026-11-09", days: 7 }), siteUrl),
+  closure_notice: (siteUrl) =>
+    closureNoticeEmail(
+      closureNoticeMessage({
+        closure: {
+          title: "Vacanze di Natale",
+          start_date: "2026-12-23",
+          end_date: "2027-01-06",
+          note: "Le lezioni riprendono giovedì 7 gennaio",
+        },
+        studentNames: [STUDENT, "Giulia Rossi"],
+        today: "2026-12-20",
+      }),
+      { parentName: PARENT, siteUrl },
+    ),
   survey_invite: (siteUrl) => {
     const { title, body } = surveyInviteMessage({ studentName: STUDENT, kind: "module_end", moduleTitle: "Primi giochi con Scratch" });
     const url = `${siteUrl}/area-riservata?sondaggio=esempio`;

@@ -6,6 +6,7 @@
  *   - send-payment-reminders (07:00 UTC): promemoria il giorno del promemoria
  *     della rata, solleciti dopo la scadenza secondo crm_payment_dunning;
  *   - subscription-pause-check (07:00 UTC): avvisi 14 e 7 giorni prima della ripresa;
+ *   - school-closure-notice (07:00 UTC): avviso 3 giorni prima di una chiusura;
  *   - monthly-report e data-retention (il 1° del mese, 06:00 UTC).
  * Sondaggi, attestati, proposte e newsletter dipendono da eventi e non si prevedono.
  * Funzioni pure (testate con vitest): i dati li carica admin-email-center.
@@ -22,6 +23,7 @@ import {
   type PaymentForText,
 } from "./paymentreminders.ts";
 import { daysBetween, reminderDue, romeToday } from "./subscriptionpause.ts";
+import { closurePeriod, noticeDue, type ClosureForNotice } from "./closurenotice.ts";
 
 /** push_email = arrivano entrambe; push = l'email parte solo se la push non riesce. */
 export type EmailChannel = "email" | "push" | "push_email" | "none" | "paused";
@@ -39,7 +41,7 @@ export type UpcomingEmail = {
 };
 
 /** Orari UTC dei job pg_cron (stessi crontab delle migrazioni). */
-export const CRON_UTC = { payments: "07:00", pauses: "07:00", monthly: "06:00" } as const;
+export const CRON_UTC = { payments: "07:00", pauses: "07:00", closures: "07:00", monthly: "06:00" } as const;
 
 export function addDays(iso: string, days: number): string {
   return new Date(Date.parse(`${iso}T00:00:00Z`) + days * 86_400_000).toISOString().slice(0, 10);
@@ -181,6 +183,49 @@ export function forecastPauses(opts: {
         studentName: p.studentName,
         channel,
         description: `Le lezioni riprendono il ${formatDate(p.ends_on)} (avviso a ${due} giorni)`,
+      }));
+    }
+  }
+  return out;
+}
+
+// ── Chiusure e festività ─────────────────────────────────────────────────────
+
+export type ForecastClosure = ClosureForNotice & {
+  notified_at: string | null;
+  /** Famiglie da avvisare (school_closure_audience), già senza gli studenti in pausa. */
+  recipients: { recipientId: string; recipientName: string | null; recipientEmail: string | null; studentNames: string[] }[];
+};
+
+export function forecastClosures(opts: {
+  closures: ForecastClosure[];
+  now: Date;
+  days: number;
+  pushUsers: Set<string>;
+}): UpcomingEmail[] {
+  const start = nextRunDate(opts.now, CRON_UTC.closures);
+  const end = addDays(romeToday(opts.now), opts.days);
+  const out: UpcomingEmail[] = [];
+
+  for (const c of opts.closures) {
+    let day: string | null = null;
+    for (let d = start; d <= end && d <= c.start_date; d = addDays(d, 1)) {
+      if (noticeDue({ today: d, startDate: c.start_date, notifiedAt: c.notified_at })) {
+        day = d;
+        break;
+      }
+    }
+    if (!day) continue;
+    for (const r of c.recipients) {
+      const hasPush = opts.pushUsers.has(r.recipientId);
+      const hasEmail = !!r.recipientEmail?.trim();
+      out.push(item("closure_notice", {
+        scheduledFor: at(day, CRON_UTC.closures),
+        recipientName: r.recipientName,
+        recipientEmail: r.recipientEmail?.trim() || null,
+        studentName: r.studentNames.join(", ") || null,
+        channel: hasPush && hasEmail ? "push_email" : hasPush ? "push" : hasEmail ? "email" : "none",
+        description: `${c.title}: niente lezioni ${closurePeriod(c.start_date, c.end_date)}`,
       }));
     }
   }

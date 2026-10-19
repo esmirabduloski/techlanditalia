@@ -129,6 +129,7 @@ export const routes: RouteRecord[] = [
       { path: "admin/newsletter", lazy: page(() => import("./pages/admin/AdminNewsletter")) },
       { path: "admin/analytics", lazy: page(() => import("./pages/admin/AdminAnalytics")) },
       { path: "admin/gruppi", lazy: page(() => import("./pages/admin/AdminGroups")) },
+      { path: "admin/chiusure", lazy: page(() => import("./pages/admin/AdminClosures")) },
       { path: "admin/disponibilita", lazy: page(() => import("./pages/admin/AdminTeacherCalendar")) },
       { path: "admin/link-insegnanti", lazy: page(() => import("./pages/admin/AdminTeacherLinks")) },
       { path: "admin/backup", lazy: page(() => import("./pages/admin/AdminBackups")) },

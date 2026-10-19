@@ -3,7 +3,7 @@ import { useRef, useState, useEffect } from 'react';
 import { 
   FileText, GraduationCap, BookOpen, Mail, User, BarChart3, 
   Award, Calendar, ClipboardCheck, Users, Newspaper, UsersRound, CalendarClock, Link as LinkIcon,
-  ChevronLeft, ChevronRight, Menu, X, Database, ClipboardList, BookText, Megaphone, Briefcase, Shield, Settings, Gift, Bug, Bell, Headset, ShieldCheck, Camera, MailCheck
+  ChevronLeft, ChevronRight, Menu, X, Database, ClipboardList, BookText, Megaphone, Briefcase, Shield, Settings, Gift, Bug, Bell, Headset, ShieldCheck, Camera, MailCheck, CalendarOff
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,7 @@ const navItems: NavItem[] = [
   { to: '/admin', label: 'Blog', icon: FileText },
   { to: '/admin/corsi', label: 'Corsi', icon: GraduationCap },
   { to: '/admin/gruppi', label: 'Gruppi', icon: UsersRound },
+  { to: '/admin/chiusure', label: 'Chiusure', icon: CalendarOff },
   
   { to: '/admin/crm', label: 'CRM', icon: Briefcase, notificationKey: 'newCrmLeads' },
   { to: '/admin/contatti', label: 'Contatti', icon: Mail, notificationKey: 'newContacts' },

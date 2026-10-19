@@ -12,6 +12,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { format, addDays, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
+import { buildLessonDates, closureOn, type SchoolClosure } from "@/lib/schoolClosures";
+import { fetchClosures } from "@/lib/schoolClosuresClient";
 import {
   Dialog,
   DialogContent,
@@ -130,6 +132,7 @@ export function LessonCalendarManager({
   const [editedDates, setEditedDates] = useState<Record<number, string>>({});
   const [editedTimes, setEditedTimes] = useState<Record<number, string>>({});
   const [savingRecordingLessonId, setSavingRecordingLessonId] = useState<string | null>(null);
+  const [closures, setClosures] = useState<SchoolClosure[]>([]);
   const [page, setPage] = useState(0);
   const lessonsPerPage = 16;
 
@@ -142,6 +145,7 @@ export function LessonCalendarManager({
   const fetchSchedule = async () => {
     setIsLoading(true);
     try {
+      setClosures(await fetchClosures());
       const { data } = await supabase
         .from('group_lesson_schedule')
         .select('*')
@@ -164,27 +168,19 @@ export function LessonCalendarManager({
   const generateSchedule = async () => {
     if (!startDate) return;
 
-    const scheduleItems: TablesInsert<"group_lesson_schedule">[] = [];
-    let currentDate = new Date(startDate);
-    let lessonCount = 0;
-
-    while (lessonCount < maxLessons) {
-      const dayOfWeek = currentDate.getDay();
-      
-      if (lessonDays.includes(dayOfWeek)) {
-        lessonCount++;
-        scheduleItems.push({
-          group_id: groupId,
-          lesson_number: lessonCount,
-          lesson_date: format(currentDate, 'yyyy-MM-dd'),
-          lesson_title: `${lessonCount}.`,
-          lesson_time: defaultLessonTime || null
-        });
-      }
-      
-      currentDate = addDays(currentDate, 1);
-      if (lessonCount >= maxLessons) break;
-    }
+    // I giorni di chiusura e le festività (/admin/chiusure) vengono saltati
+    const scheduleItems: TablesInsert<"group_lesson_schedule">[] = buildLessonDates({
+      startDate,
+      count: maxLessons,
+      lessonDays,
+      closures: await fetchClosures(startDate),
+    }).map((lessonDate, i) => ({
+      group_id: groupId,
+      lesson_number: i + 1,
+      lesson_date: lessonDate,
+      lesson_title: `${i + 1}.`,
+      lesson_time: defaultLessonTime || null
+    }));
 
     if (scheduleItems.length > 0) {
       const { data, error } = await supabase
@@ -332,7 +328,7 @@ export function LessonCalendarManager({
       await generateSchedule();
       setEditedDates({});
       setEditedTimes({});
-      toast({ title: 'Calendario rigenerato' });
+      toast({ title: 'Calendario rigenerato', description: 'I giorni di chiusura sono stati saltati' });
     } catch (error: any) {
       toast({ title: 'Errore', description: error.message, variant: 'destructive' });
     } finally {
@@ -345,6 +341,7 @@ export function LessonCalendarManager({
     (page + 1) * lessonsPerPage
   );
   const totalPages = Math.ceil(schedule.length / lessonsPerPage);
+  const lessonsOnClosures = schedule.filter(lesson => closureOn(closures, editedDates[lesson.lesson_number] || lesson.lesson_date)).length;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -358,6 +355,11 @@ export function LessonCalendarManager({
             <Plus className="w-4 h-4 text-secondary" />
             Premi il pulsante + su una lezione per aggiungere o modificare il link della registrazione.
           </p>
+          {lessonsOnClosures > 0 && (
+            <p className="text-sm rounded-md bg-amber-500/10 border border-amber-500/40 px-3 py-2 text-amber-700 dark:text-amber-400">
+              {lessonsOnClosures === 1 ? '1 lezione cade' : `${lessonsOnClosures} lezioni cadono`} in un giorno di chiusura: sposta la data o usa Rigenera per saltarli.
+            </p>
+          )}
         </DialogHeader>
 
         {isLoading ? (
@@ -385,9 +387,10 @@ export function LessonCalendarManager({
                 const displayDate = editedDate || lesson.lesson_date;
                 const displayTime = editedTime !== undefined ? editedTime : (lesson.lesson_time?.substring(0, 5) || '');
                 const isEdited = !!editedDate || editedTime !== undefined;
+                const closure = closureOn(closures, displayDate);
 
                 return (
-                  <Card key={lesson.id} className={`relative ${isEdited ? 'ring-2 ring-primary' : ''}`}>
+                  <Card key={lesson.id} className={`relative ${isEdited ? 'ring-2 ring-primary' : closure ? 'ring-2 ring-amber-500' : ''}`}>
                     <RecordingUrlButton
                       lesson={lesson}
                       isSaving={savingRecordingLessonId === lesson.id}
@@ -442,6 +445,11 @@ export function LessonCalendarManager({
                       <p className="text-xs text-muted-foreground mt-1 text-center">
                         {format(parseISO(displayDate), "EEEE d MMMM", { locale: it })}
                       </p>
+                      {closure && (
+                        <p className="text-xs font-medium text-amber-700 dark:text-amber-400 mt-1 text-center">
+                          Chiusura: {closure.title}
+                        </p>
+                      )}
                     </CardContent>
                   </Card>
                 );

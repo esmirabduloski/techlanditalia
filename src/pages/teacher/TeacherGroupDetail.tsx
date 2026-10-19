@@ -20,7 +20,9 @@ import { CertificatesReleaseCard } from "@/components/teacher/CertificatesReleas
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { format, addDays, isBefore, isToday, startOfDay } from "date-fns";
+import { format, isBefore, isToday, startOfDay } from "date-fns";
+import { buildLessonDates } from "@/lib/schoolClosures";
+import { fetchClosures } from "@/lib/schoolClosuresClient";
 import { it } from "date-fns/locale";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -337,29 +339,18 @@ export default function TeacherGroupDetail() {
     maxLessons: number, 
     lessonDays: number[]
   ) => {
-    const scheduleItems: TablesInsert<"group_lesson_schedule">[] = [];
-    let currentDate = new Date(startDate);
-    let lessonCount = 0;
-
-    // Generate lesson dates based on lesson days
-    while (lessonCount < maxLessons) {
-      const dayOfWeek = currentDate.getDay();
-      
-      if (lessonDays.includes(dayOfWeek)) {
-        lessonCount++;
-        scheduleItems.push({
-          group_id: groupId,
-          lesson_number: lessonCount,
-          lesson_date: format(currentDate, 'yyyy-MM-dd'),
-          lesson_title: `${lessonCount}.`
-        });
-      }
-      
-      currentDate = addDays(currentDate, 1);
-      
-      // Safety check
-      if (scheduleItems.length >= maxLessons) break;
-    }
+    // Date in base ai giorni di lezione, saltando chiusure e festività
+    const scheduleItems: TablesInsert<"group_lesson_schedule">[] = buildLessonDates({
+      startDate,
+      count: maxLessons,
+      lessonDays,
+      closures: await fetchClosures(startDate),
+    }).map((lessonDate, i) => ({
+      group_id: groupId,
+      lesson_number: i + 1,
+      lesson_date: lessonDate,
+      lesson_title: `${i + 1}.`
+    }));
 
     if (scheduleItems.length > 0) {
       await supabase.from('group_lesson_schedule').insert(scheduleItems);

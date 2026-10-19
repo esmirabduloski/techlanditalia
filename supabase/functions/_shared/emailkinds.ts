@@ -79,6 +79,15 @@ export const EMAIL_KINDS = {
     source: "subscription-pause-check",
     storeBody: true,
   },
+  closure_notice: {
+    label: "Chiusura o festività in arrivo",
+    audience: "famiglia",
+    category: "automatica",
+    trigger: "3 giorni prima di una chiusura o festività (Admin → Chiusure), alle famiglie che in quei giorni avrebbero lezione; di nuovo se l'admin sposta le date (email e push).",
+    schedule: "ogni giorno alle 9:00 (8:00 con l'ora solare)",
+    source: "school-closure-notice",
+    storeBody: true,
+  },
   survey_invite: {
     label: "Sondaggio di soddisfazione",
     audience: "famiglia",

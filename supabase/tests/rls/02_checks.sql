@@ -50,7 +50,8 @@ INSERT INTO rls_test.shared_tables VALUES
   ('featured_products',       'prodotti in evidenza'),
   ('legal_document_versions', 'versioni di privacy e termini'),
   ('ai_consent_versions',     'versioni dell''informativa sugli strumenti AI'),
-  ('teacher_links',           'link utili per i docenti');
+  ('teacher_links',           'link utili per i docenti'),
+  ('school_closures',         'calendario di chiusure e festività');
 
 -- Tabelle solo-admin anche se hanno una colonna che punta a un utente
 -- (es. il lead CRM collegato a un genitore: il genitore non deve vederlo).

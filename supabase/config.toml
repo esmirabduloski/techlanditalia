@@ -107,3 +107,8 @@ verify_jwt = false
 # 2FA, "respond" dalla famiglia. JWT e ruolo verificati dentro la funzione.
 [functions.satisfaction-survey]
 verify_jwt = false
+
+# Avviso chiusure e festività: dal cron (x-cron-token) o da un admin con 2FA.
+# JWT e ruolo verificati dentro la funzione.
+[functions.school-closure-notice]
+verify_jwt = false

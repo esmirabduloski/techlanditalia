@@ -167,3 +167,11 @@ if ! out=$(run_sql supabase_admin supabase/tests/rls/13_email_log.sql 2>&1); the
   exit 1
 fi
 echo "$out" | sed -n 's/.*NOTICE: *//p'
+
+echo "▶ Calendario chiusure e festività"
+if ! out=$(run_sql supabase_admin supabase/tests/rls/14_school_closures.sql 2>&1); then
+  echo "$out" | sed -nE 's/.*(NOTICE|WARNING|ERROR): *//p'
+  echo "✗ Test del calendario chiusure FALLITI"
+  exit 1
+fi
+echo "$out" | sed -n 's/.*NOTICE: *//p'

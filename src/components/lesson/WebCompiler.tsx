@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useCodeDraft } from '@/hooks/useCodeDraft';
 import { useWebFileDrafts } from '@/hooks/useWebFileDrafts';
+import { useStudentWebAssetUrls } from '@/hooks/useStudentWebAssets';
 import { CodeEditor } from './CodeEditor';
 import { buildPreviewHtml, type WebPreviewInput } from '@/lib/webPreview';
 import { TestCasesPanel, TestSummary } from './TestCasesPanel';
@@ -14,12 +15,14 @@ import { useTestRunner } from '@/hooks/useTestRunner';
 import type { TestRunnerRef } from './PythonCompiler';
 import { webCases, type TestCase, type TestResult } from '@/lib/testCases';
 import { runWebTests } from '@/lib/webTestRunner';
-
-interface UploadedFile {
-  name: string;
-  url: string;
-  type: 'image' | 'css' | 'js' | 'html';
-}
+import {
+  codeReference,
+  LEGACY_WEB_ASSETS_BUCKET,
+  referenceName,
+  storagePathOf,
+  STUDENT_WEB_ASSETS_BUCKET,
+  type StudentWebFile,
+} from '@/lib/studentWebAssets';
 
 interface JsFile {
   id: string;
@@ -126,6 +129,10 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
   // Web files drafts (uploaded files + additional JS files)
   const webFilesDrafts = useWebFileDrafts({ taskId });
   const { uploadedFiles, additionalJsFiles } = webFilesDrafts;
+  // I file dello studente sono privati: l'anteprima li apre con link firmati
+  const assetUrls = useStudentWebAssetUrls(uploadedFiles);
+  const ownFileUrls = (type: StudentWebFile['type']) =>
+    uploadedFiles.filter(f => f.type === type).map(f => assetUrls[codeReference(f)]).filter(Boolean);
 
   // Combine task attachments with user uploaded files
   const allFiles = [...taskAttachments, ...uploadedFiles];
@@ -207,8 +214,9 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
     css: cssDraft.code,
     js: jsDraft.code,
     // CSS/JS solo dai file caricati dallo studente (il CSS della task è già in cssDraft)
-    cssUrls: uploadedFiles.filter(f => f.type === 'css').map(f => f.url),
-    jsUrls: uploadedFiles.filter(f => f.type === 'js').map(f => f.url),
+    cssUrls: ownFileUrls('css'),
+    jsUrls: ownFileUrls('js'),
+    assets: assetUrls,
     taskJs: taskJsFiles.map(f => f.content).join('\n\n'),
     extraJs: additionalJsFiles.map(f => f.code).join('\n\n'),
   });
@@ -264,6 +272,7 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
     if (!files || files.length === 0 || !user) return;
 
     setIsUploading(true);
+    const takenNames = uploadedFiles.map(f => f.name);
 
     try {
       for (const file of Array.from(files)) {
@@ -322,6 +331,7 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
                 fileSize: file.size,
                 mimeType: file.type,
                 fileBytes,
+                // Regole di validazione del compilatore web (solo immagini)
                 bucket: 'web-compiler-assets'
               }
             }
@@ -344,8 +354,8 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
         const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(7)}`;
         const fileName = `${user.id}/${baseName}-${uniqueId}.${fileExt}`;
 
-        const { data, error } = await supabase.storage
-          .from('web-compiler-assets')
+        const { error } = await supabase.storage
+          .from(STUDENT_WEB_ASSETS_BUCKET)
           .upload(fileName, file, {
             contentType: fileType === 'css' ? 'text/css' : 
                          fileType === 'js' ? 'application/javascript' : 
@@ -362,19 +372,13 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
           continue;
         }
 
-        const { data: urlData } = supabase.storage
-          .from('web-compiler-assets')
-          .getPublicUrl(fileName);
-
-        webFilesDrafts.addUploadedFile({
-          name: file.name,
-          url: urlData.publicUrl,
-          type: fileType,
-        });
+        const name = referenceName(file.name, takenNames);
+        takenNames.push(name);
+        webFilesDrafts.addUploadedFile({ name, path: fileName, type: fileType });
 
         toast({
           title: 'File caricato',
-          description: `${file.name} caricato con successo`,
+          description: `Nel codice usalo con il nome ${name}`,
         });
       }
     } catch (error) {
@@ -395,14 +399,25 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
     });
   };
 
-  const removeFile = async (file: UploadedFile) => {
+  const copyReference = (file: StudentWebFile) => {
+    const ref = codeReference(file);
+    navigator.clipboard.writeText(ref);
+    toast({
+      title: 'Nome copiato',
+      description: file.path ? `Incollalo nel tuo codice, ad esempio <img src="${ref}">` : 'Incollalo nel tuo codice HTML',
+    });
+  };
+
+  const removeFile = async (file: StudentWebFile) => {
     try {
-      const path = file.url.split('/web-compiler-assets/')[1];
+      const path = storagePathOf(file);
       if (path) {
-        await supabase.storage.from('web-compiler-assets').remove([decodeURIComponent(path)]);
+        await supabase.storage.from(STUDENT_WEB_ASSETS_BUCKET).remove([path]);
+        // Caricato prima degli spazi privati: può essere ancora nel bucket pubblico
+        if (!file.path) await supabase.storage.from(LEGACY_WEB_ASSETS_BUCKET).remove([path]);
       }
       // Remove from state and save to DB (removeUploadedFile now auto-saves)
-      await webFilesDrafts.removeUploadedFile(file.url);
+      await webFilesDrafts.removeUploadedFile(file);
       toast({
         title: 'File rimosso',
       });
@@ -501,7 +516,7 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
     
     // Cleanup old blob URL
     return () => URL.revokeObjectURL(url);
-  }, [htmlDraft.code, cssDraft.code, jsDraft.code, additionalJsFiles, uploadedFiles, taskJsFiles]);
+  }, [htmlDraft.code, cssDraft.code, jsDraft.code, additionalJsFiles, uploadedFiles, taskJsFiles, assetUrls]);
 
   // Fullscreen preview mode
   if (isPreviewFullscreen) {
@@ -702,6 +717,9 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
           {uploadedFiles.length > 0 && (
             <div className="space-y-3 max-h-60 overflow-y-auto">
               <span className="text-xs font-medium text-muted-foreground block">📁 I tuoi file</span>
+              <span className="text-xs text-muted-foreground block">
+                Nel codice usa il nome del file, ad esempio <code>&lt;img src="gatto.png"&gt;</code>. I file restano privati.
+              </span>
               
               {/* Images */}
               {groupedFiles.images.length > 0 && (
@@ -709,7 +727,7 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
                   <span className="text-xs text-muted-foreground mb-1 block">🖼️ Immagini</span>
                   <div className="space-y-1">
                     {groupedFiles.images.map((file, index) => (
-                      <FileItem key={index} file={file} onCopy={copyUrl} onRemove={removeFile} />
+                      <FileItem key={index} file={file} onCopy={copyReference} onRemove={removeFile} />
                     ))}
                   </div>
                 </div>
@@ -721,7 +739,7 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
                   <span className="text-xs text-muted-foreground mb-1 block">🎨 CSS (auto-inclusi)</span>
                   <div className="space-y-1">
                     {groupedFiles.css.map((file, index) => (
-                      <FileItem key={index} file={file} onCopy={copyUrl} onRemove={removeFile} />
+                      <FileItem key={index} file={file} onCopy={copyReference} onRemove={removeFile} />
                     ))}
                   </div>
                 </div>
@@ -733,7 +751,7 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
                   <span className="text-xs text-muted-foreground mb-1 block">⚡ JavaScript (auto-inclusi)</span>
                   <div className="space-y-1">
                     {groupedFiles.js.map((file, index) => (
-                      <FileItem key={index} file={file} onCopy={copyUrl} onRemove={removeFile} />
+                      <FileItem key={index} file={file} onCopy={copyReference} onRemove={removeFile} />
                     ))}
                   </div>
                 </div>
@@ -745,7 +763,7 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
                   <span className="text-xs text-muted-foreground mb-1 block">📄 HTML</span>
                   <div className="space-y-1">
                     {groupedFiles.html.map((file, index) => (
-                      <FileItem key={index} file={file} onCopy={copyUrl} onRemove={removeFile} />
+                      <FileItem key={index} file={file} onCopy={copyReference} onRemove={removeFile} />
                     ))}
                   </div>
                 </div>
@@ -933,9 +951,9 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
 
 // File item component for user uploaded files (with remove button)
 function FileItem({ file, onCopy, onRemove }: { 
-  file: UploadedFile; 
-  onCopy: (url: string) => void; 
-  onRemove: (file: UploadedFile) => void;
+  file: StudentWebFile; 
+  onCopy: (file: StudentWebFile) => void; 
+  onRemove: (file: StudentWebFile) => void;
 }) {
   return (
     <div className="flex items-center gap-2 p-2 bg-background rounded border border-border">
@@ -944,8 +962,8 @@ function FileItem({ file, onCopy, onRemove }: {
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => onCopy(file.url)}
-        title="Copia URL"
+        onClick={() => onCopy(file)}
+        title="Copia il nome da usare nel codice"
         className="h-6 w-6 p-0"
       >
         <Copy className="w-3 h-3" />

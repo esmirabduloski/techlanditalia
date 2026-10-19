@@ -173,12 +173,18 @@ function applyQuery(rows: Row[], params: URLSearchParams): Row[] {
   return out.slice(offset, limit ? offset + Number(limit) : undefined);
 }
 
+// Immagine 1x1 servita per i file firmati, così il browser la carica davvero
+const PNG_1X1 = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==", "base64");
+
 // ---------------------------------------------------------------------------
 
 export class FakeSupabase {
   readonly tables = new Map<string, Row[]>();
   readonly users: FakeUser[] = [];
   readonly functionCalls: FunctionCall[] = [];
+  /** File nello storage finto, come "<bucket>/<percorso>": caricati dall'app o messi dai test. */
+  readonly storageObjects = new Set<string>();
+  readonly storageCalls: { method: string; path: string }[] = [];
   private readonly functions = new Map<string, FunctionHandler>();
   private readonly rpcs = new Map<string, RpcHandler>();
   private readonly tokens = new Map<string, FakeUser>();
@@ -324,8 +330,63 @@ export class FakeSupabase {
       return reply(res.status ?? 200, res.body);
     }
 
-    // --- Storage: non usato dai flussi testati
-    if (path.startsWith("/storage/v1/")) return reply(200, []);
+    // --- Storage: caricamenti e link firmati; il resto risponde vuoto
+    if (path.startsWith("/storage/v1/")) {
+      const rest = decodeURIComponent(path.slice("/storage/v1/".length));
+      const method = req.method();
+      this.storageCalls.push({ method, path: rest });
+      const signMany = rest.match(/^object\/sign\/([^/]+)$/);
+      if (signMany && method === "POST") {
+        const bucket = signMany[1];
+        const paths = (body as { paths?: string[] } | null)?.paths ?? [];
+        return reply(200, paths.map((p) => this.storageObjects.has(`${bucket}/${p}`)
+          ? { path: p, signedURL: `/object/sign/${bucket}/${p}?token=finto`, error: null }
+          : { path: p, signedURL: null, error: "Object not found" }));
+      }
+      const signOne = rest.match(/^object\/sign\/([^/]+)\/(.+)$/);
+      if (signOne && method === "POST") return reply(200, { signedURL: `/object/sign/${signOne[1]}/${signOne[2]}?token=finto` });
+      if (signOne && method === "GET") {
+        return this.storageObjects.has(`${signOne[1]}/${signOne[2]}`)
+          ? route.fulfill({ status: 200, headers: { ...cors, "content-type": "image/png" }, body: PNG_1X1 })
+          : reply(400, { error: "Object not found" });
+      }
+      const list = rest.match(/^object\/list\/([^/]+)$/);
+      if (list && method === "POST") {
+        const { prefix = "", limit = 100, offset = 0 } = (body ?? {}) as { prefix?: string; limit?: number; offset?: number };
+        const base = `${list[1]}/${prefix ? `${prefix.replace(/\/$/, "")}/` : ""}`;
+        const entries = new Map<string, { name: string; id: string | null }>();
+        for (const key of [...this.storageObjects].sort()) {
+          if (!key.startsWith(base)) continue;
+          const [first, ...more] = key.slice(base.length).split("/");
+          entries.set(first, more.length ? { name: first, id: null } : { name: first, id: `id-${key}` });
+        }
+        return reply(200, [...entries.values()].slice(offset, offset + limit));
+      }
+      if (rest === "object/move" && method === "POST") {
+        const { bucketId, sourceKey, destinationKey, destinationBucket } = body as Record<string, string>;
+        if (!this.storageObjects.delete(`${bucketId}/${sourceKey}`)) return reply(400, { error: "Object not found" });
+        this.storageObjects.add(`${destinationBucket ?? bucketId}/${destinationKey}`);
+        return reply(200, { message: "Successfully moved" });
+      }
+      const publicFile = rest.match(/^object\/public\/([^/]+)\/(.+)$/);
+      if (publicFile && method === "GET") {
+        return this.storageObjects.has(`${publicFile[1]}/${publicFile[2]}`)
+          ? route.fulfill({ status: 200, headers: { ...cors, "content-type": "image/png" }, body: PNG_1X1 })
+          : reply(400, { error: "Object not found" });
+      }
+      const object = rest.match(/^object\/([^/]+)\/(.+)$/);
+      if (object && (method === "POST" || method === "PUT")) {
+        this.storageObjects.add(`${object[1]}/${object[2]}`);
+        return reply(200, { Key: `${object[1]}/${object[2]}`, Id: randomUUID() });
+      }
+      const bucketOnly = rest.match(/^object\/([^/]+)$/);
+      if (bucketOnly && method === "DELETE") {
+        const prefixes = (body as { prefixes?: string[] } | null)?.prefixes ?? [];
+        const removed = prefixes.filter((p) => this.storageObjects.delete(`${bucketOnly[1]}/${p}`));
+        return reply(200, removed.map((name) => ({ name, bucket_id: bucketOnly[1] })));
+      }
+      return reply(200, []);
+    }
 
     // --- PostgREST
     if (path.startsWith("/rest/v1/rpc/")) {

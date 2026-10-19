@@ -1,14 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { draftColumns, draftConflictTarget, draftTarget } from '@/lib/codeDrafts';
+import { fileKey, type StudentWebFile } from '@/lib/studentWebAssets';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
-
-interface UploadedFile {
-  name: string;
-  url: string;
-  type: 'image' | 'css' | 'js' | 'html';
-}
 
 interface JsFile {
   id: string;
@@ -17,7 +12,7 @@ interface JsFile {
 }
 
 interface WebFilesData {
-  uploadedFiles: UploadedFile[];
+  uploadedFiles: StudentWebFile[];
   additionalJsFiles: JsFile[];
 }
 
@@ -28,7 +23,7 @@ interface UseWebFileDraftsOptions {
 export function useWebFileDrafts({ taskId }: UseWebFileDraftsOptions) {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<StudentWebFile[]>([]);
   const [additionalJsFiles, setAdditionalJsFiles] = useState<JsFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -86,7 +81,7 @@ export function useWebFileDrafts({ taskId }: UseWebFileDraftsOptions) {
   };
 
   const saveDraft = useCallback(async (
-    filesToSave?: UploadedFile[],
+    filesToSave?: StudentWebFile[],
     jsFilesToSave?: JsFile[]
   ) => {
     if (!user || !taskId) return;
@@ -141,7 +136,7 @@ export function useWebFileDrafts({ taskId }: UseWebFileDraftsOptions) {
     });
   };
 
-  const addUploadedFile = (file: UploadedFile) => {
+  const addUploadedFile = (file: StudentWebFile) => {
     setUploadedFiles(prev => {
       const newFiles = [...prev, file];
       // Auto-save when adding files
@@ -150,8 +145,8 @@ export function useWebFileDrafts({ taskId }: UseWebFileDraftsOptions) {
     });
   };
 
-  const removeUploadedFile = async (fileUrl: string) => {
-    const newFiles = uploadedFiles.filter(f => f.url !== fileUrl);
+  const removeUploadedFile = async (file: StudentWebFile) => {
+    const newFiles = uploadedFiles.filter(f => fileKey(f) !== fileKey(file));
     setUploadedFiles(newFiles);
     // Immediately save to persist the deletion
     await saveDraft(newFiles, additionalJsFiles);

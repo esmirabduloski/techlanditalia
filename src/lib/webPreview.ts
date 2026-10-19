@@ -1,4 +1,5 @@
 // Documento dell'anteprima Web: usato dal WebCompiler e dai casi di prova Web.
+import { resolveAssetRefs } from './studentWebAssets';
 
 export interface WebPreviewInput {
   html: string;
@@ -11,6 +12,8 @@ export interface WebPreviewInput {
   // URL di CSS/JS caricati dallo studente
   cssUrls?: string[];
   jsUrls?: string[];
+  // File caricati dallo studente: riferimento usato nel codice -> link da usare ora
+  assets?: Record<string, string>;
   // Script aggiunto in fondo al body (es. quello dei casi di prova)
   tailScript?: string;
 }
@@ -26,8 +29,9 @@ export function stripDocumentTags(html: string): string {
 }
 
 export function buildPreviewHtml({
-  html, css, js, taskJs = '', extraJs = '', cssUrls = [], jsUrls = [], tailScript,
+  html, css, js, taskJs = '', extraJs = '', cssUrls = [], jsUrls = [], assets = {}, tailScript,
 }: WebPreviewInput): string {
+  const own = (code: string) => resolveAssetRefs(code, assets);
   const cssIncludes = cssUrls.map((url) => `<link rel="stylesheet" href="${url}">`).join('\n');
   const jsIncludes = jsUrls.map((url) => `<script src="${url}"></script>`).join('\n');
 
@@ -35,15 +39,15 @@ export function buildPreviewHtml({
       <!DOCTYPE html>
       <html>
       <head>
-        <style>${css}</style>
+        <style>${own(css)}</style>
         ${cssIncludes}
       </head>
       <body>
-        ${stripDocumentTags(html)}
+        ${own(stripDocumentTags(html))}
         ${jsIncludes}
         <script>${taskJs}</script>
-        <script>${js}</script>
-        <script>${extraJs}</script>${tailScript ? `\n        <script>${tailScript}</script>` : ''}
+        <script>${own(js)}</script>
+        <script>${own(extraJs)}</script>${tailScript ? `\n        <script>${tailScript}</script>` : ''}
       </body>
       </html>
     `;

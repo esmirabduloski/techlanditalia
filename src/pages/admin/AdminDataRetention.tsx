@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { ConsentRegistryCard } from '@/components/admin/ConsentRegistryCard';
+import { StudentFilesPrivacyCard } from '@/components/admin/StudentFilesPrivacyCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -360,6 +361,8 @@ export default function AdminDataRetention() {
             })}
           </CardContent>
         </Card>
+
+        <StudentFilesPrivacyCard />
 
         <ConsentRegistryCard />
       </div>

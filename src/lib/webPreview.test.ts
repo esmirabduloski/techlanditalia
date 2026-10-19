@@ -26,6 +26,22 @@ describe('buildPreviewHtml', () => {
     expect(doc).not.toContain('<body><p>');
   });
 
+  it('usa i link dei file dello studente nel suo codice, non in quello della task', () => {
+    const doc = buildPreviewHtml({
+      html: '<img src="gatto.png">',
+      css: 'body{background:url(gatto.png)}',
+      js: "img.src='gatto.png'",
+      extraJs: 'load("gatto.png")',
+      taskJs: 'var x="gatto.png"',
+      assets: { 'gatto.png': 'https://firmato/gatto' },
+    });
+    expect(doc).toContain('<img src="https://firmato/gatto">');
+    expect(doc).toContain('url(https://firmato/gatto)');
+    expect(doc).toContain("img.src='https://firmato/gatto'");
+    expect(doc).toContain('load("https://firmato/gatto")');
+    expect(doc).toContain('var x="gatto.png"');
+  });
+
   it('aggiunge lo script finale solo se richiesto', () => {
     expect(buildPreviewHtml({ html: '', css: '', js: '' })).not.toContain('tail()');
     expect(buildPreviewHtml({ html: '', css: '', js: '', tailScript: 'tail()' })).toContain('<script>tail()</script>');

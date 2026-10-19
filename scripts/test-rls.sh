@@ -151,3 +151,11 @@ if ! out=$(run_sql supabase_admin supabase/tests/rls/11_ai_consent.sql 2>&1); th
   exit 1
 fi
 echo "$out" | sed -n 's/.*NOTICE: *//p'
+
+echo "▶ File degli studenti negli spazi privati"
+if ! out=$(run_sql supabase_admin supabase/tests/rls/12_student_files.sql 2>&1); then
+  echo "$out" | sed -nE 's/.*(NOTICE|WARNING|ERROR): *//p'
+  echo "✗ Test dei file degli studenti FALLITI"
+  exit 1
+fi
+echo "$out" | sed -n 's/.*NOTICE: *//p'

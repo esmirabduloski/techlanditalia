@@ -78,7 +78,7 @@ export function getTaskSidePanel(
     const node = kind === 'turtle' ? (
       <TurtleCompiler defaultCode={task.default_python_code || undefined} taskId={taskId} />
     ) : kind === 'pgzero' ? (
-      <PgzeroCompiler defaultCode={task.default_python_code || undefined} replitUrl={task.replit_url || undefined} />
+      <PgzeroCompiler defaultCode={task.default_python_code || undefined} replitUrl={task.replit_url || undefined} taskId={taskId} attachments={task.attachments} />
     ) : (
       <PythonCompiler defaultCode={task.default_python_code || undefined} taskId={taskId} testCases={testCases} onTestResults={onTestResults} />
     );

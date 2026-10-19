@@ -5,11 +5,11 @@
  */
 import { test as base, expect } from "@playwright/test";
 import { FakeSupabase } from "./fakeSupabase";
-import { PYODIDE_INDEX_URL, SKULPT_URLS } from "../../src/lib/runtimes";
+import { PYGAME_PYODIDE_INDEX_URL, PYODIDE_INDEX_URL, SKULPT_URLS } from "../../src/lib/runtimes";
 
 // Host esterni permessi: i runtime dei compilatori da jsDelivr, nelle versioni
-// usate dal sito (Pyodide per Python, Skulpt per Turtle).
-const ALLOWED_EXTERNAL = [PYODIDE_INDEX_URL, ...SKULPT_URLS];
+// usate dal sito (Pyodide per Python e per Pygame Zero, Skulpt per Turtle).
+const ALLOWED_EXTERNAL = [PYODIDE_INDEX_URL, PYGAME_PYODIDE_INDEX_URL, ...SKULPT_URLS];
 
 export const test = base.extend<{ fake: FakeSupabase }>({
   fake: async ({ page, baseURL }, use) => {

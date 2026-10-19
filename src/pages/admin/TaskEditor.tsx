@@ -23,6 +23,7 @@ import { QuizTaskEditor } from '@/components/admin/QuizTaskEditor';
 import { parseQuizContent } from '@/lib/quiz';
 import { AdminStepper, type AdminStep } from '@/components/admin/AdminStepper';
 import { TestCasesEditor } from '@/components/admin/TestCasesEditor';
+import { PgzeroAssetsHint } from '@/components/admin/PgzeroAssetsHint';
 import { PYTHON_COURSES, WEB_COURSES } from '@/lib/compilerKind';
 import { countIncompleteCases, parseTestCases, toEditableCases, type EditableTestCase } from '@/lib/testCases';
 interface Attachment {
@@ -646,7 +647,7 @@ function TaskEditor() {
                       <SelectContent>
                         <SelectItem value="standard">Standard (Pyodide) - Calcoli, algoritmi</SelectItem>
                         <SelectItem value="turtle">🐢 Turtle - Grafica tartaruga</SelectItem>
-                        <SelectItem value="pgzero">🎮 Pygame Zero - Giochi</SelectItem>
+                        <SelectItem value="pgzero">🎮 Pygame Zero - Giochi (si giocano nel sito)</SelectItem>
                       </SelectContent>
                     </Select>
                     <p className="text-xs text-muted-foreground">
@@ -657,7 +658,7 @@ function TaskEditor() {
                   {/* Replit URL - solo per Pygame Zero */}
                   {formData.python_env === 'pgzero' && (
                     <div className="space-y-2">
-                      <Label htmlFor="replit_url">🔗 Link Replit (per bottone "Apri Replit")</Label>
+                      <Label htmlFor="replit_url">🔗 Link Replit (facoltativo, per il bottone "Apri Replit")</Label>
                       <Input
                         id="replit_url"
                         value={formData.replit_url}
@@ -665,8 +666,8 @@ function TaskEditor() {
                         placeholder="https://replit.com/@username/progetto"
                       />
                       <p className="text-xs text-muted-foreground">
-                        Inserisci il link del progetto Replit che verrà aperto quando lo studente clicca "Apri Replit".
-                        Se lasciato vuoto, verrà usato il progetto predefinito.
+                        Il gioco si apre nel sito; Replit resta come alternativa. Inserisci il link del progetto che si
+                        apre con "Apri Replit": se lasciato vuoto, verrà usato il progetto predefinito.
                       </p>
                     </div>
                   )}
@@ -742,6 +743,9 @@ function TaskEditor() {
                       attachments={formData.attachments}
                       onAttachmentsChange={(attachments) => setFormData(prev => ({ ...prev, attachments }))}
                     />
+                    {course && PYTHON_COURSES.includes(course.slug) && formData.python_env === 'pgzero' && (
+                      <PgzeroAssetsHint attachments={formData.attachments} />
+                    )}
                   </div>
 
                   {/* Casi di prova: solo dove il compilatore li esegue (non Turtle/Pygame Zero) */}

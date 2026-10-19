@@ -34,6 +34,15 @@ KeyboardInterrupt: Input annullato dall'utente`;
     expect(explainPythonError(annullato, 'print(1)\nx = input()\n')).toMatchObject({ type: 'KeyboardInterrupt', line: 2 });
   });
 
+  it('Pygame Zero: immagine o suono che non c\'è tra i file del gioco', () => {
+    const immagine = `  File "<exec>", line 4, in <module>\nKeyError: "No image found like 'alien'. Are you sure the image exists?"`;
+    expect(explainPythonError(immagine)).toMatchObject({ type: 'KeyError', line: 4, title: 'Immagine non trovata' });
+    expect(explainPythonError(immagine)?.explanation).toContain('`alien`');
+    expect(explainPythonError(`KeyError: "No sound found like 'salto'. Are you sure the sound exists?"`)?.title).toBe('Suono non trovato');
+    expect(explainPythonError(`KeyError: "No 'music' directory found to load music 'tema'."`)?.title).toBe('Musica non trovata');
+    expect(explainPythonError("KeyError: 'Sara'")?.title).toBe('Chiave non trovata');
+  });
+
   it('legge la riga dal worker e da Skulpt', () => {
     expect(explainPythonError('ZeroDivisionError: division by zero (riga 4)')).toMatchObject({ type: 'ZeroDivisionError', line: 4, original: 'ZeroDivisionError: division by zero' });
     expect(explainPythonError("NameError: name 'x' is not defined on line 3")).toMatchObject({ type: 'NameError', line: 3 });

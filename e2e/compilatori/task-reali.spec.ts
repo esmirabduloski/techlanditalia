@@ -5,9 +5,9 @@ import type { Page } from "@playwright/test";
 import { test, expect } from "../support/test";
 import type { FakeSupabase } from "../support/fakeSupabase";
 import type { Corpus, CorpusTask } from "../../src/lib/compilerCorpusExport";
-import { toReplitMain } from "../../src/lib/pgzero";
 import { compitoUrl, eseguiPython, eseguiTurtle, esitoCasiDiProva, impostaCodice, impostaCorso, preparaAlunno, rispondiAiPrompt, taskUrl } from "./apri";
 import { leggiDisegno, pixelDisegnati } from "./disegno";
+import { pixelDisegnatiGioco } from "./gioco";
 
 /**
  * Regressione sui task veri dei corsi (e2e/compilatori/task-reali.json,
@@ -112,6 +112,30 @@ async function riassuntoTurtle(page: Page, t: CorpusTask): Promise<string> {
   return righe.join("\n");
 }
 
+async function riassuntoPgzero(page: Page, t: CorpusTask): Promise<string> {
+  await expect(page.getByText("🎮 Pygame Zero")).toBeVisible();
+  const esegui = page.getByRole("button", { name: "Esegui" });
+  await expect(esegui).toBeEnabled({ timeout: 120_000 });
+  const prompt = rispondiAiPrompt(page, Array(MAX_INPUT).fill(RISPOSTA_INPUT));
+  await esegui.click();
+  // Il gioco gira un attimo, poi si guarda cosa ha disegnato e se si è fermato per un errore
+  await page.waitForTimeout(1500);
+  const stop = page.getByRole("button", { name: "Stop" });
+  if (await stop.count()) await stop.click();
+  await expect(esegui).toBeEnabled({ timeout: 10_000 });
+  prompt.stop();
+  const errore = page.getByTestId("friendly-error");
+  const output = page.getByTestId("pgzero-output");
+  const righe = [
+    "compilatore: pgzero",
+    `esito: ${(await errore.count()) ? `errore: ${primaRiga(await errore.innerText())}` : "ok"}`,
+    `disegno: ${(await pixelDisegnatiGioco(page)) > 50 ? "sì" : "vuoto"}`,
+  ];
+  if (CASUALE.test(t.default_python_code ?? "")) righe.push("output: (casuale, non confrontato)");
+  else righe.push("output:", taglia((await output.count()) ? ((await output.textContent()) ?? "") : ""));
+  return righe.join("\n");
+}
+
 async function riassuntoWeb(page: Page): Promise<string> {
   const frame = page.frameLocator('iframe[title="Preview"]').first();
   await expect(frame.locator("body")).toBeAttached({ timeout: 20_000 });
@@ -164,14 +188,9 @@ if (!corpus) {
       for (const t of gruppo.task) {
         await test.step(nome(t), async () => {
           await apri(page, fake, t);
-          if (t.compilatore === "pgzero") {
-            // Il codice da copiare su Replit è quello del task, con l'intestazione per main.py
-            await expect(page.getByText("🎮 Pygame Zero")).toBeVisible();
-            if (t.default_python_code) await expect.soft(page.getByTestId("pgzero-code"), nome(t)).toHaveText(toReplitMain(t.default_python_code));
-            return;
-          }
           const riassunto = t.compilatore === "python" ? await riassuntoPython(page, t)
             : t.compilatore === "turtle" ? await riassuntoTurtle(page, t)
+            : t.compilatore === "pgzero" ? await riassuntoPgzero(page, t)
             : await riassuntoWeb(page);
           // Senza il titolo: rinominare un task non è una regressione
           expect.soft(`${riassunto}\n`, nome(t)).toMatchSnapshot(`${chiave(t)}.txt`);

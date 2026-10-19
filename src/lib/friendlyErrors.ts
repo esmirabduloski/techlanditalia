@@ -205,8 +205,21 @@ function explainKnown(type: string, msg: string, code: string): Explained {
         explanation: `Hai chiesto un elemento in una posizione che ${/string/.test(msg) ? 'il testo' : 'la lista'} non ha.`,
         tip: 'Le posizioni partono da 0: in una lista di 3 elementi l\'ultimo è alla posizione 2.',
       };
-    case 'KeyError':
+    case 'KeyError': {
+      // Pygame Zero: Actor("alien"), sounds.salto, music.play("tema") con un file che non c'è
+      m = msg.match(/No (image|sound|music|font) found like '([^']+)'|No '\w+' directory found to load (image|sound|music|font) '([^']+)'/);
+      if (m) {
+        const tipo = m[1] ?? m[3];
+        const nome = m[2] ?? m[4];
+        const cosa = { image: ['Immagine non trovata', "l'immagine"], sound: ['Suono non trovato', 'il suono'], music: ['Musica non trovata', 'la musica'], font: ['Font non trovato', 'il font'] }[tipo]!;
+        return {
+          title: cosa[0],
+          explanation: `Il gioco cerca ${cosa[1]} \`${nome}\`, ma tra i file del gioco non c'è.`,
+          tip: 'Controlla il nome: tutto minuscolo e senza estensione (per esempio `Actor("alien")` per alien.png). Si possono usare i file della libreria e quelli allegati all\'esercizio.',
+        };
+      }
       return { title: 'Chiave non trovata', explanation: `Nel dizionario non c'è la chiave ${msg.trim() || 'che hai chiesto'}.`, tip: 'Controlla come è scritta (maiuscole comprese) oppure usa `.get(...)`.' };
+    }
     case 'AttributeError': {
       m = msg.match(/(?:'(\w+)' object|module '(\w+)') has no attribute '(\w+)'/);
       if (!m) break;

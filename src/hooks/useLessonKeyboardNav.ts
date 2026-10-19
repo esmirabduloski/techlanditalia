@@ -6,8 +6,9 @@ interface Options {
   enabled?: boolean;
 }
 
-// Dove le frecce servono per scrivere o muoversi: editor di codice, campi, quiz
-const TYPING_SELECTOR = 'input, textarea, select, [contenteditable=""], [contenteditable="true"], [role="radiogroup"], [role="slider"], [role="tablist"], [role="menu"], [role="listbox"]';
+// Dove le frecce servono per scrivere o muoversi: editor di codice, campi, quiz,
+// finestra di un gioco (data-captures-keys, es. Pygame Zero)
+const TYPING_SELECTOR = 'input, textarea, select, [contenteditable=""], [contenteditable="true"], [role="radiogroup"], [role="slider"], [role="tablist"], [role="menu"], [role="listbox"], [data-captures-keys]';
 
 /**
  * Frecce ← / → per passare al task (o alla lezione) precedente / successivo.

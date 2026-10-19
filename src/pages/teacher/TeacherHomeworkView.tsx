@@ -290,7 +290,7 @@
                compiler === 'turtle' ? (
                  <TurtleCompiler defaultCode={homework.default_python_code || undefined} />
                ) : compiler === 'pgzero' ? (
-                 <PgzeroCompiler defaultCode={homework.default_python_code || undefined} replitUrl={homework.replit_url || undefined} />
+                 <PgzeroCompiler defaultCode={homework.default_python_code || undefined} replitUrl={homework.replit_url || undefined} attachments={homework.attachments} />
                ) : (
                  <PythonCompiler defaultCode={homework.default_python_code || undefined} />
                )

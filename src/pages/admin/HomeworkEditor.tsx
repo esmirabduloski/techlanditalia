@@ -21,6 +21,7 @@ import { useRef } from 'react';
 import { useAutoBackup } from '@/hooks/useAutoBackup';
 import { AdminStepper, type AdminStep } from '@/components/admin/AdminStepper';
 import { TestCasesEditor } from '@/components/admin/TestCasesEditor';
+import { PgzeroAssetsHint } from '@/components/admin/PgzeroAssetsHint';
 import { countIncompleteCases, parseTestCases, toEditableCases, type EditableTestCase } from '@/lib/testCases';
 import { PYTHON_COURSES, WEB_COURSES } from '@/lib/compilerKind';
 
@@ -535,6 +536,9 @@ function HomeworkEditor() {
                       ))}
                     </div>
                   )}
+                  {isPythonCourse && formData.python_env === 'pgzero' && (
+                    <PgzeroAssetsHint attachments={formData.attachments} />
+                  )}
                 </div>
               </div>
 
@@ -562,12 +566,12 @@ function HomeworkEditor() {
                           <SelectContent>
                             <SelectItem value="standard">Standard (Python base)</SelectItem>
                             <SelectItem value="turtle">🐢 Turtle (Grafica)</SelectItem>
-                            <SelectItem value="pgzero">🎮 Pygame Zero (Giochi)</SelectItem>
+                            <SelectItem value="pgzero">🎮 Pygame Zero (Giochi nel sito)</SelectItem>
                           </SelectContent>
                         </Select>
                         <p className="text-xs text-muted-foreground">
                           {formData.python_env === 'turtle' && 'Disegno con la tartaruga direttamente nella pagina'}
-                          {formData.python_env === 'pgzero' && 'Lo studente copierà il codice e lo incollerà in Replit'}
+                          {formData.python_env === 'pgzero' && 'Il gioco si apre nella pagina; resta il bottone per copiarlo in Replit'}
                           {formData.python_env === 'standard' && 'Compilatore Python standard per codice base'}
                         </p>
                       </div>
@@ -575,7 +579,7 @@ function HomeworkEditor() {
                       {/* Replit URL - solo per Pygame Zero */}
                       {formData.python_env === 'pgzero' && (
                         <div className="space-y-2">
-                          <Label htmlFor="replit_url">🔗 Link Replit (per bottone "Apri Replit")</Label>
+                          <Label htmlFor="replit_url">🔗 Link Replit (facoltativo, per il bottone "Apri Replit")</Label>
                           <Input
                             id="replit_url"
                             value={formData.replit_url}

@@ -175,3 +175,11 @@ if ! out=$(run_sql supabase_admin supabase/tests/rls/14_school_closures.sql 2>&1
   exit 1
 fi
 echo "$out" | sed -n 's/.*NOTICE: *//p'
+
+echo "▶ Mappa delle competenze"
+if ! out=$(run_sql supabase_admin supabase/tests/rls/15_skill_map.sql 2>&1); then
+  echo "$out" | sed -nE 's/.*(NOTICE|WARNING|ERROR): *//p'
+  echo "✗ Test della mappa delle competenze FALLITI"
+  exit 1
+fi
+echo "$out" | sed -n 's/.*NOTICE: *//p'

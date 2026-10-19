@@ -24,6 +24,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { SkillMapCard } from "@/components/skills/SkillMap";
 
 const COMMENTS_PER_PAGE = 5;
 
@@ -469,6 +470,14 @@ export default function TeacherStudentDetail() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Mappa delle competenze: l'insegnante (o l'admin) conferma o cambia i livelli */}
+            <SkillMapCard
+              studentId={student.id}
+              studentName={student.full_name}
+              variant="teacher"
+              editable={!isImpersonating}
+            />
 
             {/* Comments */}
             <Card>

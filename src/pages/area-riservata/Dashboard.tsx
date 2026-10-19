@@ -27,6 +27,7 @@ import { ReferralCard } from '@/components/dashboard/ReferralCard';
 import { DeadlineNotifications } from '@/components/dashboard/DeadlineNotifications';
 import { BookmarksSection } from '@/components/dashboard/BookmarksSection';
 import { ProgressCharts } from '@/components/dashboard/ProgressCharts';
+import { SkillMapCard } from '@/components/skills/SkillMap';
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { CelebrationOverlay } from '@/components/gamification/CelebrationOverlay';
 import { useCelebration } from '@/hooks/useCelebration';
@@ -574,6 +575,11 @@ export default function Dashboard() {
                 taskProgress={taskProgress}
               />
             </div>
+          )}
+
+          {/* Mappa delle competenze (DigComp), compare quando ci sono lezioni collegate */}
+          {effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (
+            <SkillMapCard studentId={effectiveUserId} variant="student" className="mb-8 scroll-mt-24" />
           )}
 
           {/* Badges Section */}

@@ -239,6 +239,11 @@ INSERT INTO public.course_certificates (student_id, group_id, student_name, cour
   ('00000000-0000-0000-0000-000000000101', '00000000-0000-0000-0000-00000000a001', 'Alunno S1', 'Corso C1', 'Insegnante T1', 30, 32, 45, current_date, 'TL-TEST-S1G1'),
   ('00000000-0000-0000-0000-000000000103', '00000000-0000-0000-0000-00000000a002', 'Alunno S3', 'Corso C2', 'Insegnante T2', 28, 32, 42, current_date, 'TL-TEST-S3G2');
 
+-- Mappa delle competenze: livelli confermati da T1 per S1 (G1) e da T2 per S2 (G2)
+INSERT INTO public.student_skill_assessments (student_id, concept, level, note, assessed_by) VALUES
+  ('00000000-0000-0000-0000-000000000101', 'cicli', 2, 'Usa bene i cicli', '00000000-0000-0000-0000-000000000301'),
+  ('00000000-0000-0000-0000-000000000102', 'variabili', 1, NULL, '00000000-0000-0000-0000-000000000302');
+
 -- Pause dell'abbonamento: S2 programmata, S3 già finita (nessuna in corso, per
 -- non cambiare i risultati di 03 e 04)
 INSERT INTO public.subscription_pauses (student_id, reason, starts_on, ends_on, ended_at, end_reason) VALUES

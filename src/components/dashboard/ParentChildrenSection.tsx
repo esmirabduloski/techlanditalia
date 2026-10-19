@@ -8,7 +8,7 @@ import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { Card, CardContent } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Users, CalendarDays, ClipboardList, CalendarCheck, CreditCard, MessageCircle, Trophy, Award } from "lucide-react";
+import { Loader2, Users, CalendarDays, ClipboardList, CalendarCheck, CreditCard, MessageCircle, Trophy, Award, Map as MapIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AvatarDisplay } from "@/components/gamification/AvatarSelector";
 import { getLevelFromPoints } from "@/components/gamification/LevelBadge";
@@ -22,7 +22,10 @@ import { ParentPaymentHistory } from "@/components/dashboard/ParentPaymentHistor
 import { ChildSummaryCard, type ChildSectionId } from "@/components/dashboard/ChildSummaryCard";
 import { ChildPasswordDialog } from "@/components/dashboard/ChildPasswordDialog";
 import { CertificateCard } from "@/components/certificates/CertificateCard";
+import { SkillMapView } from "@/components/skills/SkillMap";
 import { useStudentStreaks } from "@/hooks/useStudentStreaks";
+import { useSkillMap } from "@/hooks/useSkillMap";
+import { buildSkillMap, startedCount, type SkillMapEntry } from "@/lib/skillMap";
 import { localDateKey, nextLesson } from "@/lib/childProgress";
 import { addDaysIso, romeToday } from "@/lib/courseProposal";
 import type { CourseCertificate } from "@/lib/certificate";
@@ -157,6 +160,9 @@ function ChildDashboard({ child, canManagePassword }: { child: Child; canManageP
   );
   const { hash } = useLocation();
   const { data: certificates, isLoading: certificatesLoading } = useChildCertificates(child.id);
+  // Le competenze si sommano tra un corso e l'altro: la mappa non segue il corso scelto
+  const { data: skillRows, isLoading: skillsLoading } = useSkillMap(child.id);
+  const skillEntries = skillRows ? buildSkillMap(skillRows) : [];
 
   // Attestato appena sbloccato: la sezione Certificazioni parte aperta
   useEffect(() => {
@@ -213,12 +219,16 @@ function ChildDashboard({ child, canManagePassword }: { child: Child; canManageP
   // Link diretti (es. /area-riservata#calendario dalla barra in basso)
   useEffect(() => {
     const id = hash.replace("#", "") as ChildSectionId;
-    if (coursesLoading || certificatesLoading) return;
-    if (id === "certificazioni" ? certificates?.length : ["calendario", "compiti", "presenze", "saldo", "commenti", "traguardi"].includes(id)) {
+    if (coursesLoading || certificatesLoading || skillsLoading) return;
+    const available =
+      id === "certificazioni" ? !!certificates?.length
+      : id === "competenze" ? skillEntries.length > 0
+      : ["calendario", "compiti", "presenze", "saldo", "commenti", "traguardi"].includes(id);
+    if (available) {
       openSection(id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hash, coursesLoading, certificatesLoading]);
+  }, [hash, coursesLoading, certificatesLoading, skillsLoading]);
 
   const selectedCourse = courses.find((c) => c.courseId === selectedCourseId);
   const groupIds = selectedCourse?.groupIds;
@@ -301,6 +311,9 @@ function ChildDashboard({ child, canManagePassword }: { child: Child; canManageP
             <Section childId={child.id} id="commenti" icon={MessageCircle} title="Commenti degli insegnanti" hint={<CommentsHint childId={child.id} />}>
               <ParentCommentsSection childId={child.id} childName={child.full_name} />
             </Section>
+            {skillEntries.length > 0 && (
+              <SkillsSection childId={child.id} childName={child.full_name} entries={skillEntries} />
+            )}
             <Section childId={child.id} id="traguardi" icon={Trophy} title="Traguardi" hint={`Livello ${getLevelFromPoints(child.total_points).level}`}>
               <Achievements child={child} />
             </Section>
@@ -363,6 +376,20 @@ function CertificatesSection({ childId, childName, certificates }: { childId: st
         <div className="grid gap-4 md:grid-cols-2">
           {certificates.map((c) => <CertificateCard key={c.id} certificate={c} />)}
         </div>
+      </div>
+    </Section>
+  );
+}
+
+/** Mappa delle competenze: compare quando ci sono lezioni collegate o una valutazione. */
+function SkillsSection({ childId, childName, entries }: { childId: string; childName: string; entries: SkillMapEntry[] }) {
+  return (
+    <Section childId={childId} id="competenze" icon={MapIcon} title="Competenze" hint={`${startedCount(entries)} su ${entries.length} avviate`}>
+      <div className="space-y-4 pb-1" data-testid="parent-skill-map">
+        <p className="text-sm text-muted-foreground">
+          Cosa sa fare {childName.split(" ")[0]} con il coding, in tutti i suoi corsi. Tocca «Perché?» per vedere da quali lezioni e compiti viene ogni livello.
+        </p>
+        <SkillMapView entries={entries} variant="parent" />
       </div>
     </Section>
   );

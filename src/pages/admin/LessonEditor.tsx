@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,6 +15,8 @@ import { useToast } from '@/hooks/use-toast';
 import { LogOut, Loader2, ArrowLeft, Save, User } from 'lucide-react';
 import { useAutoBackup } from '@/hooks/useAutoBackup';
 import { OBJECTIVE_MAX_LENGTH, OBJECTIVE_PREFIX, cleanObjective } from '@/lib/lessonObjective';
+import { SKILL_CONCEPTS, conceptById, normalizeConcepts, suggestConcepts } from '@/lib/skillMap';
+import { isMissingSchemaError, skillMapClient } from '@/lib/skillMapClient';
 
 interface Course {
   id: string;
@@ -33,6 +35,8 @@ interface LessonData {
   images: string[];
   points_reward: number;
   lesson_number: number;
+  /** Concetti della mappa delle competenze (lessons.concepts, migrazione 0062). */
+  concepts: string[];
 }
 
 export default function LessonEditor() {
@@ -57,7 +61,10 @@ export default function LessonEditor() {
     images: [],
     points_reward: 50,
     lesson_number: 1,
+    concepts: [],
   });
+  // Testo di task e compiti della lezione: i contenuti veri stanno lì, servono ai suggerimenti
+  const [activityText, setActivityText] = useState('');
 
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
@@ -108,10 +115,27 @@ export default function LessonEditor() {
           images: Array.isArray(lessonData.images) ? (lessonData.images as string[]) : [],
           points_reward: lessonData.points_reward || 50,
           lesson_number: lessonData.lesson_number || 1,
+          concepts: normalizeConcepts((lessonData as { concepts?: unknown[] }).concepts),
         };
         savedSnapshotRef.current = JSON.stringify(dbData);
         setFormData(dbData);
       }
+
+      const [{ data: tasks }, { data: homework }] = await Promise.all([
+        supabase
+          .from('lesson_tasks')
+          .select('title, content, default_python_code, default_html_code, default_js_code')
+          .eq('lesson_id', lessonId),
+        supabase
+          .from('homework')
+          .select('title, description, instructions, default_python_code, default_html_code, default_js_code')
+          .eq('lesson_id', lessonId),
+      ]);
+      setActivityText(
+        [...(tasks ?? []), ...(homework ?? [])]
+          .flatMap((row) => Object.values(row).filter((v): v is string => typeof v === 'string'))
+          .join('\n'),
+      );
     } else {
       // Get next lesson number
       const { data: lessonsData } = await supabase
@@ -162,6 +186,7 @@ export default function LessonEditor() {
     };
 
     try {
+      let savedId = lessonId;
       if (isEditing && lessonId) {
         const { error } = await supabase
           .from('lessons')
@@ -171,14 +196,18 @@ export default function LessonEditor() {
         if (error) throw error;
         toast({ title: 'Successo', description: 'Lezione aggiornata' });
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('lessons')
-          .insert(lessonPayload);
+          .insert(lessonPayload)
+          .select('id')
+          .single();
 
         if (error) throw error;
+        savedId = data.id;
         toast({ title: 'Successo', description: 'Lezione creata' });
       }
 
+      if (savedId) await saveConcepts(savedId);
       return true;
     } catch (error: any) {
       toast({ 
@@ -191,6 +220,35 @@ export default function LessonEditor() {
       setIsSaving(false);
     }
   };
+
+  /**
+   * Le competenze si salvano a parte: finché la migrazione 0062 non è applicata
+   * la colonna non esiste, e il resto della lezione deve salvarsi comunque.
+   */
+  const saveConcepts = async (id: string) => {
+    const { error } = await skillMapClient.from('lessons').update({ concepts: formData.concepts }).eq('id', id);
+    if (!error) return;
+    if (isMissingSchemaError(error)) {
+      if (formData.concepts.length > 0) {
+        toast({ title: 'Competenze non salvate', description: 'La migrazione della mappa delle competenze non è ancora applicata.', variant: 'destructive' });
+      }
+      return;
+    }
+    toast({ title: 'Competenze non salvate', description: error.message, variant: 'destructive' });
+  };
+
+  const toggleConcept = (id: string) => {
+    setFormData(prev => ({
+      ...prev,
+      concepts: normalizeConcepts(prev.concepts.includes(id) ? prev.concepts.filter(c => c !== id) : [...prev.concepts, id]),
+    }));
+  };
+
+  const suggestedConcepts = useMemo(
+    () => suggestConcepts([formData.title, formData.objective, formData.description, formData.content, activityText].join('\n'))
+      .filter((id) => !formData.concepts.includes(id)),
+    [formData.title, formData.objective, formData.description, formData.content, formData.concepts, activityText],
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -314,6 +372,53 @@ export default function LessonEditor() {
                   <span>Una frase, verbo all'infinito. La vedono i ragazzi a inizio lezione e i genitori nel calendario.</span>
                   <span className="shrink-0">{formData.objective.length}/{OBJECTIVE_MAX_LENGTH}</span>
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label id="concepts-label">🧩 Competenze della lezione</Label>
+                <div className="flex flex-wrap gap-2" role="group" aria-labelledby="concepts-label">
+                  {SKILL_CONCEPTS.map((concept) => {
+                    const selected = formData.concepts.includes(concept.id);
+                    return (
+                      <Button
+                        key={concept.id}
+                        type="button"
+                        size="sm"
+                        variant={selected ? 'default' : 'outline'}
+                        aria-pressed={selected}
+                        title={concept.description}
+                        onClick={() => toggleConcept(concept.id)}
+                        className="h-8 rounded-full"
+                      >
+                        {concept.emoji} {concept.label}
+                      </Button>
+                    );
+                  })}
+                </div>
+                {suggestedConcepts.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-2 text-sm" data-testid="concept-suggestions">
+                    <span className="text-muted-foreground">Suggeriti dal testo di lezione, task e compiti:</span>
+                    {suggestedConcepts.map((id) => (
+                      <Button key={id} type="button" size="sm" variant="secondary" className="h-7 rounded-full" onClick={() => toggleConcept(id)}>
+                        + {conceptById(id)?.label}
+                      </Button>
+                    ))}
+                    {suggestedConcepts.length > 1 && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="link"
+                        className="h-7 px-1"
+                        onClick={() => setFormData(prev => ({ ...prev, concepts: normalizeConcepts([...prev.concepts, ...suggestedConcepts]) }))}
+                      >
+                        Aggiungi tutti
+                      </Button>
+                    )}
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Solo gli argomenti che la lezione insegna davvero. Fanno salire il livello nella mappa delle competenze (DigComp) che vedono studenti, genitori e insegnanti.
+                </p>
               </div>
 
               <div className="space-y-2">

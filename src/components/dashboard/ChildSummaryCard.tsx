@@ -18,7 +18,7 @@ import {
 } from "@/hooks/useChildProgressData";
 import { LOW_BALANCE } from "@/components/dashboard/ParentPaymentHistory";
 
-export type ChildSectionId = "certificazioni" | "calendario" | "compiti" | "presenze" | "saldo" | "commenti" | "traguardi";
+export type ChildSectionId = "certificazioni" | "calendario" | "compiti" | "presenze" | "saldo" | "commenti" | "competenze" | "traguardi";
 
 interface ChildSummaryCardProps {
   child: { id: string; full_name: string; username: string | null; avatar_id: number; total_points: number };

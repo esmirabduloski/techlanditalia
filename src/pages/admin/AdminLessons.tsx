@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { EditViewTabs } from '@/components/lesson/ViewModeSwitch';
+import { conceptById, conceptCoverage, normalizeConcepts } from '@/lib/skillMap';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,6 +40,8 @@ interface Lesson {
   content_type: string | null;
   points_reward: number;
   created_at: string;
+  /** Mappa delle competenze (migrazione 0062): assente finché non è applicata. */
+  concepts?: string[];
 }
 
 export default function AdminLessons() {
@@ -115,6 +118,9 @@ export default function AdminLessons() {
 
   if (!isAdmin || !course) return null;
 
+  const coverage = conceptCoverage(lessons);
+  const conceptsOf = (lesson: Lesson) => normalizeConcepts(lesson.concepts).map((id) => conceptById(id)!);
+
   return (
     <div className="min-h-screen bg-muted/30">
       {/* Header */}
@@ -147,6 +153,15 @@ export default function AdminLessons() {
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold">Lezioni</h1>
             <p className="text-muted-foreground mt-1">{lessons.length} lezioni</p>
+            {coverage && (
+              <p className="text-sm text-muted-foreground mt-1" data-testid="course-concept-coverage">
+                🧩 Competenze:{' '}
+                {coverage.concepts.length > 0
+                  ? coverage.concepts.map((c) => `${c.concept.emoji} ${c.concept.label} (${c.lessons})`).join(' · ')
+                  : 'nessuna ancora collegata'}
+                {coverage.untagged > 0 && ` — ${coverage.untagged} ${coverage.untagged === 1 ? 'lezione senza' : 'lezioni senza'}`}
+              </p>
+            )}
           </div>
           <Button asChild>
             <Link to={`/admin/corsi/${courseId}/lezioni/nuova`}>
@@ -188,11 +203,24 @@ export default function AdminLessons() {
                           Senza obiettivo
                         </Badge>
                       )}
+                      {coverage && conceptsOf(lesson).length === 0 && (
+                        <Badge variant="outline" className="border-amber-500/50 text-amber-600 dark:text-amber-400" title="Collega le competenze dall'editor della lezione">
+                          Senza competenze
+                        </Badge>
+                      )}
                     </div>
                     <div className="flex items-center gap-3 text-sm text-muted-foreground">
                       <span>{lesson.points_reward} punti</span>
                       <span>•</span>
                       <span>{new Date(lesson.created_at).toLocaleDateString('it-IT')}</span>
+                      {conceptsOf(lesson).length > 0 && (
+                        <>
+                          <span>•</span>
+                          <span title={conceptsOf(lesson).map((c) => c.label).join(', ')}>
+                            {conceptsOf(lesson).map((c) => c.emoji).join(' ')}
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>

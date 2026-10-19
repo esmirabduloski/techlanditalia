@@ -1,5 +1,11 @@
 {
-  "images": [],
+  "images": [
+    "steve.png",
+    "steve_2.png",
+    "steve_cammina.png",
+    "steve_grande.png",
+    "steve_salta.png"
+  ],
   "sounds": [],
   "music": [],
   "fonts": []

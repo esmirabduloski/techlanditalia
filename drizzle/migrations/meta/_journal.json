@@ -414,6 +414,13 @@
       "when": 1792400376883,
       "tag": "0058_email_log",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1792400401812,
+      "tag": "0059_ai_consent_versions_authenticated_read",
+      "breakpoints": true
     }
   ]
 }

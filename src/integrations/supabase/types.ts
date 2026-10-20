@@ -1503,6 +1503,66 @@ export type Database = {
         }
         Relationships: []
       }
+      google_calendar_connections: {
+        Row: {
+          calendar_id: string | null
+          connected_at: string
+          dirty_at: string | null
+          google_email: string | null
+          last_error: string | null
+          last_synced_at: string | null
+          refresh_token: string
+          retry_after: string | null
+          status: string
+          teacher_id: string
+        }
+        Insert: {
+          calendar_id?: string | null
+          connected_at?: string
+          dirty_at?: string | null
+          google_email?: string | null
+          last_error?: string | null
+          last_synced_at?: string | null
+          refresh_token: string
+          retry_after?: string | null
+          status?: string
+          teacher_id: string
+        }
+        Update: {
+          calendar_id?: string | null
+          connected_at?: string
+          dirty_at?: string | null
+          google_email?: string | null
+          last_error?: string | null
+          last_synced_at?: string | null
+          refresh_token?: string
+          retry_after?: string | null
+          status?: string
+          teacher_id?: string
+        }
+        Relationships: []
+      }
+      google_oauth_states: {
+        Row: {
+          code_verifier: string
+          created_at: string
+          state: string
+          teacher_id: string
+        }
+        Insert: {
+          code_verifier: string
+          created_at?: string
+          state: string
+          teacher_id: string
+        }
+        Update: {
+          code_verifier?: string
+          created_at?: string
+          state?: string
+          teacher_id?: string
+        }
+        Relationships: []
+      }
       group_attendance: {
         Row: {
           group_id: string
@@ -1669,6 +1729,7 @@ export type Database = {
       homework: {
         Row: {
           attachments: Json | null
+          course_id: string | null
           created_at: string
           default_css_code: string | null
           default_html_code: string | null
@@ -1678,16 +1739,18 @@ export type Database = {
           due_date: string | null
           id: string
           instructions: string | null
-          lesson_id: string
+          lesson_id: string | null
           points_reward: number
           preview_only: boolean
           python_env: string | null
           replit_url: string | null
+          seasonal_theme_id: string | null
           test_cases: Json
           title: string
         }
         Insert: {
           attachments?: Json | null
+          course_id?: string | null
           created_at?: string
           default_css_code?: string | null
           default_html_code?: string | null
@@ -1697,16 +1760,18 @@ export type Database = {
           due_date?: string | null
           id?: string
           instructions?: string | null
-          lesson_id: string
+          lesson_id?: string | null
           points_reward?: number
           preview_only?: boolean
           python_env?: string | null
           replit_url?: string | null
+          seasonal_theme_id?: string | null
           test_cases?: Json
           title: string
         }
         Update: {
           attachments?: Json | null
+          course_id?: string | null
           created_at?: string
           default_css_code?: string | null
           default_html_code?: string | null
@@ -1716,20 +1781,35 @@ export type Database = {
           due_date?: string | null
           id?: string
           instructions?: string | null
-          lesson_id?: string
+          lesson_id?: string | null
           points_reward?: number
           preview_only?: boolean
           python_env?: string | null
           replit_url?: string | null
+          seasonal_theme_id?: string | null
           test_cases?: Json
           title?: string
         }
         Relationships: [
           {
+            foreignKeyName: "homework_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "homework_lesson_id_fkey"
             columns: ["lesson_id"]
             isOneToOne: false
             referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "homework_seasonal_theme_id_fkey"
+            columns: ["seasonal_theme_id"]
+            isOneToOne: false
+            referencedRelation: "seasonal_themes"
             referencedColumns: ["id"]
           },
         ]
@@ -2872,6 +2952,39 @@ export type Database = {
         }
         Relationships: []
       }
+      seasonal_themes: {
+        Row: {
+          created_at: string
+          emoji: string
+          id: string
+          name: string
+          period_hint: string | null
+          prompt: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          emoji?: string
+          id?: string
+          name: string
+          period_hint?: string | null
+          prompt?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          id?: string
+          name?: string
+          period_hint?: string | null
+          prompt?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       security_events: {
         Row: {
           created_at: string
@@ -3520,6 +3633,27 @@ export type Database = {
         }
         Relationships: []
       }
+      teacher_calendar_feeds: {
+        Row: {
+          created_at: string
+          last_fetched_at: string | null
+          teacher_id: string
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          last_fetched_at?: string | null
+          teacher_id: string
+          token: string
+        }
+        Update: {
+          created_at?: string
+          last_fetched_at?: string | null
+          teacher_id?: string
+          token?: string
+        }
+        Relationships: []
+      }
       teacher_courses: {
         Row: {
           assigned_at: string | null
@@ -3648,6 +3782,36 @@ export type Database = {
         }
         Relationships: []
       }
+      trash_items: {
+        Row: {
+          batch_id: string
+          deleted_at: string
+          deleted_by: string | null
+          id: number
+          links: Json | null
+          row_data: Json
+          table_name: string
+        }
+        Insert: {
+          batch_id: string
+          deleted_at?: string
+          deleted_by?: string | null
+          id?: number
+          links?: Json | null
+          row_data: Json
+          table_name: string
+        }
+        Update: {
+          batch_id?: string
+          deleted_at?: string
+          deleted_by?: string | null
+          id?: number
+          links?: Json | null
+          row_data?: Json
+          table_name?: string
+        }
+        Relationships: []
+      }
       trial_bookings: {
         Row: {
           admin_notes: string | null
@@ -3752,7 +3916,18 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      trash_batches: {
+        Row: {
+          batch_id: string | null
+          counts: Json | null
+          deleted_at: string | null
+          deleted_by: string | null
+          root_data: Json | null
+          root_table: string | null
+          total: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       admin_mfa_overview: {
@@ -3785,6 +3960,28 @@ export type Database = {
         }
         Returns: Json
       }
+      claim_google_calendar_syncs: {
+        Args: { p_limit?: number }
+        Returns: {
+          calendar_id: string | null
+          connected_at: string
+          dirty_at: string | null
+          google_email: string | null
+          last_error: string | null
+          last_synced_at: string | null
+          refresh_token: string
+          retry_after: string | null
+          status: string
+          teacher_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "google_calendar_connections"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      cleanup_google_oauth_states: { Args: never; Returns: undefined }
       cleanup_old_logs: { Args: never; Returns: Json }
       cleanup_rate_limits: { Args: never; Returns: number }
       complete_lesson: { Args: { _lesson_id: string }; Returns: Json }
@@ -3809,7 +4006,9 @@ export type Database = {
       }
       cron_health_report: { Args: { _since?: string }; Returns: Json }
       current_ai_consent_version: { Args: never; Returns: string }
+      empty_trash: { Args: never; Returns: number }
       ensure_mfa_policies: { Args: never; Returns: undefined }
+      ensure_trash_triggers: { Args: never; Returns: string[] }
       generate_slug: { Args: { title: string }; Returns: string }
       get_children_ids: { Args: { _parent_id: string }; Returns: string[] }
       get_leaderboard: {
@@ -3838,6 +4037,10 @@ export type Database = {
           paid_at: string
           status: string
         }[]
+      }
+      google_calendar_touch: {
+        Args: { p_teacher_ids: string[] }
+        Returns: undefined
       }
       has_role: {
         Args: {
@@ -3924,6 +4127,7 @@ export type Database = {
           version: string
         }[]
       }
+      purge_trash_batch: { Args: { _batch: string }; Returns: number }
       record_legal_consents: { Args: { _items: Json }; Returns: number }
       release_group_certificates: {
         Args: { p_group_id: string }
@@ -3956,6 +4160,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      restore_trash_batch: { Args: { _batch: string }; Returns: number }
       reward_referral: {
         Args: { _credits_each?: number; _reason?: string; _referral_id: string }
         Returns: Json
@@ -4063,10 +4268,19 @@ export type Database = {
         }
         Returns: Json
       }
+      teacher_calendar_feed: {
+        Args: { p_rotate?: boolean }
+        Returns: {
+          created_at: string
+          last_fetched_at: string
+          token: string
+        }[]
+      }
       teacher_teaches_student_in_group: {
         Args: { _group_id: string; _teacher_id: string }
         Returns: boolean
       }
+      trash_row_label: { Args: { _row: Json }; Returns: string }
       use_my_streak_freeze: {
         Args: { _freeze_type: string; _reason?: string; _student_id: string }
         Returns: Json

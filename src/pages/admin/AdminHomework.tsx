@@ -25,6 +25,7 @@ import {
 import { 
   LogOut, Loader2, ArrowLeft, Plus, Edit, Trash2, ClipboardList, Paperclip, Calendar, MonitorPlay, Sparkles, Undo2
 } from 'lucide-react';
+import { TRASH_RECOVERY_HINT } from '@/lib/trash';
 
 interface Lesson {
   id: string;
@@ -288,7 +289,7 @@ export default function AdminHomework() {
                             <AlertDialogHeader>
                               <AlertDialogTitle>Elimina compito</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Sei sicuro di voler eliminare "{hw.title}"? Questa azione non può essere annullata.
+                                Sei sicuro di voler eliminare "{hw.title}"? Con il compito se ne vanno le consegne degli alunni. {TRASH_RECOVERY_HINT}
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>

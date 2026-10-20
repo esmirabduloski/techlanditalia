@@ -38,6 +38,7 @@ import {
 import { FeedbackTemplates } from '@/components/feedback/FeedbackTemplates';
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
+import { TRASH_RECOVERY_HINT } from "@/lib/trash";
 
 interface Student {
   id: string;
@@ -476,7 +477,7 @@ export default function AdminStudentComments() {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Eliminare il commento?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Questa azione non può essere annullata.
+                              {TRASH_RECOVERY_HINT}
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>

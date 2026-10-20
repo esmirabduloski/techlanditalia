@@ -43,6 +43,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { TRASH_RECOVERY_HINT } from "@/lib/trash";
 
 interface ContactSubmission {
   id: string;
@@ -302,7 +303,7 @@ export default function AdminContatti() {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Elimina invio</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Sei sicuro di voler eliminare questo invio? Questa azione non può essere annullata.
+                              Sei sicuro di voler eliminare questo invio? {TRASH_RECOVERY_HINT}
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
@@ -392,7 +393,7 @@ export default function AdminContatti() {
                             <AlertDialogHeader>
                               <AlertDialogTitle>Elimina candidatura</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Sei sicuro di voler eliminare questa candidatura? Questa azione non può essere annullata.
+                                Sei sicuro di voler eliminare questa candidatura? {TRASH_RECOVERY_HINT}
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>

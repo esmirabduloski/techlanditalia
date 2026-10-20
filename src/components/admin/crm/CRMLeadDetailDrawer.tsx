@@ -418,7 +418,8 @@ export function CRMLeadDetailDrawer({ lead, open, onClose, onUpdate, onDelete, p
             <AlertDialogHeader>
               <AlertDialogTitle>Eliminare il lead?</AlertDialogTitle>
               <AlertDialogDescription>
-                Verranno cancellate anche tutte le interazioni associate. L'azione è irreversibile.
+                Il lead finisce nel cestino del CRM, in fondo alla pagina: da lì puoi recuperarlo con tutte le sue
+                interazioni.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

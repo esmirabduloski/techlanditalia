@@ -23,6 +23,7 @@ import {
 import { 
   LogOut, Loader2, Plus, Edit, Trash2, ArrowLeft, BookOpen, ClipboardList, FileText, MonitorPlay
 } from 'lucide-react';
+import { TRASH_RECOVERY_HINT } from '@/lib/trash';
 
 interface Course {
   id: string;
@@ -255,7 +256,7 @@ export default function AdminLessons() {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Elimina lezione</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Sei sicuro di voler eliminare la lezione "{lesson.title}"? Questa azione non può essere annullata.
+                          Sei sicuro di voler eliminare la lezione "{lesson.title}"? Con lei se ne vanno i suoi task e compiti. {TRASH_RECOVERY_HINT}
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>

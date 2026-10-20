@@ -42,6 +42,7 @@ import {
 import { toast } from 'sonner';
 import { Switch } from '@/components/ui/switch';
 import { useAutoBackup } from '@/hooks/useAutoBackup';
+import { TRASH_RETENTION_DAYS } from '@/lib/trash';
 
 interface Course {
   id: string;
@@ -546,7 +547,8 @@ export default function AdminCourses() {
               </AlertDialogTitle>
               <AlertDialogDescription>
                 Sei sicuro di voler eliminare il corso "{editingCourse?.title}"? 
-                Questa azione non può essere annullata e rimuoverà tutte le lezioni associate.
+                Rimuoverà anche lezioni, compiti, gruppi e consegne del corso: tutto resta recuperabile dal
+                Cestino per {TRASH_RETENTION_DAYS} giorni.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

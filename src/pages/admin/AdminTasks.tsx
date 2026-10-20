@@ -22,6 +22,7 @@ import {
 import { 
   LogOut, Loader2, Plus, Edit, Trash2, ArrowLeft, ListChecks, Eye, EyeOff, MonitorPlay
 } from 'lucide-react';
+import { TRASH_RECOVERY_HINT } from '@/lib/trash';
 
 interface Course {
   id: string;
@@ -265,7 +266,7 @@ export default function AdminTasks() {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Elimina task</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Sei sicuro di voler eliminare il task "{task.title}"? Questa azione non può essere annullata.
+                          Sei sicuro di voler eliminare il task "{task.title}"? {TRASH_RECOVERY_HINT}
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>

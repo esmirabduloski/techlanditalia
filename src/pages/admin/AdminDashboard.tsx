@@ -38,6 +38,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { TRASH_RECOVERY_HINT } from "@/lib/trash";
 
 interface BlogPost {
   id: string;
@@ -347,7 +348,7 @@ export default function AdminDashboard() {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Elimina articolo</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Sei sicuro di voler eliminare "{post.title}"? Questa azione non può essere annullata.
+                              Sei sicuro di voler eliminare "{post.title}"? {TRASH_RECOVERY_HINT}
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>

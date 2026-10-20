@@ -215,3 +215,11 @@ if ! out=$(run_sql supabase_admin supabase/tests/rls/19_google_calendar_sync.sql
   exit 1
 fi
 echo "$out" | sed -n 's/.*NOTICE: *//p'
+
+echo "▶ Cestino delle eliminazioni"
+if ! out=$(run_sql supabase_admin supabase/tests/rls/20_trash.sql 2>&1); then
+  echo "$out" | sed -nE 's/.*(NOTICE|WARNING|ERROR): *//p'
+  echo "✗ Test del cestino FALLITI"
+  exit 1
+fi
+echo "$out" | sed -n 's/.*NOTICE: *//p'

@@ -54,6 +54,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { TRASH_RECOVERY_HINT } from "@/lib/trash";
 
 interface TrialBooking {
   id: string;
@@ -743,7 +744,7 @@ export default function AdminBookings() {
           <AlertDialogHeader>
             <AlertDialogTitle>Elimina prenotazione?</AlertDialogTitle>
             <AlertDialogDescription>
-              Questa azione non può essere annullata. La prenotazione di {selectedBooking?.parent_name} verrà eliminata.
+              La prenotazione di {selectedBooking?.parent_name} verrà eliminata. {TRASH_RECOVERY_HINT}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

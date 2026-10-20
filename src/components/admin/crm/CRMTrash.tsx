@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/collapsible";
 import { Trash2, RotateCcw, ChevronDown, X } from "lucide-react";
 import { CrmLead } from "@/hooks/useCRM";
+import { TRASH_RETENTION_DAYS } from "@/lib/trash";
 
 interface CRMTrashProps {
   trashedLeads: CrmLead[];
@@ -52,7 +53,11 @@ export function CRMTrash({
         )}
       </div>
 
-      <CollapsibleContent className="mt-3">
+      <CollapsibleContent className="mt-3 space-y-2">
+        <p className="text-xs text-muted-foreground px-1">
+          Anche dopo «Elimina» o «Svuota cestino» un lead resta recuperabile per {TRASH_RETENTION_DAYS} giorni da
+          Admin → Cestino, con interazioni e pagamenti.
+        </p>
         {trashedLeads.length === 0 ? (
           <p className="text-sm text-muted-foreground px-1">Il cestino è vuoto.</p>
         ) : (

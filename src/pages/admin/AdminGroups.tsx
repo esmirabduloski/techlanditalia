@@ -47,6 +47,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { TRASH_RECOVERY_HINT, TRASH_RETENTION_DAYS } from "@/lib/trash";
 
 interface CertificateFile {
   path: string;
@@ -970,7 +971,7 @@ export default function AdminGroups() {
             <AlertDialogHeader>
               <AlertDialogTitle>Conferma eliminazione</AlertDialogTitle>
               <AlertDialogDescription>
-                Sei sicuro di voler eliminare questo gruppo? Questa azione non può essere annullata.
+                Sei sicuro di voler eliminare questo gruppo? Con lui se ne vanno alunni, presenze e calendario del gruppo. {TRASH_RECOVERY_HINT}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -990,9 +991,9 @@ export default function AdminGroups() {
               <AlertDialogDescription>
                 Sei sicuro di voler resettare tutte le presenze del gruppo "{resetAttendanceConfirm?.title}"? 
                 <br /><br />
-                <strong className="text-destructive">Attenzione:</strong> Questa azione eliminerà permanentemente 
-                tutti i dati delle presenze (presenti, assenti, giustificati) per questo gruppo. 
-                L'azione non può essere annullata.
+                <strong className="text-destructive">Attenzione:</strong> Questa azione eliminerà
+                tutti i dati delle presenze (presenti, assenti, giustificati) per questo gruppo.
+                Restano recuperabili dal Cestino per {TRASH_RETENTION_DAYS} giorni.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

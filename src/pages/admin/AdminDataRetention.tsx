@@ -264,8 +264,8 @@ export default function AdminDataRetention() {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Cancellare definitivamente {selectedTotal} record?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Verranno eliminati dal database i dati delle categorie selezionate. Non esiste un cestino: se ti
-                        serve una copia, esportala prima di confermare.
+                        Verranno eliminati dal database i dati delle categorie selezionate. Queste cancellazioni non
+                        passano dal Cestino: se ti serve una copia, esportala prima di confermare.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

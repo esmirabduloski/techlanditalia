@@ -282,3 +282,5 @@ INSERT INTO public.push_templates (title, body) VALUES ('t', 'b');
 INSERT INTO public.data_retention_runs DEFAULT VALUES;
 INSERT INTO public.blog_settings DEFAULT VALUES ON CONFLICT DO NOTHING;
 INSERT INTO public.crm_notion_settings DEFAULT VALUES ON CONFLICT DO NOTHING;
+INSERT INTO public.trash_items (batch_id, table_name, row_data, deleted_by)
+VALUES (gen_random_uuid(), 'glossary_terms', '{"term": "Termine eliminato"}', '00000000-0000-0000-0000-000000000901');

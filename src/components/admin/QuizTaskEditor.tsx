@@ -137,7 +137,7 @@ export function QuizTaskEditor({ value, onChange, courseId, currentTaskId }: Qui
         <div className="space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <Tabs value={editor} onValueChange={(v) => setEditor(v as 'form' | 'json')}>
-              <TabsList className="h-9">
+              <TabsList className="h-9 min-h-0">
                 <TabsTrigger value="form" disabled={!formAvailable} className="gap-1.5">
                   <ListChecks className="h-4 w-4" /> Modulo
                 </TabsTrigger>

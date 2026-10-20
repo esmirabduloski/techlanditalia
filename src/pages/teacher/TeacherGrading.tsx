@@ -373,10 +373,10 @@ export default function TeacherGrading() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-5xl mx-auto px-4 py-8">
+      <main className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
               <Award className="w-8 h-8 text-tech-teal" />
               Valutazione Compiti
             </h1>
@@ -484,7 +484,7 @@ export default function TeacherGrading() {
 
         {/* Grade Dialog */}
         <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
-          <DialogContent className="w-[calc(100vw-1rem)] sm:max-w-2xl max-h-[90vh] p-0 flex flex-col gap-0">
+          <DialogContent className="w-[calc(100vw-1rem)] sm:max-w-2xl max-h-[90vh] p-0 sm:p-0 flex flex-col gap-0">
             <DialogHeader className="p-4 sm:p-6 pb-2 border-b shrink-0">
               <DialogTitle>Valuta Compito</DialogTitle>
               <DialogDescription className="line-clamp-2">

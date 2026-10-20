@@ -340,7 +340,7 @@
    // Non-compiler courses - show simple view
    return (
      <Layout>
-       <div className="max-w-4xl mx-auto px-4 py-8">
+       <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
           <Button variant="ghost" onClick={() => navigate(backHref)}>
             <ArrowLeft className="w-4 h-4 mr-2" />

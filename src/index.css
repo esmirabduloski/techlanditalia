@@ -252,6 +252,20 @@
   a[target="_blank"][aria-label]::after {
     content: none;
   }
+
+  /* Sul telefono popover, menu e select non escono dallo schermo,
+     e i titoli lunghi delle card (email, slug, URL) vanno a capo */
+  @media (max-width: 640px) {
+    [data-radix-popper-content-wrapper] > * {
+      max-width: calc(100vw - 1.5rem) !important;
+    }
+
+    .tech-card h1,
+    .tech-card h2,
+    .tech-card h3 {
+      overflow-wrap: anywhere;
+    }
+  }
 }
 
 @layer utilities {

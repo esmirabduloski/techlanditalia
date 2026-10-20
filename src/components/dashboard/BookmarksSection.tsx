@@ -140,11 +140,11 @@ export function BookmarksSection() {
             I Tuoi Preferiti
           </CardTitle>
           <Tabs value={sortMode} onValueChange={(v) => setSortMode(v as SortMode)}>
-            <TabsList className="h-8">
-              <TabsTrigger value="date" className="text-xs gap-1 px-2 h-7">
+            <TabsList className="h-8 min-h-0">
+              <TabsTrigger value="date" className="text-xs sm:text-xs gap-1 px-2 sm:px-2 h-7 min-h-0">
                 <Clock className="w-3 h-3" /> Data
               </TabsTrigger>
-              <TabsTrigger value="course" className="text-xs gap-1 px-2 h-7">
+              <TabsTrigger value="course" className="text-xs sm:text-xs gap-1 px-2 sm:px-2 h-7 min-h-0">
                 <ArrowDownAZ className="w-3 h-3" /> Corso
               </TabsTrigger>
             </TabsList>

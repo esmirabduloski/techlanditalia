@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Award } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { certificateClient } from '@/lib/certificateClient';
+import { canSelfConsent } from '@/lib/aiConsents';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CertificateCard } from '@/components/certificates/CertificateCard';
 import { CelebrationOverlay } from '@/components/gamification/CelebrationOverlay';
-import type { CourseCertificate } from '@/lib/certificate';
+import { sharingAvailable, type CourseCertificate } from '@/lib/certificate';
 
 interface Props {
   userId: string;
@@ -32,11 +34,24 @@ function markSeen(ids: string[]) {
 /**
  * Certificazioni dell'alunno: compaiono solo dopo che l'insegnante ha
  * sbloccato gli attestati, il giorno della festa di fine corso. La prima
- * volta partono i coriandoli.
+ * volta partono i coriandoli. Dai 14 anni (anno di nascita indicato dal
+ * genitore) l'alunno può renderli pubblici da solo per LinkedIn e Instagram.
  */
 export function StudentCertificatesCard({ userId }: Props) {
   const [certificates, setCertificates] = useState<CourseCertificate[]>([]);
   const [celebrate, setCelebrate] = useState<CourseCertificate | null>(null);
+  const [birthYear, setBirthYear] = useState<number | null>(null);
+  const shareable = certificates.some(sharingAvailable);
+
+  useEffect(() => {
+    if (!shareable) return;
+    supabase
+      .from('student_birth_years')
+      .select('birth_year')
+      .eq('student_id', userId)
+      .maybeSingle()
+      .then(({ data }) => setBirthYear(data?.birth_year ?? null));
+  }, [userId, shareable]);
 
   useEffect(() => {
     (async () => {
@@ -74,7 +89,18 @@ export function StudentCertificatesCard({ userId }: Props) {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2">
-            {certificates.map((c) => <CertificateCard key={c.id} certificate={c} />)}
+            {certificates.map((c) => (
+              <CertificateCard
+                key={c.id}
+                certificate={c}
+                sharing={{
+                  viewer: 'student',
+                  canPublish: canSelfConsent(birthYear),
+                  studentFirstName: c.student_name.split(' ')[0],
+                  onChange: (next) => setCertificates((list) => list.map((x) => (x.id === next.id ? { ...x, ...next } : x))),
+                }}
+              />
+            ))}
           </div>
         </CardContent>
       </Card>

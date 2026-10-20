@@ -1,9 +1,12 @@
 /**
- * Attestati di fine corso (drizzle/migrations/0050_course_certificates.sql).
- * Qui solo logica pura: riempire il modello SVG (src/assets/certificates/attestato.svg)
- * e decidere quando si sbloccano. Il PDF lo genera certificatePdf.ts nel browser.
+ * Attestati di fine corso (drizzle/migrations/0050_course_certificates.sql) e
+ * loro verifica e condivisione (0064_certificate_sharing.sql).
+ * Qui solo logica pura: riempire il modello SVG (src/assets/certificates/attestato.svg),
+ * decidere quando si sbloccano e costruire i link pubblici. Il PDF lo genera
+ * certificatePdf.ts nel browser.
  */
 import { shortDate } from '@/lib/courseProposal';
+import type { QrPath } from '@/lib/qrCode';
 
 /** Contratto della 0050, disponibile anche prima di applicarla al database. */
 export type CourseCertificate = {
@@ -24,6 +27,26 @@ export type CourseCertificate = {
   released_by: string | null;
   notified_at: string | null;
   created_at: string;
+  /**
+   * Contratto della 0064: NULL = privato. Prima che la migrazione sia
+   * applicata le colonne mancano del tutto (vedi sharingAvailable).
+   */
+  shared_at?: string | null;
+  shared_by?: string | null;
+  shared_as?: 'parent' | 'student' | null;
+};
+
+/** Riga di verify_certificate(): se l'attestato è privato, iniziali e niente competenze. */
+export type VerifiedCertificate = {
+  code: string;
+  is_public: boolean;
+  student_name: string;
+  course_title: string;
+  course_emoji: string | null;
+  teacher_name: string | null;
+  issued_on: string;
+  hard_skills: string[];
+  soft_skills: string[];
 };
 
 /** Campi dell'attestato usati dal modello. */
@@ -57,8 +80,8 @@ export function formatHours(hours: number): string {
 const xmlEscape = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-/** Valori dei segnaposto {{...}} del modello. */
-export function certificateValues(c: CertificateData): Record<string, string> {
+/** Valori dei segnaposto {{...}} del modello; senza QR il suo riquadro sparisce. */
+export function certificateValues(c: CertificateData, qr?: QrPath): Record<string, string> {
   const values: Record<string, string> = {
     NOME: c.student_name.trim(),
     CORSO: c.course_title.trim(),
@@ -68,6 +91,8 @@ export function certificateValues(c: CertificateData): Record<string, string> {
     DATA: shortDate(c.issued_on),
     INSEGNANTE: c.teacher_name.trim(),
     CODICE: c.code,
+    QR_SIZE: String(qr?.size ?? 0),
+    QR_PATH: qr?.d ?? '',
   };
   for (let i = 0; i < MAX_HARD_SKILLS; i++) values[`HARD_${i + 1}`] = (c.hard_skills[i] ?? '').trim();
   for (let i = 0; i < MAX_SOFT_SKILLS; i++) values[`SOFT_${i + 1}`] = (c.soft_skills[i] ?? '').trim();
@@ -94,11 +119,11 @@ function setFontSize(svg: string, id: string, size: number): string {
 
 /**
  * Riempie il modello SVG: sostituisce i segnaposto (con escape XML), toglie le
- * righe delle competenze vuote (gruppi con data-slot) e riduce nome e corso
- * se sono troppo lunghi.
+ * righe delle competenze vuote e il QR mancante (gruppi con data-slot) e
+ * riduce nome e corso se sono troppo lunghi.
  */
-export function fillCertificateSvg(template: string, c: CertificateData): string {
-  const values = certificateValues(c);
+export function fillCertificateSvg(template: string, c: CertificateData, qr?: QrPath): string {
+  const values = certificateValues(c, qr);
   let svg = template.replace(/<g data-slot="([A-Z_0-9]+)">[\s\S]*?<\/g>/g, (group, key: string) =>
     values[key] ? group : '',
   );
@@ -133,4 +158,59 @@ export function certificatesUnlocked(opts: {
 }): boolean {
   if (opts.lastLessonDate) return opts.today >= opts.lastLessonDate;
   return opts.lastLessonMarked;
+}
+
+// --- Verifica e condivisione (0064) ---
+
+export const CERTIFICATE_SITE = 'https://techlanditalia.it';
+/** Pagina pubblica di verifica: /attestato (modulo) e /attestato/<codice>. */
+export const CERTIFICATE_VERIFY_PATH = '/attestato';
+
+/** Link pubblico dell'attestato, lo stesso del QR stampato sul PDF. */
+export function certificateUrl(code: string): string {
+  return `${CERTIFICATE_SITE}${CERTIFICATE_VERIFY_PATH}/${encodeURIComponent(code)}`;
+}
+
+/**
+ * Codice scritto a mano o link incollato → codice da cercare, oppure null se
+ * non può essere un codice. Stessa normalizzazione di verify_certificate().
+ */
+export function normalizeCertificateCode(input: string): string | null {
+  const raw = input.trim();
+  const fromUrl = raw.match(/\/attestato\/([^/?#\s]+)/i);
+  // "TL 2026 7K3QF" e "TL - 2026 - 7K3QF" valgono come TL-2026-7K3QF
+  const code = (fromUrl ? decodeURIComponent(fromUrl[1]) : raw).replace(/\s*-\s*|\s+/g, '-').toUpperCase();
+  return /^[A-Z0-9][A-Z0-9-]{3,38}[A-Z0-9]$/.test(code) ? code : null;
+}
+
+/** La 0064 è applicata quando la riga ha la colonna shared_at (anche NULL). */
+export function sharingAvailable(c: Partial<CourseCertificate>): boolean {
+  return 'shared_at' in c;
+}
+
+export function isCertificatePublic(c: Partial<CourseCertificate>): boolean {
+  return !!c.shared_at;
+}
+
+/**
+ * "Aggiungi al profilo" di LinkedIn, sezione Licenze e certificazioni, già
+ * compilata. TECHLAND non ha una pagina aziendale: va il nome, senza logo.
+ */
+export function linkedInAddToProfileUrl(c: Pick<CertificateData, 'course_title' | 'issued_on' | 'code'>): string {
+  const [year, month] = c.issued_on.split('-');
+  const params = new URLSearchParams({
+    startTask: 'CERTIFICATION_NAME',
+    name: c.course_title.trim(),
+    organizationName: 'TECHLAND',
+    issueYear: String(Number(year)),
+    issueMonth: String(Number(month)),
+    certUrl: certificateUrl(c.code),
+    certId: c.code,
+  });
+  return `https://www.linkedin.com/profile/add?${params}`;
+}
+
+/** Stesso nome del PDF, in .png: l'immagine da condividere. */
+export function certificateImageFileName(c: Pick<CertificateData, 'student_name' | 'course_title'>): string {
+  return certificateFileName(c).replace(/\.pdf$/, '.png');
 }

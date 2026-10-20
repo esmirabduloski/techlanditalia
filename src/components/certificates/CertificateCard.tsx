@@ -2,29 +2,42 @@ import { useEffect, useState } from 'react';
 import { Award, Download, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { CERTIFICATE_HOURS, CERTIFICATE_LESSONS, formatHours, type CertificateData } from '@/lib/certificate';
+import { CertificateSharePanel, type CertificateSharing } from '@/components/certificates/CertificateSharePanel';
+import {
+  CERTIFICATE_HOURS,
+  CERTIFICATE_LESSONS,
+  formatHours,
+  sharingAvailable,
+  type CertificateData,
+  type CourseCertificate,
+} from '@/lib/certificate';
 import { shortDate } from '@/lib/courseProposal';
 import { cn } from '@/lib/utils';
 
 interface Props {
-  certificate: CertificateData & { id: string; course_emoji?: string | null };
+  certificate: CertificateData & Partial<CourseCertificate> & { id: string; course_emoji?: string | null };
+  /** Solo per la famiglia: link pubblico, LinkedIn e Instagram */
+  sharing?: CertificateSharing;
   className?: string;
 }
 
 /**
  * Attestato di fine corso: anteprima (lo stesso disegno del PDF) e pulsante
- * per scaricarlo. Modello, font e jsPDF si caricano solo qui.
+ * per scaricarlo. Modello, font e jsPDF si caricano solo qui. Con la 0064
+ * applicata l'attestato ha il QR code di verifica e la famiglia può renderlo
+ * pubblico per condividerlo.
  */
-export function CertificateCard({ certificate: c, className }: Props) {
+export function CertificateCard({ certificate: c, sharing, className }: Props) {
   const { toast } = useToast();
   const [preview, setPreview] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const verifiable = sharingAvailable(c);
 
   useEffect(() => {
     let url: string | null = null;
     let cancelled = false;
     import('@/lib/certificatePdf')
-      .then((m) => m.certificatePreviewUrl(c))
+      .then((m) => m.certificatePreviewUrl(c, { verifiable }))
       .then((u) => {
         if (cancelled) URL.revokeObjectURL(u);
         else setPreview((url = u));
@@ -38,13 +51,13 @@ export function CertificateCard({ certificate: c, className }: Props) {
     };
     // L'attestato non cambia dopo lo sblocco: basta l'id
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [c.id]);
+  }, [c.id, verifiable]);
 
   const download = async () => {
     setBusy(true);
     try {
       const { downloadCertificatePdf } = await import('@/lib/certificatePdf');
-      await downloadCertificatePdf(c);
+      await downloadCertificatePdf(c, { verifiable });
     } catch (e) {
       toast({
         title: "Non siamo riusciti a creare il PDF",
@@ -81,6 +94,9 @@ export function CertificateCard({ certificate: c, className }: Props) {
           {busy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
           Scarica PDF
         </Button>
+        {sharing && verifiable && (
+          <CertificateSharePanel certificate={c as CourseCertificate} {...sharing} />
+        )}
       </div>
     </div>
   );

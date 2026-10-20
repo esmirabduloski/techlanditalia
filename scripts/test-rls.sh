@@ -183,3 +183,11 @@ if ! out=$(run_sql supabase_admin supabase/tests/rls/15_skill_map.sql 2>&1); the
   exit 1
 fi
 echo "$out" | sed -n 's/.*NOTICE: *//p'
+
+echo "▶ Attestati verificabili e condivisibili"
+if ! out=$(run_sql supabase_admin supabase/tests/rls/16_certificate_sharing.sql 2>&1); then
+  echo "$out" | sed -nE 's/.*(NOTICE|WARNING|ERROR): *//p'
+  echo "✗ Test degli attestati condivisibili FALLITI"
+  exit 1
+fi
+echo "$out" | sed -n 's/.*NOTICE: *//p'

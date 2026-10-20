@@ -126,6 +126,14 @@ export default function Privacy() {
                     cancellazione in ogni momento.
                   </li>
                   <li>
+                    <strong>Verifica e condivisione degli attestati:</strong> ogni attestato ha un codice e un QR code per
+                    controllarne l&apos;autenticità sulla pagina techlanditalia.it/attestato, dove si vedono solo le iniziali
+                    dello studente, il corso e la data. Se il genitore, o lo studente dai 14 anni, attiva il link pubblico,
+                    chi apre il link vede anche nome e cognome, competenze e insegnante (per esempio dal profilo LinkedIn).
+                    Base giuridica: consenso (art. 6.1.a), revocabile in ogni momento disattivando il link. La pagina non è
+                    indicizzata dai motori di ricerca.
+                  </li>
+                  <li>
                     <strong>Conservazione:</strong> per tutta la durata dell&apos;iscrizione e per i 10 anni successivi, termine
                     della prescrizione ordinaria e degli obblighi contabili e fiscali (artt. 2220 e 2946 c.c.); in qualsiasi
                     momento il genitore può chiedere la cancellazione anticipata dei dati didattici non necessari a tali fini.

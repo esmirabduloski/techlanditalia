@@ -16,6 +16,7 @@ export const NO_PRERENDER_PREFIXES = [
   "/lp",
   "/.lovable",
   "/newsletter",
+  "/attestato",
 ] as const;
 
 export function isNonPrerenderedPath(pathname: string): boolean {

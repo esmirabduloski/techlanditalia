@@ -79,6 +79,10 @@ export const routes: RouteRecord[] = [
       { path: "accessibilita", lazy: page(() => import("./pages/Accessibilita")) },
       { path: "glossario", lazy: page(() => import("./pages/Glossario")) },
 
+      // Verifica pubblica degli attestati, dal QR code (non prerenderata, noindex)
+      { path: "attestato", lazy: page(() => import("./pages/CertificateVerify")) },
+      { path: "attestato/:code", lazy: page(() => import("./pages/CertificateVerify")) },
+
       // === Landing ads (escluse dal prerender: noindex, gestione separata) ===
       { path: "lp/:slug", lazy: page(() => import("./pages/LandingPage")) },
 

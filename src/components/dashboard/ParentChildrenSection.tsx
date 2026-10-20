@@ -1,5 +1,6 @@
 import { useState, useEffect, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
@@ -361,7 +362,14 @@ function Section({
 
 /** Attestati di fine corso: la sezione esiste solo dopo lo sblocco dell'insegnante. */
 function CertificatesSection({ childId, childName, certificates }: { childId: string; childName: string; certificates: CourseCertificate[] }) {
+  const queryClient = useQueryClient();
   const hasNew = certificates.some(isNewCertificate);
+  const firstName = childName.split(" ")[0];
+  // Link pubblico cambiato: aggiorna l'attestato nella cache, senza ricaricare
+  const updated = (next: CourseCertificate) =>
+    queryClient.setQueryData<CourseCertificate[]>(["child-certificates", childId], (old) =>
+      old?.map((c) => (c.id === next.id ? { ...c, ...next } : c)),
+    );
   const hint = hasNew ? (
     <span className="text-primary font-medium">🎓 Nuovo!</span>
   ) : certificates.length === 1 ? "1 attestato" : `${certificates.length} attestati`;
@@ -370,11 +378,17 @@ function CertificatesSection({ childId, childName, certificates }: { childId: st
       <div className="space-y-3 pb-1" data-testid="parent-certificates">
         {hasNew && (
           <p className="text-sm text-muted-foreground">
-            Complimenti a {childName.split(" ")[0]}! Ecco il suo attestato di fine corso: scaricalo, stampalo o condividilo con chi vuoi.
+            Complimenti a {firstName}! Ecco il suo attestato di fine corso: scaricalo, stampalo o condividilo con chi vuoi.
           </p>
         )}
         <div className="grid gap-4 md:grid-cols-2">
-          {certificates.map((c) => <CertificateCard key={c.id} certificate={c} />)}
+          {certificates.map((c) => (
+            <CertificateCard
+              key={c.id}
+              certificate={c}
+              sharing={{ viewer: "parent", canPublish: true, studentFirstName: firstName, onChange: updated }}
+            />
+          ))}
         </div>
       </div>
     </Section>

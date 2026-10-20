@@ -1,13 +1,21 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   certificateFileName,
+  certificateImageFileName,
+  certificateUrl,
   certificateValues,
   certificatesUnlocked,
   fillCertificateSvg,
   formatHours,
+  isCertificatePublic,
+  linkedInAddToProfileUrl,
   nameFontSize,
+  normalizeCertificateCode,
+  sharingAvailable,
   type CertificateData,
 } from './certificate';
+import { qrPath } from './qrCode';
 
 const cert: CertificateData = {
   student_name: ' Giulia Bianchi ',
@@ -105,5 +113,75 @@ describe('certificatesUnlocked', () => {
   it('senza data in calendario serve la presenza dell\'ultima lezione', () => {
     expect(certificatesUnlocked({ today: '2026-10-16', lastLessonDate: null, lastLessonMarked: false })).toBe(false);
     expect(certificatesUnlocked({ today: '2026-10-16', lastLessonDate: null, lastLessonMarked: true })).toBe(true);
+  });
+});
+
+describe('modello vero (attestato.svg)', () => {
+  const template = readFileSync(new URL('../assets/certificates/attestato.svg', import.meta.url), 'utf8');
+
+  it('senza QR il riquadro del QR sparisce', () => {
+    const svg = fillCertificateSvg(template, cert);
+    expect(svg).not.toContain('data-slot="QR_PATH"');
+    expect(svg).toContain('verificalo su techlanditalia.it/attestato');
+  });
+
+  it('con il QR punta alla pagina di verifica e non lascia segnaposto', () => {
+    const qr = qrPath(certificateUrl(cert.code));
+    const svg = fillCertificateSvg(template, cert, qr);
+    expect(svg).toContain(`viewBox="0 0 ${qr.size} ${qr.size}"`);
+    expect(svg).toContain(`d="${qr.d}"`);
+    expect(svg).not.toMatch(/\{\{[A-Z_0-9]+\}\}/);
+  });
+});
+
+describe('qrPath', () => {
+  it('link di un attestato: versione 4 (33 moduli), con i quadrati di posizione', () => {
+    const qr = qrPath('https://techlanditalia.it/attestato/TL-2026-7K3QF');
+    expect(qr.size).toBe(33);
+    // Prima riga: quadrato in alto a sinistra (7 moduli) e in alto a destra
+    expect(qr.d.startsWith('M0 0h7v1h-7z')).toBe(true);
+    expect(qr.d).toContain('M26 0h7v1h-7z');
+    expect(qrPath('https://techlanditalia.it/attestato/TL-2026-7K3QF')).toEqual(qr);
+  });
+});
+
+describe('link pubblici', () => {
+  it('link di verifica, lo stesso del QR', () => {
+    expect(certificateUrl('TL-2026-7K3QF')).toBe('https://techlanditalia.it/attestato/TL-2026-7K3QF');
+  });
+
+  it('codice scritto a mano o link incollato', () => {
+    expect(normalizeCertificateCode(' tl-2026-7k3qf ')).toBe('TL-2026-7K3QF');
+    expect(normalizeCertificateCode('TL 2026 7K3QF')).toBe('TL-2026-7K3QF');
+    expect(normalizeCertificateCode('TL - 2026 - 7K3QF')).toBe('TL-2026-7K3QF');
+    expect(normalizeCertificateCode('https://techlanditalia.it/attestato/TL-2026-7K3QF?utm=x')).toBe('TL-2026-7K3QF');
+    expect(normalizeCertificateCode('')).toBeNull();
+    expect(normalizeCertificateCode('<script>')).toBeNull();
+    expect(normalizeCertificateCode('X'.repeat(60))).toBeNull();
+  });
+
+  it('LinkedIn: certificazione già compilata, con link e codice', () => {
+    const url = new URL(linkedInAddToProfileUrl(cert));
+    expect(url.origin + url.pathname).toBe('https://www.linkedin.com/profile/add');
+    expect(Object.fromEntries(url.searchParams)).toEqual({
+      startTask: 'CERTIFICATION_NAME',
+      name: 'Sviluppo giochi con Roblox',
+      organizationName: 'TECHLAND',
+      issueYear: '2026',
+      issueMonth: '10',
+      certUrl: 'https://techlanditalia.it/attestato/TL-2026-7K3QF',
+      certId: 'TL-2026-7K3QF',
+    });
+  });
+
+  it('immagine con lo stesso nome del PDF', () => {
+    expect(certificateImageFileName(cert)).toBe('Attestato-Giulia-Bianchi-Sviluppo-giochi-con-Roblox.png');
+  });
+
+  it('condivisione disponibile solo con la 0064 applicata (colonna shared_at)', () => {
+    expect(sharingAvailable({ code: 'x' })).toBe(false);
+    expect(sharingAvailable({ code: 'x', shared_at: null })).toBe(true);
+    expect(isCertificatePublic({ shared_at: null })).toBe(false);
+    expect(isCertificatePublic({ shared_at: '2026-10-20T10:00:00Z' })).toBe(true);
   });
 });

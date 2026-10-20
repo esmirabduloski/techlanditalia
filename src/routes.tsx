@@ -118,6 +118,10 @@ export const routes: RouteRecord[] = [
       { path: "admin/corsi/:courseId/lezioni/:lessonId/compiti", lazy: page(() => import("./pages/admin/AdminHomework")) },
       { path: "admin/corsi/:courseId/lezioni/:lessonId/compiti/nuovo", lazy: page(() => import("./pages/admin/HomeworkEditor")) },
       { path: "admin/corsi/:courseId/lezioni/:lessonId/compiti/:homeworkId/modifica", lazy: page(() => import("./pages/admin/HomeworkEditor")) },
+      // Compiti stagionali: un compito per corso per tema, da inserire e togliere dalle lezioni
+      { path: "admin/compiti-stagionali", lazy: page(() => import("./pages/admin/AdminSeasonalHomework")) },
+      { path: "admin/compiti-stagionali/:themeId/corso/:courseId/nuovo", lazy: page(() => import("./pages/admin/HomeworkEditor")) },
+      { path: "admin/compiti-stagionali/:themeId/compito/:homeworkId/modifica", lazy: page(() => import("./pages/admin/HomeworkEditor")) },
       // Scheda "Visualizza": lezioni, task e compiti come li vedono gli studenti
       { path: "admin/corsi/:courseId/anteprima/lezione/:lessonNumber", lazy: page(() => import("./pages/admin/AdminLessonPreview")) },
       { path: "admin/corsi/:courseId/anteprima/lezione/:lessonNumber/task/:taskNumber", lazy: page(() => import("./pages/admin/AdminTaskPreview")) },

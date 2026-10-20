@@ -24,6 +24,8 @@ import { TestCasesEditor } from '@/components/admin/TestCasesEditor';
 import { PgzeroAssetsHint } from '@/components/admin/PgzeroAssetsHint';
 import { countIncompleteCases, parseTestCases, toEditableCases, type EditableTestCase } from '@/lib/testCases';
 import { PYTHON_COURSES, WEB_COURSES } from '@/lib/compilerKind';
+import { seasonalPrefill, type SeasonalTheme } from '@/lib/seasonalHomework';
+import { seasonalClient } from '@/lib/seasonalHomeworkClient';
 
 interface Course {
   id: string;
@@ -65,16 +67,24 @@ interface HomeworkFormData {
 // La chiave rimonta l'editor a ogni cambio compito: stato e caricamento
 // ripartono da zero invece di mescolare i dati del compito precedente.
 export default function HomeworkEditorPage() {
-  const { homeworkId } = useParams<{ homeworkId: string }>();
-  return <HomeworkEditor key={homeworkId ?? 'nuovo'} />;
+  const { homeworkId, courseId } = useParams<{ homeworkId: string; courseId: string }>();
+  return <HomeworkEditor key={homeworkId ?? `nuovo-${courseId}`} />;
 }
 
 function HomeworkEditor() {
-  const { courseId, lessonId, homeworkId } = useParams<{ courseId: string; lessonId: string; homeworkId: string }>();
+  const { courseId: courseParam, lessonId: lessonParam, homeworkId, themeId } =
+    useParams<{ courseId: string; lessonId: string; homeworkId: string; themeId: string }>();
   const isEditing = Boolean(homeworkId);
+  // Compito stagionale: niente lezione obbligatoria, il corso arriva dall'indirizzo o dal compito
+  const isSeasonal = Boolean(themeId);
   
   const [course, setCourse] = useState<Course | null>(null);
   const [lesson, setLesson] = useState<Lesson | null>(null);
+  const [theme, setTheme] = useState<SeasonalTheme | null>(null);
+  const [seasonalCourseId, setSeasonalCourseId] = useState<string | null>(null);
+  const courseId = courseParam ?? seasonalCourseId ?? undefined;
+  // Nei compiti stagionali la lezione è quella in cui è inserito (se c'è)
+  const lessonId = isSeasonal ? lesson?.id : lessonParam;
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const { createCourseSnapshot } = useAutoBackup();
@@ -112,18 +122,29 @@ function HomeworkEditor() {
   }, [user, isAdmin, authLoading, navigate]);
 
   useEffect(() => {
-    if (user && isAdmin && courseId && lessonId) {
+    if (user && isAdmin && (isSeasonal || (courseParam && lessonParam))) {
       fetchData();
     }
-  }, [user, isAdmin, courseId, lessonId, homeworkId]);
+  }, [user, isAdmin, courseParam, lessonParam, homeworkId, themeId]);
 
   const fetchData = async () => {
-    if (!courseId || !lessonId) return;
+    // Il compito si legge per primo: nei compiti stagionali dice corso e lezione
+    const { data: homeworkData } = homeworkId
+      ? await seasonalClient.from('homework').select('*').eq('id', homeworkId).maybeSingle()
+      : { data: null };
+    const targetCourseId = courseParam ?? homeworkData?.course_id ?? null;
+    const targetLessonId = isSeasonal ? homeworkData?.lesson_id ?? null : lessonParam ?? null;
+    if (!targetCourseId || (!isSeasonal && !targetLessonId)) {
+      setIsLoading(false);
+      return;
+    }
+    setSeasonalCourseId(targetCourseId);
+
     // Fetch course
     const { data: courseData } = await supabase
       .from('courses')
       .select('id, title, emoji, slug')
-      .eq('id', courseId)
+      .eq('id', targetCourseId)
       .maybeSingle();
 
     if (courseData) {
@@ -131,57 +152,78 @@ function HomeworkEditor() {
     }
 
     // Fetch lesson
-    const { data: lessonData } = await supabase
-      .from('lessons')
-      .select('id, title, lesson_number')
-      .eq('id', lessonId)
-      .maybeSingle();
-
-    if (lessonData) {
-      setLesson(lessonData);
-    }
-
-    // Compiti della lezione, per la navigazione in alto (stesso ordine della lista)
-    const { data: siblingsData } = await supabase
-      .from('homework')
-      .select('id, title')
-      .eq('lesson_id', lessonId)
-      .order('created_at');
-
-    if (siblingsData) {
-      setLessonHomework(siblingsData.map((h, i) => ({ id: h.id, number: i + 1, title: h.title })));
-    }
-
-    // If editing, fetch homework
-    if (homeworkId) {
-      const { data: homeworkData } = await supabase
-        .from('homework')
-        .select('*')
-        .eq('id', homeworkId)
+    if (targetLessonId) {
+      const { data: lessonData } = await supabase
+        .from('lessons')
+        .select('id, title, lesson_number')
+        .eq('id', targetLessonId)
         .maybeSingle();
 
-      if (homeworkData) {
-        const dbData: HomeworkFormData = {
-          title: homeworkData.title || '',
-          description: homeworkData.description || '',
-          instructions: homeworkData.instructions || '',
-          points_reward: homeworkData.points_reward || 25,
-          due_date: homeworkData.due_date ? homeworkData.due_date.split('T')[0] : '',
-          attachments: Array.isArray(homeworkData.attachments) 
-            ? (homeworkData.attachments as unknown as Attachment[]) 
-            : [],
-          default_python_code: (homeworkData as any).default_python_code || '',
-          default_html_code: (homeworkData as any).default_html_code || '',
-          default_css_code: (homeworkData as any).default_css_code || '',
-          default_js_code: (homeworkData as any).default_js_code || '',
-          python_env: (homeworkData as any).python_env || 'standard',
-          replit_url: (homeworkData as any).replit_url || '',
-          preview_only: (homeworkData as any).preview_only || false,
-          test_cases: toEditableCases((homeworkData as any).test_cases),
-        };
-        savedSnapshotRef.current = JSON.stringify(dbData);
-        setFormData(dbData);
+      if (lessonData) {
+        setLesson(lessonData);
       }
+    }
+
+    let seasonalTheme: SeasonalTheme | null = null;
+    if (isSeasonal && themeId) {
+      const { data: themeData } = await seasonalClient.from('seasonal_themes').select('*').eq('id', themeId).maybeSingle();
+      seasonalTheme = themeData;
+      setTheme(themeData);
+
+      // Lo stesso tema negli altri corsi, per passare da un corso all'altro
+      const { data: variants } = await seasonalClient
+        .from('homework')
+        .select('id, course_id')
+        .eq('seasonal_theme_id', themeId);
+      const courseIds = (variants ?? []).map((v) => v.course_id).filter((id): id is string => !!id);
+      const { data: variantCourses } = courseIds.length > 0
+        ? await supabase.from('courses').select('id, title, emoji').in('id', courseIds)
+        : { data: [] };
+      const courseById = new Map((variantCourses ?? []).map((c) => [c.id, c]));
+      const steps = (variants ?? [])
+        .map((v) => ({ id: v.id, course: courseById.get(v.course_id ?? '') }))
+        .sort((a, b) => (a.course?.title ?? '').localeCompare(b.course?.title ?? '', 'it'))
+        .map((v, i) => ({ id: v.id, number: i + 1, title: v.course ? `${v.course.emoji} ${v.course.title}` : 'Corso' }));
+      setLessonHomework(steps);
+    } else {
+      // Compiti della lezione, per la navigazione in alto (stesso ordine della lista)
+      const { data: siblingsData } = await supabase
+        .from('homework')
+        .select('id, title')
+        .eq('lesson_id', targetLessonId!)
+        .order('created_at');
+
+      if (siblingsData) {
+        setLessonHomework(siblingsData.map((h, i) => ({ id: h.id, number: i + 1, title: h.title })));
+      }
+    }
+
+    // Compito nuovo di un tema: parte dalla richiesta standard
+    if (!homeworkId && seasonalTheme) {
+      setFormData(prev => ({ ...prev, ...seasonalPrefill(seasonalTheme) }));
+    }
+
+    if (homeworkData) {
+      const dbData: HomeworkFormData = {
+        title: homeworkData.title || '',
+        description: homeworkData.description || '',
+        instructions: homeworkData.instructions || '',
+        points_reward: homeworkData.points_reward || 25,
+        due_date: homeworkData.due_date ? homeworkData.due_date.split('T')[0] : '',
+        attachments: Array.isArray(homeworkData.attachments) 
+          ? (homeworkData.attachments as unknown as Attachment[]) 
+          : [],
+        default_python_code: (homeworkData as any).default_python_code || '',
+        default_html_code: (homeworkData as any).default_html_code || '',
+        default_css_code: (homeworkData as any).default_css_code || '',
+        default_js_code: (homeworkData as any).default_js_code || '',
+        python_env: (homeworkData as any).python_env || 'standard',
+        replit_url: (homeworkData as any).replit_url || '',
+        preview_only: (homeworkData as any).preview_only || false,
+        test_cases: toEditableCases((homeworkData as any).test_cases),
+      };
+      savedSnapshotRef.current = JSON.stringify(dbData);
+      setFormData(dbData);
     }
 
     setIsLoading(false);
@@ -200,7 +242,8 @@ function HomeworkEditor() {
         const fileExt = file.name.split('.').pop();
         const baseName = file.name.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9-_]/g, '-');
         const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(7)}`;
-        const fileName = `${lessonId}/${baseName}-${uniqueId}.${fileExt}`;
+        const folder = isSeasonal ? `stagionali/${courseId}` : lessonId;
+        const fileName = `${folder}/${baseName}-${uniqueId}.${fileExt}`;
 
         const { data, error } = await supabase.storage
           .from('homework-attachments')
@@ -279,7 +322,6 @@ function HomeworkEditor() {
     }
 
     const payload: any = {
-      lesson_id: lessonId,
       title: formData.title,
       description: formData.description || null,
       instructions: formData.instructions || null,
@@ -296,9 +338,16 @@ function HomeworkEditor() {
       test_cases: parseTestCases(formData.test_cases) as unknown as Json,
     };
 
+    // Un compito stagionale nasce in archivio; dove si trova lo decide la pagina dei compiti stagionali
+    if (!isSeasonal) {
+      payload.lesson_id = lessonId;
+    } else if (!isEditing) {
+      Object.assign(payload, { seasonal_theme_id: themeId, course_id: courseId, lesson_id: null });
+    }
+
     try {
       if (isEditing && homeworkId) {
-        const { error } = await supabase
+        const { error } = await seasonalClient
           .from('homework')
           .update(payload)
           .eq('id', homeworkId);
@@ -306,7 +355,7 @@ function HomeworkEditor() {
         if (error) throw error;
         toast({ title: 'Successo', description: 'Compito aggiornato' });
       } else {
-        const { error } = await supabase
+        const { error } = await seasonalClient
           .from('homework')
           .insert(payload);
 
@@ -326,10 +375,15 @@ function HomeworkEditor() {
     }
   };
 
+  // Dove si torna: la lista dei compiti della lezione, o il tema nella pagina dei compiti stagionali
+  const listHref = isSeasonal
+    ? `/admin/compiti-stagionali?tema=${themeId}`
+    : `/admin/corsi/${courseId}/lezioni/${lessonId}/compiti`;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (await saveHomework()) {
-      navigate(`/admin/corsi/${courseId}/lezioni/${lessonId}/compiti`);
+      navigate(listHref);
     }
   };
 
@@ -341,6 +395,10 @@ function HomeworkEditor() {
   const goToHomework = async (target: string | null) => {
     if (hasUnsavedChanges() && !(await saveHomework())) return;
 
+    if (isSeasonal) {
+      if (target) navigate(`/admin/compiti-stagionali/${themeId}/compito/${target}/modifica`);
+      return;
+    }
     const base = `/admin/corsi/${courseId}/lezioni/${lessonId}/compiti`;
     navigate(target ? `${base}/${target}/modifica` : `${base}/nuovo`);
   };
@@ -372,7 +430,7 @@ function HomeworkEditor() {
     );
   }
 
-  if (!isAdmin || !course || !lesson) return null;
+  if (!isAdmin || !course || (!lesson && !isSeasonal) || (isSeasonal && !theme)) return null;
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -386,13 +444,15 @@ function HomeworkEditor() {
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 mb-6 flex-wrap">
           <Button variant="ghost" size="sm" asChild>
-            <Link to={`/admin/corsi/${courseId}/lezioni/${lessonId}/compiti`}>
+            <Link to={listHref}>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Compiti
+              {isSeasonal ? 'Compiti stagionali' : 'Compiti'}
             </Link>
           </Button>
           <span className="text-muted-foreground">/</span>
-          <span className="font-medium">{isEditing ? 'Modifica' : 'Nuovo'} Compito</span>
+          <span className="font-medium">
+            {isSeasonal ? `${theme?.emoji} ${theme?.name} · ${course.title}` : `${isEditing ? 'Modifica' : 'Nuovo'} Compito`}
+          </span>
           <EditViewTabs
             mode="edit"
             className="ml-auto"
@@ -408,7 +468,7 @@ function HomeworkEditor() {
           itemLabel="Compito"
           busy={isSaving || isUploading}
           onSelect={(id) => goToHomework(id)}
-          onNew={() => goToHomework(null)}
+          onNew={isSeasonal ? undefined : () => goToHomework(null)}
         />
 
         <form onSubmit={handleSubmit}>
@@ -416,7 +476,9 @@ function HomeworkEditor() {
             <CardHeader>
               <CardTitle>{isEditing ? 'Modifica Compito' : 'Nuovo Compito'}</CardTitle>
               <CardDescription>
-                {course.emoji} {course.title} - L{lesson.lesson_number}: {lesson.title}
+                {isSeasonal && `${theme?.emoji} ${theme?.name} · `}
+                {course.emoji} {course.title}
+                {lesson ? ` - L${lesson.lesson_number}: ${lesson.title}` : ' - In archivio, non è in nessuna lezione'}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -694,7 +756,7 @@ function HomeworkEditor() {
           {/* Actions */}
           <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3">
             <Button type="button" variant="outline" asChild className="w-full sm:w-auto">
-              <Link to={`/admin/corsi/${courseId}/lezioni/${lessonId}/compiti`}>Annulla</Link>
+              <Link to={listHref}>Annulla</Link>
             </Button>
             <Button type="submit" disabled={isSaving} className="w-full sm:w-auto">
               {isSaving ? (

@@ -9,6 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { EditViewTabs } from '@/components/lesson/ViewModeSwitch';
+import { SeasonalBadge } from '@/components/homework/SeasonalBadge';
+import { seasonalClient } from '@/lib/seasonalHomeworkClient';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,7 +23,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { 
-  LogOut, Loader2, ArrowLeft, Plus, Edit, Trash2, ClipboardList, Paperclip, Calendar, MonitorPlay
+  LogOut, Loader2, ArrowLeft, Plus, Edit, Trash2, ClipboardList, Paperclip, Calendar, MonitorPlay, Sparkles, Undo2
 } from 'lucide-react';
 
 interface Lesson {
@@ -47,6 +49,8 @@ interface Homework {
   attachments: Attachment[];
   due_date: string | null;
   created_at: string;
+  /** Compito stagionale (0066): si toglie dalla lezione invece di cancellarlo */
+  seasonal_theme_id?: string | null;
 }
 
 export default function AdminHomework() {
@@ -110,6 +114,18 @@ export default function AdminHomework() {
     } else {
       setHomework(homework.filter(h => h.id !== id));
       toast({ title: 'Successo', description: 'Compito eliminato' });
+    }
+  };
+
+  // Il compito stagionale torna in archivio, pronto per la prossima volta: testo e consegne restano
+  const removeFromLesson = async (hw: Homework) => {
+    const { error } = await seasonalClient.from('homework').update({ lesson_id: null }).eq('id', hw.id);
+
+    if (error) {
+      toast({ title: 'Errore', description: 'Impossibile togliere il compito dalla lezione', variant: 'destructive' });
+    } else {
+      setHomework(homework.filter(h => h.id !== hw.id));
+      toast({ title: 'Compito tolto dalla lezione', description: 'È tornato nei compiti stagionali' });
     }
   };
 
@@ -191,7 +207,10 @@ export default function AdminHomework() {
                 <CardContent className="py-4">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold truncate">{hw.title}</h3>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <h3 className="font-semibold truncate">{hw.title}</h3>
+                        <SeasonalBadge themeId={hw.seasonal_theme_id} className="hidden sm:inline-flex" />
+                      </div>
                       {hw.description && (
                         <p className="text-sm text-muted-foreground truncate">{hw.description}</p>
                       )}
@@ -230,30 +249,60 @@ export default function AdminHomework() {
                           <Edit className="w-4 h-4" />
                         </Link>
                       </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                            <Trash2 className="w-4 h-4" />
+                      {hw.seasonal_theme_id ? (
+                        <>
+                          <Button variant="ghost" size="icon" asChild title="Gestisci nei compiti stagionali">
+                            <Link to={`/admin/compiti-stagionali?tema=${hw.seasonal_theme_id}`} aria-label="Gestisci nei compiti stagionali">
+                              <Sparkles className="w-4 h-4" />
+                            </Link>
                           </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Elimina compito</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Sei sicuro di voler eliminare "{hw.title}"? Questa azione non può essere annullata.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Annulla</AlertDialogCancel>
-                            <AlertDialogAction 
-                              onClick={() => deleteHomework(hw.id)} 
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                              Elimina
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" title="Togli dalla lezione" aria-label={`Togli "${hw.title}" dalla lezione`}>
+                                <Undo2 className="w-4 h-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Togli dalla lezione</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  "{hw.title}" è un compito stagionale: non viene cancellato ma torna in archivio nei Compiti stagionali,
+                                  pronto per la prossima volta. Gli alunni non lo vedono più; le consegne già fatte restano da correggere.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Annulla</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => removeFromLesson(hw)}>Togli</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </>
+                      ) : (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Elimina compito</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Sei sicuro di voler eliminare "{hw.title}"? Questa azione non può essere annullata.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Annulla</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={() => deleteHomework(hw.id)} 
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Elimina
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
                     </div>
                   </div>
                 </CardContent>

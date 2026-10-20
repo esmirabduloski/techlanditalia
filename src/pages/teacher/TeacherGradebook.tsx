@@ -411,7 +411,8 @@ export default function TeacherGradebook() {
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <span className="cursor-help text-xs">
-                                {h.emoji} L{h.lesson_number}
+                                {/* 0: compito stagionale non più in una lezione */}
+                                {h.emoji} {h.lesson_number ? `L${h.lesson_number}` : '✨'}
                               </span>
                             </TooltipTrigger>
                             <TooltipContent>

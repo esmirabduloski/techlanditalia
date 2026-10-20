@@ -25,6 +25,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAutoBackup } from '@/hooks/useAutoBackup';
 import { exportCompilerCorpus } from '@/lib/compilerCorpusExport';
+import { fetchArchivedSeasonalHomework } from '@/lib/seasonalHomeworkClient';
 
 interface Snapshot {
   id: string;
@@ -105,18 +106,20 @@ export default function AdminBackups() {
       if (!course) throw new Error('Corso non trovato');
 
       // Fetch course + lessons + tasks + homework
-      const [lessonsRes, tasksRes, homeworkRes, courseRes] = await Promise.all([
+      const [lessonsRes, tasksRes, homeworkRes, courseRes, archivedSeasonal] = await Promise.all([
         supabase.from('lessons').select('*').eq('course_id', selectedCourse).order('lesson_number'),
         supabase.from('lesson_tasks').select('*, lessons!inner(course_id)').eq('lessons.course_id', selectedCourse),
         supabase.from('homework').select('*, lessons!inner(course_id)').eq('lessons.course_id', selectedCourse),
         supabase.from('courses').select('*').eq('id', selectedCourse).single(),
+        // I compiti stagionali in archivio non sono in nessuna lezione
+        fetchArchivedSeasonalHomework(selectedCourse),
       ]);
 
       const snapshotData = {
         course: courseRes.data,
         lessons: lessonsRes.data || [],
         tasks: tasksRes.data || [],
-        homework: homeworkRes.data || [],
+        homework: [...(homeworkRes.data || []), ...archivedSeasonal],
       };
 
       const { error } = await supabase.from('content_snapshots').insert({

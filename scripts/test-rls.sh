@@ -191,3 +191,11 @@ if ! out=$(run_sql supabase_admin supabase/tests/rls/16_certificate_sharing.sql 
   exit 1
 fi
 echo "$out" | sed -n 's/.*NOTICE: *//p'
+
+echo "▶ Compiti stagionali"
+if ! out=$(run_sql supabase_admin supabase/tests/rls/17_seasonal_homework.sql 2>&1); then
+  echo "$out" | sed -nE 's/.*(NOTICE|WARNING|ERROR): *//p'
+  echo "✗ Test dei compiti stagionali FALLITI"
+  exit 1
+fi
+echo "$out" | sed -n 's/.*NOTICE: *//p'

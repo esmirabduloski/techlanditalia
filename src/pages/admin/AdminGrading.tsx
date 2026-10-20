@@ -55,6 +55,7 @@ interface Submission {
     title: string;
     points_reward: number;
     test_cases: unknown;
+    /** null: compito stagionale tolto dalla lezione (le consegne restano da correggere) */
     lesson: {
       title: string;
       lesson_number: number;
@@ -62,7 +63,7 @@ interface Submission {
         title: string;
         emoji: string;
       };
-    };
+    } | null;
   };
 }
 
@@ -149,7 +150,7 @@ export default function AdminGrading() {
             title: string;
             lesson_number: number;
             course: { title: string; emoji: string };
-          };
+          } | null;
         },
       }));
       setSubmissions(typedSubmissions);
@@ -334,15 +335,17 @@ export default function AdminGrading() {
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xl">{submission.homework.lesson.course.emoji}</span>
+                        <span className="text-xl">{submission.homework.lesson?.course.emoji ?? '✨'}</span>
                         <h3 className="font-semibold">{submission.homework.title}</h3>
                         {getStatusBadge(submission.status, submission.grade)}
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        {submission.student.full_name} · {submission.homework.lesson.course.title}
+                        {submission.student.full_name} · {submission.homework.lesson?.course.title ?? 'Compito stagionale'}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Lezione {submission.homework.lesson.lesson_number}: {submission.homework.lesson.title}
+                        {submission.homework.lesson
+                          ? `Lezione ${submission.homework.lesson.lesson_number}: ${submission.homework.lesson.title}`
+                          : 'Non è più in una lezione'}
                       </p>
                       <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">

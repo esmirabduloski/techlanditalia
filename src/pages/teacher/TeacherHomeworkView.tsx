@@ -15,6 +15,7 @@
  import { Badge } from '@/components/ui/badge';
  import { Loader2, ArrowLeft, Trophy } from 'lucide-react';
  import { resolveCompiler } from '@/lib/compilerKind';
+ import { SeasonalBadge } from '@/components/homework/SeasonalBadge';
  
  interface Attachment {
    name: string;
@@ -37,10 +38,13 @@
    python_env: string | null;
    replit_url: string | null;
    preview_only: boolean;
+   /** Compito stagionale (0066) */
+   seasonal_theme_id: string | null;
+   /** Un compito stagionale in archivio non ha lezione: id e numero sono null */
    lesson: {
-     id: string;
+     id: string | null;
      title: string;
-     lesson_number: number;
+     lesson_number: number | null;
      course: {
        id: string;
        title: string;
@@ -90,11 +94,11 @@
          .from('homework')
          .select(`
            *,
-           lessons!inner (
+           lessons (
              id,
              title,
              lesson_number,
-             courses!inner (
+             courses (
                id,
                title,
                emoji,
@@ -107,8 +111,19 @@
  
        if (homeworkError) throw homeworkError;
  
-       const lesson = homeworkData.lessons as any;
-       const course = lesson.courses;
+       const row = homeworkData as typeof homeworkData & { seasonal_theme_id?: string | null; course_id?: string | null };
+       // Compito stagionale in archivio: niente lezione, il corso è sul compito
+       const lesson = (homeworkData.lessons as any) ?? { id: null, title: 'Compito stagionale', lesson_number: null };
+       let course = lesson.courses;
+       if (!course && row.course_id) {
+         const { data: courseData } = await supabase
+           .from('courses')
+           .select('id, title, emoji, slug')
+           .eq('id', row.course_id)
+           .maybeSingle();
+         course = courseData;
+       }
+       if (!course) throw new Error('Corso del compito non trovato');
  
        setHomework({
          id: homeworkData.id,
@@ -126,6 +141,7 @@
          python_env: (homeworkData as any).python_env || null,
          replit_url: (homeworkData as any).replit_url || null,
          preview_only: (homeworkData as any).preview_only || false,
+         seasonal_theme_id: row.seasonal_theme_id ?? null,
          lesson: {
            id: lesson.id,
            title: lesson.title,
@@ -166,14 +182,27 @@
    }
  
    const { lesson } = homework;
-   // Admin: "indietro" torna all'elenco compiti della lezione, "Modifica" all'editor
-   const backHref = scope === 'admin' ? `/admin/corsi/${lesson.course.id}/lezioni/${lesson.id}/compiti` : courseHref;
+   // Admin: "indietro" torna all'elenco compiti della lezione, "Modifica" all'editor.
+   // Un compito stagionale in archivio non ha lezione: si torna ai compiti stagionali.
+   const seasonalHref = `/admin/compiti-stagionali?tema=${homework.seasonal_theme_id}`;
+   const backHref = scope !== 'admin' ? courseHref
+     : lesson.id ? `/admin/corsi/${lesson.course.id}/lezioni/${lesson.id}/compiti`
+     : seasonalHref;
+   const editHref = lesson.id
+     ? `/admin/corsi/${lesson.course.id}/lezioni/${lesson.id}/compiti/${homework.id}/modifica`
+     : `/admin/compiti-stagionali/${homework.seasonal_theme_id}/compito/${homework.id}/modifica`;
    const editTabs = scope === 'admin' && (
      <EditViewTabs
        mode="view"
        compact
-       onEdit={() => navigate(`/admin/corsi/${lesson.course.id}/lezioni/${lesson.id}/compiti/${homework.id}/modifica`)}
+       onEdit={() => navigate(editHref)}
      />
+   );
+   const lessonLabel = (
+     <>
+       <span>{lesson.lesson_number ? `Lezione ${lesson.lesson_number}` : 'Non inserito in una lezione'}</span>
+       <SeasonalBadge themeId={homework.seasonal_theme_id} />
+     </>
    );
    const teacherBadge = scope === 'teacher' && <Badge variant="outline" className="ml-2">Vista Insegnante</Badge>;
 
@@ -196,7 +225,7 @@
                  <span>{homework.lesson.course.emoji}</span>
                  <span>{homework.lesson.course.title}</span>
                  <span>·</span>
-                 <span>Lezione {homework.lesson.lesson_number}</span>
+                 {lessonLabel}
                  {teacherBadge}
                </div>
                <h1 className="font-semibold">{homework.title}</h1>
@@ -233,7 +262,7 @@
                  <span>{homework.lesson.course.emoji}</span>
                  <span>{homework.lesson.course.title}</span>
                  <span>·</span>
-                 <span>Lezione {homework.lesson.lesson_number}</span>
+                 {lessonLabel}
                  {teacherBadge}
                </div>
                <h1 className="font-semibold">{homework.title}</h1>
@@ -317,7 +346,10 @@
             <ArrowLeft className="w-4 h-4 mr-2" />
             {scope === 'admin' ? 'Torna ai compiti' : 'Torna al corso'}
           </Button>
-          {editTabs || <Badge variant="outline">Vista Insegnante</Badge>}
+          <div className="flex items-center gap-2">
+            <SeasonalBadge themeId={homework.seasonal_theme_id} />
+            {editTabs || <Badge variant="outline">Vista Insegnante</Badge>}
+          </div>
         </div>
           <LessonContent
             title={homework.title}

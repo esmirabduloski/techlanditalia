@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useCallback } from 'react';
+import { fetchArchivedSeasonalHomework } from '@/lib/seasonalHomeworkClient';
 
 export function useAutoBackup() {
   const { user } = useAuth();
@@ -22,11 +23,13 @@ export function useAutoBackup() {
         return true;
       }
 
-      const [courseRes, lessonsRes, tasksRes, homeworkRes] = await Promise.all([
+      const [courseRes, lessonsRes, tasksRes, homeworkRes, archivedSeasonal] = await Promise.all([
         supabase.from('courses').select('*').eq('id', courseId).single(),
         supabase.from('lessons').select('*').eq('course_id', courseId).order('lesson_number'),
         supabase.from('lesson_tasks').select('*, lessons!inner(course_id)').eq('lessons.course_id', courseId),
         supabase.from('homework').select('*, lessons!inner(course_id)').eq('lessons.course_id', courseId),
+        // I compiti stagionali in archivio non sono in nessuna lezione
+        fetchArchivedSeasonalHomework(courseId),
       ]);
 
       if (!courseRes.data) return false;
@@ -35,7 +38,7 @@ export function useAutoBackup() {
         course: courseRes.data,
         lessons: lessonsRes.data || [],
         tasks: tasksRes.data || [],
-        homework: homeworkRes.data || [],
+        homework: [...(homeworkRes.data || []), ...archivedSeasonal],
       };
 
       const { error } = await supabase.from('content_snapshots').insert({

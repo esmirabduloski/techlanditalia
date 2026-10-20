@@ -21,7 +21,8 @@ interface AdminStepperProps {
   /** true mentre si salva prima di cambiare elemento */
   busy?: boolean;
   onSelect: (id: string) => void;
-  onNew: () => void;
+  /** Senza, il pallino "+" non c'è (es. compiti stagionali: uno per corso, si creano dalla loro pagina) */
+  onNew?: () => void;
 }
 
 /**
@@ -99,26 +100,28 @@ export function AdminStepper({ steps, currentId, itemLabel, busy, onSelect, onNe
             </li>
           );
         })}
-        <li>
-          <button
-            type="button"
-            onClick={() => !isNew && onNew()}
-            disabled={busy}
-            title={`Nuovo ${noun}`}
-            aria-label={`Nuovo ${noun}`}
-            aria-current={isNew ? 'step' : undefined}
-            className={cn(
-              'w-8 h-8 rounded-full flex items-center justify-center border-2 border-dashed transition-all',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-              'disabled:cursor-wait',
-              isNew
-                ? 'bg-primary border-primary border-solid text-primary-foreground scale-110 shadow-md'
-                : 'bg-background border-border text-muted-foreground hover:border-primary/50 hover:text-foreground',
-            )}
-          >
-            <Plus className="w-4 h-4" />
-          </button>
-        </li>
+        {onNew && (
+          <li>
+            <button
+              type="button"
+              onClick={() => !isNew && onNew()}
+              disabled={busy}
+              title={`Nuovo ${noun}`}
+              aria-label={`Nuovo ${noun}`}
+              aria-current={isNew ? 'step' : undefined}
+              className={cn(
+                'w-8 h-8 rounded-full flex items-center justify-center border-2 border-dashed transition-all',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                'disabled:cursor-wait',
+                isNew
+                  ? 'bg-primary border-primary border-solid text-primary-foreground scale-110 shadow-md'
+                  : 'bg-background border-border text-muted-foreground hover:border-primary/50 hover:text-foreground',
+              )}
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+          </li>
+        )}
       </ol>
 
       <Button

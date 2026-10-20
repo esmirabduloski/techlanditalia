@@ -3,7 +3,7 @@ import { useRef, useState, useEffect } from 'react';
 import { 
   FileText, GraduationCap, BookOpen, Mail, User, BarChart3, 
   Award, Calendar, ClipboardCheck, Users, Newspaper, UsersRound, CalendarClock, Link as LinkIcon,
-  ChevronLeft, ChevronRight, Menu, X, Database, ClipboardList, BookText, Megaphone, Briefcase, Shield, Settings, Gift, Bug, Bell, Headset, ShieldCheck, Camera, MailCheck, CalendarOff
+  ChevronLeft, ChevronRight, Menu, X, Database, ClipboardList, BookText, Megaphone, Briefcase, Shield, Settings, Gift, Bug, Bell, Headset, ShieldCheck, Camera, MailCheck, CalendarOff, Sparkles
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { to: '/admin', label: 'Blog', icon: FileText },
   { to: '/admin/corsi', label: 'Corsi', icon: GraduationCap },
+  { to: '/admin/compiti-stagionali', label: 'Stagionali', icon: Sparkles },
   { to: '/admin/gruppi', label: 'Gruppi', icon: UsersRound },
   { to: '/admin/chiusure', label: 'Chiusure', icon: CalendarOff },
   

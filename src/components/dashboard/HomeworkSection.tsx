@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { SeasonalBadge } from "@/components/homework/SeasonalBadge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ClipboardList, CheckCircle2, Clock, AlertCircle, Loader2, Paperclip, Download, AlertTriangle, CalendarClock, MessageSquare, ArrowUpDown, Filter, ChevronDown } from "lucide-react";
@@ -33,6 +34,8 @@ interface HomeworkWithDetails {
   grade: number | null;
   points_earned: number;
   feedback_at: string | null;
+  /** Compito stagionale (0066): mostra il badge del tema */
+  seasonal_theme_id: string | null;
 }
 
 type FilterStatus = "all" | "pending" | "graded" | "expired" | "in_review";
@@ -190,6 +193,7 @@ export function HomeworkSection() {
           grade: submission?.grade ?? null,
           points_earned: submission?.points_earned || 0,
           feedback_at: submission?.feedback_at || null,
+          seasonal_theme_id: (h as { seasonal_theme_id?: string | null }).seasonal_theme_id ?? null,
         };
       });
 
@@ -388,6 +392,7 @@ export function HomeworkSection() {
                       <div>
                         <CardTitle className="text-base flex items-center gap-2 flex-wrap">
                           {hw.title}
+                          <SeasonalBadge themeId={hw.seasonal_theme_id} />
                           {deadlineBadge}
                         </CardTitle>
                         <CardDescription className="text-xs">

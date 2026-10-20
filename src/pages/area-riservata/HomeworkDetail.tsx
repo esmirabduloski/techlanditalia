@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileUpload } from "@/components/homework/FileUpload";
+import { SeasonalBadge } from "@/components/homework/SeasonalBadge";
 import { 
   ArrowLeft, 
   Download, 
@@ -44,6 +45,8 @@ interface HomeworkDetails {
   points_reward: number;
   due_date: string | null;
   attachments: Attachment[];
+  /** Compito stagionale (0066): mostra il badge del tema */
+  seasonal_theme_id: string | null;
   lesson: {
     id: string;
     title: string;
@@ -153,6 +156,7 @@ export default function HomeworkDetail() {
         attachments: Array.isArray(homeworkData.attachments) 
           ? (homeworkData.attachments as unknown as Attachment[]) 
           : [],
+        seasonal_theme_id: (homeworkData as { seasonal_theme_id?: string | null }).seasonal_theme_id ?? null,
         lesson: {
           id: lesson.id,
           title: lesson.title,
@@ -399,6 +403,7 @@ export default function HomeworkDetail() {
                 </Link>
                 <span>·</span>
                 <span>Lezione {homework.lesson.lesson_number}</span>
+                <SeasonalBadge themeId={homework.seasonal_theme_id} />
               </div>
               <h1 className="text-2xl font-bold text-foreground">{homework.title}</h1>
             </div>

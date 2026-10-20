@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
 import { Layout } from '@/components/layout/Layout';
 import { LessonContent } from '@/components/lesson/LessonContent';
+import { SeasonalBadge } from '@/components/homework/SeasonalBadge';
 import { PythonCompiler, type TestRunnerRef } from '@/components/lesson/PythonCompiler';
 import { TurtleCompiler } from '@/components/lesson/TurtleCompiler';
 import { PgzeroCompiler } from '@/components/lesson/PgzeroCompiler';
@@ -43,6 +44,8 @@ interface HomeworkDetails {
   replit_url: string | null;
   preview_only: boolean;
   test_cases: TestCase[];
+  /** Compito stagionale (0066): mostra il badge del tema */
+  seasonal_theme_id: string | null;
   lesson: {
     id: string;
     title: string;
@@ -153,6 +156,7 @@ export default function HomeworkView() {
         replit_url: (homeworkData as any).replit_url || null,
         preview_only: (homeworkData as any).preview_only || false,
         test_cases: parseTestCases((homeworkData as any).test_cases),
+        seasonal_theme_id: (homeworkData as { seasonal_theme_id?: string | null }).seasonal_theme_id ?? null,
         lesson: {
           id: lesson.id,
           title: lesson.title,
@@ -338,6 +342,7 @@ export default function HomeworkView() {
                 <span>{homework.lesson.course.title}</span>
                 <span>·</span>
                 <span>Lezione {homework.lesson.lesson_number}</span>
+                <SeasonalBadge themeId={homework.seasonal_theme_id} />
               </div>
               <h1 className="font-semibold">{homework.title}</h1>
             </div>
@@ -383,6 +388,7 @@ export default function HomeworkView() {
                 <span>{homework.lesson.course.title}</span>
                 <span>·</span>
                 <span>Lezione {homework.lesson.lesson_number}</span>
+                <SeasonalBadge themeId={homework.seasonal_theme_id} />
               </div>
               <h1 className="font-semibold">{homework.title}</h1>
             </div>

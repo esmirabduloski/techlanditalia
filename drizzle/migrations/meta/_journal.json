@@ -498,6 +498,13 @@
       "when": 1792528735082,
       "tag": "0070_teacher_calendar_feed",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1792528838205,
+      "tag": "0071_google_calendar_sync",
+      "breakpoints": true
     }
   ]
 }

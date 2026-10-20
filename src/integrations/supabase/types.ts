@@ -672,6 +672,9 @@ export type Database = {
           lessons_total: number
           notified_at: string | null
           released_by: string | null
+          shared_as: string | null
+          shared_at: string | null
+          shared_by: string | null
           soft_skills: string[]
           student_id: string
           student_name: string
@@ -691,6 +694,9 @@ export type Database = {
           lessons_total: number
           notified_at?: string | null
           released_by?: string | null
+          shared_as?: string | null
+          shared_at?: string | null
+          shared_by?: string | null
           soft_skills?: string[]
           student_id: string
           student_name: string
@@ -710,6 +716,9 @@ export type Database = {
           lessons_total?: number
           notified_at?: string | null
           released_by?: string | null
+          shared_as?: string | null
+          shared_at?: string | null
+          shared_by?: string | null
           soft_skills?: string[]
           student_id?: string
           student_name?: string
@@ -3932,6 +3941,9 @@ export type Database = {
           lessons_total: number
           notified_at: string | null
           released_by: string | null
+          shared_as: string | null
+          shared_at: string | null
+          shared_by: string | null
           soft_skills: string[]
           student_id: string
           student_name: string
@@ -3969,6 +3981,37 @@ export type Database = {
       set_ai_consent: {
         Args: { _granted: boolean; _student: string; _version: string }
         Returns: undefined
+      }
+      set_certificate_public: {
+        Args: { p_certificate_id: string; p_public: boolean }
+        Returns: {
+          code: string
+          course_emoji: string | null
+          course_title: string
+          created_at: string
+          group_id: string
+          hard_skills: string[]
+          hours_attended: number
+          id: string
+          issued_on: string
+          lessons_attended: number
+          lessons_total: number
+          notified_at: string | null
+          released_by: string | null
+          shared_as: string | null
+          shared_at: string | null
+          shared_by: string | null
+          soft_skills: string[]
+          student_id: string
+          student_name: string
+          teacher_name: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "course_certificates"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       set_student_birth_year: {
         Args: { _student: string; _year: number }
@@ -4027,6 +4070,20 @@ export type Database = {
       use_my_streak_freeze: {
         Args: { _freeze_type: string; _reason?: string; _student_id: string }
         Returns: Json
+      }
+      verify_certificate: {
+        Args: { p_code: string }
+        Returns: {
+          code: string
+          course_emoji: string
+          course_title: string
+          hard_skills: string[]
+          is_public: boolean
+          issued_on: string
+          soft_skills: string[]
+          student_name: string
+          teacher_name: string
+        }[]
       }
       verify_cron_token: {
         Args: { _name: string; _token: string }

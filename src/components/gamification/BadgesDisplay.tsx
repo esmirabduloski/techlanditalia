@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Trophy, Lock, ChevronDown } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { SocialShareButton } from "@/components/gamification/SocialShareButton";
+import { cn } from "@/lib/utils";
 
 interface BadgeData {
   id: string;
@@ -24,11 +26,13 @@ interface BadgesDisplayProps {
   showAll?: boolean;
   maxItems?: number;
   title?: string;
+  /** Solo per lo studente stesso con 14 anni certi (canSelfConsent): può condividere da solo */
+  canShare?: boolean;
 }
 
 const INITIAL_BADGES_COUNT = 10;
 
-export function BadgesDisplay({ userId, showAll: showAllProp = true, maxItems, title = "🏆 Badge e Achievement" }: BadgesDisplayProps) {
+export function BadgesDisplay({ userId, showAll: showAllProp = true, maxItems, title = "🏆 Badge e Achievement", canShare = false }: BadgesDisplayProps) {
   const [badges, setBadges] = useState<BadgeData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
@@ -124,67 +128,74 @@ export function BadgesDisplay({ userId, showAll: showAllProp = true, maxItems, t
         </Card>
       ) : (
         <>
+        {/* Popover e non tooltip: si apre anche col tocco e può contenere il pulsante Condividi */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-          <TooltipProvider>
-            {limitedBadges.map((badge) => (
-              <Tooltip key={badge.id}>
-                <TooltipTrigger asChild>
-                  <Card
-                    className={`cursor-pointer transition-all duration-200 hover:scale-105 ${
-                      badge.isEarned
-                        ? "border-primary/50 bg-gradient-to-br from-card to-primary/10"
-                        : "border-muted bg-muted/20 opacity-60"
-                    }`}
-                  >
-                    <CardContent className="p-3 text-center">
-                      <div className="relative">
-                        <span className="text-3xl md:text-4xl">
-                          {badge.isEarned ? badge.emoji : "🔒"}
-                        </span>
-                        {!badge.isEarned && (
-                          <Lock className="w-3 h-3 absolute -top-1 -right-1 text-muted-foreground" />
-                        )}
-                      </div>
-                      <p className={`text-xs font-medium mt-2 truncate ${
-                        badge.isEarned ? "text-foreground" : "text-muted-foreground"
-                      }`}>
-                        {badge.name}
-                      </p>
-                      {badge.isEarned && badge.points_reward > 0 && (
-                        <Badge variant="outline" className="text-[10px] mt-1 px-1">
-                          +{badge.points_reward}
-                        </Badge>
-                      )}
-                    </CardContent>
-                  </Card>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-xs">
-                  <div className="text-center">
-                    <p className="font-semibold">{badge.emoji} {badge.name}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {badge.description}
-                    </p>
-                    {badge.isEarned && badge.earned_at && (
-                      <p className="text-xs text-primary mt-2">
-                        Ottenuto: {format(new Date(badge.earned_at), "d MMMM yyyy", { locale: it })}
-                      </p>
+          {limitedBadges.map((badge) => (
+            <Popover key={badge.id}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className={cn(
+                    "w-full rounded-lg border bg-card p-3 text-center text-card-foreground shadow-sm transition-all duration-200 hover:scale-105",
+                    badge.isEarned
+                      ? "border-primary/50 bg-gradient-to-br from-card to-primary/10"
+                      : "border-muted bg-muted/20 opacity-60",
+                  )}
+                >
+                  <span className="relative block">
+                    <span className="text-3xl md:text-4xl">
+                      {badge.isEarned ? badge.emoji : "🔒"}
+                    </span>
+                    {!badge.isEarned && (
+                      <Lock className="w-3 h-3 absolute -top-1 -right-1 text-muted-foreground" />
                     )}
-                    {badge.points_reward > 0 && (
-                      <p className="text-xs font-medium mt-1">
-                        +{badge.points_reward} punti bonus
-                      </p>
-                    )}
-                    {/* Niente social dall'account dello studente (minori): la condivisione passa dal genitore */}
-                    {badge.isEarned && (
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Vuoi condividerlo? Chiedi a un genitore 👨‍👩‍👧
-                      </p>
-                    )}
+                  </span>
+                  <span className={cn(
+                    "block text-xs font-medium mt-2 truncate",
+                    badge.isEarned ? "text-foreground" : "text-muted-foreground",
+                  )}>
+                    {badge.name}
+                  </span>
+                  {badge.isEarned && badge.points_reward > 0 && (
+                    <Badge variant="outline" className="text-[10px] mt-1 px-1">
+                      +{badge.points_reward}
+                    </Badge>
+                  )}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent side="top" className="w-64 text-center">
+                <p className="font-semibold">{badge.emoji} {badge.name}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {badge.description}
+                </p>
+                {badge.isEarned && badge.earned_at && (
+                  <p className="text-xs text-primary mt-2">
+                    Ottenuto: {format(new Date(badge.earned_at), "d MMMM yyyy", { locale: it })}
+                  </p>
+                )}
+                {badge.points_reward > 0 && (
+                  <p className="text-xs font-medium mt-1">
+                    +{badge.points_reward} punti bonus
+                  </p>
+                )}
+                {/* Social dall'account dello studente solo con 14 anni certi; prima la condivisione passa dal genitore */}
+                {badge.isEarned && (canShare ? (
+                  <div className="mt-2">
+                    <SocialShareButton
+                      text={`Ho ottenuto il badge "${badge.name}" su TechLand!`}
+                      emoji={badge.emoji}
+                      size="sm"
+                      variant="ghost"
+                    />
                   </div>
-                </TooltipContent>
-              </Tooltip>
-            ))}
-          </TooltipProvider>
+                ) : (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Vuoi condividerlo? Chiedi a un genitore 👨‍👩‍👧
+                  </p>
+                ))}
+              </PopoverContent>
+            </Popover>
+          ))}
         </div>
         {hasMore && !expanded && (
           <div className="flex justify-center">

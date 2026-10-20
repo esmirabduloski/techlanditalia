@@ -31,6 +31,8 @@ import { SkillMapCard } from '@/components/skills/SkillMap';
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { CelebrationOverlay } from '@/components/gamification/CelebrationOverlay';
 import { useCelebration } from '@/hooks/useCelebration';
+import { useStudentBirthYear } from '@/hooks/useStudentBirthYear';
+import { canSelfConsent } from '@/lib/aiConsents';
 import { Loader2, BookOpen, Trophy, Target, Settings, LogOut, Rocket, Shield, GraduationCap, CreditCard, Bookmark } from 'lucide-react';
 import { TrustpilotLoader } from '@/components/TrustpilotLoader';
 import { useBookmarks } from '@/hooks/useBookmarks';
@@ -60,6 +62,9 @@ export default function Dashboard() {
   const { streaks, bonuses, loading: streaksLoading } = useStudentStreaks(effectiveUserId);
   const { isTeacher, isLoading: teacherLoading } = useTeacherRole();
   const { celebration, isVisible: showCelebration, hideCelebration } = useCelebration();
+  // Badge sui social dall'account dello studente solo con 14 anni certi; mai durante l'impersonificazione
+  const birthYear = useStudentBirthYear(!isImpersonating && profile?.role === 'student' ? user?.id : null);
+  const canShareBadges = canSelfConsent(birthYear);
   const { bookmarks } = useBookmarks();
   const { bgColor, updateColor } = useBackgroundColor();
   const { resolvedTheme } = useTheme();
@@ -241,6 +246,7 @@ export default function Dashboard() {
           emoji={celebration.emoji}
           isVisible={showCelebration}
           onClose={hideCelebration}
+          canShare={canShareBadges}
         />
       )}
 
@@ -585,7 +591,7 @@ export default function Dashboard() {
           {/* Badges Section */}
           {effectiveUserId && !effectiveIsTeacher && !effectiveIsParent && (
             <div className="mb-8">
-              <BadgesDisplay userId={effectiveUserId} showAll={true} />
+              <BadgesDisplay userId={effectiveUserId} showAll={true} canShare={canShareBadges} />
             </div>
           )}
 

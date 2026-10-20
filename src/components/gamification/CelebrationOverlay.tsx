@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Trophy, Star, Sparkles } from 'lucide-react';
+import { SocialShareButton } from './SocialShareButton';
 
 interface Confetti {
   id: number;
@@ -17,6 +18,8 @@ interface CelebrationOverlayProps {
   emoji?: string;
   isVisible: boolean;
   onClose: () => void;
+  /** Studente con 14 anni certi (canSelfConsent): il badge lo può condividere da solo */
+  canShare?: boolean;
 }
 
 const colors = [
@@ -33,11 +36,15 @@ export function CelebrationOverlay({
   title, 
   subtitle, 
   emoji, 
-  isVisible, 
-  onClose 
+  isVisible,
+  onClose,
+  canShare = false,
 }: CelebrationOverlayProps) {
   const [confetti, setConfetti] = useState<Confetti[]>([]);
+  // Chi tocca Condividi ha bisogno di tempo: la chiusura automatica si ferma
+  const [held, setHeld] = useState(false);
   const prefersReducedMotion = useReducedMotion();
+  const share = canShare && type === 'badge';
 
   const generateConfetti = useCallback(() => {
     if (prefersReducedMotion) {
@@ -69,12 +76,15 @@ export function CelebrationOverlay({
   }, [prefersReducedMotion]);
 
   useEffect(() => {
-    if (isVisible) {
-      generateConfetti();
-      const timer = setTimeout(onClose, 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [isVisible, generateConfetti, onClose]);
+    if (isVisible) generateConfetti();
+    else setHeld(false);
+  }, [isVisible, generateConfetti]);
+
+  useEffect(() => {
+    if (!isVisible || held) return;
+    const timer = setTimeout(onClose, 4000);
+    return () => clearTimeout(timer);
+  }, [isVisible, held, onClose]);
 
   return (
     <AnimatePresence>
@@ -222,15 +232,34 @@ export function CelebrationOverlay({
                   )}
                 </motion.div>
 
-                {/* Niente social dall'account dello studente (minori): la condivisione passa dal genitore */}
-                <motion.p
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.8 }}
-                  className="text-center text-sm text-muted-foreground mt-4"
-                >
-                  Fallo vedere a mamma o papà: possono condividerlo dalla loro area 👨‍👩‍👧
-                </motion.p>
+                {/* Social dall'account dello studente solo per i badge e con 14 anni certi; prima la condivisione passa dal genitore */}
+                {share ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.8 }}
+                    className="flex justify-center mt-4"
+                    // Il menu è in un portal ma gli eventi React risalgono fin qui: senza stop chiuderebbero la celebrazione
+                    onClick={(e) => e.stopPropagation()}
+                    onPointerDownCapture={() => setHeld(true)}
+                    onFocusCapture={() => setHeld(true)}
+                  >
+                    <SocialShareButton
+                      text={`Ho ottenuto il badge "${title}" su TechLand!`}
+                      emoji={emoji || '🏆'}
+                      menuClassName="z-[110]"
+                    />
+                  </motion.div>
+                ) : (
+                  <motion.p
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.8 }}
+                    className="text-center text-sm text-muted-foreground mt-4"
+                  >
+                    Fallo vedere a mamma o papà: possono condividerlo dalla loro area 👨‍👩‍👧
+                  </motion.p>
+                )}
 
                 {/* Close hint */}
                 <motion.p

@@ -120,7 +120,7 @@ test("l'alunno festeggia e trova il proprio attestato", async ({ page, fake }) =
   await expect(card.getByRole("button", { name: "Scarica PDF" })).toBeVisible();
 
   // I coriandoli solo la prima volta
-  await page.getByText("Tocca per continuare").click({ force: true });
+  await page.getByText("Tocca per continuare").click();
   await page.reload();
   await expect(card.getByRole("heading", { name: "Certificazioni" })).toBeVisible();
   await expect(page.getByText("🎓 Corso completato!")).toHaveCount(0);
@@ -322,7 +322,7 @@ test.describe("verifica e condivisione", () => {
     fakeSharing(fake);
     await fake.signInBeforeLoad(page, student);
     await page.goto("/area-riservata");
-    await page.getByText("Tocca per continuare").click({ force: true });
+    await page.getByText("Tocca per continuare").click();
 
     const share = page.getByTestId("student-certificates").getByTestId("certificate-share");
     await share.getByText("Condividi su LinkedIn o Instagram").click();

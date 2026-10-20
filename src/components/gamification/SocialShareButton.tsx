@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface SocialShareButtonProps {
   text: string;
@@ -15,18 +16,22 @@ interface SocialShareButtonProps {
   variant?: "default" | "ghost" | "outline";
   size?: "default" | "sm" | "icon";
   className?: string;
+  /** Classi del menu, es. uno z-index sopra un overlay */
+  menuClassName?: string;
 }
 
 const SITE_URL = "https://techlanditalia.lovable.app";
 
-// Solo per account adulti (genitori). Non usarlo nelle viste dello studente:
-// aprirebbe WhatsApp/Facebook dall'account di un minore.
+// Per account adulti (genitori) e per lo studente con 14 anni certi
+// (canSelfConsent). Mai nelle viste dello studente senza quel controllo:
+// aprirebbe WhatsApp/Facebook dall'account di un bambino.
 export function SocialShareButton({
   text,
   emoji = "🏆",
   variant = "outline",
   size = "sm",
   className = "",
+  menuClassName,
 }: SocialShareButtonProps) {
   const [copied, setCopied] = useState(false);
 
@@ -60,12 +65,12 @@ export function SocialShareButton({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant={variant} size={size} className={className}>
+        <Button variant={variant} size={size} className={className} aria-label="Condividi">
           <Share2 className="w-4 h-4" />
           <span className="hidden sm:inline">Condividi</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-[180px]">
+      <DropdownMenuContent align="end" className={cn("min-w-[180px]", menuClassName)}>
         <DropdownMenuItem onClick={shareWhatsApp} className="gap-2 cursor-pointer">
           <span className="text-lg">💬</span>
           WhatsApp

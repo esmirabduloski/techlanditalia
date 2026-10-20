@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Award } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { certificateClient } from '@/lib/certificateClient';
 import { canSelfConsent } from '@/lib/aiConsents';
+import { useStudentBirthYear } from '@/hooks/useStudentBirthYear';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CertificateCard } from '@/components/certificates/CertificateCard';
 import { CelebrationOverlay } from '@/components/gamification/CelebrationOverlay';
@@ -40,18 +40,8 @@ function markSeen(ids: string[]) {
 export function StudentCertificatesCard({ userId }: Props) {
   const [certificates, setCertificates] = useState<CourseCertificate[]>([]);
   const [celebrate, setCelebrate] = useState<CourseCertificate | null>(null);
-  const [birthYear, setBirthYear] = useState<number | null>(null);
   const shareable = certificates.some(sharingAvailable);
-
-  useEffect(() => {
-    if (!shareable) return;
-    supabase
-      .from('student_birth_years')
-      .select('birth_year')
-      .eq('student_id', userId)
-      .maybeSingle()
-      .then(({ data }) => setBirthYear(data?.birth_year ?? null));
-  }, [userId, shareable]);
+  const birthYear = useStudentBirthYear(shareable ? userId : null);
 
   useEffect(() => {
     (async () => {

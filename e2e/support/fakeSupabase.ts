@@ -10,12 +10,12 @@
  *   single/maybeSingle, insert, upsert (on_conflict), update, delete, rpc;
  * - Auth: utente da token, refresh, logout (sessioni = JWT non firmati);
  * - Edge function: handler per nome, con registro delle chiamate;
- * - Realtime: websocket accettato e lasciato muto.
+ * - Realtime: join e heartbeat; INSERT mandati ai canali in ascolto con emitInsert.
  *
  * Le select non proiettano le colonne: tornano le righe intere. Le risorse
  * annidate (es. `lessons(courses(...))`) vanno messe già dentro la riga nel seed.
  */
-import type { Page, Route } from "@playwright/test";
+import type { Page, Route, WebSocketRoute } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 
 export const FAKE_SUPABASE_URL = "https://supabase.e2e.test";
@@ -45,6 +45,21 @@ type FunctionHandler = (body: Json, ctx: { fake: FakeSupabase; userId: string | 
   | Promise<{ status?: number; body: Json }>;
 
 type RpcHandler = (args: Json, ctx: { fake: FakeSupabase; userId: string | null }) => Json;
+
+/** Un `.on('postgres_changes', …)` di un canale, con l'id che gli ha dato il server. */
+interface RealtimeBinding {
+  id: number;
+  event: string;
+  schema: string;
+  table?: string;
+  filter?: string;
+}
+
+interface RealtimeChannel {
+  ws: WebSocketRoute;
+  topic: string;
+  bindings: RealtimeBinding[];
+}
 
 // ---------------------------------------------------------------------------
 // Sessioni
@@ -188,6 +203,8 @@ export class FakeSupabase {
   private readonly functions = new Map<string, FunctionHandler>();
   private readonly rpcs = new Map<string, RpcHandler>();
   private readonly tokens = new Map<string, FakeUser>();
+  private readonly channels: RealtimeChannel[] = [];
+  private nextBindingId = 1;
 
   constructor() {
     // Default dell'area riservata: niente 2FA richiesta, nessun consenso in sospeso.
@@ -261,10 +278,67 @@ export class FakeSupabase {
   // --- Intercettazione ------------------------------------------------------
 
   async install(page: Page) {
-    await page.routeWebSocket(/supabase\.e2e\.test/, () => {
-      // Connessione accettata e muta: il realtime non serve ai flussi testati.
-    });
+    await page.routeWebSocket(/supabase\.e2e\.test/, (ws) => this.realtime(ws));
     await page.route(`${FAKE_SUPABASE_URL}/**`, (route) => this.handle(route));
+  }
+
+  // --- Realtime -------------------------------------------------------------
+
+  /**
+   * Protocollo Phoenix 2.0.0 di realtime-js, messaggi [join_ref, ref, topic, event, payload]:
+   * risponde a join e heartbeat; gli eventi postgres_changes partono solo da emitInsert.
+   */
+  private realtime(ws: WebSocketRoute) {
+    ws.onMessage((raw) => {
+      if (typeof raw !== "string") return;
+      const [joinRef, ref, topic, event, payload] = JSON.parse(raw) as [string | null, string | null, string, string, Row];
+      const reply = (response: Json) => ws.send(JSON.stringify([joinRef, ref, topic, "phx_reply", { status: "ok", response }]));
+      if (event === "heartbeat") return reply({});
+      if (event === "phx_join") {
+        const config = (payload.config ?? {}) as { postgres_changes?: Omit<RealtimeBinding, "id">[] };
+        const bindings = (config.postgres_changes ?? []).map((b) => ({ ...b, id: this.nextBindingId++ }));
+        this.channels.push({ ws, topic, bindings });
+        return reply({ postgres_changes: bindings });
+      }
+      if (event === "phx_leave") {
+        this.dropChannels((c) => c.ws === ws && c.topic === topic);
+        return reply({});
+      }
+    });
+    ws.onClose(() => this.dropChannels((c) => c.ws === ws));
+  }
+
+  private dropChannels(which: (c: RealtimeChannel) => boolean) {
+    for (let i = this.channels.length - 1; i >= 0; i--) if (which(this.channels[i])) this.channels.splice(i, 1);
+  }
+
+  private insertBindings(tableName: string, row: Row) {
+    return this.channels.flatMap((channel) =>
+      channel.bindings
+        .filter((b) => (b.event === "INSERT" || b.event === "*") && (!b.table || b.table === tableName))
+        .filter((b) => {
+          if (!b.filter) return true;
+          const eq = b.filter.indexOf("=");
+          return matches(getPath(row, b.filter.slice(0, eq)), b.filter.slice(eq + 1));
+        })
+        .map((b) => ({ channel, id: b.id })),
+    );
+  }
+
+  /** Se l'app è in ascolto degli INSERT su `tableName` (per righe come `row`). */
+  listensForInsert(tableName: string, row: Row = {}) {
+    return this.insertBindings(tableName, row).length > 0;
+  }
+
+  /** Aggiunge la riga come farebbe il database e la manda ai canali realtime in ascolto. */
+  emitInsert(tableName: string, record: Row) {
+    this.seed(tableName, [record]);
+    const row = this.table(tableName).at(-1)!;
+    const data = { schema: "public", table: tableName, commit_timestamp: new Date().toISOString(), type: "INSERT", record: row, columns: [], errors: null };
+    const byChannel = new Map<RealtimeChannel, number[]>();
+    for (const { channel, id } of this.insertBindings(tableName, row)) byChannel.set(channel, [...(byChannel.get(channel) ?? []), id]);
+    for (const [channel, ids] of byChannel) channel.ws.send(JSON.stringify([null, null, channel.topic, "postgres_changes", { ids, data }]));
+    return row;
   }
 
   private userFromAuth(header: string | null): FakeUser | null {

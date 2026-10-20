@@ -264,6 +264,17 @@ INSERT INTO public.chat_messages (conversation_id, role, content) VALUES ('00000
 INSERT INTO public.blocked_emails (pattern, type) VALUES ('blocked@test.local', 'email') ON CONFLICT DO NOTHING;
 INSERT INTO public.rate_limits (identifier, endpoint) VALUES ('1.2.3.4', 'test');
 INSERT INTO public.internal_cron_tokens (name) VALUES ('test-token') ON CONFLICT DO NOTHING;
+-- Link segreti del calendario lezioni (0067): li legge solo l'edge function
+INSERT INTO public.teacher_calendar_feeds (teacher_id, token) VALUES
+  ('00000000-0000-0000-0000-000000000301', repeat('1', 48)),
+  ('00000000-0000-0000-0000-000000000302', repeat('2', 48));
+-- Collegamenti a Google Calendar (0068): token e richieste OAuth solo per le edge function
+INSERT INTO public.google_calendar_connections (teacher_id, google_email, refresh_token, calendar_id, last_synced_at) VALUES
+  ('00000000-0000-0000-0000-000000000301', 't1@gmail.test', 'refresh-t1', 'cal-t1@group.calendar.google.com', now()),
+  ('00000000-0000-0000-0000-000000000302', 't2@gmail.test', 'refresh-t2', 'cal-t2@group.calendar.google.com', now());
+INSERT INTO public.google_oauth_states (state, teacher_id, code_verifier) VALUES
+  (repeat('a', 43), '00000000-0000-0000-0000-000000000301', 'verifier-t1'),
+  (repeat('b', 43), '00000000-0000-0000-0000-000000000302', 'verifier-t2');
 INSERT INTO public.crm_tags (name) VALUES ('test-tag') ON CONFLICT DO NOTHING;
 INSERT INTO public.crm_notion_sync_log (operation, status) VALUES ('test', 'ok');
 INSERT INTO public.content_snapshots (entity_type, entity_id, entity_label, snapshot_data) VALUES ('course', gen_random_uuid(), 'x', '{}');

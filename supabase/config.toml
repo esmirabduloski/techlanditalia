@@ -112,3 +112,19 @@ verify_jwt = false
 # JWT e ruolo verificati dentro la funzione.
 [functions.school-closure-notice]
 verify_jwt = false
+
+# Calendario lezioni dell'insegnante (iCalendar) per Google Calendar: lo
+# scaricano i server di Google senza account, il token segreto nel percorso è
+# l'unica credenziale (verificato dentro la funzione).
+[functions.teacher-calendar-feed]
+verify_jwt = false
+
+# Collegamento dell'account Google dell'insegnante (Google Calendar): JWT,
+# ruolo insegnante e 2FA verificati dentro la funzione.
+[functions.google-calendar]
+verify_jwt = false
+
+# Riallineamento dei Google Calendar collegati: dal cron con x-cron-token
+# (verificato dentro la funzione).
+[functions.google-calendar-sync]
+verify_jwt = false

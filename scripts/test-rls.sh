@@ -199,3 +199,19 @@ if ! out=$(run_sql supabase_admin supabase/tests/rls/17_seasonal_homework.sql 2>
   exit 1
 fi
 echo "$out" | sed -n 's/.*NOTICE: *//p'
+
+echo "▶ Calendario lezioni dell'insegnante"
+if ! out=$(run_sql supabase_admin supabase/tests/rls/18_teacher_calendar_feed.sql 2>&1); then
+  echo "$out" | sed -nE 's/.*(NOTICE|WARNING|ERROR): *//p'
+  echo "✗ Test del calendario insegnante FALLITI"
+  exit 1
+fi
+echo "$out" | sed -n 's/.*NOTICE: *//p'
+
+echo "▶ Collegamento a Google Calendar"
+if ! out=$(run_sql supabase_admin supabase/tests/rls/19_google_calendar_sync.sql 2>&1); then
+  echo "$out" | sed -nE 's/.*(NOTICE|WARNING|ERROR): *//p'
+  echo "✗ Test del collegamento Google FALLITI"
+  exit 1
+fi
+echo "$out" | sed -n 's/.*NOTICE: *//p'

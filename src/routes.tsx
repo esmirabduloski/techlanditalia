@@ -165,6 +165,7 @@ export const routes: RouteRecord[] = [
       { path: "insegnante/corso/:courseSlug/compito/:homeworkId", lazy: page(() => import("./pages/teacher/TeacherHomeworkView")) },
       { path: "insegnante/gruppo/:groupId", lazy: page(() => import("./pages/teacher/TeacherGroupDetail")) },
       { path: "insegnante/studente/:studentId", lazy: page(() => import("./pages/teacher/TeacherStudentDetail")) },
+      { path: "insegnante/google-calendar", lazy: page(() => import("./pages/teacher/TeacherGoogleCalendarCallback")) },
 
       // === 404 ===
       { path: "*", lazy: page(() => import("./pages/NotFound")) },

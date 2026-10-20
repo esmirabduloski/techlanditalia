@@ -470,6 +470,20 @@
       "when": 1792495606734,
       "tag": "0066_seasonal_homework",
       "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1792498232993,
+      "tag": "0067_teacher_calendar_feed",
+      "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1792501295261,
+      "tag": "0068_google_calendar_sync",
+      "breakpoints": true
     }
   ]
 }

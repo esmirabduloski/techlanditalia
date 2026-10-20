@@ -10,6 +10,8 @@ import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useImpersonation } from "@/contexts/ImpersonationContext";
+import { CalendarSyncDialog } from "@/components/teacher/CalendarSyncDialog";
 
 interface ScheduledLesson {
   id: string;
@@ -144,6 +146,8 @@ export function TeacherWeeklyCalendar({ lessons }: TeacherWeeklyCalendarProps) {
   );
   const [localLessons, setLocalLessons] = useState(lessons);
   const navigate = useNavigate();
+  // Il link del calendario è dell'utente collegato: non dell'insegnante impersonato
+  const { isImpersonating } = useImpersonation();
 
   // Sync when parent lessons change
   useMemo(() => setLocalLessons(lessons), [lessons]);
@@ -210,10 +214,13 @@ export function TeacherWeeklyCalendar({ lessons }: TeacherWeeklyCalendarProps) {
     <Card className="mb-8">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <CalendarDays className="w-5 h-5 text-primary" />
-            Calendario lezioni
-          </CardTitle>
+          <div className="flex items-center gap-x-3 gap-y-2 flex-wrap">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <CalendarDays className="w-5 h-5 text-primary" />
+              Calendario lezioni
+            </CardTitle>
+            {!isImpersonating && <CalendarSyncDialog />}
+          </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={goToToday} className="text-xs">
               Oggi

@@ -35,7 +35,7 @@ interface Lesson {
 
 interface Homework {
   id: string;
-  lesson_id: string;
+  lesson_id: string | null;
   title: string;
   description: string | null;
   instructions: string | null;

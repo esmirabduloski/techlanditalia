@@ -232,7 +232,7 @@ export function useChildHomework(childId: string, courseIds?: string[]) {
       }
 
       const homeworkByLesson = new Map<string, { id: string; title: string }>();
-      homeworkData?.forEach((hw) => homeworkByLesson.set(hw.lesson_id, { id: hw.id, title: hw.title }));
+      homeworkData?.forEach((hw) => homeworkByLesson.set(hw.lesson_id ?? "", { id: hw.id, title: hw.title }));
       const submissionsByHomework = new Map<string, SubmissionRow>();
       (submissionsData as SubmissionRow[] | null)?.forEach((sub) => submissionsByHomework.set(sub.homework_id, sub));
 

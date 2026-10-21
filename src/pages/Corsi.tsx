@@ -139,6 +139,20 @@ export default function Corsi() {
               <strong> Python</strong>, <strong>Web Development</strong> e <strong>informatica</strong>.
               Trova il corso perfetto e prenota la prima lezione gratuita.
             </p>
+            <div className="mt-8 grid sm:grid-cols-3 gap-4 text-left">
+              <div className="rounded-xl border border-border/50 bg-background p-4">
+                <p className="font-semibold mb-1">Piccoli gruppi</p>
+                <p className="text-sm text-muted-foreground">Lezioni online dal vivo in piccoli gruppi, con attenzione a ogni alunno.</p>
+              </div>
+              <div className="rounded-xl border border-border/50 bg-background p-4">
+                <p className="font-semibold mb-1">Docenti esperti</p>
+                <p className="text-sm text-muted-foreground">Insegnanti che seguono l'alunno passo dopo passo, dal primo codice al progetto finale.</p>
+              </div>
+              <div className="rounded-xl border border-border/50 bg-background p-4">
+                <p className="font-semibold mb-1">Prima lezione gratuita</p>
+                <p className="text-sm text-muted-foreground">Prova il corso senza impegno e scopri se è quello giusto.</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -201,6 +215,24 @@ export default function Corsi() {
               </Link>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Call to action finale */}
+      <section className="tech-section bg-muted/30 border-t border-border/50">
+        <div className="tech-container text-center max-w-2xl mx-auto">
+          <h2 className="text-3xl font-bold mb-4">Non sai quale corso scegliere?</h2>
+          <p className="text-muted-foreground mb-6">
+            Prenota una lezione di prova gratuita: ti aiutiamo a trovare il percorso
+            più adatto all'età e agli interessi dell'alunno.
+          </p>
+          <Link
+            to="/prenota"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            Prenota la lezione gratuita
+            <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
       </section>
     </Layout>

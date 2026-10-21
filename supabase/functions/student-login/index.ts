@@ -82,7 +82,7 @@ serve(async (req) => {
       if (signInError) {
         await recordAttempt(false);
         return new Response(JSON.stringify({ error: "Email o password non corretti" }), {
-          status: 401,
+          status: 200,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
@@ -103,7 +103,7 @@ serve(async (req) => {
 
     if (profileError || !profile) {
       return new Response(JSON.stringify({ error: "Nome utente o password non corretti" }), {
-        status: 401,
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -112,7 +112,7 @@ serve(async (req) => {
 
     if (studentAuthError || !studentAuthUser.user) {
       return new Response(JSON.stringify({ error: "Nome utente o password non corretti" }), {
-        status: 401,
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -203,7 +203,7 @@ serve(async (req) => {
 
     await recordAttempt(false);
     return new Response(JSON.stringify({ error: "Nome utente o password non corretti" }), {
-      status: 401,
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {

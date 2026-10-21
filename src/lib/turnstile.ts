@@ -7,7 +7,7 @@
  * Turnstile). È pubblica: finisce comunque nel bundle del sito.
  * Vuota = verifica spenta nel sito.
  */
-const SITE_KEY = "";
+const SITE_KEY = "0x4AAAAAAFe6AUA_Z1TX5uM9";
 
 /** VITE_TURNSTILE_SITE_KEY la sostituisce: i test e2e usano la chiave di prova di Cloudflare. */
 export const TURNSTILE_SITE_KEY: string = import.meta.env.VITE_TURNSTILE_SITE_KEY ?? SITE_KEY;

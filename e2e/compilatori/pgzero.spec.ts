@@ -195,8 +195,10 @@ test("compito: il codice si salva come bozza e senza link usa il Replit di defau
   await expect(page.getByText("🎮 Pygame Zero")).toBeVisible();
 
   await page.getByRole("textbox", { name: "Codice Python" }).fill(GIOCO + "# il mio gioco\n");
+  // Mentre Pyodide di Pygame Zero si carica blocca il thread principale anche per secondi:
+  // il timer di salvataggio (3 s) scatta in ritardo, soprattutto con più test in parallelo.
   await expect
-    .poll(() => fake.table("student_code_drafts").find((d) => d.homework_id)?.content, { timeout: 10_000 })
+    .poll(() => fake.table("student_code_drafts").find((d) => d.homework_id)?.content, { timeout: 30_000 })
     .toBe(GIOCO + "# il mio gioco\n");
   expect(fake.table("student_code_drafts")[0]).toMatchObject({ student_id: student.id, code_type: "python" });
 

@@ -1,4 +1,5 @@
 import { Head } from "vite-react-ssg";
+import { useLocation } from "react-router-dom";
 
 interface SEOHeadProps {
   title: string;
@@ -36,6 +37,10 @@ export function SEOHead({
 }: SEOHeadProps) {
   const fullTitle = title.includes("TECHLAND") ? title : `${title} | TECHLAND`;
   const canonicalUrl = canonical?.startsWith("http") ? canonical : canonical ? `${BASE_URL}${canonical}` : undefined;
+  // Senza canonical esplicito, og:url punta comunque alla pagina corrente,
+  // non alla homepage: le anteprime social devono riferirsi al contenuto condiviso.
+  const location = useLocation();
+  const pageUrl = canonicalUrl || `${BASE_URL}${location.pathname}`;
 
   // Ensure description is within limits
   const truncatedDescription = description.length > 160 
@@ -62,7 +67,7 @@ export function SEOHead({
       
       {/* Open Graph / Facebook */}
       <meta property="og:type" content={ogType} />
-      <meta property="og:url" content={canonicalUrl || BASE_URL} />
+      <meta property="og:url" content={pageUrl} />
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={truncatedDescription} />
       <meta property="og:image" content={ogImage} />
@@ -71,7 +76,7 @@ export function SEOHead({
       
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:url" content={canonicalUrl || BASE_URL} />
+      <meta name="twitter:url" content={pageUrl} />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={truncatedDescription} />
       <meta name="twitter:image" content={ogImage} />

@@ -42,6 +42,7 @@ test("il genitore prenota la prova e la richiesta arriva a submit-booking", asyn
     interest: "python-base",
     referralCode: "AMICO10",
     website: "", // honeypot vuoto: non è un bot
+    turnstileToken: expect.stringMatching(/^e2e-turnstile-token-/),
   });
   expect(typeof (calls[0].body as { formOpenedAt: unknown }).formOpenedAt).toBe("number");
 });
@@ -76,4 +77,10 @@ test("se il server rifiuta, il genitore vede l'errore e può riprovare", async (
   await page.getByRole("button", { name: "Prenota lezione gratuita" }).click();
   await expect(page.getByRole("heading", { name: "Richiesta ricevuta!" })).toBeVisible();
   expect(attempts).toBe(2);
+
+  // Ogni token Turnstile vale una volta sola: il secondo invio ne usa uno nuovo
+  const [first, second] = fake.callsTo("submit-booking").map((c) => (c.body as { turnstileToken?: string }).turnstileToken);
+  expect(first).toMatch(/^e2e-turnstile-token-/);
+  expect(second).toMatch(/^e2e-turnstile-token-/);
+  expect(second).not.toBe(first);
 });

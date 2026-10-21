@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { MessageCircle, X, Send, Trash2, Headset, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useParentChat } from '@/hooks/useParentChat';
+import { TurnstileSlot } from '@/components/TurnstileSlot';
 import { useParentBottomNavVisible } from '@/components/layout/ParentBottomNav';
 import { useProfileRole } from '@/hooks/useProfileRole';
 
@@ -36,6 +37,7 @@ function ParentChatWindow() {
     requestOperator,
     operatorRequested,
     operatorActive,
+    turnstile,
   } = useParentChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -256,6 +258,7 @@ function ParentChatWindow() {
 
           {/* Input */}
           <form onSubmit={handleSubmit} className="border-t border-border p-3">
+            <TurnstileSlot turnstile={turnstile} className="mb-2" />
             <div className="flex gap-2">
               <input
                 ref={inputRef}

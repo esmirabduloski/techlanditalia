@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { clientIp } from "../_shared/clientip.ts";
+import { turnstileGuard } from "../_shared/turnstile.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -16,6 +17,8 @@ const Schema = z.object({
   messaggio: z.string().trim().min(10).max(5000),
   website: z.string().max(0).optional().or(z.literal("")),
   formOpenedAt: z.number().optional(),
+  // Token Cloudflare Turnstile (vedi _shared/turnstile.ts)
+  turnstileToken: z.string().max(2048).optional(),
 });
 
 const BOT_UA = /(curl|wget|python-requests|scrapy|httpclient|go-http-client|java\/|libwww|httrack|nikto|sqlmap|nmap|masscan|zgrab|acunetix|nessus|burpsuite)/i;
@@ -53,6 +56,12 @@ serve(async (req: Request) => {
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
     const { nome, email, telefono, posizione, messaggio, website, formOpenedAt } = parsed.data;
+
+    const turnstileBlocked = await turnstileGuard(req, {
+      token: parsed.data.turnstileToken, endpoint: "submit-job-application", identifier: email,
+      logEvent: (e) => logEvent(supabase, e), corsHeaders,
+    });
+    if (turnstileBlocked) return turnstileBlocked;
 
     if (website && website.length > 0) {
       await logEvent(supabase, { event_type: "honeypot_triggered", identifier: email, ip_address: ip, user_agent: ua, endpoint: "submit-job-application", severity: "warn" });

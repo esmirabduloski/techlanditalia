@@ -12,6 +12,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { Link } from "react-router-dom";
 import { useFormAntiSpam } from "@/hooks/useFormAntiSpam";
+import { useTurnstile } from "@/hooks/useTurnstile";
+import { TurnstileSlot } from "@/components/TurnstileSlot";
 
 // Validation schema
 const contactSchema = z.object({
@@ -66,6 +68,7 @@ export default function Contatti() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { formOpenedAt, honeypotProps, honeypotValue } = useFormAntiSpam();
+  const turnstile = useTurnstile("contatti");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,8 +91,9 @@ export default function Contatti() {
     setIsSubmitting(true);
 
     try {
+      const turnstileToken = await turnstile.getToken();
       const { data, error } = await supabase.functions.invoke("send-contact-email", {
-        body: { ...result.data, website: honeypotValue, formOpenedAt },
+        body: { ...result.data, website: honeypotValue, formOpenedAt, turnstileToken },
       });
 
       if (error) {
@@ -104,6 +108,7 @@ export default function Contatti() {
       console.error("Error sending contact email:", error);
       toast.error("Errore nell'invio del messaggio. Riprova più tardi.");
     } finally {
+      turnstile.reset();
       setIsSubmitting(false);
     }
   };
@@ -285,6 +290,7 @@ export default function Contatti() {
                 </div>
               </div>
 
+              <TurnstileSlot turnstile={turnstile} />
               <Button type="submit" variant="cta" className="w-full" disabled={isSubmitting}>
                 {isSubmitting ? "Invio in corso..." : "Invia messaggio"}
               </Button>

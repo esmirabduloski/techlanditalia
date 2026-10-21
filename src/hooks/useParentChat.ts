@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { useTurnstile } from '@/hooks/useTurnstile';
 
 type Message = {
   role: 'user' | 'assistant' | 'operator';
@@ -31,6 +32,9 @@ export function useParentChat() {
   const lastOperatorMsgRef = useRef<string | null>(null);
   // Per mostrare l'avviso "l'operatore ha terminato la chat" una volta sola
   const operatorWasActiveRef = useRef(false);
+  // Ogni messaggio all'AI porta un token anti-bot nuovo (supabase/functions/_shared/turnstile.ts)
+  const turnstile = useTurnstile('chat');
+  const { getToken: getTurnstileToken, reset: resetTurnstile } = turnstile;
 
   const sendMessage = useCallback(async (input: string) => {
     if (!input.trim() || isLoading) return;
@@ -56,6 +60,7 @@ export function useParentChat() {
     };
 
     try {
+      const turnstileToken = await getTurnstileToken();
       const resp = await fetch(CHAT_URL, {
         method: 'POST',
         headers: AUTH_HEADERS,
@@ -65,11 +70,13 @@ export function useParentChat() {
             .filter((m) => m.role !== 'operator')
             .map((m) => ({ role: m.role, content: m.content })),
           sessionId: sessionIdRef.current,
+          turnstileToken,
         }),
       });
+      resetTurnstile();
 
-      if (resp.status === 429) {
-        // Limite raggiunto: il server spiega quando riprovare o dove scriverci
+      if (resp.status === 429 || resp.status === 403) {
+        // Limite raggiunto o verifica anti-bot fallita: il server spiega cosa fare
         const data = await resp.json().catch(() => null);
         setMessages([
           ...newMessages,
@@ -133,7 +140,7 @@ export function useParentChat() {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, isLoading]);
+  }, [messages, isLoading, getTurnstileToken, resetTurnstile]);
 
   /** Chiede esplicitamente di parlare con un operatore umano, lasciando un recapito. */
   const requestOperator = useCallback(async (contact?: string) => {
@@ -249,5 +256,5 @@ export function useParentChat() {
     setMessages([{ role: 'assistant', content: WELCOME }]);
   }, []);
 
-  return { messages, isLoading, sendMessage, clearChat, requestOperator, operatorRequested, operatorActive };
+  return { messages, isLoading, sendMessage, clearChat, requestOperator, operatorRequested, operatorActive, turnstile };
 }

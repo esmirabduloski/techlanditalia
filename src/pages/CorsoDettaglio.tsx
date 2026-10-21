@@ -5,6 +5,8 @@ import { agePhrase, COURSE_FACTS_COLUMNS, courseFactsFromRow, type CourseFacts }
 import { useState, useEffect } from "react";
 import NotFound from "./NotFound";
 import { useFormAntiSpam } from "@/hooks/useFormAntiSpam";
+import { useTurnstile } from "@/hooks/useTurnstile";
+import { TurnstileSlot } from "@/components/TurnstileSlot";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -665,6 +667,7 @@ function CorsoDettaglio() {
     },
   });
   const { formOpenedAt, honeypotProps, honeypotValue } = useFormAntiSpam();
+  const turnstile = useTurnstile("prenota-corso");
 
   // Le CTA della pagina portano al form in fondo alla stessa pagina (niente
   // cambio pagina, campo "interesse" già impostato sul corso).
@@ -682,6 +685,7 @@ function CorsoDettaglio() {
     setIsSubmitting(true);
 
     try {
+      const turnstileToken = await turnstile.getToken();
       const { data: bookingResult, error: bookingError } = await supabase.functions.invoke("submit-booking", {
         body: {
           parentName: data.name,
@@ -694,6 +698,7 @@ function CorsoDettaglio() {
           adminEmail: "info@techland.it",
           website: honeypotValue,
           formOpenedAt,
+          turnstileToken,
         },
       });
 
@@ -718,6 +723,7 @@ function CorsoDettaglio() {
         variant: "destructive",
       });
     } finally {
+      turnstile.reset();
       setIsSubmitting(false);
     }
   };
@@ -1155,6 +1161,7 @@ function CorsoDettaglio() {
                     )}
                   />
 
+                  <TurnstileSlot turnstile={turnstile} />
                   <Button 
                     type="submit" 
                     variant="hero" 

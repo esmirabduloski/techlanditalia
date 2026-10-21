@@ -48,6 +48,8 @@ export default defineConfig({
       VITE_SUPABASE_PUBLISHABLE_KEY: "chiave-finta-e2e",
       VITE_SUPABASE_PROJECT_ID: "e2e",
       VITE_SENTRY_DSN: "",
+      // Chiave di prova di Cloudflare: il widget c'è, lo script è finto (e2e/support/test.ts)
+      VITE_TURNSTILE_SITE_KEY: "1x00000000000000000000AA",
     },
   },
 });

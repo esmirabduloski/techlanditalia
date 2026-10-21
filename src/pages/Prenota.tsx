@@ -33,6 +33,8 @@ import { SEOHead } from "@/components/seo/SEOHead";
 import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { useFormAntiSpam } from "@/hooks/useFormAntiSpam";
+import { useTurnstile } from "@/hooks/useTurnstile";
+import { TurnstileSlot } from "@/components/TurnstileSlot";
 
 const fallbackInterests = [
   { value: "non-so", label: "Non sono sicuro, vorrei consigli" },
@@ -68,6 +70,7 @@ export default function Prenota() {
   const { trackFormStart, trackFormSubmit, trackFormError, trackBookingConversion, trackFunnelStep } = useAnalytics();
   const formStartTracked = useRef(false);
   const { formOpenedAt, honeypotProps, honeypotValue } = useFormAntiSpam();
+  const turnstile = useTurnstile("prenota");
   const [searchParams] = useSearchParams();
   const refCode = normalizeReferralCode(searchParams.get("ref"));
 
@@ -133,6 +136,7 @@ export default function Prenota() {
     trackFunnelStep('booking_funnel', 3, 'form_submit_attempt');
 
     try {
+      const turnstileToken = await turnstile.getToken();
       // Submit booking through secure Edge Function with rate limiting
       const { data: bookingResult, error: bookingError } = await supabase.functions.invoke("submit-booking", {
         body: {
@@ -145,6 +149,7 @@ export default function Prenota() {
           adminEmail: ADMIN_EMAIL,
           website: honeypotValue,
           formOpenedAt,
+          turnstileToken,
         },
       });
 
@@ -203,6 +208,7 @@ export default function Prenota() {
         variant: "destructive",
       });
     } finally {
+      turnstile.reset();
       setIsSubmitting(false);
     }
   };
@@ -504,6 +510,7 @@ export default function Prenota() {
                     </div>
                   )}
 
+                  <TurnstileSlot turnstile={turnstile} />
                   <Button 
                     type="submit" 
                     variant="hero" 

@@ -11,6 +11,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { BUILD_COURSES } from "@/lib/buildCourseFacts";
+import { useTurnstile } from "@/hooks/useTurnstile";
+import { TurnstileSlot } from "@/components/TurnstileSlot";
 
 const benefits = [
   {
@@ -69,11 +71,13 @@ export default function LavoraConNoi() {
   });
   const [formOpenedAt] = useState(() => Date.now());
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const turnstile = useTurnstile("candidatura");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
+    const turnstileToken = await turnstile.getToken();
     const { data, error } = await supabase.functions.invoke('submit-job-application', {
       body: {
         nome: formData.nome,
@@ -83,8 +87,10 @@ export default function LavoraConNoi() {
         messaggio: formData.messaggio,
         website: formData.website,
         formOpenedAt,
+        turnstileToken,
       },
     });
+    turnstile.reset();
 
     if (error || (data && (data as any).error)) {
       toast.error("Errore nell'invio della candidatura. Riprova.");
@@ -300,6 +306,7 @@ export default function LavoraConNoi() {
                 />
               </div>
               
+              <TurnstileSlot turnstile={turnstile} />
               <Button type="submit" variant="cta" className="w-full" disabled={isSubmitting}>
                 {isSubmitting ? "Invio in corso..." : "Invia candidatura"}
               </Button>

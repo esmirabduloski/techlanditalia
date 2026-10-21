@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { clientIp } from "../_shared/clientip.ts";
+import { turnstileGuard } from "../_shared/turnstile.ts";
 import { notifyAdmins } from "../_shared/adminpush.ts";
 import { captureServerError } from "../_shared/sentry.ts";
 
@@ -26,6 +27,8 @@ const BookingSchema = z.object({
   website: z.string().max(0).optional().or(z.literal("")),
   // Time-trap: timestamp apertura form (ms da epoch)
   formOpenedAt: z.number().optional(),
+  // Token Cloudflare Turnstile (vedi _shared/turnstile.ts)
+  turnstileToken: z.string().max(2048).optional(),
 });
 
 const BOT_UA_PATTERNS = /(curl|wget|python-requests|scrapy|httpclient|go-http-client|java\/|libwww|httrack|nikto|sqlmap|nmap|masscan|zgrab|acunetix|nessus|burpsuite)/i;
@@ -109,6 +112,12 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
     const data = parsed.data;
+
+    const turnstileBlocked = await turnstileGuard(req, {
+      token: data.turnstileToken, endpoint: "submit-booking", identifier: data.email,
+      logEvent: (e) => logSecurityEvent(supabase, e), corsHeaders,
+    });
+    if (turnstileBlocked) return turnstileBlocked;
 
     // Honeypot triggered → silent reject (200 to mislead bots)
     if (data.website && data.website.length > 0) {

@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { clientIp } from "../_shared/clientip.ts";
+import { turnstileGuard } from "../_shared/turnstile.ts";
 import { notifyAdmins } from "../_shared/adminpush.ts";
 import { captureServerError } from "../_shared/sentry.ts";
 import { sendEmail } from "../_shared/email.ts";
@@ -20,6 +21,8 @@ const ContactSchema = z.object({
   // Honeypot
   website: z.string().max(0).optional().or(z.literal("")),
   formOpenedAt: z.number().optional(),
+  // Token Cloudflare Turnstile (vedi _shared/turnstile.ts)
+  turnstileToken: z.string().max(2048).optional(),
 });
 
 const BOT_UA_PATTERNS = /(curl|wget|python-requests|scrapy|httpclient|go-http-client|java\/|libwww|httrack|nikto|sqlmap|nmap|masscan|zgrab|acunetix|nessus|burpsuite)/i;
@@ -61,6 +64,12 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
     const { nome, email, oggetto, messaggio, website, formOpenedAt } = parsed.data;
+
+    const turnstileBlocked = await turnstileGuard(req, {
+      token: parsed.data.turnstileToken, endpoint: "send-contact-email", identifier: email,
+      logEvent: (e) => logSecurityEvent(supabase, e), corsHeaders,
+    });
+    if (turnstileBlocked) return turnstileBlocked;
 
     // Honeypot
     if (website && website.length > 0) {

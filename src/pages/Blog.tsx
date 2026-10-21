@@ -11,6 +11,8 @@ import { ArrowRight, Clock, Loader2, Mail, CheckCircle, Search, X, ChevronLeft, 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
 import { useFormAntiSpam } from "@/hooks/useFormAntiSpam";
+import { useTurnstile } from "@/hooks/useTurnstile";
+import { TurnstileSlot } from "@/components/TurnstileSlot";
 
 // Animation variants
 const containerVariants = {
@@ -158,6 +160,7 @@ export default function Blog() {
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
   const { formOpenedAt, honeypotProps, honeypotValue } = useFormAntiSpam();
+  const turnstile = useTurnstile("newsletter");
   
   // Search and filter states
   const [searchQuery, setSearchQuery] = useState('');
@@ -251,8 +254,9 @@ export default function Blog() {
     setIsSubscribing(true);
 
     try {
+      const turnstileToken = await turnstile.getToken();
       const { data, error } = await supabase.functions.invoke('newsletter-subscribe', {
-        body: { email: email.trim(), website: honeypotValue, formOpenedAt }
+        body: { email: email.trim(), website: honeypotValue, formOpenedAt, turnstileToken }
       });
 
       if (error) throw error;
@@ -270,6 +274,7 @@ export default function Blog() {
       console.error('Newsletter subscribe error:', error);
       toast.error("Errore durante l'iscrizione. Riprova più tardi.");
     } finally {
+      turnstile.reset();
       setIsSubscribing(false);
     }
   };
@@ -739,6 +744,7 @@ export default function Blog() {
               }
             </p>
             {!subscribed && (
+              <>
               <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
                 <input {...honeypotProps} />
                 <input
@@ -764,6 +770,8 @@ export default function Blog() {
                   )}
                 </button>
               </form>
+              <TurnstileSlot turnstile={turnstile} className="mt-3" />
+              </>
             )}
             {/* Informativa breve newsletter: consenso via double opt-in, revoca dal link in ogni email */}
             <p className="mt-4 text-xs text-muted-foreground">

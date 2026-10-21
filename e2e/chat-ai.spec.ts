@@ -20,6 +20,40 @@ test("il visitatore vede subito che in chat risponde un'intelligenza artificiale
   await expect(page.getByText("Assistente AI", { exact: true })).toBeVisible();
 });
 
+test("ogni messaggio alla chat porta un token anti-bot nuovo", async ({ page, fake }) => {
+  let replies = 0;
+  fake.fn("parent-chat", () => ({ body: { message: `Risposta di prova ${++replies}` } }));
+
+  await page.goto("/");
+  await page.getByRole("button", { name: "Apri chat con l'assistente AI" }).click(DEFERRED);
+  const input = page.getByPlaceholder("Scrivi un messaggio...");
+
+  await input.fill("Che corsi avete?");
+  await input.press("Enter");
+  await expect(page.getByText("Risposta di prova 1")).toBeVisible();
+  await input.fill("E per 10 anni?");
+  await input.press("Enter");
+  await expect(page.getByText("Risposta di prova 2")).toBeVisible();
+
+  const tokens = fake.callsTo("parent-chat").map((c) => (c.body as { turnstileToken?: string }).turnstileToken);
+  expect(tokens).toHaveLength(2);
+  expect(tokens[0]).toMatch(/^e2e-turnstile-token-/);
+  expect(tokens[1]).toMatch(/^e2e-turnstile-token-/);
+  expect(tokens[1]).not.toBe(tokens[0]);
+});
+
+test("se la verifica anti-bot fallisce, la chat spiega cosa fare", async ({ page, fake }) => {
+  fake.fn("parent-chat", () => ({ status: 403, body: { error: "Non siamo riusciti a verificare che tu non sia un bot." } }));
+
+  await page.goto("/");
+  await page.getByRole("button", { name: "Apri chat con l'assistente AI" }).click(DEFERRED);
+  const input = page.getByPlaceholder("Scrivi un messaggio...");
+  await input.fill("Ciao");
+  await input.press("Enter");
+
+  await expect(page.getByText("Non siamo riusciti a verificare che tu non sia un bot.")).toBeVisible();
+});
+
 test("lo studente non ha la chat", async ({ page, fake }) => {
   seedStudent(fake);
   fake.table("profiles").find((p) => p.id === student.id)!.role = "student";

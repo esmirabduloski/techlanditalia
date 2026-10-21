@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { notifyAdmins } from "../_shared/adminpush.ts";
 import { clientIp, rateLimit } from "../_shared/ratelimit.ts";
+import { turnstileGuard } from "../_shared/turnstile.ts";
 import { courseCatalogLines, type CatalogCourse } from "../_shared/coursecatalog.ts";
 
 /** Frasi con cui un visitatore chiede di parlare con una persona reale. */
@@ -223,7 +224,7 @@ serve(async (req) => {
   if (globalLimited) return globalLimited;
 
   try {
-    const { messages, sessionId } = await req.json();
+    const { messages, sessionId, turnstileToken } = await req.json();
     // sessionId deve essere un UUID casuale (non indovinabile): funge da segreto della conversazione
     const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (typeof sessionId !== 'string' || !UUID_RE.test(sessionId)) {
@@ -263,6 +264,23 @@ serve(async (req) => {
         });
       }
     }
+
+    // Ogni messaggio porta un token Turnstile nuovo: senza, l'AI non risponde (vedi _shared/turnstile.ts)
+    const turnstileBlocked = await turnstileGuard(req, {
+      token: turnstileToken,
+      endpoint: 'parent-chat',
+      identifier: sessionId,
+      logEvent: async (event) => {
+        if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return;
+        try {
+          await createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY).from('security_events').insert(event);
+        } catch (e) {
+          console.error('[sec-log]', e);
+        }
+      },
+      corsHeaders,
+    });
+    if (turnstileBlocked) return turnstileBlocked;
 
     console.log('Processing chat request with', messages.length, 'messages');
 

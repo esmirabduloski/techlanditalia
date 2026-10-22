@@ -526,6 +526,13 @@
       "when": 1792698454684,
       "tag": "0074_page_views_own_select",
       "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1792698839940,
+      "tag": "0075_reapply_drop_legacy_role_escalation_trigger",
+      "breakpoints": true
     }
   ]
 }

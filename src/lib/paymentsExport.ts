@@ -1,6 +1,6 @@
 import { format, parseISO } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
-import { csvCell } from '@/lib/csv';
+import { csvCell, downloadBlob } from '@/lib/csv';
 import { methodLabel, todayIso } from '@/lib/payments';
 
 export type ExportFormat = 'xlsx' | 'csv';
@@ -78,15 +78,6 @@ async function loadRows(opts: PaymentsExportOptions): Promise<ExportRow[]> {
     })
     .sort((a, b) =>
       ((a.ricezione ?? a.scadenza)?.getTime() ?? 0) - ((b.ricezione ?? b.scadenza)?.getTime() ?? 0));
-}
-
-function downloadBlob(blob: Blob, fileName: string) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = fileName;
-  a.click();
-  URL.revokeObjectURL(url);
 }
 
 /** CSV per Excel in italiano: separatore ";" e virgola decimale. */

@@ -125,6 +125,7 @@ const sections: FeatureSection[] = [
       { name: 'Newsletter', description: 'Gestione iscritti newsletter con invio email e conferma double opt-in.', route: '/admin/newsletter' },
       { name: 'Email', description: 'Centro di controllo email: catalogo di tutte le email con anteprima ed email di prova, invii previsti nei prossimi giorni (solleciti, fine pausa, report) e storico degli invii con destinatario ed esito.', route: '/admin/email' },
       { name: 'Utenti', description: 'Gestione profili utenti, creazione account, reset password e toggle ruoli.', route: '/admin/utenti' },
+      { name: 'Import/Export CSV', description: 'Menu «CSV» in Utenti (studenti con genitore e corsi), Gruppi e Lezioni del corso: esporta per Excel, importa con anteprima riga per riga (nuova, modificata, invariata, errore). Le righe esistenti si aggiornano, niente viene cancellato; gli studenti nuovi creano anche il genitore con l\'email di benvenuto (edge function admin-import-students).', route: '/admin/utenti' },
       { name: 'Disponibilità Insegnanti', description: 'Calendario disponibilità insegnanti con gestione turni.', route: '/admin/disponibilita' },
       { name: 'Valutazioni', description: 'Panoramica valutazioni compiti con filtri per corso e gruppo.', route: '/admin/valutazioni' },
       { name: 'Statistiche', description: 'Dashboard con metriche su iscrizioni, completamento corsi e performance.', route: '/admin/statistiche' },

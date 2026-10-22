@@ -18,6 +18,10 @@ import { LessonCalendarManager } from "@/components/admin/LessonCalendarManager"
 import { StudentTransferDialog } from "@/components/admin/StudentTransferDialog";
 import { GroupMergeSplitDialog } from "@/components/admin/GroupMergeSplitDialog";
 import { GroupTimelineDialog } from "@/components/admin/GroupTimelineDialog";
+import { CsvImportDialog, CsvMenu } from "@/components/admin/CsvImportDialog";
+import { downloadCsv } from "@/lib/csv";
+import { todayStamp } from "@/lib/csvImport";
+import { applyGroups, GROUP_COLUMNS, groupsTemplateCsv, groupsToCsv, loadGroupsCsvContext, planGroups } from "@/lib/groupsCsv";
 import { 
   Loader2, Plus, Users, LogOut, Home, Edit, Trash2, UsersRound, Search, Calendar, RotateCcw, Archive, GraduationCap, ArrowRightLeft, GitMerge, ListTree
 } from "lucide-react";
@@ -115,6 +119,7 @@ export default function AdminGroups() {
   const [transferGroup, setTransferGroup] = useState<StudentGroup | null>(null);
   const [mergeSplitGroup, setMergeSplitGroup] = useState<StudentGroup | null>(null);
   const [timelineGroup, setTimelineGroup] = useState<StudentGroup | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -549,11 +554,29 @@ export default function AdminGroups() {
               {groups.length} gruppi creati
             </p>
           </div>
-          <Button onClick={openCreateDialog}>
-            <Plus className="w-4 h-4 mr-2" />
-            Nuovo Gruppo
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <CsvMenu
+              onExport={async () => downloadCsv(`gruppi-${todayStamp()}.csv`, groupsToCsv(await loadGroupsCsvContext()))}
+              onImport={() => setImportOpen(true)}
+              onTemplate={() => downloadCsv('modello-gruppi.csv', groupsTemplateCsv(courses[0]?.title))}
+            />
+            <Button onClick={openCreateDialog}>
+              <Plus className="w-4 h-4 mr-2" />
+              Nuovo Gruppo
+            </Button>
+          </div>
         </div>
+
+        <CsvImportDialog
+          open={importOpen}
+          onOpenChange={setImportOpen}
+          title="Importa gruppi"
+          description="I gruppi con un ID già presente vengono aggiornati, quelli con l'ID vuoto creati con il loro calendario. Gli studenti elencati vengono aggiunti; nessuno viene tolto."
+          columns={GROUP_COLUMNS}
+          plan={async (rows) => planGroups(rows, await loadGroupsCsvContext())}
+          apply={applyGroups}
+          onImported={fetchData}
+        />
 
         <Card>
           <CardContent className="pt-6">

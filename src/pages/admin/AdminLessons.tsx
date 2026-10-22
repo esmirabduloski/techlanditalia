@@ -24,11 +24,17 @@ import {
   LogOut, Loader2, Plus, Edit, Trash2, ArrowLeft, BookOpen, ClipboardList, FileText, MonitorPlay
 } from 'lucide-react';
 import { TRASH_RECOVERY_HINT } from '@/lib/trash';
+import { CsvImportDialog, CsvMenu } from '@/components/admin/CsvImportDialog';
+import { useAutoBackup } from '@/hooks/useAutoBackup';
+import { downloadCsv } from '@/lib/csv';
+import { todayStamp } from '@/lib/csvImport';
+import { applyLessons, LESSON_COLUMNS, lessonsTemplateCsv, lessonsToCsv, planLessons } from '@/lib/lessonsCsv';
 
 interface Course {
   id: string;
   title: string;
   emoji: string;
+  slug: string;
   total_lessons: number;
 }
 
@@ -40,6 +46,8 @@ interface Lesson {
   objective: string | null;
   content_type: string | null;
   points_reward: number;
+  video_url: string | null;
+  slides_url: string | null;
   created_at: string;
   /** Mappa delle competenze (migrazione 0062): assente finché non è applicata. */
   concepts?: string[];
@@ -50,9 +58,11 @@ export default function AdminLessons() {
   const [course, setCourse] = useState<Course | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [importOpen, setImportOpen] = useState(false);
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { createCourseSnapshot } = useAutoBackup();
 
   useEffect(() => {
     if (!authLoading && (!user || !isAdmin)) {
@@ -71,7 +81,7 @@ export default function AdminLessons() {
     // Fetch course
     const { data: courseData } = await supabase
       .from('courses')
-      .select('id, title, emoji, total_lessons')
+      .select('id, title, emoji, slug, total_lessons')
       .eq('id', courseId)
       .maybeSingle();
 
@@ -164,13 +174,34 @@ export default function AdminLessons() {
               </p>
             )}
           </div>
-          <Button asChild>
-            <Link to={`/admin/corsi/${courseId}/lezioni/nuova`}>
-              <Plus className="w-4 h-4 mr-2" />
-              Nuova Lezione
-            </Link>
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <CsvMenu
+              onExport={() => downloadCsv(`lezioni-${course.slug}-${todayStamp()}.csv`, lessonsToCsv(lessons))}
+              onImport={() => setImportOpen(true)}
+              onTemplate={() => downloadCsv('modello-lezioni.csv', lessonsTemplateCsv())}
+            />
+            <Button asChild>
+              <Link to={`/admin/corsi/${courseId}/lezioni/nuova`}>
+                <Plus className="w-4 h-4 mr-2" />
+                Nuova Lezione
+              </Link>
+            </Button>
+          </div>
         </div>
+
+        <CsvImportDialog
+          open={importOpen}
+          onOpenChange={setImportOpen}
+          title={`Importa lezioni in ${course.title}`}
+          description="Programma del corso: le lezioni con un numero già presente vengono aggiornate, le altre create. Contenuto, immagini, task e compiti restano come sono. Prima dell'import si salva un backup del corso."
+          columns={LESSON_COLUMNS}
+          plan={(rows) => planLessons(rows, lessons, { totalLessons: course.total_lessons })}
+          apply={async (rows, onProgress) => {
+            await createCourseSnapshot(course.id, "Auto-backup prima dell'import CSV");
+            return applyLessons(course.id, rows, onProgress);
+          }}
+          onImported={fetchData}
+        />
 
         {/* Lessons List */}
         {lessons.length === 0 ? (

@@ -3,32 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { rateLimit } from "../_shared/ratelimit.ts";
 import { decodeClaims, mfaRequiredResponse } from "../_shared/mfa.ts";
-import { randomUnknownPassword } from "../_shared/studentpassword.ts";
-
-// Il link "Imposta la tua password" deve puntare alla pagina con il form di nuova
-// password, non alla homepage. Stessa allowlist usata da send-password-reset-email.
-const ALLOWED_HOSTS = new Set([
-  "techlanditalia.it",
-  "www.techlanditalia.it",
-  "techlanditalia.lovable.app",
-]);
-
-function resolveSetupRedirect(req: Request): string {
-  const fallback = "https://techlanditalia.it/auth?reset=true";
-  const origin = req.headers.get("origin");
-  if (!origin) return fallback;
-  try {
-    const u = new URL(origin);
-    if (u.protocol !== "https:" && u.protocol !== "http:") return fallback;
-    if (ALLOWED_HOSTS.has(u.hostname) || u.hostname.endsWith(".lovable.app")) {
-      return `${u.origin}/auth?reset=true`;
-    }
-    return fallback;
-  } catch {
-    return fallback;
-  }
-}
-
+import { addParentRole, createAdultAccount, createChildAccount, sendWelcomeEmail } from "../_shared/familyaccounts.ts";
 
 serve(async (req) => {
   const corsHeaders = corsHeadersFor(req);
@@ -124,77 +99,24 @@ serve(async (req) => {
 
     console.log(`Admin ${adminUser.id} creating ${role} account: ${email}`);
 
-    // Create the user account
-    const userRole = role === "parent" ? "parent" : "teacher";
-    const { data: authData, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email: email.trim().toLowerCase(),
-      password,
-      email_confirm: true,
-      user_metadata: {
-        full_name: fullName.trim(),
-        role: userRole,
-      },
-    });
-
-    if (createError) {
-      console.error("Error creating user:", createError);
-      let msg = "Impossibile creare l'account";
-      if (createError.message.includes("already been registered")) {
-        msg = "Questa email è già registrata";
-      } else if ((createError as { code?: string }).code === "weak_password" || createError.message.toLowerCase().includes("weak")) {
-        msg = "Password troppo debole o già comparsa in fughe di dati. Usa una password diversa (almeno 8 caratteri, con lettere, numeri e un simbolo) o premi 'Genera'.";
-      }
-      return new Response(JSON.stringify({ error: msg }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-
-    const newUserId = authData.user.id;
-
-    // Il trigger su auth.users crea già il profilo con ruolo 'student'. Il cambio di
-    // ruolo va fatto con la sessione dell'admin: un vecchio trigger di sicurezza su
-    // profiles accetta il cambio ruolo solo se auth.uid() è un admin (con la service
-    // role auth.uid() è NULL e l'update veniva respinto).
-    const supabaseAsAdmin = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
-
-    const profileFields = {
-      full_name: fullName.trim(),
-      email: email.trim().toLowerCase(),
-      role: userRole,
+    const clients = {
+      admin: supabaseAdmin,
+      asAdmin: createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } },
+        auth: { persistSession: false, autoRefreshToken: false },
+      }),
     };
 
-    const { data: existingProfile } = await supabaseAdmin
-      .from("profiles")
-      .select("id")
-      .eq("id", newUserId)
-      .maybeSingle();
-
-    let parentProfileError: unknown = null;
-    if (existingProfile) {
-      const { data: updated, error } = await supabaseAsAdmin
-        .from("profiles")
-        .update(profileFields)
-        .eq("id", newUserId)
-        .select("id");
-      parentProfileError = error ?? (updated && updated.length > 0 ? null : { message: "Nessuna riga aggiornata (permessi admin)" });
-    } else {
-      const { error } = await supabaseAdmin.from("profiles").insert({ id: newUserId, ...profileFields });
-      parentProfileError = error;
-    }
-
-    if (parentProfileError) {
-      console.error("Error creating/updating parent profile:", parentProfileError);
-      await supabaseAdmin.auth.admin.deleteUser(newUserId);
-      return new Response(JSON.stringify({ error: "Impossibile creare il profilo utente" }), {
-        status: 500,
+    // Create the user account
+    const userRole = role === "parent" ? "parent" : "teacher";
+    const account = await createAdultAccount(clients, { email, password, fullName, role: userRole });
+    if (!account.ok) {
+      return new Response(JSON.stringify({ error: account.error }), {
+        status: account.status,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const newUserId = account.userId;
 
     // Add role to user_roles table
     if (role === "teacher") {
@@ -216,119 +138,39 @@ serve(async (req) => {
 
     // For parent role, add 'user' role and create child account
     if (role === "parent") {
-      const { error: roleError } = await supabaseAdmin
-        .from("user_roles")
-        .insert({ user_id: newUserId, role: "user" });
-      if (roleError && !roleError.message.includes("duplicate")) {
-        console.error("Error adding user role:", roleError);
-      }
+      await addParentRole(supabaseAdmin, newUserId);
 
-      // Create child account. La password del figlio NON è quella del genitore:
-      // nasce casuale e il genitore la imposta dall'area riservata
-      // (parent-set-child-password, migrazione 0046_student_passwords).
-      const childEmail = `${childUsername.trim().toLowerCase().replace(/[^a-z0-9]/g, "")}_${Date.now()}@student.techland.local`;
-
-      const { data: childAuthData, error: childAuthError } = await supabaseAdmin.auth.admin.createUser({
-        email: childEmail,
-        password: randomUnknownPassword(),
-        email_confirm: true,
-        user_metadata: {
-          full_name: childName.trim(),
-          role: "student",
-        },
+      const child = await createChildAccount(supabaseAdmin, {
+        parentId: newUserId,
+        childName,
+        childUsername,
+        courseIds: courseId && courseId !== "none" ? [courseId] : [],
       });
 
-      if (childAuthError) {
-        console.error("Error creating child account:", childAuthError);
+      if (!child.ok && child.stage === "auth") {
         return new Response(JSON.stringify({ error: "Account genitore creato ma errore nella creazione del figlio" }), {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-
-      // Create/update child profile explicitly instead of relying on auth triggers.
-      const { error: profileError } = await supabaseAdmin
-        .from("profiles")
-        .upsert({
-          id: childAuthData.user.id,
-          full_name: childName.trim(),
-          email: childEmail,
-          role: "student",
-          username: childUsername.trim(),
-          parent_id: newUserId,
-        }, { onConflict: "id" });
-
-      if (profileError) {
-        console.error("Error updating child profile:", profileError);
-        await supabaseAdmin.auth.admin.deleteUser(childAuthData.user.id);
+      if (!child.ok) {
         await supabaseAdmin.auth.admin.deleteUser(newUserId);
         return new Response(JSON.stringify({ error: "Account genitore creato ma non è stato possibile associare il figlio. Riprova o contatta supporto." }), {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-
-      const { error: pwSettingsError } = await supabaseAdmin
-        .from("student_password_settings")
-        .upsert({ student_id: childAuthData.user.id, own_password: true, set_at: new Date().toISOString() });
-      if (pwSettingsError) {
-        console.error("Error saving child password settings:", pwSettingsError);
-      }
-
-      // Enroll child in course if selected
-      if (courseId && courseId !== "none") {
-        const { error: enrollError } = await supabaseAdmin
-          .from("enrollments")
-          .insert({
-            student_id: childAuthData.user.id,
-            course_id: courseId,
-            status: "active",
-          });
-        if (enrollError) {
-          console.error("Error creating enrollment:", enrollError);
-        }
-      }
     }
 
     // Send welcome email (with a one-time password setup link instead of the plaintext password)
-    try {
-      const welcomeBody: Record<string, string> = {
-        email: email.trim().toLowerCase(),
-        fullName: fullName.trim(),
-        role: userRole,
-        // Collega l'email al profilo nel registro email (sparisce con l'account)
-        userId: newUserId,
-      };
-      if (role === "parent" && childName && childUsername) {
-        welcomeBody.childName = childName.trim();
-        welcomeBody.childUsername = childUsername.trim();
-      }
-
-      // Generate a one-time recovery link so the user can set their own password.
-      // Senza redirectTo il link cadeva sul Site URL (la homepage) e il form di
-      // nuova password non veniva mai mostrato.
-      try {
-        const { data: linkData } = await supabaseAdmin.auth.admin.generateLink({
-          type: "recovery",
-          email: email.trim().toLowerCase(),
-          options: { redirectTo: resolveSetupRedirect(req) },
-        });
-        const actionLink = linkData?.properties?.action_link;
-        if (actionLink) {
-          welcomeBody.setupLink = actionLink;
-        }
-      } catch (linkErr) {
-        console.error("Error generating setup link:", linkErr);
-      }
-
-      // Use anon key client + admin auth header so the welcome-email function authorizes the call
-      const supabaseAnon = createClient(supabaseUrl, supabaseAnonKey, {
-        global: { headers: { Authorization: authHeader } },
-      });
-      await supabaseAnon.functions.invoke("send-welcome-email", { body: welcomeBody });
-    } catch (err) {
-      console.error("Welcome email error:", err);
-    }
+    await sendWelcomeEmail(req, clients, {
+      userId: newUserId,
+      email,
+      fullName,
+      role: userRole,
+      childName: role === "parent" ? childName : undefined,
+      childUsername: role === "parent" ? childUsername : undefined,
+    });
 
     console.log(`Account created successfully: ${newUserId} (${role})`);
 

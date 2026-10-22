@@ -45,6 +45,10 @@ import { LessonBalanceManager } from '@/components/admin/LessonBalanceManager';
 import { SubscriptionPauseDialog } from '@/components/admin/SubscriptionPauseDialog';
 import { SubscriptionPauseButton } from '@/components/admin/SubscriptionPauseBadge';
 import { useSubscriptionPauses } from '@/hooks/useSubscriptionPauses';
+import { CsvImportDialog, CsvMenu } from '@/components/admin/CsvImportDialog';
+import { downloadCsv } from '@/lib/csv';
+import { todayStamp } from '@/lib/csvImport';
+import { applyStudents, loadStudentsCsvContext, planStudents, STUDENT_COLUMNS, studentsTemplateCsv, studentsToCsv } from '@/lib/studentsCsv';
 import {
   Select,
   SelectContent,
@@ -157,6 +161,8 @@ export default function AdminUsers() {
     courseId: string;
   }>({ role: 'parent', fullName: '', email: '', password: '', childName: '', childUsername: '', courseId: 'none' });
   const [creatingUser, setCreatingUser] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [sendWelcome, setSendWelcome] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
   const [mfaStatus, setMfaStatus] = useState<Map<string, MfaUserStatus>>(new Map());
   const [backgroundChecks, setBackgroundChecks] = useState<Map<string, BackgroundCheck>>(new Map());
@@ -907,11 +913,40 @@ export default function AdminUsers() {
               }
             </p>
           </div>
-          <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
-            <UserPlus className="w-4 h-4" />
-            Crea utente
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <CsvMenu
+              onExport={async () => downloadCsv(`studenti-${todayStamp()}.csv`, studentsToCsv(await loadStudentsCsvContext()))}
+              onImport={() => setImportOpen(true)}
+              onTemplate={() => downloadCsv('modello-studenti.csv', studentsTemplateCsv(courses[0]?.title))}
+            />
+            <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
+              <UserPlus className="w-4 h-4" />
+              Crea utente
+            </Button>
+          </div>
         </div>
+
+        <CsvImportDialog
+          open={importOpen}
+          onOpenChange={setImportOpen}
+          title="Importa studenti"
+          description="Una riga per studente. Gli username già presenti vengono aggiornati; quelli nuovi vengono creati sotto il genitore con quell'email, o insieme a un genitore nuovo. Iscrizioni e collegamenti non vengono mai tolti."
+          columns={STUDENT_COLUMNS}
+          plan={async (rows) => planStudents(rows, await loadStudentsCsvContext())}
+          apply={(rows, onProgress) => applyStudents(rows, { sendWelcome }, onProgress)}
+          onImported={fetchData}
+          options={
+            <div className="rounded-md border p-3 space-y-1">
+              <label className="flex items-start gap-2 text-sm cursor-pointer">
+                <Checkbox checked={sendWelcome} onCheckedChange={(v) => setSendWelcome(v === true)} className="mt-0.5" />
+                <span>Invia l'email di benvenuto ai nuovi genitori, con il link per impostare la password (e l'invito a recensirci su Trustpilot)</span>
+              </label>
+              {!sendWelcome && (
+                <p className="text-xs text-muted-foreground pl-6">Senza email, i nuovi genitori entrano con "Password dimenticata" dalla pagina di accesso.</p>
+              )}
+            </div>
+          }
+        />
 
         {teachersNeedingCheck.length > 0 && (
           <div className="mb-6 rounded-lg border border-red-500/40 bg-red-500/10 p-4">

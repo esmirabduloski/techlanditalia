@@ -234,10 +234,11 @@ export function HomeworkSection() {
       case "course":
         sorted.sort((a, b) => a.course_title.localeCompare(b.course_title));
         break;
-      case "status":
+      case "status": {
         const statusOrder: Record<string, number> = { expired: 0, pending: 1, in_review: 2, graded: 3 };
         sorted.sort((a, b) => (statusOrder[getEffectiveStatus(a)] ?? 4) - (statusOrder[getEffectiveStatus(b)] ?? 4));
         break;
+      }
       case "points":
         sorted.sort((a, b) => b.points_reward - a.points_reward);
         break;

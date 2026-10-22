@@ -112,7 +112,7 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
         const courseIds = [...new Set(scheduleData.map((s: any) => s.group?.course?.id).filter(Boolean))];
         
         // Fetch real lesson titles from lessons table
-        let lessonTitlesMap: Record<string, string> = {};
+        const lessonTitlesMap: Record<string, string> = {};
         if (courseIds.length > 0) {
           const { data: lessonsData } = await supabase
             .from("lessons")

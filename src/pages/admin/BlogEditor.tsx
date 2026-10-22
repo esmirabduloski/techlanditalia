@@ -184,7 +184,7 @@ export default function BlogEditor() {
         'hr','table','thead','tbody','tr','th','td','span','div','iframe'
       ],
       ALLOWED_ATTR: ['href','src','alt','title','target','rel','class','width','height','allow','allowfullscreen','frameborder'],
-      ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+      ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i,
     });
     const sanitizedExcerpt = excerpt ? DOMPurify.sanitize(excerpt, { ALLOWED_TAGS: [] }) : null;
 

@@ -1,5 +1,6 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { isPrivateAreaPath } from "./privateAreas";
+import { isPrivateAreaPath, PRIVATE_AREA_PREFIXES } from "./privateAreas";
 
 describe("isPrivateAreaPath", () => {
   it("aree con dati personali o di minori", () => {
@@ -16,5 +17,15 @@ describe("isPrivateAreaPath", () => {
 
   it("accetta anche il percorso senza barra iniziale", () => {
     expect(isPrivateAreaPath("admin/crm")).toBe(true);
+  });
+});
+
+describe("copie della lista in index.html", () => {
+  it("gli snippet di GTM e Clarity escludono le stesse aree", () => {
+    const html = readFileSync(new URL("../../index.html", import.meta.url), "utf8");
+    const copies = html.match(/\/\^\\\/\(([^)]*)\)\(\\\/\|\$\)\//g) ?? [];
+    const expected = PRIVATE_AREA_PREFIXES.map((p) => p.slice(1).replace(".", "\\.")).join("|");
+    expect(copies).toHaveLength(2);
+    for (const copy of copies) expect(copy).toBe(`/^\\/(${expected})(\\/|$)/`);
   });
 });

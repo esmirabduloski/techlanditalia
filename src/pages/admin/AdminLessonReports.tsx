@@ -93,7 +93,7 @@ export default function AdminLessonReports() {
 
       // Collect all student IDs needing support
       const allStudentIds = [...new Set(reportsData.flatMap(r => (r.students_needing_support as string[]) || []))];
-      let studentNameMap: Record<string, string> = {};
+      const studentNameMap: Record<string, string> = {};
       if (allStudentIds.length > 0) {
         const { data: studentProfiles } = await supabase
           .from("profiles")

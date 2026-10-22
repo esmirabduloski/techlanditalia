@@ -6,12 +6,13 @@ import { seedStudent, student } from "./support/seed";
 test.beforeEach(async ({ fake }) => {
   seedStudent(fake);
   // Come la funzione vera: accetta email o nome utente e restituisce la sessione.
+  // Con credenziali sbagliate risponde 200 con { error } (non 401).
   fake.fn("student-login", (body, { fake }) => {
     const { identifier, password } = body as { identifier: string; password: string };
     const user = fake.users.find((u) => (u.username === identifier || u.email === identifier) && u.password === password);
     return user
       ? { body: { session: fake.createSession(user) } }
-      : { status: 401, body: { error: "Nome utente o password non corretti" } };
+      : { body: { error: "Nome utente o password non corretti" } };
   });
   fake.fn("check-login-attempts", () => ({ body: { blocked: false } }));
 });

@@ -60,7 +60,7 @@ export function StreakFreezeCard({ studentId }: Props) {
   const countByType = (t: "homework" | "attendance") =>
     freezes.filter((f) => f.freeze_type === t).length;
 
-  const useFreeze = async (t: "homework" | "attendance") => {
+  const applyFreeze = async (t: "homework" | "attendance") => {
     setSubmitting(t);
     const { data, error } = await supabase.rpc("use_my_streak_freeze", {
       _student_id: studentId,
@@ -143,7 +143,7 @@ export function StreakFreezeCard({ studentId }: Props) {
                 Annulla
               </Button>
               <Button
-                onClick={() => useFreeze(t)}
+                onClick={() => applyFreeze(t)}
                 disabled={submitting !== null}
                 className="bg-tech-cyan hover:bg-tech-cyan/90"
               >

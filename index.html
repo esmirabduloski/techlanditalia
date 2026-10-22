@@ -55,8 +55,14 @@
     <!-- Google Tag Manager. Caricato DOPO iubenda: così il blocco dei tracker e
          Google Consent Mode sono già registrati quando il container viene scaricato.
          Il container di per sé non imposta cookie: sono i tag al suo interno a farlo,
-         e vanno legati al consenso (Consent Mode). -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+         e vanno legati al consenso (Consent Mode).
+         Come Clarity, SOLO pagine pubbliche (stessa lista di src/lib/privateAreas.ts):
+         i suoi tag GA4 e Google Ads mandano l'indirizzo della pagina. Per chi arriva
+         in un'area privata navigando dal sito, serve l'eccezione "Page Path" nei
+         trigger del container. -->
+    <script>(function(w,d,s,l,i){
+    if (/^\/(admin|area-riservata|insegnante|auth|\.lovable)(\/|$)/.test(d.location.pathname)) return;
+    w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
     j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);

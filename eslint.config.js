@@ -29,6 +29,7 @@ export default tseslint.config(
     rules: { "react-hooks/rules-of-hooks": "off" },
   },
   {
-    ignores: ["playwright-report", "test-results"],
+    // .claude: worktree di Claude Code (copie del repo); mcp/index.ts lo rigenera la build
+    ignores: ["playwright-report", "test-results", ".claude", "supabase/functions/mcp/index.ts"],
   },
 );

@@ -512,6 +512,13 @@
       "when": 1792528932074,
       "tag": "0072_google_calendar_sync_expected_age",
       "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1792662310511,
+      "tag": "0073_page_views_own_select",
+      "breakpoints": true
     }
   ]
 }

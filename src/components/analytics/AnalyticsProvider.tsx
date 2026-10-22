@@ -72,16 +72,20 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
       ...utmParams
     };
 
+    // L'id nasce qui e l'insert non chiede la riga indietro: page_views la leggono
+    // solo gli admin, e con .select() l'RLS rifiutava (401) le visite di tutti gli altri.
+    // Le uscite (UPDATE) le può scrivere solo l'utente loggato proprietario della riga.
+    const id = crypto.randomUUID?.();
+    currentPageViewId.current = null;
+
     try {
       const supabase = await getSupabase();
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('page_views')
-        .insert(pageViewData)
-        .select('id')
-        .single();
+        .insert({ ...pageViewData, id });
 
-      if (!error && data) {
-        currentPageViewId.current = data.id;
+      if (!error && id && user?.id) {
+        currentPageViewId.current = id;
       }
     } catch {
       // Silent fail - analytics should never break UX or pollute console
@@ -92,9 +96,12 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
 
   // Update page view with exit data
   const updatePageView = useCallback(async () => {
-    if (!currentPageViewId.current) return;
+    // Letti subito: dopo l'await la pagina successiva li ha già sostituiti
+    const pageViewId = currentPageViewId.current;
+    if (!pageViewId) return;
 
     const timeOnPage = Math.floor((Date.now() - pageEnteredAt.current) / 1000);
+    const scrollDepth = maxScrollDepth.current;
 
     try {
       const supabase = await getSupabase();
@@ -102,10 +109,10 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
         .from('page_views')
         .update({
           time_on_page: timeOnPage,
-          scroll_depth: maxScrollDepth.current,
+          scroll_depth: scrollDepth,
           exited_at: new Date().toISOString()
         })
-        .eq('id', currentPageViewId.current);
+        .eq('id', pageViewId);
     } catch {
       // Silent fail
     }
@@ -153,29 +160,9 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
     };
   }, [handleScroll]);
 
-  // Track exit on page unload
+  // Uscita dalla SPA: chiude l'ultima pagina vista
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (currentPageViewId.current) {
-        // Use sendBeacon for reliable tracking on page exit
-        const timeOnPage = Math.floor((Date.now() - pageEnteredAt.current) / 1000);
-        
-        // Fallback: try to update via supabase (may not complete)
-        navigator.sendBeacon?.(
-          `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/page_views?id=eq.${currentPageViewId.current}`,
-          JSON.stringify({
-            time_on_page: timeOnPage,
-            scroll_depth: maxScrollDepth.current,
-            exited_at: new Date().toISOString()
-          })
-        );
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
       updatePageView();
     };
   }, [updatePageView]);

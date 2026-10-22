@@ -2,10 +2,12 @@
  * Aree private del sito: studenti minorenni, genitori, insegnanti, admin e login.
  *
  * Qui non deve girare nessuno strumento di analisi o pubblicità (Clarity,
- * Google Analytics, Google Ads): i termini di Clarity e le regole di Google sulla
- * pubblicità personalizzata escludono i minori, e queste pagine contengono dati
- * personali. Lista unica usata da clarity.ts, googleAnalytics.ts e ScrollToTop
- * (index.html ne ha una copia nello snippet inline di Clarity).
+ * Google Analytics, Google Ads, Google Tag Manager): i termini di Clarity e le
+ * regole di Google sulla pubblicità personalizzata escludono i minori, e queste
+ * pagine contengono dati personali. Lista unica usata da clarity.ts,
+ * googleAnalytics.ts e ScrollToTop (index.html ne ha una copia negli snippet
+ * inline di GTM e Clarity; nel container GTM la stessa regex è l'eccezione
+ * "Page Path" dei trigger, che copre la navigazione SPA).
  *
  * NB: non è la lista del prerender (prerender.ts): lì ci sono anche le landing
  * /lp, che sono pagine pubbliche delle campagne e vanno misurate.

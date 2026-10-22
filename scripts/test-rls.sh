@@ -223,3 +223,11 @@ if ! out=$(run_sql supabase_admin supabase/tests/rls/20_trash.sql 2>&1); then
   exit 1
 fi
 echo "$out" | sed -n 's/.*NOTICE: *//p'
+
+echo "▶ Visite del sito"
+if ! out=$(run_sql supabase_admin supabase/tests/rls/21_page_views.sql 2>&1); then
+  echo "$out" | sed -nE 's/.*(NOTICE|WARNING|ERROR): *//p'
+  echo "✗ Test delle visite FALLITI"
+  exit 1
+fi
+echo "$out" | sed -n 's/.*NOTICE: *//p'

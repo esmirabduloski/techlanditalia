@@ -71,7 +71,8 @@ serve(async (req) => {
       }
       const sent = await sendSecurityEmail("security_mfa_code", "mfa-recovery", user.email, mfaCodeEmail(code), user.id);
       if (!sent) return json({ error: "Impossibile inviare l'email" }, 500);
-      return json({ success: true });
+      // la lunghezza dipende da mailer_otp_length in Supabase Auth (qui 8, non 6)
+      return json({ success: true, codeLength: code.length });
     }
 
     // submit

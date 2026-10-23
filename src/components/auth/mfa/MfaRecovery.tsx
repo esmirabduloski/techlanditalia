@@ -9,7 +9,13 @@ import { MfaCodeInput } from './MfaCodeInput';
 
 type Step = 'intro' | 'code' | 'sent';
 
-async function invokeRecovery(body: Record<string, unknown>): Promise<{ error?: string }> {
+/**
+ * Lunghezza dei codici email impostata in Supabase Auth (mailer_otp_length)
+ * su Lovable Cloud: la usa solo se mfa-recovery non la indica nella risposta.
+ */
+const EMAIL_CODE_FALLBACK_LENGTH = 8;
+
+async function invokeRecovery(body: Record<string, unknown>): Promise<{ error?: string; codeLength?: number }> {
   const { data, error } = await supabase.functions.invoke('mfa-recovery', { body });
   if (!error) return data ?? {};
   try {
@@ -27,6 +33,7 @@ export function MfaRecovery({ email, onBack }: { email: string; onBack: () => vo
   const { toast } = useToast();
   const [step, setStep] = useState<Step>('intro');
   const [code, setCode] = useState('');
+  const [codeLength, setCodeLength] = useState(EMAIL_CODE_FALLBACK_LENGTH);
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -38,12 +45,14 @@ export function MfaRecovery({ email, onBack }: { email: string; onBack: () => vo
       toast({ variant: 'destructive', title: 'Errore', description: res.error });
       return;
     }
+    setCodeLength(res.codeLength ?? EMAIL_CODE_FALLBACK_LENGTH);
+    setCode('');
     setStep('code');
     toast({ title: 'Codice inviato', description: `Controlla la casella ${email}` });
   };
 
   const submit = async (value = code) => {
-    if (value.length !== 6) return;
+    if (value.length !== codeLength) return;
     setBusy(true);
     const { error } = await supabase.auth.verifyOtp({ email, token: value, type: 'email' });
     if (error) {
@@ -78,9 +87,9 @@ export function MfaRecovery({ email, onBack }: { email: string; onBack: () => vo
     return (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Inserisci il codice a 6 cifre che ti abbiamo inviato a <strong>{email}</strong>.
+          Inserisci il codice a {codeLength} cifre che ti abbiamo inviato a <strong>{email}</strong>.
         </p>
-        <MfaCodeInput value={code} onChange={setCode} disabled={busy} />
+        <MfaCodeInput value={code} onChange={setCode} disabled={busy} length={codeLength} />
         <div className="space-y-2">
           <Label htmlFor="mfa-note">Messaggio per l&apos;amministratore (facoltativo)</Label>
           <Textarea
@@ -93,7 +102,7 @@ export function MfaRecovery({ email, onBack }: { email: string; onBack: () => vo
           />
         </div>
         <div className="flex flex-wrap justify-center gap-2">
-          <Button onClick={() => submit()} disabled={busy || code.length !== 6}>
+          <Button onClick={() => submit()} disabled={busy || code.length !== codeLength}>
             {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Invia richiesta
           </Button>

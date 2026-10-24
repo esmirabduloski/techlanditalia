@@ -9,7 +9,7 @@ import { useEffectiveUserId } from "@/hooks/useEffectiveUserId";
 import { Card, CardContent } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Users, CalendarDays, ClipboardList, CalendarCheck, CreditCard, MessageCircle, Trophy, Award, Map as MapIcon } from "lucide-react";
+import { Loader2, Users, CalendarDays, ClipboardList, CalendarCheck, CreditCard, MessageCircle, Trophy, Award, History, Map as MapIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AvatarDisplay } from "@/components/gamification/AvatarSelector";
 import { getLevelFromPoints } from "@/components/gamification/LevelBadge";
@@ -22,6 +22,7 @@ import { ChildAttendanceHistory } from "@/components/dashboard/ChildAttendanceHi
 import { ParentPaymentHistory } from "@/components/dashboard/ParentPaymentHistory";
 import { ChildSummaryCard, type ChildSectionId } from "@/components/dashboard/ChildSummaryCard";
 import { ChildPasswordDialog } from "@/components/dashboard/ChildPasswordDialog";
+import { ChildTimeline, TimelineHint } from "@/components/dashboard/ChildTimeline";
 import { CertificateCard } from "@/components/certificates/CertificateCard";
 import { SkillMapView } from "@/components/skills/SkillMap";
 import { useStudentStreaks } from "@/hooks/useStudentStreaks";
@@ -50,6 +51,7 @@ interface Child {
   username: string | null;
   avatar_id: number;
   total_points: number;
+  created_at?: string | null;
 }
 
 interface ChildCourse {
@@ -71,7 +73,7 @@ export function ParentChildrenSection() {
       try {
         const { data } = await supabase
           .from("profiles")
-          .select("id, full_name, email, username, avatar_id, total_points")
+          .select("id, full_name, email, username, avatar_id, total_points, created_at")
           .eq("parent_id", effectiveUserId);
         setChildren(data || []);
         if (data?.length) {
@@ -224,7 +226,7 @@ function ChildDashboard({ child, canManagePassword }: { child: Child; canManageP
     const available =
       id === "certificazioni" ? !!certificates?.length
       : id === "competenze" ? skillEntries.length > 0
-      : ["calendario", "compiti", "presenze", "saldo", "commenti", "traguardi"].includes(id);
+      : ["calendario", "compiti", "presenze", "saldo", "commenti", "percorso", "traguardi"].includes(id);
     if (available) {
       openSection(id);
     }
@@ -234,6 +236,17 @@ function ChildDashboard({ child, canManagePassword }: { child: Child; canManageP
   const selectedCourse = courses.find((c) => c.courseId === selectedCourseId);
   const groupIds = selectedCourse?.groupIds;
   const courseIds = selectedCourse ? [selectedCourse.courseId] : undefined;
+  // Sezioni presenti: la linea del tempo porta solo a queste
+  const sections: ChildSectionId[] = [
+    ...(certificates?.length ? ["certificazioni" as const] : []),
+    ...(skillEntries.length > 0 && courses.length > 0 ? ["competenze" as const] : []),
+    ...(courses.length > 0 ? ["traguardi" as const] : []),
+  ];
+  const timeline = (
+    <Section childId={child.id} id="percorso" icon={History} title="Linea del tempo" hint={<TimelineHint child={child} skills={skillEntries} />}>
+      <ChildTimeline child={child} skills={skillEntries} sections={sections} onOpenSection={openSection} />
+    </Section>
+  );
 
   if (coursesLoading) {
     return (
@@ -272,11 +285,13 @@ function ChildDashboard({ child, canManagePassword }: { child: Child; canManageP
             onOpenSection={openSection}
             onNewPassword={canManagePassword ? () => setPasswordOpen(true) : undefined}
           />
-          {certificates && certificates.length > 0 && (
-            <Accordion type="multiple" value={openSections} onValueChange={setOpenSections} className="space-y-3">
+          {/* Corsi finiti: restano attestati e percorso */}
+          <Accordion type="multiple" value={openSections} onValueChange={setOpenSections} className="space-y-3">
+            {certificates && certificates.length > 0 && (
               <CertificatesSection childId={child.id} childName={child.full_name} certificates={certificates} />
-            </Accordion>
-          )}
+            )}
+            {timeline}
+          </Accordion>
           <Card className="border-dashed">
             <CardContent className="py-6 text-center">
               <p className="text-sm text-muted-foreground">Nessun corso attivo per {child.full_name}</p>
@@ -315,6 +330,7 @@ function ChildDashboard({ child, canManagePassword }: { child: Child; canManageP
             {skillEntries.length > 0 && (
               <SkillsSection childId={child.id} childName={child.full_name} entries={skillEntries} />
             )}
+            {timeline}
             <Section childId={child.id} id="traguardi" icon={Trophy} title="Traguardi" hint={`Livello ${getLevelFromPoints(child.total_points).level}`}>
               <Achievements child={child} />
             </Section>

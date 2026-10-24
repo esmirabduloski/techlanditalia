@@ -19,6 +19,7 @@ import {
 } from '@/lib/childProgress';
 import type { CourseCertificate } from '@/lib/certificate';
 import { certificateClient } from '@/lib/certificateClient';
+import { dayKey, type TimelineSources } from '@/lib/childTimeline';
 
 const STALE_TIME = 60_000;
 
@@ -34,6 +35,9 @@ type ScheduleRow = {
 type LessonRow = { id: string; lesson_number: number; title: string | null; course_id: string; course: { title: string; emoji: string } };
 type SubmissionRow = { homework_id: string; submitted_at: string | null; status: string | null; grade: number | null; teacher_feedback: string | null };
 type CommentRow = { id: string; content: string; created_at: string; author: { full_name: string; role: string } | null };
+type TimelineGroupRow = { group_id: string; group: { course: CourseRef | null } | null };
+type TimelineSubmissionRow = { submitted_at: string; feedback_at: string | null; grade: number | null; homework: { title: string } | null };
+type TimelineBadgeRow = { badge_id: string; earned_at: string; badge: { name: string; emoji: string; description: string } | null };
 
 /** Gruppi del figlio: quelli passati dal genitore oppure tutti quelli a cui è iscritto. */
 async function resolveGroupIds(childId: string, groupIds?: string[]): Promise<string[]> {
@@ -415,6 +419,76 @@ export function useChildCertificates(childId: string) {
         .order('issued_on', { ascending: false });
       if (error) throw error;
       return (data ?? []) as CourseCertificate[];
+    },
+  });
+}
+
+// --- Linea del tempo ----------------------------------------------------------
+
+/**
+ * Tutto il percorso del figlio, in tutti i corsi: presenze, compiti, esercizi,
+ * badge e serie. Attestati e competenze arrivano dalle loro query (già in cache).
+ */
+export function useChildTimeline(childId: string) {
+  return useQuery({
+    queryKey: ['child-timeline', childId],
+    enabled: !!childId,
+    staleTime: STALE_TIME,
+    queryFn: async (): Promise<TimelineSources> => {
+      const [groups, attendance, submissions, exercises, badges, streaks] = await Promise.all([
+        supabase.from('group_students').select('group_id, group:group_id ( course:course_id ( id, title, emoji ) )').eq('student_id', childId),
+        supabase.from('group_attendance').select('group_id, lesson_number, marked_at').eq('student_id', childId).eq('status', 'present'),
+        supabase
+          .from('homework_submissions')
+          .select('submitted_at, feedback_at, grade, homework:homework_id ( title )')
+          .eq('student_id', childId)
+          .order('submitted_at', { ascending: true }),
+        // In ordine: anche oltre il limite di righe le prime soglie restano giuste
+        supabase.from('task_progress').select('completed_at').eq('student_id', childId).order('completed_at', { ascending: true }),
+        supabase.from('user_achievements').select('badge_id, earned_at, badge:badge_id ( name, emoji, description )').eq('user_id', childId),
+        supabase.from('streak_bonuses').select('streak_type, milestone, points_awarded, awarded_at').eq('student_id', childId),
+      ]);
+      const failed = [groups, attendance, submissions, exercises, badges, streaks].find((r) => r.error);
+      if (failed?.error) throw new Error(`Errore di caricamento del percorso: ${failed.error.message}`);
+
+      // Data di ogni lezione dal calendario del gruppo; senza calendario vale il giorno del registro
+      const courseByGroup = new Map<string, CourseRef>();
+      ((groups.data || []) as unknown as TimelineGroupRow[]).forEach((gs) => {
+        if (gs.group?.course) courseByGroup.set(gs.group_id, gs.group.course);
+      });
+      const lessonDates = new Map<string, string>();
+      if (courseByGroup.size > 0) {
+        const { data: schedule } = await supabase
+          .from('group_lesson_schedule')
+          .select('group_id, lesson_number, lesson_date')
+          .in('group_id', [...courseByGroup.keys()]);
+        schedule?.forEach((s) => lessonDates.set(`${s.group_id}-${s.lesson_number}`, s.lesson_date));
+      }
+
+      return {
+        attendance: (attendance.data || []).flatMap((a) => {
+          const date = lessonDates.get(`${a.group_id}-${a.lesson_number}`) ?? dayKey(a.marked_at);
+          if (!date) return [];
+          const course = courseByGroup.get(a.group_id);
+          return [{ date, courseId: course?.id ?? null, courseTitle: course?.title ?? null, courseEmoji: course?.emoji ?? null }];
+        }),
+        submissions: ((submissions.data || []) as unknown as TimelineSubmissionRow[]).map((s) => ({
+          submittedAt: s.submitted_at,
+          feedbackAt: s.feedback_at,
+          grade: s.grade,
+          title: s.homework?.title ?? null,
+        })),
+        exercises: (exercises.data || []).map((t) => t.completed_at),
+        badges: ((badges.data || []) as unknown as TimelineBadgeRow[]).flatMap((b) =>
+          b.badge ? [{ badgeId: b.badge_id, earnedAt: b.earned_at, name: b.badge.name, emoji: b.badge.emoji, description: b.badge.description }] : [],
+        ),
+        streakBonuses: (streaks.data || []).map((s) => ({
+          awardedAt: s.awarded_at,
+          type: s.streak_type,
+          milestone: s.milestone,
+          points: s.points_awarded,
+        })),
+      };
     },
   });
 }

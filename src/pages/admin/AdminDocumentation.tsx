@@ -82,6 +82,7 @@ const sections: FeatureSection[] = [
       { name: 'Monitoraggio Figli', description: 'Vista presenze, compiti consegnati, voti e calendario lezioni per ogni figlio.' },
       { name: 'Badge Figli', description: 'Visualizzazione badge e traguardi raggiunti dai figli.' },
       { name: 'Competenze Figli', description: 'Sezione Competenze con la mappa DigComp del figlio in tutti i suoi corsi e il «Perché?» di ogni livello.', route: '/area-riservata#competenze' },
+      { name: 'Linea del tempo', description: 'Tutti i traguardi del figlio dal primo giorno, in tutti i corsi: prime lezioni, soglie di lezioni, compiti ed esercizi, badge, serie, competenze confermate e attestati, divisi per mese.', route: '/area-riservata#percorso' },
       { name: 'Storico Pagamenti', description: 'Elenco pagamenti effettuati tramite Stripe con dettagli importo e data.' },
       { name: 'Chat Supporto', description: 'Chat integrata con AI per domande sulla piattaforma e supporto tecnico.' },
       { name: 'Feedback Insegnanti', description: 'Sezione con commenti e valutazioni degli insegnanti sui figli.' },

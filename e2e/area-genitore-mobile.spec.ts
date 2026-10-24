@@ -164,3 +164,49 @@ test("il link #calendario apre il calendario delle lezioni", async ({ page }) =>
   await expect(page.getByText("Lezione 7")).toBeVisible();
   await expect(page.getByText("🔒 Il materiale si apre quando è la prossima lezione").first()).toBeVisible();
 });
+
+test("la linea del tempo racconta i traguardi dal primo giorno", async ({ page, fake }) => {
+  // Profilo creato il 1° settembre; il badge e il compito con i loro dettagli annidati
+  fake.table("profiles").find((p) => p.id === student.id)!.created_at = "2026-09-01T08:00:00Z";
+  fake.table("user_achievements")[0].badge = { name: "Prima lezione", emoji: "🎉", description: "Hai seguito la tua prima lezione" };
+  fake.table("homework_submissions")[0].homework = { title: "Compito 1" };
+  // 50 esercizi, due al giorno dal 12 settembre: soglie 1, 10, 25 e 50
+  fake.seed("task_progress", Array.from({ length: 50 }, (_, i) => ({
+    student_id: student.id,
+    completed_at: new Date(Date.parse("2026-09-12T13:00:00Z") + i * 12 * 3600_000).toISOString(),
+  })));
+
+  await page.goto("/area-riservata#percorso");
+
+  const trigger = page.getByRole("button", { name: /^Linea del tempo/ });
+  await expect(trigger).toHaveAttribute("aria-expanded", "true");
+  await expect(trigger).toContainText("7 traguardi");
+  const timeline = page.getByTestId("parent-timeline");
+  await expect(timeline.getByText("Luca è su TechLand dal 1 settembre 2026.")).toBeVisible();
+  await expect(timeline.getByRole("list", { name: "In tutto" }).getByRole("listitem")).toHaveText([
+    "📚 3 lezioni", "📝 2 compiti", "💻 50 esercizi", "🏅 1 badge",
+  ]);
+
+  // Dal più recente, per mese; il primo giorno chiude l'elenco anche quando è accorciato
+  await expect(timeline.getByRole("heading", { level: 4 })).toHaveText(["ottobre 2026", "settembre 2026"]);
+  await expect(timeline.getByText("50 esercizi risolti")).toBeVisible();
+  await expect(timeline.getByText("Primo compito consegnato")).toBeVisible();
+  await expect(timeline.getByText("11 set · Compito 1")).toBeVisible();
+  await expect(timeline.getByText("Prima lezione di Python Base")).toBeHidden();
+  await expect(timeline.getByText("Primo giorno su TechLand")).toBeVisible();
+  await expect(timeline.getByText("1 settembre 2026 · Inizia il percorso di Luca")).toBeVisible();
+
+  const showAll = timeline.getByRole("button", { name: "Mostra tutto (1 traguardo in più)" });
+  // Il testo del bottone non deve essere tagliato
+  expect(await showAll.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+  await showAll.click();
+  await expect(timeline.getByText("Prima lezione di Python Base")).toBeVisible();
+  await expect(timeline.getByText("11 set · La prima lezione in assoluto su TechLand")).toBeVisible();
+
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth);
+  expect(overflow).toBe(390);
+
+  // Il badge porta alla sezione Traguardi
+  await timeline.getByRole("button", { name: /Badge «Prima lezione»/ }).click();
+  await expect(page.getByRole("button", { name: /^Traguardi/ })).toHaveAttribute("aria-expanded", "true");
+});

@@ -247,6 +247,9 @@ export default function Dashboard() {
           isVisible={showCelebration}
           onClose={hideCelebration}
           canShare={canShareBadges}
+          avatarId={effectiveIsParent ? undefined : profile.avatar_id}
+          level={celebration.level}
+          previousLevel={celebration.previousLevel}
         />
       )}
 
@@ -298,6 +301,7 @@ export default function Dashboard() {
                   avatarId={profile.avatar_id}
                   level={level.level}
                   size="lg"
+                  live
                 />
                 <div className="min-w-0">
                   <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground break-words">

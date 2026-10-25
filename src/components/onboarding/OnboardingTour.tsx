@@ -77,7 +77,7 @@ const studentSteps: OnboardingStep[] = [
     id: 'profile',
     icon: <Settings className="w-12 h-12 text-muted-foreground" />,
     title: 'Personalizza il Profilo',
-    description: 'Vai nel tuo Profilo per scegliere il tuo avatar. Il bordo dell\'avatar diventa più bello man mano che sali di livello!',
+    description: 'Vai nel tuo Profilo per scegliere il tuo avatar. Il tuo avatar cresce con te: a ogni livello si evolve in una nuova forma!',
   },
   {
     id: 'complete',

@@ -16,6 +16,7 @@
     "verify:prerender": "node scripts/verify-prerender.mjs",
     "indexnow": "node scripts/indexnow-submit.mjs",
     "sentry:alerts": "node scripts/sentry-alerts.mjs",
+    "avatars:render": "node scripts/render-avatars.mjs",
     "test:e2e": "playwright test",
     "test:compilatori": "playwright test e2e/compilatori && npm run test:pgzero",
     "test:pgzero": "${PYTHON:-python3} e2e/compilatori/pgzero/esegui.py"
@@ -86,6 +87,7 @@
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
+    "three": "^0.186.1",
     "vaul": "^0.9.9",
     "write-excel-file": "^4.1.1",
     "zod": "^3.25.76"
@@ -99,6 +101,7 @@
     "@types/node": "^22.16.5",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
+    "@types/three": "^0.186.0",
     "@vitejs/plugin-react-swc": "^3.11.0",
     "autoprefixer": "^10.4.21",
     "drizzle-kit": "^0.31.11",

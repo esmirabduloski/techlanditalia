@@ -159,7 +159,10 @@ export default defineConfig(({ mode, isSsrBuild }) => ({
     sourcemap: true,
     // I loghi dei corsi (src/assets/logos) sono piccoli ma ripetuti molte volte
     // nell'HTML prerenderato: meglio un file cacheable che un data URI duplicato.
-    assetsInlineLimit: (filePath) => (filePath.includes("/assets/logos/") ? false : undefined),
+    // Gli avatar (src/assets/avatars) sono 200 e importati tutti insieme: inline
+    // finirebbero nel JS anche quelli che la pagina non mostra.
+    assetsInlineLimit: (filePath) =>
+      filePath.includes("/assets/logos/") || filePath.includes("/assets/avatars/") ? false : undefined,
     rollupOptions: {
       output: isSsrBuild ? {} : {
         manualChunks: {

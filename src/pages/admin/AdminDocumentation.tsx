@@ -57,7 +57,7 @@ const sections: FeatureSection[] = [
     color: 'bg-green-500/10 text-green-600 dark:text-green-400',
     features: [
       { name: 'Dashboard Studente', description: 'Panoramica con corsi iscritti, progressi, punti, badge, streak e compiti in scadenza.', route: '/area-riservata' },
-      { name: 'Profilo', description: 'Gestione dati personali, selezione avatar e visualizzazione livello gamification.', route: '/area-riservata/profilo' },
+      { name: 'Profilo', description: 'Gestione dati personali, scelta dell\'avatar 3D (10 personaggi, una forma per ogni livello) con la sua evoluzione e visualizzazione livello gamification.', route: '/area-riservata/profilo' },
       { name: 'Progresso Corso', description: 'Vista dettagliata delle lezioni completate, task e compiti per ogni corso.', route: '/area-riservata/corso/:courseId' },
       { name: 'Vista Lezione', description: 'Contenuto lezione con slides Google embedded, video e materiale didattico.', route: '/area-riservata/corso/:courseId/lezione/:n' },
       { name: 'Editor Codice Python', description: 'Compilatore Python integrato con supporto Turtle graphics e PyGame Zero.', route: '/area-riservata/.../task/:n' },

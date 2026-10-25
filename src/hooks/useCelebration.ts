@@ -7,6 +7,9 @@ interface CelebrationData {
   title: string;
   subtitle?: string;
   emoji?: string;
+  /** Solo level-up: per l'evoluzione dell'avatar */
+  level?: number;
+  previousLevel?: number;
 }
 
 interface Badge {
@@ -123,6 +126,8 @@ export function useCelebration() {
             type: 'level-up',
             title: `Livello ${currentLevel.level}`,
             subtitle: `Sei diventato ${currentLevel.name}! ${currentLevel.badge_emoji}`,
+            level: currentLevel.level,
+            previousLevel: previousLevel.current,
           });
         }
         

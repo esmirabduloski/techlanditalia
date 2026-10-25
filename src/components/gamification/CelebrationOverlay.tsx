@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Trophy, Star, Sparkles } from 'lucide-react';
 import { SocialShareButton } from './SocialShareButton';
+import { AvatarLevelUp } from './AvatarLevelUp';
+import { getAvatar, stageName } from '@/lib/avatars/catalog';
 
 interface Confetti {
   id: number;
@@ -20,6 +22,10 @@ interface CelebrationOverlayProps {
   onClose: () => void;
   /** Studente con 14 anni certi (canSelfConsent): il badge lo può condividere da solo */
   canShare?: boolean;
+  /** Nuovo livello: l'avatar dello studente si evolve da previousLevel a level */
+  avatarId?: number;
+  level?: number;
+  previousLevel?: number;
 }
 
 const colors = [
@@ -39,12 +45,17 @@ export function CelebrationOverlay({
   isVisible,
   onClose,
   canShare = false,
+  avatarId,
+  level,
+  previousLevel,
 }: CelebrationOverlayProps) {
   const [confetti, setConfetti] = useState<Confetti[]>([]);
   // Chi tocca Condividi ha bisogno di tempo: la chiusura automatica si ferma
   const [held, setHeld] = useState(false);
   const prefersReducedMotion = useReducedMotion();
   const share = canShare && type === 'badge';
+  const evolution = type === 'level-up' && avatarId !== undefined && level !== undefined ? { avatarId, level } : null;
+  const hasEvolution = evolution !== null;
 
   const generateConfetti = useCallback(() => {
     if (prefersReducedMotion) {
@@ -82,9 +93,10 @@ export function CelebrationOverlay({
 
   useEffect(() => {
     if (!isVisible || held) return;
-    const timer = setTimeout(onClose, 4000);
+    // l'evoluzione dell'avatar ha bisogno di un paio di secondi in più
+    const timer = setTimeout(onClose, hasEvolution ? 6000 : 4000);
     return () => clearTimeout(timer);
-  }, [isVisible, held, onClose]);
+  }, [isVisible, held, onClose, hasEvolution]);
 
   return (
     <AnimatePresence>
@@ -201,7 +213,9 @@ export function CelebrationOverlay({
                     ease: 'easeInOut'
                   }}
                 >
-                  {type === 'level-up' ? (
+                  {evolution ? (
+                    <AvatarLevelUp avatarId={evolution.avatarId} from={previousLevel ?? evolution.level - 1} to={evolution.level} reducedMotion={prefersReducedMotion} />
+                  ) : type === 'level-up' ? (
                     <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
                       <Trophy className="w-12 h-12 text-primary" />
                     </div>
@@ -228,6 +242,11 @@ export function CelebrationOverlay({
                   {subtitle && (
                     <p className="text-muted-foreground">
                       {subtitle}
+                    </p>
+                  )}
+                  {evolution && (
+                    <p className="mt-2 text-sm text-foreground">
+                      Il tuo {getAvatar(evolution.avatarId).name} si è evoluto: <span className="font-semibold text-primary">{stageName(evolution.avatarId, evolution.level)}</span>
                     </p>
                   )}
                 </motion.div>

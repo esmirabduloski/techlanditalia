@@ -6,6 +6,7 @@ import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AvatarSelector, AvatarDisplay } from '@/components/gamification/AvatarSelector';
+import { AvatarEvolution } from '@/components/gamification/AvatarEvolution';
 import { LevelBadge, PointsDisplay, getLevelFromPoints, LEVELS } from '@/components/gamification/LevelBadge';
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { DeleteAccountCard } from '@/components/account/DeleteAccountCard';
@@ -15,6 +16,7 @@ import { StudentAiConsentCard } from '@/components/account/StudentAiConsentCard'
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ArrowLeft, Save, Trophy, RotateCcw, ShieldCheck, ChevronRight, UserRound } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { stageName } from '@/lib/avatars/catalog';
 
 export default function Profile() {
   const { user, isLoading: authLoading } = useAuth();
@@ -152,23 +154,28 @@ export default function Profile() {
                   Avatar e Livello
                 </CardTitle>
                 <CardDescription>
-                  Scegli il tuo avatar! Il bordo diventa più bello con i livelli.
+                  Il tuo avatar cresce con te: ogni livello lo fa evolvere. Trascinalo per girarlo!
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Current Avatar Preview */}
                 <div className="flex flex-col items-center gap-4 p-6 bg-muted/30 rounded-xl">
-                  <AvatarDisplay 
-                    avatarId={selectedAvatar} 
-                    level={level.level} 
+                  <AvatarDisplay
+                    avatarId={selectedAvatar}
+                    level={level.level}
                     size="xl"
                     showLevel
+                    live
+                    interactive
                   />
-                  <div className="text-center">
+                  <div className="text-center space-y-1">
                     <p className="font-semibold text-foreground">{profile.full_name}</p>
+                    <p className="text-sm text-muted-foreground">{stageName(selectedAvatar, level.level)}</p>
                     <LevelBadge points={profile.total_points} size="sm" />
                   </div>
                 </div>
+
+                <AvatarEvolution avatarId={selectedAvatar} points={profile.total_points} />
 
                 {/* Avatar Selector */}
                 <div>

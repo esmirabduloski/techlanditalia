@@ -12,7 +12,7 @@ import { SEOBreadcrumb } from "@/components/seo/SEOBreadcrumb";
  * pagamenti Stripe, statistiche di prima parte, log di sicurezza e registro email. Se aggiungi un
  * fornitore o un nuovo trattamento, aggiorna anche questa pagina e la data.
  */
-const LAST_UPDATE = "19 ottobre 2026";
+const LAST_UPDATE = "25 ottobre 2026";
 const PRIVACY_EMAIL = "info@techlanditalia.it";
 
 const H2 = ({ children }: { children: React.ReactNode }) => (
@@ -326,6 +326,8 @@ export default function Privacy() {
                     <strong>Cancellazione ("diritto all&apos;oblio"):</strong> ottenere la cancellazione dei dati tuoi e di tuo
                     figlio, inclusa la chiusura degli account, salvo i dati che dobbiamo conservare per legge (es. fatture).
                     I genitori possono farlo in autonomia dalla propria area riservata (Profilo → Elimina account).
+                    L&apos;accesso viene bloccato subito; per 30 giorni conserviamo una copia dei dati, solo per poter
+                    ripristinare un account eliminato per errore, poi la cancellazione è definitiva.
                   </li>
                   <li>
                     <strong>Limitazione e opposizione:</strong> limitare il trattamento o opporti, in particolare alle

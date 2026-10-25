@@ -1,4 +1,5 @@
-// Cestino delle eliminazioni fatte dagli admin (drizzle/migrations/0069_trash.sql).
+// Cestino delle eliminazioni fatte dagli admin (drizzle/migrations/0069_trash.sql)
+// e degli account eliminati (0076_account_trash.sql, radice "profiles").
 // Ogni batch è quello che è sparito con un click: la prima riga cancellata
 // (root) e i conteggi per tabella di tutto quello che è sparito con lei.
 
@@ -24,6 +25,7 @@ interface TableLabel {
 }
 
 const TABLE_LABELS: Record<string, TableLabel> = {
+  profiles: { one: 'Account', many: 'account' },
   courses: { one: 'Corso', many: 'corsi' },
   lessons: { one: 'Lezione', many: 'lezioni' },
   lesson_tasks: { one: 'Task', many: 'task' },
@@ -66,7 +68,34 @@ const TABLE_LABELS: Record<string, TableLabel> = {
   school_closures: { one: 'Chiusura', many: 'chiusure' },
   teacher_links: { one: 'Link insegnante', many: 'link insegnanti' },
   push_templates: { one: 'Modello di notifica', many: 'modelli di notifica' },
+  // Dati che spariscono con un account
+  user_achievements: { one: 'Badge ottenuto', many: 'badge ottenuti' },
+  email_log: { one: 'Email inviata', many: 'email inviate' },
+  satisfaction_surveys: { one: 'Sondaggio di soddisfazione', many: 'sondaggi di soddisfazione' },
+  student_streaks: { one: 'Serie di giorni', many: 'serie di giorni' },
+  streak_bonuses: { one: 'Bonus della serie', many: 'bonus delle serie' },
+  streak_freezes: { one: 'Pausa della serie', many: 'pause delle serie' },
+  student_password_settings: { one: 'Impostazione della password', many: 'impostazioni della password' },
+  student_skill_assessments: { one: 'Valutazione delle competenze', many: 'valutazioni delle competenze' },
+  subscription_pauses: { one: 'Pausa dell’abbonamento', many: 'pause dell’abbonamento' },
 };
+
+const ROLE_LABELS: Record<string, string> = {
+  parent: 'genitore',
+  student: 'studente',
+  teacher: 'insegnante',
+  admin: 'admin',
+};
+
+/** Batch di un account eliminato (0076): la radice è il suo profilo. */
+export function isAccountBatch(batch: Pick<TrashBatch, 'root_table'>): boolean {
+  return batch.root_table === 'profiles';
+}
+
+/** L'account si è eliminato da solo (il genitore da Profilo), non un admin. */
+export function isSelfDeleted(batch: Pick<TrashBatch, 'root_table' | 'root_data' | 'deleted_by'>): boolean {
+  return isAccountBatch(batch) && !!batch.deleted_by && batch.root_data.id === batch.deleted_by;
+}
 
 export function tableLabel(table: string, count = 1): string {
   const label = TABLE_LABELS[table];
@@ -86,8 +115,17 @@ export function rowTitle(row: Record<string, unknown> | null | undefined): strin
   return null;
 }
 
-/** "Corso «Python base»", oppure "30 presenze" se il click ne ha cancellate tante. */
+/**
+ * "Corso «Python base»", oppure "30 presenze" se il click ne ha cancellate tante.
+ * Un account: "Account genitore «Mario Rossi» e 2 account studente".
+ */
 export function batchTitle(batch: Pick<TrashBatch, 'root_table' | 'root_data' | 'counts'>): string {
+  if (isAccountBatch(batch)) {
+    const role = ROLE_LABELS[String(batch.root_data.role ?? '')];
+    const name = rowTitle(batch.root_data);
+    const children = (batch.counts.profiles ?? 1) - 1;
+    return `Account${role ? ` ${role}` : ''}${name ? ` «${name}»` : ''}${children > 0 ? ` e ${children} account studente` : ''}`;
+  }
   const rootCount = batch.counts[batch.root_table] ?? 1;
   if (rootCount > 1) return `${rootCount} ${tableLabel(batch.root_table, rootCount)}`;
   const title = rowTitle(batch.root_data);
@@ -141,7 +179,7 @@ export function restoreErrorMessage(error: RpcError): string {
     return `${what} esiste già con gli stessi dati (per esempio lo stesso slug o la stessa email). Rinomina o elimina quello nuovo e riprova.`;
   }
   if (message.startsWith('trash_missing_parent')) {
-    return `${what} dipende da qualcosa che è stato eliminato a parte (per esempio il corso o il gruppo). Ripristina prima quello e poi riprova.`;
+    return `${what} dipende da qualcosa che è stato eliminato a parte (per esempio il corso, il gruppo o l’account). Ripristina prima quello e poi riprova.`;
   }
   if (message.startsWith('trash_not_found')) {
     return 'Non è più nel cestino: forse qualcuno l’ha appena ripristinato o eliminato.';

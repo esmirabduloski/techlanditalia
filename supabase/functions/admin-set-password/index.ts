@@ -5,7 +5,7 @@ import { corsHeadersFor } from "../_shared/cors.ts";
 import { rateLimit } from "../_shared/ratelimit.ts";
 import { decodeClaims, mfaRequiredResponse } from "../_shared/mfa.ts";
 import { validateChildPassword } from "../_shared/studentpassword.ts";
-import { removeUserFiles } from "../_shared/userfiles.ts";
+import { ACCOUNT_TRASH_DAYS, trashAccount } from "../_shared/accounttrash.ts";
 
 const BodySchema = z.object({
   userId: z.string().uuid(),
@@ -91,58 +91,26 @@ serve(async (req) => {
         });
       }
 
-      // Get user's profile to check if it's a parent with children
-      const { data: profile } = await supabaseAdmin
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .single();
-
-      // File nello storage (compiti consegnati, compilatore web): con l'account si
-      // cancellano le righe del database, non i file. Un errore non blocca l'eliminazione.
-      const fileErrors: string[] = [];
-      const removeFilesOf = async (id: string) => {
-        const { errors } = await removeUserFiles(supabaseAdmin.storage, id);
-        fileErrors.push(...errors.map((e) => `${id} ${e}`));
-      };
-
-      if (profile?.role === 'parent') {
-        // Get children
-        const { data: children } = await supabaseAdmin
-          .from('profiles')
-          .select('id')
-          .eq('parent_id', userId)
-          .eq('role', 'student');
-
-        // Delete children first
-        if (children && children.length > 0) {
-          for (const child of children) {
-            await removeFilesOf(child.id);
-            const { error: childDeleteError } = await supabaseAdmin.auth.admin.deleteUser(child.id);
-            if (childDeleteError) {
-              console.error(`Error deleting child ${child.id}:`, childDeleteError);
-            }
-          }
-          console.log(`Deleted ${children.length} children of parent ${userId}`);
-        }
-      }
-
-      // Delete the user
-      await removeFilesOf(userId);
-      const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
-      if (fileErrors.length > 0) console.error("File non cancellati:", fileErrors);
-
-      if (deleteError) {
-        console.error("Error deleting user:", deleteError);
-        return new Response(JSON.stringify({ error: "Impossibile eliminare l'utente" }), {
-          status: 500,
+      // Nel Cestino per 30 giorni (migrazione 0076): login bloccato, profilo e
+      // dati collegati (con i figli di un genitore) ripristinabili, file nello
+      // storage lasciati dove sono. Li elimina per sempre purge-deleted-accounts.
+      const trashed = await trashAccount(supabaseAdmin, userId, user.id);
+      if (!trashed.ok) {
+        console.error(`Error trashing user ${userId}:`, trashed.message);
+        const error = trashed.reason === "not_found"
+          ? "Utente non trovato: forse è già nel Cestino"
+          : trashed.reason === "not_ready"
+          ? "Il cestino degli account non è ancora attivo (migrazione 0076 da applicare): nessun dato è stato eliminato"
+          : "Impossibile eliminare l'utente";
+        return new Response(JSON.stringify({ error }), {
+          status: trashed.reason === "not_found" ? 404 : trashed.reason === "not_ready" ? 503 : 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      console.log(`User ${userId} deleted by admin ${user.id}`);
+      console.log(`User ${userId} moved to trash by admin ${user.id} (batch ${trashed.batchId})`);
 
-      return new Response(JSON.stringify({ success: true, fileErrors }), {
+      return new Response(JSON.stringify({ success: true, batchId: trashed.batchId, recoverableDays: ACCOUNT_TRASH_DAYS }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

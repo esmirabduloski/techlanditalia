@@ -29,11 +29,13 @@ import {
   batchTitle,
   batchTypes,
   daysLeft,
+  isAccountBatch,
+  isSelfDeleted,
   restoreErrorMessage,
   tableLabel,
   type TrashBatch,
 } from '@/lib/trash';
-import { fetchTrashBatches, trashClient } from '@/lib/trashClient';
+import { fetchTrashBatches, purgeAccountBatches, trashClient } from '@/lib/trashClient';
 
 const ALL_TYPES = 'all';
 
@@ -93,36 +95,59 @@ export default function AdminTrash() {
       return;
     }
     const others = (data ?? batch.total) - 1;
+    const together = others > 0 ? `Insieme a ${others} element${others === 1 ? 'o collegato' : 'i collegati'}.` : '';
     toast({
       title: `Ripristinato: ${batchTitle(batch)}`,
-      description: others > 0 ? `Insieme a ${others} element${others === 1 ? 'o collegato' : 'i collegati'}.` : undefined,
+      description: isAccountBatch(batch)
+        ? `${together} Può di nuovo accedere con la password di prima.`.trim()
+        : together || undefined,
     });
     fetchData();
   };
 
+  /** File rimasti nello storage dopo l'eliminazione di account (gli admin ricevono anche una push). */
+  const warnFileErrors = (fileErrors: string[]) => {
+    if (fileErrors.length === 0) return;
+    toast({
+      title: 'Alcuni file non sono stati cancellati',
+      description: `${fileErrors.length} cartelle nello storage sono rimaste: ${fileErrors.join('; ')}`,
+      variant: 'destructive',
+    });
+  };
+
   const handlePurge = async (batch: TrashBatch) => {
     setBusyId(batch.batch_id);
-    const { error } = await trashClient.rpc('purge_trash_batch', { _batch: batch.batch_id });
-    setBusyId(null);
-    if (error) {
-      toast({ title: 'Errore', description: error.message, variant: 'destructive' });
-      return;
+    try {
+      if (isAccountBatch(batch)) {
+        warnFileErrors((await purgeAccountBatches([batch.batch_id])).fileErrors);
+      } else {
+        const { error } = await trashClient.rpc('purge_trash_batch', { _batch: batch.batch_id });
+        if (error) throw error;
+      }
+      toast({ title: `Eliminato per sempre: ${batchTitle(batch)}` });
+    } catch (error) {
+      toast({ title: 'Errore', description: (error as { message?: string }).message, variant: 'destructive' });
+    } finally {
+      setBusyId(null);
+      fetchData();
     }
-    toast({ title: `Eliminato per sempre: ${batchTitle(batch)}` });
-    fetchData();
   };
 
   const handleEmpty = async () => {
     setIsEmptying(true);
-    const { error } = await trashClient.rpc('empty_trash');
-    setIsEmptying(false);
-    if (error) {
-      toast({ title: 'Errore', description: error.message, variant: 'destructive' });
-      return;
+    try {
+      const { error } = await trashClient.rpc('empty_trash');
+      if (error) throw error;
+      // empty_trash lascia gli account: login e file li elimina la edge function
+      warnFileErrors((await purgeAccountBatches(batches.filter(isAccountBatch).map((b) => b.batch_id))).fileErrors);
+      toast({ title: 'Cestino svuotato' });
+      setTypeFilter(ALL_TYPES);
+    } catch (error) {
+      toast({ title: 'Errore', description: (error as { message?: string }).message, variant: 'destructive' });
+    } finally {
+      setIsEmptying(false);
+      fetchData();
     }
-    toast({ title: 'Cestino svuotato' });
-    setTypeFilter(ALL_TYPES);
-    fetchData();
   };
 
   if (authLoading || (isAdmin && isLoading)) {
@@ -149,6 +174,11 @@ export default function AdminTrash() {
             Quello che un admin elimina resta qui {TRASH_RETENTION_DAYS} giorni. "Ripristina" lo rimette com'era,
             insieme a tutto quello che è stato eliminato con lui: le lezioni di un corso, le consegne di un compito,
             gli alunni e le presenze di un gruppo. Dopo {TRASH_RETENTION_DAYS} giorni viene cancellato per sempre.
+          </p>
+          <p className="text-muted-foreground mt-2">
+            Anche gli <strong>account</strong> eliminati da Utenti o dal genitore stesso (con i figli) restano qui{' '}
+            {TRASH_RETENTION_DAYS} giorni: nel frattempo non si può accedere, poi il ripristino rimette accesso, password,
+            file e tutti i dati com'erano.
           </p>
         </div>
 
@@ -206,6 +236,7 @@ export default function AdminTrash() {
                         <AlertDialogDescription>
                           Tutte le {batches.length} eliminazioni nel cestino diventano definitive e non si potranno più
                           ripristinare.
+                          {batches.some(isAccountBatch) && ' Gli account vengono eliminati per sempre, con accesso e file.'}
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
@@ -224,6 +255,7 @@ export default function AdminTrash() {
                   const left = daysLeft(batch.deleted_at);
                   const busy = busyId === batch.batch_id;
                   const who = batch.deleted_by ? names[batch.deleted_by] : null;
+                  const by = isSelfDeleted(batch) ? " dall'account stesso" : who ? ` da ${who}` : '';
                   return (
                     <div
                       key={batch.batch_id}
@@ -234,7 +266,7 @@ export default function AdminTrash() {
                         <p className="font-medium break-words">{batchTitle(batch)}</p>
                         <p className="text-xs text-muted-foreground">
                           Eliminato il {format(new Date(batch.deleted_at), "d MMM yyyy 'alle' HH:mm", { locale: it })}
-                          {who ? ` da ${who}` : ''}
+                          {by}
                         </p>
                         {contents && <p className="text-xs text-muted-foreground">Insieme a: {contents}</p>}
                         <Badge variant={left <= 3 ? 'destructive' : 'secondary'} className="font-normal">
@@ -261,6 +293,7 @@ export default function AdminTrash() {
                               <AlertDialogDescription>
                                 {batchTitle(batch)}
                                 {contents ? `, insieme a ${contents},` : ''} non si potrà più ripristinare.
+                                {isAccountBatch(batch) && ' Vengono cancellati anche l’accesso e i file caricati.'}
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
@@ -287,12 +320,13 @@ export default function AdminTrash() {
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground space-y-2">
             <p>
-              <strong>Account utenti</strong> eliminati da Utenti: l'eliminazione porta via anche l'accesso e i file
-              ed è definitiva. Quando un account viene eliminato, dal cestino spariscono anche i suoi dati.
+              <strong>File</strong> come allegati dei task e attestati PDF: si ripristinano le righe del database, non i
+              file già cancellati dallo storage. I file degli account (compiti consegnati, compilatore web) invece restano
+              finché l'account è nel cestino.
             </p>
             <p>
-              <strong>File</strong> come allegati dei task e attestati PDF: si ripristinano le righe del database, non i
-              file già cancellati dallo storage.
+              <strong>Account eliminati per sempre</strong> (dopo {TRASH_RETENTION_DAYS} giorni o con "Elimina per
+              sempre"): con l'account spariscono dal cestino anche le altre righe con i suoi dati.
             </p>
             <p>
               <strong>Pulizie della pagina Privacy</strong> e cancellazioni automatiche: sono definitive per legge.

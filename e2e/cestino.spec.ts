@@ -1,5 +1,5 @@
 import { test, expect } from "./support/test";
-import type { FakeUser } from "./support/fakeSupabase";
+import type { FakeSupabase, FakeUser } from "./support/fakeSupabase";
 
 /**
  * Cestino delle eliminazioni (/admin/cestino, migrazione 0069_trash).
@@ -46,6 +46,39 @@ const term = {
   counts: { glossary_terms: 1 },
   total: 1,
 };
+
+// Account (0076): il genitore si è eliminato da solo con i due figli; uno
+// studente l'ha eliminato l'admin da Utenti.
+const family = {
+  batch_id: "7a000000-0000-4000-8000-000000000004",
+  deleted_at: "2026-10-18T09:00:00Z",
+  deleted_by: "20000000-0000-4000-8000-000000000001",
+  root_table: "profiles",
+  root_data: { id: "20000000-0000-4000-8000-000000000001", full_name: "Mario Rossi", role: "parent" },
+  counts: { profiles: 3, enrollments: 2, homework_submissions: 5 },
+  total: 10,
+};
+
+const studentAccount = {
+  batch_id: "7a000000-0000-4000-8000-000000000005",
+  deleted_at: "2026-10-16T09:00:00Z",
+  deleted_by: admin.id,
+  root_table: "profiles",
+  root_data: { id: "10000000-0000-4000-8000-000000000001", full_name: "Luca Bianchi", role: "student" },
+  counts: { profiles: 1, group_students: 1 },
+  total: 2,
+};
+
+/** purge-deleted-accounts finta: toglie i batch dal riepilogo e li registra. */
+function purgeFunction(fake: FakeSupabase, purged: string[]) {
+  fake.fn("purge-deleted-accounts", (body, { fake }) => {
+    const ids = (body as { batchIds: string[] }).batchIds;
+    purged.push(...ids);
+    const rows = fake.table("trash_batches");
+    for (const id of ids) rows.splice(rows.findIndex((r) => r.batch_id === id), 1);
+    return { body: { ok: true, purged: ids.length, failed: [], fileErrors: [] } };
+  });
+}
 
 test.beforeEach(async ({ page, fake }) => {
   await page.clock.setFixedTime(new Date(NOW));
@@ -116,6 +149,78 @@ test("elenca, ripristina ed elimina per sempre", async ({ page, fake }) => {
   await dialog.getByRole("button", { name: "Elimina per sempre" }).click();
   await expect(items).toHaveCount(1);
   await expect(items.first()).toContainText("Variabile");
+});
+
+test("account: chi li ha eliminati, ripristino ed eliminazione per sempre con accesso e file", async ({ page, fake }) => {
+  fake.seed("trash_batches", [studentAccount, family]);
+  const restored: string[] = [];
+  const purged: string[] = [];
+  let rpcPurges = 0;
+  fake.rpc("restore_trash_batch", (args, { fake }) => {
+    const id = (args as { _batch: string })._batch;
+    restored.push(id);
+    const rows = fake.table("trash_batches");
+    const i = rows.findIndex((r) => r.batch_id === id);
+    const total = rows[i].total;
+    rows.splice(i, 1);
+    return total;
+  });
+  fake.rpc("purge_trash_batch", () => {
+    rpcPurges++;
+    return 0;
+  });
+  purgeFunction(fake, purged);
+
+  await page.goto("/admin/cestino");
+  const items = page.getByTestId("trash-batch");
+  await expect(items).toHaveCount(2);
+
+  const familyItem = items.filter({ hasText: "Account genitore «Mario Rossi» e 2 account studente" });
+  await expect(familyItem).toContainText("Eliminato il 18 ott 2026");
+  await expect(familyItem).toContainText("dall'account stesso");
+  await expect(familyItem).toContainText("Insieme a: 5 consegne e 2 iscrizioni ai corsi");
+
+  const studentItem = items.filter({ hasText: "Account studente «Luca Bianchi»" });
+  await expect(studentItem).toContainText("da Admin Techland");
+
+  // Ripristino: come gli altri batch, con l'accesso di nuovo attivo
+  await familyItem.getByRole("button", { name: "Ripristina" }).click();
+  await expect(page.getByText("Ripristinato: Account genitore «Mario Rossi» e 2 account studente", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("Insieme a 9 elementi collegati. Può di nuovo accedere con la password di prima.", { exact: true }),
+  ).toBeVisible();
+  expect(restored).toEqual([family.batch_id]);
+  await expect(items).toHaveCount(1);
+
+  // Eliminazione per sempre: passa dalla edge function, che cancella anche login e file
+  await studentItem.getByRole("button", { name: "Elimina per sempre" }).click();
+  const dialog = page.getByRole("alertdialog");
+  await expect(dialog).toContainText("Vengono cancellati anche l’accesso e i file caricati.");
+  await dialog.getByRole("button", { name: "Elimina per sempre" }).click();
+  await expect(page.getByText("Eliminato per sempre: Account studente «Luca Bianchi»", { exact: true })).toBeVisible();
+  await expect(page.getByText("Il cestino è vuoto.")).toBeVisible();
+  expect(purged).toEqual([studentAccount.batch_id]);
+  expect(rpcPurges).toBe(0);
+});
+
+test("svuota il cestino con dentro degli account", async ({ page, fake }) => {
+  fake.seed("trash_batches", [course, studentAccount]);
+  const purged: string[] = [];
+  fake.rpc("empty_trash", (_args, { fake }) => {
+    // Come nel database: gli account restano
+    const rows = fake.table("trash_batches");
+    rows.splice(0, rows.length, ...rows.filter((r) => r.root_table === "profiles"));
+    return 1;
+  });
+  purgeFunction(fake, purged);
+
+  await page.goto("/admin/cestino");
+  await page.getByRole("button", { name: "Svuota cestino" }).click();
+  const dialog = page.getByRole("alertdialog");
+  await expect(dialog).toContainText("Gli account vengono eliminati per sempre, con accesso e file.");
+  await dialog.getByRole("button", { name: "Svuota cestino" }).click();
+  await expect(page.getByText("Il cestino è vuoto.")).toBeVisible();
+  expect(purged).toEqual([studentAccount.batch_id]);
 });
 
 test("spiega perché un ripristino non riesce", async ({ page, fake }) => {

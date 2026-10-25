@@ -284,3 +284,6 @@ INSERT INTO public.blog_settings DEFAULT VALUES ON CONFLICT DO NOTHING;
 INSERT INTO public.crm_notion_settings DEFAULT VALUES ON CONFLICT DO NOTHING;
 INSERT INTO public.trash_items (batch_id, table_name, row_data, deleted_by)
 VALUES (gen_random_uuid(), 'glossary_terms', '{"term": "Termine eliminato"}', '00000000-0000-0000-0000-000000000901');
+-- Riga finta per 02_checks.sql (nessun login bloccato davvero): 22_account_trash.sql la toglie
+INSERT INTO public.account_trash (user_id, batch_id, deleted_by)
+VALUES ('00000000-0000-0000-0000-000000000901', gen_random_uuid(), '00000000-0000-0000-0000-000000000901');

@@ -231,3 +231,11 @@ if ! out=$(run_sql supabase_admin supabase/tests/rls/21_page_views.sql 2>&1); th
   exit 1
 fi
 echo "$out" | sed -n 's/.*NOTICE: *//p'
+
+echo "▶ Account eliminati nel cestino"
+if ! out=$(run_sql supabase_admin supabase/tests/rls/22_account_trash.sql 2>&1); then
+  echo "$out" | sed -nE 's/.*(NOTICE|WARNING|ERROR): *//p'
+  echo "✗ Test degli account nel cestino FALLITI"
+  exit 1
+fi
+echo "$out" | sed -n 's/.*NOTICE: *//p'

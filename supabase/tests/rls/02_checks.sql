@@ -65,7 +65,8 @@ INSERT INTO rls_test.admin_only_tables VALUES
   ('monthly_reports',   'report mensile, numeri interni'),
   ('admin_access_logs', 'log degli accessi admin'),
   ('email_log',         'registro delle email inviate: il destinatario non lo vede'),
-  ('trash_items',       'cestino delle eliminazioni: copie di righe di chiunque');
+  ('trash_items',       'cestino delle eliminazioni: copie di righe di chiunque'),
+  ('account_trash',     'account nel cestino: elenco per gli admin');
 
 CREATE FUNCTION rls_test.group_col(_tbl text) RETURNS text LANGUAGE sql STABLE AS $$
   SELECT CASE WHEN _tbl IN (SELECT tbl FROM rls_test.admin_only_tables) THEN NULL

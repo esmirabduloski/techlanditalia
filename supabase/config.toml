@@ -128,3 +128,9 @@ verify_jwt = false
 # (verificato dentro la funzione).
 [functions.google-calendar-sync]
 verify_jwt = false
+
+# Eliminazione definitiva degli account nel Cestino dopo 30 giorni: dal cron con
+# x-cron-token, oppure da un admin ("Elimina per sempre", JWT + 2FA verificati
+# dentro la funzione).
+[functions.purge-deleted-accounts]
+verify_jwt = false

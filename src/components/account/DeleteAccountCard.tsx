@@ -18,11 +18,14 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { TRASH_RETENTION_DAYS } from '@/lib/trash';
 
 /**
  * Cancellazione account self-service (art. 17 GDPR), solo per i genitori.
  * Mostra cosa verrà eliminato (account propri e dei figli) e chiede di digitare
- * ELIMINA prima di chiamare la edge function delete-my-account.
+ * ELIMINA prima di chiamare la edge function delete-my-account. Gli account
+ * restano nel Cestino per TRASH_RETENTION_DAYS giorni (migrazione 0076): chi li
+ * ha eliminati per sbaglio può chiedere di ripristinarli.
  */
 export function DeleteAccountCard() {
   const { user, signOut } = useAuth();
@@ -60,8 +63,18 @@ export function DeleteAccountCard() {
     setDeleting(true);
     try {
       const { data, error } = await supabase.functions.invoke('delete-my-account', { body: { confirm: 'ELIMINA' } });
-      if (error || data?.error) throw new Error(data?.error || error?.message || 'Errore');
-      toast({ title: 'Account eliminato', description: 'I tuoi dati e quelli dei tuoi figli sono stati cancellati. Grazie di essere stato con noi.' });
+      if (error) {
+        // Con le risposte 4xx/5xx il messaggio della funzione è nel corpo
+        const payload = 'context' in error
+          ? await (error.context as Response).clone().json().catch(() => null)
+          : null;
+        throw new Error(payload?.error || error.message || 'Errore');
+      }
+      if (data?.error) throw new Error(data.error);
+      toast({
+        title: 'Account eliminato',
+        description: `Se hai cambiato idea scrivici entro ${TRASH_RETENTION_DAYS} giorni a info@techlanditalia.it: possiamo ancora ripristinarlo.`,
+      });
       setOpen(false);
       await signOut();
       navigate('/', { replace: true });
@@ -97,7 +110,11 @@ export function DeleteAccountCard() {
             </li>
             <li>Le lezioni residue non ancora utilizzate vengono perse: contattaci prima se vuoi chiarimenti.</li>
             <li>Conserviamo solo i documenti contabili obbligatori per legge (fatture), per 10 anni.</li>
-            <li>L&apos;operazione è immediata e non reversibile.</li>
+            <li>
+              L&apos;accesso viene bloccato subito. Per {TRASH_RETENTION_DAYS} giorni possiamo ancora ripristinare tutto
+              com&apos;era, per esempio se hai eliminato l&apos;account per sbaglio: scrivici a info@techlanditalia.it.
+              Poi la cancellazione diventa definitiva.
+            </li>
           </ul>
         </div>
 
@@ -109,10 +126,11 @@ export function DeleteAccountCard() {
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Confermi l&apos;eliminazione definitiva?</AlertDialogTitle>
+              <AlertDialogTitle>Confermi l&apos;eliminazione dell&apos;account?</AlertDialogTitle>
               <AlertDialogDescription>
-                Per procedere scrivi <strong>ELIMINA</strong> nel campo qui sotto. Verranno cancellati il tuo account
-                {children.length > 0 ? ` e ${children.length === 1 ? 'l\'account studente collegato' : `i ${children.length} account studente collegati`}` : ''}.
+                Per procedere scrivi <strong>ELIMINA</strong> nel campo qui sotto. Verranno eliminati il tuo account
+                {children.length > 0 ? ` e ${children.length === 1 ? 'l\'account studente collegato' : `i ${children.length} account studente collegati`}` : ''}
+                : per {TRASH_RETENTION_DAYS} giorni potremo ancora ripristinarli, poi la cancellazione è definitiva.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <div className="space-y-2">
@@ -129,7 +147,7 @@ export function DeleteAccountCard() {
               <AlertDialogCancel disabled={deleting}>Annulla</AlertDialogCancel>
               <Button variant="destructive" onClick={handleDelete} disabled={deleting || confirmText !== 'ELIMINA'}>
                 {deleting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
-                Elimina definitivamente
+                Elimina account
               </Button>
             </AlertDialogFooter>
           </AlertDialogContent>

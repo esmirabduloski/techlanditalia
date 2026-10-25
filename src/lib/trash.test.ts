@@ -4,6 +4,8 @@ import {
   batchTitle,
   batchTypes,
   daysLeft,
+  isAccountBatch,
+  isSelfDeleted,
   restoreErrorMessage,
   rowTitle,
   tableLabel,
@@ -50,6 +52,36 @@ describe('batchTitle / batchContents', () => {
     expect(batchContents(course)).toBe('40 consegne, 12 lezioni, 12 task, 5 iscrizioni ai corsi e altri 2 elementi');
     expect(batchContents({ root_table: 'lessons', counts: { lessons: 1, homework: 1 } })).toBe('1 compito');
     expect(batchContents({ root_table: 'glossary_terms', counts: { glossary_terms: 1 } })).toBeNull();
+  });
+});
+
+describe('account eliminati', () => {
+  const parent = {
+    root_table: 'profiles',
+    root_data: { id: 'p1', full_name: 'Mario Rossi', role: 'parent' },
+    counts: { profiles: 3, enrollments: 2, homework_submissions: 5 },
+    deleted_by: 'p1',
+  };
+
+  it('nomina l’account con il ruolo e i figli eliminati con lui', () => {
+    expect(isAccountBatch(parent)).toBe(true);
+    expect(isAccountBatch({ root_table: 'courses' })).toBe(false);
+    expect(batchTitle(parent)).toBe('Account genitore «Mario Rossi» e 2 account studente');
+    expect(
+      batchTitle({ root_table: 'profiles', root_data: { full_name: 'Luca', role: 'student' }, counts: { profiles: 1 } }),
+    ).toBe('Account studente «Luca»');
+    expect(batchTitle({ root_table: 'profiles', root_data: { email: 'x@y.it' }, counts: { profiles: 1 } })).toBe(
+      'Account «x@y.it»',
+    );
+    // I profili dei figli sono nel titolo, non nell'elenco di quello che è sparito insieme
+    expect(batchContents(parent)).toBe('5 consegne e 2 iscrizioni ai corsi');
+  });
+
+  it('distingue chi si è eliminato da solo da chi è stato eliminato da un admin', () => {
+    expect(isSelfDeleted(parent)).toBe(true);
+    expect(isSelfDeleted({ ...parent, deleted_by: 'admin' })).toBe(false);
+    expect(isSelfDeleted({ ...parent, deleted_by: null })).toBe(false);
+    expect(isSelfDeleted({ root_table: 'courses', root_data: { id: 'a' }, deleted_by: 'a' })).toBe(false);
   });
 });
 

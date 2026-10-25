@@ -9,8 +9,9 @@
  *   web-compiler-assets  gli stessi file caricati prima della 0055, non ancora spostati
  * group-certificates è organizzato per gruppo, non per utente: non si tocca.
  *
- * Usato da delete-my-account e da admin-set-password (action "delete") con il
- * client service role, prima di eliminare l'utente.
+ * Usato da purge-deleted-accounts (purgeAccountBatch in accounttrash.ts) con il
+ * client service role, quando un account esce dal Cestino per sempre: finché
+ * l'account è nel cestino i file restano, così il ripristino li ritrova.
  */
 
 export const USER_FILE_BUCKETS = ["homework-files", "student-web-assets", "web-compiler-assets"] as const;

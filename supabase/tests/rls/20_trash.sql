@@ -104,9 +104,12 @@ BEGIN
     RAISE EXCEPTION 'trash: manca il trigger su %', missing;
   END IF;
 
+  -- I profili solo dentro trash_account() (0076, vedi 22_account_trash.sql)
   SELECT string_agg(c.relname, ', ') INTO extra
   FROM pg_trigger g JOIN pg_class c ON c.oid = g.tgrelid
-  WHERE g.tgname = 'a_trash_capture' AND c.relname IN ('profiles', 'user_roles', 'trash_items');
+  WHERE g.tgname = 'a_trash_capture'
+    AND (c.relname IN ('user_roles', 'trash_items')
+         OR (c.relname = 'profiles' AND encode(g.tgargs, 'escape') NOT LIKE 'account_only%'));
   IF extra IS NOT NULL THEN
     RAISE EXCEPTION 'trash: trigger su tabelle che non devono passare dal cestino: %', extra;
   END IF;

@@ -54,6 +54,39 @@ export function isMissingTrashSchema(error: { code?: string } | null | undefined
   return ['42P01', 'PGRST202', 'PGRST205'].includes(error?.code ?? '');
 }
 
+interface PurgeAccountsResponse {
+  ok?: boolean;
+  error?: string;
+  failed?: string[];
+  fileErrors?: string[];
+}
+
+/**
+ * Account eliminati per sempre (login e file nello storage) dalla edge function
+ * purge-deleted-accounts (0076): purge_trash_batch ed empty_trash non li toccano.
+ * Restituisce i file rimasti nello storage, che non bloccano l'eliminazione.
+ */
+export async function purgeAccountBatches(batchIds: string[]): Promise<{ fileErrors: string[] }> {
+  if (batchIds.length === 0) return { fileErrors: [] };
+  const { data, error } = await supabase.functions.invoke<PurgeAccountsResponse>('purge-deleted-accounts', {
+    body: { batchIds },
+  });
+  if (!error && data?.ok) return { fileErrors: data.fileErrors ?? [] };
+
+  // Con le risposte 4xx/5xx il corpo è in error.context
+  let payload: PurgeAccountsResponse | null = data;
+  if (error && typeof error === 'object' && 'context' in error) {
+    payload = await ((error as { context: Response }).context).clone().json().catch(() => null);
+  }
+  const failed = payload?.failed?.length ?? 0;
+  throw new Error(
+    payload?.error ??
+      (failed > 0
+        ? `${failed === 1 ? 'Un account non è stato eliminato' : `${failed} account non sono stati eliminati`}: restano nel cestino, riprova tra poco.`
+        : error instanceof Error ? error.message : 'Eliminazione non riuscita'),
+  );
+}
+
 /** Batch dal più recente; null se la migrazione non è ancora applicata. */
 export async function fetchTrashBatches(): Promise<TrashBatch[] | null> {
   const { data, error } = await trashClient

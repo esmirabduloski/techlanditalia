@@ -2,19 +2,20 @@
  * Cancellazione account self-service (diritto all'oblio, art. 17 GDPR).
  *
  * POST { confirm: "ELIMINA" } con il JWT dell'utente.
- * Solo i GENITORI possono usarla: elimina prima gli account degli studenti
- * collegati, poi il genitore. Le tabelle collegate (profili, iscrizioni,
- * progressi, compiti…) si cancellano a cascata come nell'eliminazione da admin
- * (admin-set-password, action "delete"); i file nello storage (compiti
- * consegnati, compilatore web) li cancella removeUserFiles prima di ogni
- * account. Studenti e insegnanti passano dal genitore o dalla scuola; gli
- * admin non possono auto-eliminarsi.
+ * Solo i GENITORI possono usarla. Il loro account e quelli degli studenti
+ * collegati finiscono nel Cestino come nell'eliminazione da admin
+ * (admin-set-password, action "delete"; trashAccount, migrazione 0076):
+ * l'accesso si blocca subito, ma per 30 giorni un admin può ripristinare
+ * tutto com'era, se il genitore ha eliminato l'account per sbaglio. Poi
+ * purge-deleted-accounts elimina per sempre login e file nello storage.
+ * Studenti e insegnanti passano dal genitore o dalla scuola; gli admin non
+ * possono auto-eliminarsi.
  */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeadersFor } from "../_shared/cors.ts";
 import { notifyAdmins } from "../_shared/adminpush.ts";
-import { removeUserFiles } from "../_shared/userfiles.ts";
+import { ACCOUNT_TRASH_DAYS, trashAccount } from "../_shared/accounttrash.ts";
 
 serve(async (req: Request): Promise<Response> => {
   const corsHeaders = corsHeadersFor(req);
@@ -51,42 +52,24 @@ serve(async (req: Request): Promise<Response> => {
       .eq("parent_id", user.id)
       .eq("role", "student");
 
-    // Un file non cancellato non blocca l'eliminazione: lo segnaliamo agli admin
-    const fileErrors: string[] = [];
-    const removeFilesOf = async (id: string) => {
-      const { errors } = await removeUserFiles(admin.storage, id);
-      fileErrors.push(...errors.map((e) => `${id} ${e}`));
-    };
-
-    const failed: string[] = [];
-    for (const child of children ?? []) {
-      await removeFilesOf(child.id);
-      const { error } = await admin.auth.admin.deleteUser(child.id);
-      if (error) {
-        console.error(`[delete-my-account] figlio ${child.id}:`, error.message);
-        failed.push(child.full_name ?? child.id);
-      }
-    }
-    if (failed.length > 0) {
-      return json({ error: `Non sono riuscito a eliminare gli account di: ${failed.join(", ")}. Scrivici a info@techlanditalia.it.` }, 500);
+    // Senza la migrazione 0076 non si elimina niente: meglio un errore di
+    // un'eliminazione definitiva quando la pagina promette 30 giorni
+    const trashed = await trashAccount(admin, user.id, user.id);
+    if (!trashed.ok) {
+      console.error(`[delete-my-account] ${user.id}:`, trashed.message);
+      return trashed.reason === "not_ready"
+        ? json({ error: "Al momento non è possibile eliminare l'account. Riprova più tardi o scrivici a info@techlanditalia.it." }, 503)
+        : json({ error: "Impossibile eliminare l'account. Scrivici a info@techlanditalia.it." }, 500);
     }
 
-    await removeFilesOf(user.id);
-    const { error: deleteError } = await admin.auth.admin.deleteUser(user.id);
-    if (fileErrors.length > 0) console.error("[delete-my-account] file non cancellati:", fileErrors);
-    if (deleteError) {
-      console.error("[delete-my-account] genitore:", deleteError.message);
-      return json({ error: "Impossibile eliminare l'account. Scrivici a info@techlanditalia.it." }, 500);
-    }
+    console.log(`[delete-my-account] ${user.id} nel cestino con ${children?.length ?? 0} figli (batch ${trashed.batchId})`);
 
-    console.log(`[delete-my-account] ${user.id} eliminato con ${children?.length ?? 0} figli`);
-
-    // Avviso interno agli admin (contabilità/CRM potrebbero avere riferimenti da aggiornare)
+    // Avviso interno agli admin: possono ripristinarlo dal Cestino
     const task = notifyAdmins({
       title: "Account genitore eliminato",
-      body: `${profile?.full_name ?? user.email ?? "Un genitore"} ha eliminato il proprio account (${children?.length ?? 0} studenti).` +
-        (fileErrors.length > 0 ? " Attenzione: alcuni file nello storage non sono stati cancellati (log di delete-my-account)." : ""),
-      path: "/admin/utenti",
+      body: `${profile?.full_name ?? user.email ?? "Un genitore"} ha eliminato il proprio account (${children?.length ?? 0} studenti). ` +
+        `Resta nel Cestino per ${ACCOUNT_TRASH_DAYS} giorni.`,
+      path: "/admin/cestino",
       type: "account_deleted",
     });
     try {
@@ -96,7 +79,7 @@ serve(async (req: Request): Promise<Response> => {
       task.catch(() => undefined);
     }
 
-    return json({ success: true, deletedChildren: children?.length ?? 0 });
+    return json({ success: true, deletedChildren: children?.length ?? 0, recoverableDays: ACCOUNT_TRASH_DAYS });
   } catch (error) {
     console.error("[delete-my-account]", error);
     return json({ error: "Errore interno" }, 500);

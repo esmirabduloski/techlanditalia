@@ -47,6 +47,7 @@ import { SubscriptionPauseButton } from '@/components/admin/SubscriptionPauseBad
 import { useSubscriptionPauses } from '@/hooks/useSubscriptionPauses';
 import { CsvImportDialog, CsvMenu } from '@/components/admin/CsvImportDialog';
 import { downloadCsv } from '@/lib/csv';
+import { TRASH_RECOVERY_HINT } from '@/lib/trash';
 import { todayStamp } from '@/lib/csvImport';
 import { applyStudents, loadStudentsCsvContext, planStudents, STUDENT_COLUMNS, studentsTemplateCsv, studentsToCsv } from '@/lib/studentsCsv';
 import {
@@ -855,23 +856,22 @@ export default function AdminUsers() {
     
     setIsSaving(true);
     try {
-      // Delete the user from auth (this will cascade delete the profile due to the foreign key)
+      // Account nel Cestino (migrazione 0076): login bloccato, profilo e dati
+      // collegati (con i figli di un genitore) ripristinabili per 30 giorni
       const { data, error } = await supabase.functions.invoke('admin-set-password', {
         body: { userId: deleteDialog.userId, action: 'delete' }
       });
 
-      if (error) throw error;
-
-      const fileErrors: string[] = data?.fileErrors ?? [];
-      if (fileErrors.length > 0) {
-        toast({
-          title: 'Utente eliminato, ma non tutti i file',
-          description: `${fileErrors.length} cartelle nello storage non sono state cancellate: ${fileErrors.join('; ')}`,
-          variant: 'destructive',
-        });
-      } else {
-        toast({ title: 'Successo', description: 'Utente eliminato' });
+      if (error) {
+        // Con le risposte 4xx/5xx il messaggio della funzione è nel corpo
+        const payload = 'context' in error
+          ? await (error.context as Response).clone().json().catch(() => null)
+          : null;
+        throw new Error(payload?.error || error.message);
       }
+      if (data?.error) throw new Error(data.error);
+
+      toast({ title: 'Utente eliminato', description: TRASH_RECOVERY_HINT });
       setDeleteDialog({ open: false, userId: '', userName: '' });
       fetchData();
     } catch (error: any) {
@@ -1824,7 +1824,8 @@ export default function AdminUsers() {
                     <div className="space-y-3">
                       <p>
                         Sei sicuro di voler eliminare l'utente <strong>{deleteDialog.userName}</strong>?
-                        Questa azione è <strong>irreversibile</strong>.
+                        L'accesso viene bloccato subito. {TRASH_RECOVERY_HINT} Il ripristino rimette accesso, password,
+                        file e dati com'erano.
                       </p>
                       {isParent && children.length > 0 && (
                         <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm">

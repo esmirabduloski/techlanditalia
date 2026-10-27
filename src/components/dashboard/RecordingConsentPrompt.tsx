@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { consentKey, consentStatus, fetchMediaConsents, setMediaConsent } from '@/lib/mediaConsents';
+import { fetchChildIds } from '@/lib/familyClient';
 
 interface Props {
   userId: string;
@@ -30,7 +31,7 @@ export function RecordingConsentPrompt({ userId, readOnly }: Props) {
     const { data: kids } = await supabase
       .from('profiles')
       .select('id, full_name')
-      .eq('parent_id', userId)
+      .in('id', await fetchChildIds(supabase, userId))
       .eq('role', 'student');
     const list = kids ?? [];
     if (list.length === 0) return;

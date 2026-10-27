@@ -4,6 +4,7 @@
 --
 --   Genitore P1 ── figli S1, S2          Genitore P2 ── figlio S3
 --   Alunno S4 (nessun genitore collegato)
+--   Genitore P3: secondo genitore di S2 e di S3 (student_guardians)
 --
 --   Gruppo G1 (corso C1, insegnante T1): S1, S3
 --   Gruppo G2 (corso C2, insegnante T2): S2, S3, S4
@@ -23,6 +24,7 @@ INSERT INTO auth.users (instance_id, id, aud, role, email, raw_user_meta_data, c
   ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000104', 'authenticated', 'authenticated', 's4@test.local', '{"full_name":"Alunno S4"}', now(), now()),
   ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000201', 'authenticated', 'authenticated', 'p1@test.local', '{"full_name":"Genitore P1"}', now(), now()),
   ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000202', 'authenticated', 'authenticated', 'p2@test.local', '{"full_name":"Genitore P2"}', now(), now()),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000203', 'authenticated', 'authenticated', 'p3@test.local', '{"full_name":"Genitore P3"}', now(), now()),
   ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000301', 'authenticated', 'authenticated', 't1@test.local', '{"full_name":"Insegnante T1"}', now(), now()),
   ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000302', 'authenticated', 'authenticated', 't2@test.local', '{"full_name":"Insegnante T2"}', now(), now()),
   ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000901', 'authenticated', 'authenticated', 'admin@test.local', '{"full_name":"Admin"}', now(), now());
@@ -30,12 +32,16 @@ INSERT INTO auth.users (instance_id, id, aud, role, email, raw_user_meta_data, c
 -- Il vecchio trigger prevent_role_self_escalation blocca il cambio di ruolo a
 -- chiunque non sia admin (anche al service role): qui lo sospendiamo.
 SET LOCAL session_replication_role = replica;
-UPDATE public.profiles SET role = 'parent' WHERE id IN ('00000000-0000-0000-0000-000000000201', '00000000-0000-0000-0000-000000000202');
+UPDATE public.profiles SET role = 'parent' WHERE id IN ('00000000-0000-0000-0000-000000000201', '00000000-0000-0000-0000-000000000202', '00000000-0000-0000-0000-000000000203');
 UPDATE public.profiles SET parent_id = '00000000-0000-0000-0000-000000000201' WHERE id IN ('00000000-0000-0000-0000-000000000101', '00000000-0000-0000-0000-000000000102');
 UPDATE public.profiles SET parent_id = '00000000-0000-0000-0000-000000000202' WHERE id = '00000000-0000-0000-0000-000000000103';
 UPDATE public.profiles SET referral_code = 'REFP1TEST' WHERE id = '00000000-0000-0000-0000-000000000201';
 UPDATE public.profiles SET referral_code = 'REFP2TEST' WHERE id = '00000000-0000-0000-0000-000000000202';
 SET LOCAL session_replication_role = origin;
+
+INSERT INTO public.student_guardians (student_id, guardian_id) VALUES
+  ('00000000-0000-0000-0000-000000000102', '00000000-0000-0000-0000-000000000203'),
+  ('00000000-0000-0000-0000-000000000103', '00000000-0000-0000-0000-000000000203');
 
 INSERT INTO public.user_roles (user_id, role) VALUES
   ('00000000-0000-0000-0000-000000000301', 'teacher'),

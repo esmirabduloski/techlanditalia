@@ -31,6 +31,7 @@ import { buildSkillMap, startedCount, type SkillMapEntry } from "@/lib/skillMap"
 import { localDateKey, nextLesson } from "@/lib/childProgress";
 import { addDaysIso, romeToday } from "@/lib/courseProposal";
 import type { CourseCertificate } from "@/lib/certificate";
+import { fetchChildIds } from "@/lib/familyClient";
 
 /** Un attestato sbloccato da meno di così resta "nuovo" e la sezione parte aperta. */
 const NEW_CERTIFICATE_DAYS = 14;
@@ -71,10 +72,11 @@ export function ParentChildrenSection() {
     if (!effectiveUserId) return;
     (async () => {
       try {
+        const childIds = await fetchChildIds(supabase, effectiveUserId);
         const { data } = await supabase
           .from("profiles")
           .select("id, full_name, email, username, avatar_id, total_points, created_at")
-          .eq("parent_id", effectiveUserId);
+          .in("id", childIds);
         setChildren(data || []);
         if (data?.length) {
           let first = data[0].id;

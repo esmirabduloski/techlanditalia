@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Video } from "lucide-react";
 import { localDateKey } from "@/lib/childProgress";
+import { fetchChildIds } from "@/lib/familyClient";
 
 interface ScheduleRow {
   id: string;
@@ -51,7 +52,8 @@ export function JoinLessonHero({ userId, forParent = false }: JoinLessonHeroProp
     queryFn: async (): Promise<TodayLesson[]> => {
       let students = [{ id: userId, name: "" }];
       if (forParent) {
-        const { data, error } = await supabase.from("profiles").select("id, full_name").eq("parent_id", userId);
+        const childIds = await fetchChildIds(supabase, userId);
+        const { data, error } = await supabase.from("profiles").select("id, full_name").in("id", childIds);
         if (error) throw error;
         students = (data || []).map((c) => ({ id: c.id, name: c.full_name.split(" ")[0] }));
       }

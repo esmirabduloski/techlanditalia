@@ -46,11 +46,19 @@ serve(async (req: Request): Promise<Response> => {
       return json({ error: "Solo l'account del genitore può essere eliminato da qui. Scrivici a info@techlanditalia.it." }, 403);
     }
 
-    const { data: children } = await admin
+    const { data: ownChildren } = await admin
       .from("profiles")
       .select("id, full_name")
       .eq("parent_id", user.id)
       .eq("role", "student");
+    // Chi ha anche un altro genitore resta a lui (trash_account, 0077): senza la
+    // tabella student_guardians la lettura fallisce e vanno tutti nel cestino
+    const { data: shared } = await admin
+      .from("student_guardians")
+      .select("student_id")
+      .in("student_id", (ownChildren ?? []).map((c) => c.id));
+    const sharedIds = new Set((shared ?? []).map((s) => s.student_id as string));
+    const children = (ownChildren ?? []).filter((c) => !sharedIds.has(c.id));
 
     // Senza la migrazione 0076 non si elimina niente: meglio un errore di
     // un'eliminazione definitiva quando la pagina promette 30 giorni

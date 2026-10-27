@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { getSupabase } from '@/integrations/supabase/lazyClient';
 import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
+import { fetchChildIds } from '@/lib/familyClient';
 
 export type ProfileRole = 'student' | 'parent' | 'teacher' | 'admin' | null;
 
@@ -18,13 +19,13 @@ export function useProfileRole() {
     staleTime: 5 * 60_000,
     queryFn: async () => {
       const supabase = await getSupabase();
-      const [{ data: profile }, { data: children }] = await Promise.all([
+      const [{ data: profile }, childIds] = await Promise.all([
         supabase.from('profiles').select('role').eq('id', effectiveUserId!).maybeSingle(),
-        supabase.from('profiles').select('id').eq('parent_id', effectiveUserId!).limit(1),
+        fetchChildIds(supabase, effectiveUserId!),
       ]);
       return {
         role: (profile?.role ?? null) as ProfileRole,
-        hasChildren: (children?.length ?? 0) > 0,
+        hasChildren: childIds.length > 0,
       };
     },
   });

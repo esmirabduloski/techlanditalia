@@ -149,6 +149,10 @@ BEGIN
   RAISE NOTICE 'Account nel cestino: profili cancellati in altro modo restano fuori, come prima';
 END $$;
 
+-- I secondi genitori di 01_seed.sql (P3 per S2 e S3) li prova 23_second_parent.sql:
+-- qui P1 si elimina insieme a entrambi i figli, come prima.
+DELETE FROM public.student_guardians;
+
 -- Il genitore P1 si elimina: lui, S1 e S2 nel cestino; poi l'admin lo ripristina.
 -- S2 aveva già un blocco del login (scaduto): al ripristino torna quello.
 UPDATE auth.users SET banned_until = now() - interval '1 day' WHERE id = '00000000-0000-0000-0000-000000000102';

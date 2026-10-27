@@ -73,16 +73,18 @@ serve(async (req) => {
       });
     }
 
-    // For parent, child data is required
-    if (role === "parent" && (!childName || !childUsername)) {
-      return new Response(JSON.stringify({ error: "Dati del figlio obbligatori per il genitore" }), {
+    // Il figlio è facoltativo: senza nome e username si crea solo il genitore
+    // (per esempio il secondo genitore, poi collegato ai figli da "Assegna figli")
+    const withChild = role === "parent" && !!(childName?.trim() || childUsername?.trim());
+    if (withChild && (!childName?.trim() || !childUsername?.trim())) {
+      return new Response(JSON.stringify({ error: "Per creare anche il figlio servono nome e username" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     // Check child username uniqueness if parent
-    if (role === "parent") {
+    if (withChild) {
       const { data: existingUser } = await supabaseAdmin
         .from("profiles")
         .select("id")
@@ -139,7 +141,8 @@ serve(async (req) => {
     // For parent role, add 'user' role and create child account
     if (role === "parent") {
       await addParentRole(supabaseAdmin, newUserId);
-
+    }
+    if (withChild) {
       const child = await createChildAccount(supabaseAdmin, {
         parentId: newUserId,
         childName,
@@ -168,8 +171,8 @@ serve(async (req) => {
       email,
       fullName,
       role: userRole,
-      childName: role === "parent" ? childName : undefined,
-      childUsername: role === "parent" ? childUsername : undefined,
+      childName: withChild ? childName : undefined,
+      childUsername: withChild ? childUsername : undefined,
     });
 
     console.log(`Account created successfully: ${newUserId} (${role})`);

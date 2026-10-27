@@ -2,8 +2,9 @@
  * Il genitore imposta la password del figlio dall'area riservata.
  *
  * POST { childId, newPassword } con il JWT del genitore.
- * - Il figlio deve essere uno studente con parent_id = chiamante (controllo
- *   lato server, il browser non decide nulla).
+ * - Il figlio deve essere uno studente del chiamante, come genitore principale
+ *   o secondo genitore (is_parent_of; controllo lato server, il browser non
+ *   decide nulla).
  * - Se il genitore ha la verifica in due passaggi attiva serve la sessione aal2.
  * - Cambia solo la password del figlio e la segna come "propria": da quel
  *   momento la password del genitore non vale più per il figlio
@@ -64,8 +65,11 @@ serve(async (req: Request): Promise<Response> => {
       .select("id, full_name, parent_id, role")
       .eq("id", childId)
       .maybeSingle();
+    // Genitore principale o secondo genitore (0077)
+    const isParent = !!child && (child.parent_id === user.id ||
+      (await admin.rpc("is_parent_of", { _parent_id: user.id, _student_id: childId })).data === true);
     // Stessa risposta se il figlio non esiste o non è suo: non rivela altri account
-    if (!child || child.parent_id !== user.id || child.role !== "student") {
+    if (!child || !isParent || child.role !== "student") {
       return json({ error: "Puoi cambiare solo la password dei tuoi figli" }, 403);
     }
 

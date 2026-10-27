@@ -22,6 +22,7 @@ import { Link } from "react-router-dom";
 import { CRMCourseSelect } from "./CRMCourseSelect";
 import { CRMPaymentsSection } from "./payments/CRMPaymentsSection";
 import { CRMLinkedAccount } from "./CRMLinkedAccount";
+import { CRMSecondParent } from "./CRMSecondParent";
 import { CRMLeadTasks } from "./tasks/CRMLeadTasks";
 import { CRMSubscriptionSection } from "./CRMSubscriptionSection";
 import { CRMCourseProposalSection } from "./CRMCourseProposalSection";
@@ -156,6 +157,7 @@ export function CRMLeadDetailDrawer({ lead, open, onClose, onUpdate, onDelete, p
           <div className="flex flex-wrap gap-2 items-center text-sm text-muted-foreground">
             <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{lead.email}</span>
             {lead.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{lead.phone}</span>}
+            {lead.second_parent_name && <span className="flex items-center gap-1"><User className="w-3 h-3" />e {lead.second_parent_name}</span>}
             <Badge variant="outline">{SOURCE_LABELS[lead.source]}</Badge>
             {pauses && <SubscriptionPauseBadge pauses={pauses.activeForProfile(lead.linked_profile_id)} />}
           </div>
@@ -239,6 +241,9 @@ export function CRMLeadDetailDrawer({ lead, open, onClose, onUpdate, onDelete, p
             />
           </div>
         </div>
+
+        {/* Secondo genitore: stessa famiglia, stessa scheda */}
+        <CRMSecondParent lead={lead} onUpdate={onUpdate} />
 
         {/* Pipeline stage */}
         <div className="space-y-3 mb-6">

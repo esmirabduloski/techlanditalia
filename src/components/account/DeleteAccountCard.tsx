@@ -19,13 +19,15 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { TRASH_RETENTION_DAYS } from '@/lib/trash';
+import { fetchChildIds, fetchGuardianLinks } from '@/lib/familyClient';
 
 /**
  * Cancellazione account self-service (art. 17 GDPR), solo per i genitori.
  * Mostra cosa verrà eliminato (account propri e dei figli) e chiede di digitare
  * ELIMINA prima di chiamare la edge function delete-my-account. Gli account
  * restano nel Cestino per TRASH_RETENTION_DAYS giorni (migrazione 0076): chi li
- * ha eliminati per sbaglio può chiedere di ripristinarli.
+ * ha eliminati per sbaglio può chiedere di ripristinarli. Un figlio che ha anche
+ * un altro genitore (migrazione 0077) non viene eliminato: resta all'altro.
  */
 export function DeleteAccountCard() {
   const { user, signOut } = useAuth();
@@ -33,6 +35,7 @@ export function DeleteAccountCard() {
   const { toast } = useToast();
   const [isParent, setIsParent] = useState(false);
   const [children, setChildren] = useState<{ id: string; full_name: string | null }[]>([]);
+  const [keptChildren, setKeptChildren] = useState<{ id: string; full_name: string | null }[]>([]);
   const [confirmText, setConfirmText] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [open, setOpen] = useState(false);
@@ -45,12 +48,15 @@ export function DeleteAccountCard() {
       if (cancelled || profile?.role !== 'parent') return;
       const { data: kids } = await supabase
         .from('profiles')
-        .select('id, full_name')
-        .eq('parent_id', user.id)
+        .select('id, full_name, parent_id')
+        .in('id', await fetchChildIds(supabase, user.id))
         .eq('role', 'student');
+      const own = (kids ?? []).filter((k) => k.parent_id === user.id);
+      const shared = new Set((await fetchGuardianLinks(supabase, own.map((k) => k.id))).map((l) => l.student_id));
       if (cancelled) return;
       setIsParent(true);
-      setChildren(kids ?? []);
+      setChildren(own.filter((k) => !shared.has(k.id)));
+      setKeptChildren((kids ?? []).filter((k) => k.parent_id !== user.id || shared.has(k.id)));
     })();
     return () => {
       cancelled = true;
@@ -102,12 +108,25 @@ export function DeleteAccountCard() {
           </p>
           <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
             <li>
-              Vengono eliminati il tuo account e{' '}
-              {children.length > 0
-                ? `gli account di ${children.map((c) => c.full_name).filter(Boolean).join(', ') || `${children.length} studenti`}`
-                : 'gli eventuali account studente collegati'}
-              , con progressi, compiti consegnati e file caricati, presenze, badge e commenti.
+              {children.length === 0 && keptChildren.length > 0 ? (
+                'Viene eliminato il tuo account.'
+              ) : (
+                <>
+                  Vengono eliminati il tuo account e{' '}
+                  {children.length > 0
+                    ? `gli account di ${children.map((c) => c.full_name).filter(Boolean).join(', ') || `${children.length} studenti`}`
+                    : 'gli eventuali account studente collegati'}
+                  , con progressi, compiti consegnati e file caricati, presenze, badge e commenti.
+                </>
+              )}
             </li>
+            {keptChildren.length > 0 && (
+              <li>
+                {keptChildren.map((c) => c.full_name).filter(Boolean).join(', ') || 'I figli collegati'}:{' '}
+                {keptChildren.length === 1 ? "l'account resta" : 'gli account restano'} all&apos;altro genitore, con
+                tutti i progressi.
+              </li>
+            )}
             <li>Le lezioni residue non ancora utilizzate vengono perse: contattaci prima se vuoi chiarimenti.</li>
             <li>Conserviamo solo i documenti contabili obbligatori per legge (fatture), per 10 anni.</li>
             <li>

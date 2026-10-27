@@ -3,7 +3,7 @@ import { CrmLead, PIPELINE_STAGES, PipelineStage, SOURCE_LABELS } from "@/hooks/
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { AlertCircle, Calendar, ChevronRight, Mail, Phone } from "lucide-react";
+import { AlertCircle, Calendar, ChevronRight, Mail, Phone, Users } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { it } from "date-fns/locale";
 import { groupByInterest } from "@/lib/crmInterestGroups";
@@ -122,6 +122,11 @@ export function CRMKanbanBoard({ leads, onSelectLead, onMoveLead, onSetInterest,
                                   <div className="font-medium text-sm truncate">
                                     {lead.full_name || "—"}
                                   </div>
+                                  {lead.second_parent_name && (
+                                    <div className="text-xs text-muted-foreground truncate flex items-center gap-1">
+                                      <Users className="w-3 h-3" /> {lead.second_parent_name}
+                                    </div>
+                                  )}
                                   <div className="text-xs text-muted-foreground truncate flex items-center gap-1">
                                     <Mail className="w-3 h-3" /> {lead.email}
                                   </div>

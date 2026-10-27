@@ -239,3 +239,11 @@ if ! out=$(run_sql supabase_admin supabase/tests/rls/22_account_trash.sql 2>&1);
   exit 1
 fi
 echo "$out" | sed -n 's/.*NOTICE: *//p'
+
+echo "▶ Secondo genitore"
+if ! out=$(run_sql supabase_admin supabase/tests/rls/23_second_parent.sql 2>&1); then
+  echo "$out" | sed -nE 's/.*(NOTICE|WARNING|ERROR): *//p'
+  echo "✗ Test del secondo genitore FALLITI"
+  exit 1
+fi
+echo "$out" | sed -n 's/.*NOTICE: *//p'

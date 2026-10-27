@@ -35,6 +35,7 @@ import {
 import { 
   LogOut, Loader2, Plus, Edit, Trash2, User, Calendar, Save, Home, MessageCircle, Eye, GraduationCap
 } from 'lucide-react';
+import { fetchGuardianLinks, type GuardianLink } from '@/lib/familyClient';
 import { FeedbackTemplates } from '@/components/feedback/FeedbackTemplates';
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -62,6 +63,8 @@ interface Comment {
 export default function AdminStudentComments() {
   const [searchParams] = useSearchParams();
   const [students, setStudents] = useState<Student[]>([]);
+  // Secondi genitori (0077): "Aggiungi commento" dalla loro riga in Utenti
+  const [guardianLinks, setGuardianLinks] = useState<GuardianLink[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -116,7 +119,8 @@ export default function AdminStudentComments() {
       }
       // If parent_id param is present, open dialog with children of that parent
       else if (parentIdParam) {
-        const childrenOfParent = students.filter(s => s.parent_id === parentIdParam);
+        const childrenOfParent = students.filter(s => s.parent_id === parentIdParam ||
+          guardianLinks.some(l => l.guardian_id === parentIdParam && l.student_id === s.id));
         
         if (childrenOfParent.length > 0) {
           setFormData({
@@ -131,7 +135,7 @@ export default function AdminStudentComments() {
         navigate('/admin/commenti', { replace: true });
       }
     }
-  }, [isLoading, students, studentIdParam, parentIdParam, visibilityParam, navigate]);
+  }, [isLoading, students, guardianLinks, studentIdParam, parentIdParam, visibilityParam, navigate]);
 
   const fetchData = async () => {
     // Fetch students with parent_id
@@ -142,6 +146,7 @@ export default function AdminStudentComments() {
       .order('full_name');
 
     setStudents(studentsData || []);
+    setGuardianLinks(await fetchGuardianLinks(supabase));
 
     // Fetch all comments
     const { data: commentsData } = await supabase
@@ -289,7 +294,8 @@ export default function AdminStudentComments() {
   // Get children of a specific parent for filtering in dialog
   const getStudentsForDialog = () => {
     if (parentIdParam) {
-      return students.filter(s => s.parent_id === parentIdParam);
+      return students.filter(s => s.parent_id === parentIdParam ||
+        guardianLinks.some(l => l.guardian_id === parentIdParam && l.student_id === s.id));
     }
     return students;
   };

@@ -255,7 +255,9 @@ serve(async (req: Request): Promise<Response> => {
 
       const p = await loadProposal(supabase, body.proposal_id);
       if (!p) return json({ error: "Proposta non trovata" }, 404);
-      const isFamily = p.student_id === user.id || (!!p.student?.parent_id && p.student.parent_id === user.id);
+      // Risponde l'alunno o uno dei suoi genitori (anche il secondo genitore)
+      const isFamily = p.student_id === user.id || (!!p.student?.parent_id && p.student.parent_id === user.id) ||
+        (await supabase.rpc("is_parent_of", { _parent_id: user.id, _student_id: p.student_id })).data === true;
       if (!isFamily) return json({ error: "Non autorizzato" }, 403);
       if (p.status !== "sent") return json({ error: "Hai già risposto a questa proposta" }, 409);
 

@@ -37,6 +37,9 @@ export function CRMLeadList({ leads, onSelectLead, pausesFor }: Props) {
         l.email.toLowerCase().includes(q) ||
         (l.full_name || "").toLowerCase().includes(q) ||
         (l.phone || "").toLowerCase().includes(q) ||
+        (l.second_parent_name || "").toLowerCase().includes(q) ||
+        (l.second_parent_email || "").toLowerCase().includes(q) ||
+        (l.second_parent_phone || "").toLowerCase().includes(q) ||
         (l.notes || "").toLowerCase().includes(q) ||
         (l.referral_code || "").toLowerCase().includes(q) ||
         (l.referrer_email || "").toLowerCase().includes(q) ||
@@ -125,6 +128,9 @@ export function CRMLeadList({ leads, onSelectLead, pausesFor }: Props) {
                         {l.full_name || "—"}
                         {pausesFor && <SubscriptionPauseBadge pauses={pausesFor(l)} className="text-[10px] py-0" />}
                       </div>
+                      {l.second_parent_name && (
+                        <div className="text-xs font-normal text-muted-foreground">e {l.second_parent_name}</div>
+                      )}
                     </td>
                     <td className="p-3 text-muted-foreground">{l.email}</td>
                     <td className="p-3 text-muted-foreground hidden md:table-cell">{l.phone || "—"}</td>

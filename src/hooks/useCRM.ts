@@ -35,6 +35,10 @@ export interface CrmLead {
   referral_code?: string | null;
   referrer_email?: string | null;
   referrer_id?: string | null;
+  // Secondo genitore nella stessa scheda (migrazione 0077: assenti finché non è applicata)
+  second_parent_name?: string | null;
+  second_parent_email?: string | null;
+  second_parent_phone?: string | null;
 }
 
 export interface CrmInteraction {

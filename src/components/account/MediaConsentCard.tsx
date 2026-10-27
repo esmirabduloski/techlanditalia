@@ -15,6 +15,7 @@ import {
   formatConsentDate,
   setMediaConsent,
 } from '@/lib/mediaConsents';
+import { fetchChildIds } from '@/lib/familyClient';
 
 /**
  * Consensi foto e video dei figli, solo per i genitori: uno per finalità,
@@ -34,7 +35,7 @@ export function MediaConsentCard() {
     const { data: kids } = await supabase
       .from('profiles')
       .select('id, full_name')
-      .eq('parent_id', user.id)
+      .in('id', await fetchChildIds(supabase, user.id))
       .eq('role', 'student');
     const list = kids ?? [];
     setConsents(await fetchMediaConsents(list.map((k) => k.id)));

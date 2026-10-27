@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { MessageSquare, Loader2, User, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
+import { fetchChildIds } from "@/lib/familyClient";
 
 interface FeedbackItem {
   id: string;
@@ -38,7 +39,7 @@ export function ParentFeedbackSection() {
       const { data: children } = await supabase
         .from("profiles")
         .select("id, full_name")
-        .eq("parent_id", user.id);
+        .in("id", await fetchChildIds(supabase, user.id));
 
       if (!children || children.length === 0) {
         setIsParent(false);

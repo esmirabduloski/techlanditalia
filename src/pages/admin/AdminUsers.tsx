@@ -50,6 +50,7 @@ import { downloadCsv } from '@/lib/csv';
 import { TRASH_RECOVERY_HINT } from '@/lib/trash';
 import { todayStamp } from '@/lib/csvImport';
 import { applyStudents, loadStudentsCsvContext, planStudents, STUDENT_COLUMNS, studentsTemplateCsv, studentsToCsv } from '@/lib/studentsCsv';
+import { fetchChildIds, fetchGuardianLinks, saveParentChildren, type GuardianLink } from '@/lib/familyClient';
 import {
   Select,
   SelectContent,
@@ -148,12 +149,16 @@ export default function AdminUsers() {
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; userId: string; userName: string }>({ open: false, userId: '', userName: '' });
   const [assignChildrenDialog, setAssignChildrenDialog] = useState<{ open: boolean; parentId: string; parentName: string }>({ open: false, parentId: '', parentName: '' });
   const [selectedChildrenToAssign, setSelectedChildrenToAssign] = useState<string[]>([]);
+  const [assignSearch, setAssignSearch] = useState('');
+  // Secondi genitori (student_guardians, migrazione 0077): profiles.parent_id è il principale
+  const [guardianLinks, setGuardianLinks] = useState<GuardianLink[]>([]);
   const pauses = useSubscriptionPauses();
   const [pauseStudent, setPauseStudent] = useState<Profile | null>(null);
   const [balanceDialog, setBalanceDialog] = useState<{ open: boolean; userId: string; userName: string; balance: number }>({ open: false, userId: '', userName: '', balance: 0 });
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createForm, setCreateForm] = useState<{
-    role: 'parent' | 'teacher';
+    // parent_only: genitore senza figlio, da collegare poi ai figli (anche già assegnati)
+    role: 'parent' | 'parent_only' | 'teacher';
     fullName: string;
     email: string;
     password: string;
@@ -161,6 +166,8 @@ export default function AdminUsers() {
     childUsername: string;
     courseId: string;
   }>({ role: 'parent', fullName: '', email: '', password: '', childName: '', childUsername: '', courseId: 'none' });
+  // Dal CRM, secondo genitore: dopo la creazione propone i figli del primo
+  const [linkChildrenOf, setLinkChildrenOf] = useState<string | null>(null);
   const [creatingUser, setCreatingUser] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [sendWelcome, setSendWelcome] = useState(true);
@@ -176,6 +183,7 @@ export default function AdminUsers() {
     if (courses.length === 0) return; // attende i corsi per abbinare l'interesse
     const email = searchParams.get('email') ?? '';
     const name = searchParams.get('name') ?? '';
+    const parentOnly = searchParams.get('role') === 'parent_only';
     const course = (searchParams.get('course') ?? '').trim().toLowerCase();
     const matched = course
       ? courses.find(c => c.title.trim().toLowerCase() === course) ||
@@ -183,14 +191,15 @@ export default function AdminUsers() {
       : undefined;
     setCreateForm(prev => ({
       ...prev,
-      role: 'parent',
+      role: parentOnly ? 'parent_only' : 'parent',
       fullName: name,
       email,
       courseId: matched ? matched.id : 'none',
     }));
+    setLinkChildrenOf(parentOnly ? searchParams.get('children_of') : null);
     setCreateDialogOpen(true);
     const next = new URLSearchParams(searchParams);
-    ['create', 'email', 'name', 'course'].forEach(k => next.delete(k));
+    ['create', 'email', 'name', 'course', 'role', 'children_of'].forEach(k => next.delete(k));
     setSearchParams(next, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, courses]);
@@ -237,7 +246,7 @@ export default function AdminUsers() {
     setCreatingUser(true);
     try {
       const body: Record<string, string | undefined> = {
-        role,
+        role: role === 'parent_only' ? 'parent' : role,
         email: email.trim().toLowerCase(),
         password,
         fullName: fullName.trim(),
@@ -265,10 +274,23 @@ export default function AdminUsers() {
         return;
       }
 
-      toast({ title: 'Account creato!', description: role === 'parent' ? 'Genitore + figlio creati con successo.' : 'Insegnante creato con successo.' });
+      toast({
+        title: 'Account creato!',
+        description: role === 'parent' ? 'Genitore + figlio creati con successo.'
+          : role === 'parent_only' ? 'Genitore creato: ora scegli i suoi figli.'
+          : 'Insegnante creato con successo.',
+      });
       setCreateDialogOpen(false);
       setCreateForm({ role: 'parent', fullName: '', email: '', password: '', childName: '', childUsername: '', courseId: 'none' });
-      fetchData();
+      // fetchData mostra lo spinner a pagina intera: il dialog dei figli si apre dopo
+      await fetchData();
+      if (role === 'parent_only' && data?.userId) {
+        const preselect = linkChildrenOf ? await fetchChildrenOf(linkChildrenOf) : [];
+        setAssignSearch('');
+        setSelectedChildrenToAssign(preselect);
+        setAssignChildrenDialog({ open: true, parentId: data.userId as string, parentName: fullName.trim() });
+      }
+      setLinkChildrenOf(null);
     } catch (e) {
       toast({ variant: 'destructive', title: 'Errore', description: 'Si è verificato un errore.' });
     } finally {
@@ -379,6 +401,7 @@ export default function AdminUsers() {
     })) as Profile[];
 
     setProfiles(enrichedProfiles);
+    setGuardianLinks(await fetchGuardianLinks(supabase));
     setCourses(coursesData || []);
     setEnrollments(enrollmentsData || []);
     setMfaStatus(await fetchMfaOverview());
@@ -405,13 +428,14 @@ export default function AdminUsers() {
   const [filterCourse, setFilterCourse] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<'all' | 'enrolled' | 'no_enrollment'>('all');
 
-  const matchesSearchQuery = (p: Profile) => {
-    if (searchQuery === '') return true;
-    const query = searchQuery.toLowerCase();
+  const matchesText = (p: Profile, text: string) => {
+    const query = text.trim().toLowerCase();
     return p.full_name.toLowerCase().includes(query) ||
       (p.username && p.username.toLowerCase().includes(query)) ||
       (p.email && p.email.toLowerCase().includes(query));
   };
+
+  const matchesSearchQuery = (p: Profile) => searchQuery === '' || matchesText(p, searchQuery);
 
   const matchesCourseFilter = (p: Profile) => {
     if (filterCourse === 'all') return true;
@@ -423,6 +447,27 @@ export default function AdminUsers() {
     const hasEnrollment = enrollments.some(e => e.student_id === p.id);
     return filterStatus === 'enrolled' ? hasEnrollment : !hasEnrollment;
   };
+
+  // Figli del primo genitore (o l'alunno stesso, se il lead del CRM è collegato all'alunno)
+  const fetchChildrenOf = async (profileId: string) => {
+    const ids = await fetchChildIds(supabase, profileId);
+    if (ids.length > 0) return ids;
+    const { data } = await supabase.from('profiles').select('id').eq('id', profileId).eq('role', 'student').maybeSingle();
+    return data ? [data.id] : [];
+  };
+
+  const guardiansOf = (studentId: string) =>
+    guardianLinks.filter(l => l.student_id === studentId).map(l => l.guardian_id);
+
+  const isChildOf = (student: Profile, parentId: string) =>
+    student.parent_id === parentId || guardianLinks.some(l => l.guardian_id === parentId && l.student_id === student.id);
+
+  // Gli altri genitori dell'alunno, visti dalla famiglia di parentId
+  const otherParentNames = (student: Profile, parentId: string) =>
+    [student.parent_id, ...guardiansOf(student.id)]
+      .filter((id): id is string => !!id && id !== parentId)
+      .map(id => profiles.find(p => p.id === id)?.full_name)
+      .filter((name): name is string => !!name);
 
   const groupedUsers = () => {
     const groups: { parent: Profile | null; children: Profile[] }[] = [];
@@ -442,7 +487,7 @@ export default function AdminUsers() {
     
     // For each parent, get their children
     allParents.forEach(parent => {
-      const children = allStudents.filter(s => s.parent_id === parent.id);
+      const children = allStudents.filter(s => isChildOf(s, parent.id));
       
       // Check if parent matches filter
       const parentMatchesSearch = matchesSearchQuery(parent);
@@ -480,7 +525,7 @@ export default function AdminUsers() {
     // Orphan students (no parent)
     if (filterRole !== 'parent' && filterRole !== 'admin' && filterRole !== 'teacher' && filterRole !== 'parentRole') {
       const orphanStudents = allStudents.filter(s => {
-        if (s.parent_id) return false;
+        if (s.parent_id || guardiansOf(s.id).length > 0) return false;
         return matchesSearchQuery(s) && matchesCourseFilter(s) && matchesStatusFilter(s);
       });
       if (orphanStudents.length > 0) {
@@ -488,7 +533,7 @@ export default function AdminUsers() {
       }
     } else if (filterRole === 'admin' || filterRole === 'teacher' || filterRole === 'parentRole') {
       const orphanStudentsWithRole = allStudents.filter(s => {
-        if (s.parent_id) return false;
+        if (s.parent_id || guardiansOf(s.id).length > 0) return false;
         return matchesSearchQuery(s) && matchesSpecialRoleFilter(s) && matchesCourseFilter(s) && matchesStatusFilter(s);
       });
       if (orphanStudentsWithRole.length > 0) {
@@ -648,33 +693,27 @@ export default function AdminUsers() {
   };
 
   const openAssignChildrenDialog = (parentId: string, parentName: string) => {
-    // Get current children of this parent
-    const currentChildren = profiles.filter(p => p.parent_id === parentId).map(p => p.id);
+    // Figli attuali: come genitore principale o come secondo genitore
+    const currentChildren = profiles.filter(p => p.role === 'student' && isChildOf(p, parentId)).map(p => p.id);
     setSelectedChildrenToAssign(currentChildren);
+    setAssignSearch('');
     setAssignChildrenDialog({ open: true, parentId, parentName });
   };
 
+  // Tutti gli alunni, anche quelli che hanno già un genitore (questo diventa il secondo):
+  // prima i figli attuali, poi chi non ha genitori, poi gli altri
   const getAvailableChildrenForAssignment = () => {
-    // Get students that either have no parent or are already assigned to this parent
-    return profiles.filter(p => 
-      p.role === 'student' && 
-      (p.parent_id === null || p.parent_id === assignChildrenDialog.parentId)
-    );
+    const parentId = assignChildrenDialog.parentId;
+    const rank = (p: Profile) => isChildOf(p, parentId) ? 0 : (!p.parent_id && guardiansOf(p.id).length === 0) ? 1 : 2;
+    return profiles
+      .filter(p => p.role === 'student' && p.id !== parentId && (assignSearch.trim() === '' || matchesText(p, assignSearch)))
+      .sort((a, b) => rank(a) - rank(b) || a.full_name.localeCompare(b.full_name));
   };
 
   const handleSaveChildrenAssignment = async () => {
     setIsSaving(true);
     try {
-      const { data, error } = await supabase.functions.invoke('admin-assign-children', {
-        body: {
-          parentId: assignChildrenDialog.parentId,
-          childIds: selectedChildrenToAssign,
-        },
-      });
-
-      if (error || data?.error) {
-        throw new Error(data?.error || error?.message || 'Impossibile aggiornare i figli');
-      }
+      await saveParentChildren(supabase, assignChildrenDialog.parentId, selectedChildrenToAssign);
 
       toast({ title: 'Successo', description: 'Figli aggiornati' });
       setAssignChildrenDialog({ open: false, parentId: '', parentName: '' });
@@ -1339,6 +1378,12 @@ export default function AdminUsers() {
                                     <h4 className="font-medium truncate">{child.full_name}</h4>
                                     <Badge variant="outline" className="text-xs">Studente</Badge>
                                     <Badge variant="secondary" className="text-xs">{child.total_points} punti</Badge>
+                                    {group.parent && otherParentNames(child, group.parent.id).length > 0 && (
+                                      <Badge variant="outline" className="text-xs gap-1 border-purple-500/40 text-purple-700 dark:text-purple-300">
+                                        <Users2 className="w-3 h-3" />
+                                        Anche figlio di {otherParentNames(child, group.parent.id).join(', ')}
+                                      </Badge>
+                                    )}
                                   </div>
                                   
                                   <div className="flex items-center gap-4 mt-1 text-sm">
@@ -1811,7 +1856,10 @@ export default function AdminUsers() {
           {(() => {
             const target = profiles.find(p => p.id === deleteDialog.userId);
             const isParent = target?.role === 'parent';
-            const children = isParent ? profiles.filter(p => p.parent_id === deleteDialog.userId) : [];
+            // Chi ha anche un altro genitore resta a lui (trash_account, migrazione 0077)
+            const ownChildren = isParent ? profiles.filter(p => p.parent_id === deleteDialog.userId) : [];
+            const children = ownChildren.filter(c => guardiansOf(c.id).length === 0);
+            const keptChildren = ownChildren.filter(c => guardiansOf(c.id).length > 0);
             const childIds = children.map(c => c.id);
             const ownEnrollments = enrollments.filter(e => e.student_id === deleteDialog.userId).length;
             const childEnrollments = enrollments.filter(e => childIds.includes(e.student_id)).length;
@@ -1848,7 +1896,13 @@ export default function AdminUsers() {
                           </ul>
                         </div>
                       )}
-                      {isParent && children.length === 0 && (
+                      {keptChildren.length > 0 && (
+                        <p className="text-sm text-muted-foreground">
+                          {keptChildren.map(c => `${c.full_name} resta con ${otherParentNames(c, deleteDialog.userId).join(', ')}`).join('; ')}:
+                          ha anche un altro genitore, che diventa il genitore principale.
+                        </p>
+                      )}
+                      {isParent && ownChildren.length === 0 && (
                         <p className="text-sm text-muted-foreground">
                           Questo genitore non ha alunni figli associati.
                         </p>
@@ -1881,18 +1935,30 @@ export default function AdminUsers() {
           <DialogHeader>
             <DialogTitle>Assegna Figli - {assignChildrenDialog.parentName}</DialogTitle>
             <DialogDescription>
-              Seleziona gli studenti da assegnare come figli a questo genitore.
+              Seleziona i figli di questo genitore. Se uno studente ha già un genitore, lo mantiene e
+              questo diventa il secondo genitore: entrambi accedono all'area riservata.
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4 space-y-3 max-h-[60vh] overflow-y-auto">
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={assignSearch}
+              onChange={(e) => setAssignSearch(e.target.value)}
+              placeholder="Cerca studente per nome o username…"
+              className="pl-9"
+              aria-label="Cerca studente"
+            />
+          </div>
+          <div className="py-2 space-y-3 max-h-[55vh] overflow-y-auto">
             {getAvailableChildrenForAssignment().length === 0 ? (
               <div className="text-center py-6 text-muted-foreground border-dashed border rounded-lg">
                 <GraduationCap className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">Nessuno studente disponibile</p>
-                <p className="text-xs mt-1">Gli studenti già assegnati ad altri genitori non sono mostrati</p>
+                <p className="text-sm">Nessuno studente trovato</p>
               </div>
             ) : (
-              getAvailableChildrenForAssignment().map(student => (
+              getAvailableChildrenForAssignment().map(student => {
+                const others = otherParentNames(student, assignChildrenDialog.parentId);
+                return (
                 <div key={student.id} className="flex items-center gap-3 p-2 border rounded-lg">
                   <Checkbox
                     id={`child-${student.id}`}
@@ -1914,10 +1980,17 @@ export default function AdminUsers() {
                       {student.username && (
                         <div className="text-xs text-muted-foreground">@{student.username}</div>
                       )}
+                      {others.length > 0 && (
+                        <div className="text-xs text-purple-700 dark:text-purple-300">
+                          Genitore: {others.join(', ')}
+                          {selectedChildrenToAssign.includes(student.id) && !isChildOf(student, assignChildrenDialog.parentId) && ' · si aggiunge come secondo genitore'}
+                        </div>
+                      )}
                     </div>
                   </label>
                 </div>
-              ))
+                );
+              })
             )}
           </div>
           <DialogFooter>
@@ -1951,27 +2024,33 @@ export default function AdminUsers() {
       />
 
       {/* Create User Dialog */}
-      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+      <Dialog open={createDialogOpen} onOpenChange={(open) => { setCreateDialogOpen(open); if (!open) setLinkChildrenOf(null); }}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Crea nuovo utente</DialogTitle>
             <DialogDescription>
-              Crea un account per un genitore (con figlio) oppure per un insegnante. Verrà inviata una email di benvenuto.
+              Crea un account per un genitore (con o senza figlio) oppure per un insegnante. Verrà inviata una email di benvenuto.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
               <Label>Tipo account</Label>
-              <Select value={createForm.role} onValueChange={(v) => setCreateForm(prev => ({ ...prev, role: v as 'parent' | 'teacher' }))}>
+              <Select value={createForm.role} onValueChange={(v) => setCreateForm(prev => ({ ...prev, role: v as 'parent' | 'parent_only' | 'teacher' }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="parent">Genitore + Figlio</SelectItem>
+                  <SelectItem value="parent_only">Solo genitore</SelectItem>
                   <SelectItem value="teacher">Insegnante</SelectItem>
                 </SelectContent>
               </Select>
+              {createForm.role === 'parent_only' && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Per esempio il secondo genitore: dopo la creazione scegli i suoi figli, anche se hanno già un genitore.
+                </p>
+              )}
             </div>
             <div>
-              <Label>Nome completo {createForm.role === 'parent' ? 'genitore' : 'insegnante'}</Label>
+              <Label>Nome completo {createForm.role === 'teacher' ? 'insegnante' : 'genitore'}</Label>
               <Input
                 value={createForm.fullName}
                 onChange={(e) => setCreateForm(prev => ({ ...prev, fullName: e.target.value }))}

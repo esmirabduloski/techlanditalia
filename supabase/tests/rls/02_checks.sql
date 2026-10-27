@@ -30,6 +30,7 @@ INSERT INTO rls_test.personas VALUES
   ('alunno S4',     '00000000-0000-0000-0000-000000000104', 'student', 'aal1'),
   ('genitore P1',   '00000000-0000-0000-0000-000000000201', 'parent',  'aal1'),
   ('genitore P2',   '00000000-0000-0000-0000-000000000202', 'parent',  'aal1'),
+  ('genitore P3',   '00000000-0000-0000-0000-000000000203', 'parent',  'aal1'),
   ('insegnante T1', '00000000-0000-0000-0000-000000000301', 'teacher', 'aal2'),
   ('insegnante T2', '00000000-0000-0000-0000-000000000302', 'teacher', 'aal2');
 
@@ -115,6 +116,7 @@ CREATE TABLE rls_test.allowed_users (persona text, uid uuid);
 INSERT INTO rls_test.allowed_users
 SELECT name, uid FROM rls_test.personas
 UNION SELECT p.name, pr.id FROM rls_test.personas p JOIN public.profiles pr ON pr.parent_id = p.uid WHERE p.kind = 'parent'
+UNION SELECT p.name, g.student_id FROM rls_test.personas p JOIN public.student_guardians g ON g.guardian_id = p.uid WHERE p.kind = 'parent'
 UNION SELECT p.name, gs.student_id FROM rls_test.personas p
       JOIN public.student_groups sg ON sg.teacher_id = p.uid JOIN public.group_students gs ON gs.group_id = sg.id
       WHERE p.kind = 'teacher';
@@ -124,6 +126,9 @@ INSERT INTO rls_test.allowed_groups
 SELECT p.name, gs.group_id FROM rls_test.personas p JOIN public.group_students gs ON gs.student_id = p.uid WHERE p.kind = 'student'
 UNION SELECT p.name, gs.group_id FROM rls_test.personas p
       JOIN public.profiles pr ON pr.parent_id = p.uid JOIN public.group_students gs ON gs.student_id = pr.id
+      WHERE p.kind = 'parent'
+UNION SELECT p.name, gs.group_id FROM rls_test.personas p
+      JOIN public.student_guardians g ON g.guardian_id = p.uid JOIN public.group_students gs ON gs.student_id = g.student_id
       WHERE p.kind = 'parent'
 UNION SELECT p.name, sg.id FROM rls_test.personas p JOIN public.student_groups sg ON sg.teacher_id = p.uid WHERE p.kind = 'teacher';
 
@@ -353,6 +358,12 @@ SELECT rls_test.expect_blocked('alunno S1', 'salvare codice a nome di S3',
   $$INSERT INTO public.student_code_drafts (student_id, task_id, code_type) VALUES ('00000000-0000-0000-0000-000000000103', '00000000-0000-0000-0000-00000000f001', 'python')$$);
 SELECT rls_test.expect_blocked('genitore P1', 'collegarsi come genitore di S3',
   $$UPDATE public.profiles SET parent_id = '00000000-0000-0000-0000-000000000201' WHERE id = '00000000-0000-0000-0000-000000000103'$$);
+SELECT rls_test.expect_blocked('genitore P1', 'farsi secondo genitore di S3',
+  $$INSERT INTO public.student_guardians (student_id, guardian_id) VALUES ('00000000-0000-0000-0000-000000000103', '00000000-0000-0000-0000-000000000201')$$);
+SELECT rls_test.expect_blocked('genitore P1', 'collegare S1 a sé con la funzione dell''admin',
+  $$SELECT public.admin_set_parent_children('00000000-0000-0000-0000-000000000201', ARRAY['00000000-0000-0000-0000-000000000101', '00000000-0000-0000-0000-000000000103']::uuid[])$$);
+SELECT rls_test.expect_blocked('genitore P3', 'diventare genitore principale di S2',
+  $$UPDATE public.profiles SET parent_id = '00000000-0000-0000-0000-000000000203' WHERE id = '00000000-0000-0000-0000-000000000102'$$);
 SELECT rls_test.expect_blocked('genitore P1', 'dare il consenso media per S3',
   $$INSERT INTO public.media_consents (student_id, purpose, granted) VALUES ('00000000-0000-0000-0000-000000000103', 'open_day', true)$$);
 -- Consenso AI: si scrive solo con set_ai_consent / set_student_birth_year (11_ai_consent.sql)
@@ -406,6 +417,13 @@ END $$;
 SELECT rls_test.expect('genitore P1', 'gli anni di nascita dei figli', 'SELECT count(*) FROM public.student_birth_years', 2);
 SELECT rls_test.expect('genitore P1', 'il consenso AI dei figli (solo S1)', 'SELECT count(*) FROM public.ai_consents', 1);
 SELECT rls_test.expect('genitore P2', 'il consenso AI del figlio S3', 'SELECT count(*) FROM public.ai_consents', 1);
+-- Secondo genitore (student_guardians): vede i figli come il genitore principale
+SELECT rls_test.expect('genitore P3', 'sé stesso e i figli S2 e S3 (secondo genitore)', 'SELECT count(*) FROM public.profiles', 3);
+SELECT rls_test.expect('genitore P3', 'i gruppi di S2 e S3', 'SELECT count(*) FROM public.student_groups', 2);
+SELECT rls_test.expect('genitore P3', 'l''anno di nascita di S2 (S3 non ce l''ha)', 'SELECT count(*) FROM public.student_birth_years', 1);
+SELECT rls_test.expect('genitore P3', 'il consenso AI di S3 dato da P2', 'SELECT count(*) FROM public.ai_consents', 1);
+SELECT rls_test.expect('genitore P3', 'i propri collegamenti da secondo genitore', 'SELECT count(*) FROM public.student_guardians', 2);
+SELECT rls_test.expect('genitore P1', 'il secondo genitore di S2', 'SELECT count(*) FROM public.student_guardians', 1);
 SELECT rls_test.expect('alunno S1', 'il proprio consenso AI e il suo storico', 'SELECT count(*) FROM public.ai_consent_events', 1);
 SELECT rls_test.expect('insegnante T1', 'il proprio gruppo', 'SELECT count(*) FROM public.student_groups WHERE teacher_id = auth.uid()', 1);
 SELECT rls_test.expect('insegnante T1', 'gli alunni del proprio gruppo', $$SELECT count(*) FROM public.group_students WHERE group_id = '00000000-0000-0000-0000-00000000a001'$$, 2);

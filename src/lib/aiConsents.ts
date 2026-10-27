@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { formatConsentDate } from '@/lib/mediaConsents';
+import { fetchChildIds } from '@/lib/familyClient';
 
 /**
  * Consenso agli strumenti AI per gli studenti (L. 132/2025, art. 4 c. 4;
@@ -177,7 +178,7 @@ export async function fetchChildrenAiState(parentId: string): Promise<{ version:
   const { data: kids } = await supabase
     .from('profiles')
     .select('id, full_name')
-    .eq('parent_id', parentId)
+    .in('id', await fetchChildIds(supabase, parentId))
     .eq('role', 'student');
   const list = kids ?? [];
   if (list.length === 0) return null;

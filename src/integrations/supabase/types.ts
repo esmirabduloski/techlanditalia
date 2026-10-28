@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_trash: {
+        Row: {
+          batch_id: string
+          deleted_at: string
+          deleted_by: string | null
+          previous_banned_until: string | null
+          user_id: string
+        }
+        Insert: {
+          batch_id: string
+          deleted_at?: string
+          deleted_by?: string | null
+          previous_banned_until?: string | null
+          user_id: string
+        }
+        Update: {
+          batch_id?: string
+          deleted_at?: string
+          deleted_by?: string | null
+          previous_banned_until?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_access_logs: {
         Row: {
           action: string
@@ -938,6 +962,9 @@ export type Database = {
           referral_code: string | null
           referrer_email: string | null
           referrer_id: string | null
+          second_parent_email: string | null
+          second_parent_name: string | null
+          second_parent_phone: string | null
           source: Database["public"]["Enums"]["crm_lead_source"]
           source_record_id: string | null
           tags: string[]
@@ -968,6 +995,9 @@ export type Database = {
           referral_code?: string | null
           referrer_email?: string | null
           referrer_id?: string | null
+          second_parent_email?: string | null
+          second_parent_name?: string | null
+          second_parent_phone?: string | null
           source?: Database["public"]["Enums"]["crm_lead_source"]
           source_record_id?: string | null
           tags?: string[]
@@ -998,6 +1028,9 @@ export type Database = {
           referral_code?: string | null
           referrer_email?: string | null
           referrer_id?: string | null
+          second_parent_email?: string | null
+          second_parent_name?: string | null
+          second_parent_phone?: string | null
           source?: Database["public"]["Enums"]["crm_lead_source"]
           source_record_id?: string | null
           tags?: string[]
@@ -3323,6 +3356,39 @@ export type Database = {
           },
         ]
       }
+      student_guardians: {
+        Row: {
+          created_at: string
+          guardian_id: string
+          student_id: string
+        }
+        Insert: {
+          created_at?: string
+          guardian_id: string
+          student_id: string
+        }
+        Update: {
+          created_at?: string
+          guardian_id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_guardians_guardian_id_fkey"
+            columns: ["guardian_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_guardians_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_password_settings: {
         Row: {
           own_password: boolean
@@ -3941,6 +4007,10 @@ export type Database = {
           verified_factors: number
         }[]
       }
+      admin_set_parent_children: {
+        Args: { _children: string[]; _parent: string }
+        Returns: undefined
+      }
       ai_access_allowed: { Args: { _student: string }; Returns: boolean }
       ai_self_consent_age: { Args: { _student: string }; Returns: boolean }
       check_login_rate_limit: {
@@ -4127,6 +4197,7 @@ export type Database = {
           version: string
         }[]
       }
+      purge_account_trash: { Args: { _batch: string }; Returns: string[] }
       purge_trash_batch: { Args: { _batch: string }; Returns: number }
       record_legal_consents: { Args: { _items: Json }; Returns: number }
       release_group_certificates: {
@@ -4280,6 +4351,7 @@ export type Database = {
         Args: { _group_id: string; _teacher_id: string }
         Returns: boolean
       }
+      trash_account: { Args: { _by?: string; _user: string }; Returns: string }
       trash_row_label: { Args: { _row: Json }; Returns: string }
       use_my_streak_freeze: {
         Args: { _freeze_type: string; _reason?: string; _student_id: string }

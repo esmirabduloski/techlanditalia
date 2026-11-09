@@ -46,7 +46,7 @@ export function CRMCancellationDialog({ open, onOpenChange, lead, students, open
   const [reasonOther, setReasonOther] = useState('');
   const [wouldHaveStayed, setWouldHaveStayed] = useState('');
   const [wouldReturn, setWouldReturn] = useState<WouldReturn | ''>('');
-  const [markLost, setMarkLost] = useState(true);
+  const [markCancelled, setMarkCancelled] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -56,12 +56,12 @@ export function CRMCancellationDialog({ open, onOpenChange, lead, students, open
     setReasonOther('');
     setWouldHaveStayed('');
     setWouldReturn('');
-    setMarkLost(true);
+    setMarkCancelled(true);
   }, [open, students]);
 
-  // Se lascia un solo figlio e gli altri restano, il lead non è perso
+  // Se lascia un solo figlio e gli altri restano, la famiglia resta cliente
   useEffect(() => {
-    setMarkLost(who === FAMILY || students.length <= 1);
+    setMarkCancelled(who === FAMILY || students.length <= 1);
   }, [who, students.length]);
 
   const valid = !!reason && !!wouldReturn && (reason !== 'other' || reasonOther.trim().length > 0);
@@ -110,8 +110,8 @@ export function CRMCancellationDialog({ open, onOpenChange, lead, students, open
       ].join('\n'),
       metadata: { subscription_cancellation: true, student_id: row.student_id },
     });
-    if (markLost && lead.pipeline_stage !== 'lost') {
-      await onUpdate(lead.id, { pipeline_stage: 'lost' });
+    if (markCancelled && lead.pipeline_stage !== 'cancelled') {
+      await onUpdate(lead.id, { pipeline_stage: 'cancelled' });
     }
 
     setSaving(false);
@@ -199,8 +199,8 @@ export function CRMCancellationDialog({ open, onOpenChange, lead, students, open
           </fieldset>
 
           <div className="flex items-center gap-2">
-            <Checkbox id="cancel-lost" checked={markLost} onCheckedChange={(v) => setMarkLost(v === true)} />
-            <Label htmlFor="cancel-lost" className="font-normal">Sposta il lead in "Perso"</Label>
+            <Checkbox id="cancel-stage" checked={markCancelled} onCheckedChange={(v) => setMarkCancelled(v === true)} />
+            <Label htmlFor="cancel-stage" className="font-normal">Sposta il lead in "Disdetto"</Label>
           </div>
         </div>
 

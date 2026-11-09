@@ -1,7 +1,7 @@
 import { CrmLead, PIPELINE_STAGES, SOURCE_LABELS, LeadSource } from "@/hooks/useCRM";
 import { useCRMStats } from "@/hooks/useCRM";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, Users, AlertCircle, Trophy, XCircle } from "lucide-react";
+import { TrendingUp, Users, AlertCircle, Trophy, XCircle, UserMinus } from "lucide-react";
 import { CRMCancellationStats } from "./CRMCancellationStats";
 import { CRMSatisfactionStats } from "./CRMSatisfactionStats";
 import { CRMMonthlyReportCard } from "./CRMMonthlyReportCard";
@@ -14,10 +14,11 @@ export function CRMAnalytics({ leads }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
         <StatCard icon={<Users className="w-4 h-4" />} label="Totale lead" value={stats.total} />
         <StatCard icon={<TrendingUp className="w-4 h-4" />} label="In funnel" value={stats.inFunnel} color="text-blue-500" />
         <StatCard icon={<Trophy className="w-4 h-4" />} label="Acquisiti" value={stats.won} color="text-green-500" />
+        <StatCard icon={<UserMinus className="w-4 h-4" />} label="Disdetti" value={stats.cancelled} color="text-orange-600" />
         <StatCard icon={<XCircle className="w-4 h-4" />} label="Persi" value={stats.lost} color="text-red-500" />
         <StatCard icon={<AlertCircle className="w-4 h-4" />} label="FU scaduti" value={stats.overdueFollowups} color="text-amber-500" />
       </div>

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-export type PipelineStage = "new" | "contacted" | "qualified" | "proposal_sent" | "won" | "lost" | "nurture";
+export type PipelineStage = "new" | "contacted" | "qualified" | "proposal_sent" | "won" | "cancelled" | "lost" | "nurture";
 export type LeadSource = "trial_booking" | "contact_form" | "newsletter" | "registered" | "manual" | "import";
 export type InteractionType = "email" | "whatsapp" | "call" | "note" | "quote_sent" | "meeting" | "status_change" | "sms";
 
@@ -58,6 +58,7 @@ export const PIPELINE_STAGES: { value: PipelineStage; label: string; color: stri
   { value: "qualified", label: "Qualificato", color: "bg-cyan-500" },
   { value: "proposal_sent", label: "Preventivo inviato", color: "bg-purple-500" },
   { value: "won", label: "Cliente acquisito", color: "bg-green-500" },
+  { value: "cancelled", label: "Disdetto", color: "bg-orange-600" },
   { value: "lost", label: "Perso", color: "bg-red-500" },
   { value: "nurture", label: "Nurturing", color: "bg-amber-500" },
 ];
@@ -272,7 +273,7 @@ export function useCRMInteractions(leadId: string | null) {
 export function useCRMStats(leads: CrmLead[]) {
   return useMemo(() => {
     const byStage: Record<PipelineStage, number> = {
-      new: 0, contacted: 0, qualified: 0, proposal_sent: 0, won: 0, lost: 0, nurture: 0,
+      new: 0, contacted: 0, qualified: 0, proposal_sent: 0, won: 0, cancelled: 0, lost: 0, nurture: 0,
     };
     const bySource: Record<LeadSource, number> = {
       trial_booking: 0, contact_form: 0, newsletter: 0, registered: 0, manual: 0, import: 0,
@@ -284,11 +285,12 @@ export function useCRMStats(leads: CrmLead[]) {
     const total = leads.length;
     const won = byStage.won;
     const lost = byStage.lost;
-    const inFunnel = total - won - lost;
+    const cancelled = byStage.cancelled;
+    const inFunnel = total - won - cancelled - lost;
     const conversionRate = (won + lost) > 0 ? (won / (won + lost)) * 100 : 0;
     const overdueFollowups = leads.filter(
       (l) => l.next_followup_at && new Date(l.next_followup_at) < new Date()
     ).length;
-    return { byStage, bySource, total, won, lost, inFunnel, conversionRate, overdueFollowups };
+    return { byStage, bySource, total, won, cancelled, lost, inFunnel, conversionRate, overdueFollowups };
   }, [leads]);
 }

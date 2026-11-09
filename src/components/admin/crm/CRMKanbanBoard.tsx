@@ -37,7 +37,7 @@ export function CRMKanbanBoard({ leads, onSelectLead, onMoveLead, onSetInterest,
   };
 
   const grouped: Record<PipelineStage, CrmLead[]> = {
-    new: [], contacted: [], qualified: [], proposal_sent: [], won: [], lost: [], nurture: [],
+    new: [], contacted: [], qualified: [], proposal_sent: [], won: [], cancelled: [], lost: [], nurture: [],
   };
   leads.forEach((l) => grouped[l.pipeline_stage].push(l));
 

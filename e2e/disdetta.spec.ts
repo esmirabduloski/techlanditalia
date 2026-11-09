@@ -42,7 +42,7 @@ test.beforeEach(async ({ fake, page }) => {
   await fake.signInBeforeLoad(page, admin);
 });
 
-test("l'admin registra la disdetta con il questionario e il lead va in Perso", async ({ page, fake }) => {
+test("l'admin registra la disdetta con il questionario e il lead va in Disdetto", async ({ page, fake }) => {
   fake.seed("subscription_pauses", [{
     id: "d0000000-0000-4000-8000-000000000001",
     student_id: student.id,
@@ -76,7 +76,7 @@ test("l'admin registra la disdetta con il questionario e il lead va in Perso", a
       created_by: admin.id,
     }),
   ]);
-  expect(fake.table("crm_leads")[0].pipeline_stage).toBe("lost");
+  expect(fake.table("crm_leads")[0].pipeline_stage).toBe("cancelled");
   // Chi disdice non resta in pausa
   expect(fake.table("subscription_pauses")[0]).toMatchObject({ end_reason: "manual" });
   expect(fake.table("crm_interactions")).toEqual([

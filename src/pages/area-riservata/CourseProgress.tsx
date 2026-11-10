@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, Link, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useStudentProgress } from '@/hooks/useStudentProgress';
+import { computeLessonAccess } from '@/lib/lessonAccess';
 import { supabase } from '@/integrations/supabase/client';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -222,6 +223,7 @@ export default function CourseProgress() {
   const progressPercent = totalTasksCount > 0 
     ? Math.round((completedTasksCount / totalTasksCount) * 100) 
     : 0;
+  const lessonAccess = computeLessonAccess(lessons, new Set(lessonProgress.map(p => p.lesson_id)), scheduleByLessonNumber);
 
   return (
     <Layout>
@@ -289,14 +291,9 @@ export default function CourseProgress() {
                   </CardContent>
                 </Card>
               ) : (
-                lessons.map((lesson, index) => {
-                  const completed = isLessonCompleted(lesson.id);
-                  const isNext = !completed && lessons.slice(0, index).every(l => isLessonCompleted(l.id));
-                  const isLocked = !completed && !isNext && index > 0;
-                  const scheduledDate = scheduleByLessonNumber[lesson.lesson_number];
-                  const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local
-                  const isOnOrAfterScheduledDate = scheduledDate ? todayStr >= scheduledDate : false;
-                  const canComplete = isNext && isOnOrAfterScheduledDate;
+                lessons.map((lesson) => {
+                  const { completed, isNext, accessible, scheduledDate, canComplete } = lessonAccess[lesson.id];
+                  const isLocked = !accessible;
 
                     const cardContent = (
                       <CardContent className="py-4">
@@ -355,7 +352,9 @@ export default function CourseProgress() {
                                   </>
                                 )}
                               </Button>
-                            ) : isNext && scheduledDate ? (
+                            ) : accessible ? (
+                              <Badge variant="outline" className="text-primary border-primary">Disponibile</Badge>
+                            ) : scheduledDate ? (
                               <Badge variant="secondary" title={`Disponibile dal ${new Date(scheduledDate).toLocaleDateString('it-IT')}`}>
                                 <Lock className="w-3 h-3 mr-1" />
                                 Dal {new Date(scheduledDate).toLocaleDateString('it-IT')}
@@ -372,7 +371,7 @@ export default function CourseProgress() {
                     );
 
                     // Se la lezione è accessibile (completata o sbloccata per data), rendi cliccabile
-                    if (completed || canComplete) {
+                    if (accessible) {
                       return (
                         <Link 
                           key={lesson.id}

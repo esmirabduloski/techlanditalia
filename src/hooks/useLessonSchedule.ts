@@ -12,6 +12,7 @@ export function useLessonSchedule(courseId: string | undefined, userId: string |
     setSchedule({});
     if (!courseId || !userId) return;
     async function load() {
+      if (!courseId || !userId) return;
       const { data: memberships, error: membershipError } = await supabase
         .from('group_students').select('group_id').eq('student_id', userId);
       if (membershipError) { console.error('Lesson memberships unavailable', membershipError); return; }

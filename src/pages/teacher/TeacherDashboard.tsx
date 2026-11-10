@@ -13,17 +13,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Progress } from "@/components/ui/progress";
 import { 
-  Loader2, User, BookOpen, Users, UsersRound, LogOut, ShieldCheck, Phone, Mail, Clock,
+  Loader2, User, BookOpen, Users, LogOut, ShieldCheck, Phone, Mail, Clock,
   ChevronRight, GraduationCap, Plus, Trash2, Edit2, Bell, Check, CheckCheck,
-  BarChart3, CalendarDays, ExternalLink, TrendingUp, TrendingDown, AlertTriangle,
+  BarChart3, CalendarDays, ExternalLink, TrendingUp, AlertTriangle, Search,
   Link as LinkIcon, Book, FileText, Calendar, Video, MessageCircle, HelpCircle, Settings, Star, Globe, Shield, Award, RotateCcw
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BugReportButton } from '@/components/BugReportButton';
 import { TeacherWeeklyCalendar } from '@/components/teacher/TeacherWeeklyCalendar';
 import { PushNotificationsCard } from '@/components/notifications/PushNotificationsCard';
+import { TeacherGroupsOverview } from '@/components/teacher/TeacherGroupsOverview';
+import { format } from 'date-fns';
 
 interface AvailabilitySlot {
   day: string;
@@ -59,6 +60,7 @@ interface StudentGroup {
   lesson_time?: string | null;
   status: string;
   lessons_completed?: number;
+  teacher_meeting_link?: string | null;
 }
 
 interface TeacherNotification {
@@ -142,7 +144,7 @@ export default function TeacherDashboard() {
   
   const [isTeacher, setIsTeacher] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("profilo");
+  const [activeTab, setActiveTab] = useState("studenti");
   const [profile, setProfile] = useState<{ full_name: string; email: string | null; onboarding_completed: boolean | null } | null>(null);
   const [teacherProfile, setTeacherProfile] = useState<TeacherProfile | null>(null);
   const [assignedCourses, setAssignedCourses] = useState<Course[]>([]);
@@ -163,8 +165,8 @@ export default function TeacherDashboard() {
   const [calendarLessons, setCalendarLessons] = useState<any[]>([]);
   const [teacherLinks, setTeacherLinks] = useState<TeacherLink[]>([]);
   const [statsLoading, setStatsLoading] = useState(true);
-  const [groupStatusFilter, setGroupStatusFilter] = useState<string>('all');
-  const [groupSortBy, setGroupSortBy] = useState<string>('title');
+  // Consegne ancora da valutare; null se il conteggio non è disponibile
+  const [pendingCount, setPendingCount] = useState<number | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingChecked, setOnboardingChecked] = useState(false);
 
@@ -270,7 +272,7 @@ export default function TeacherDashboard() {
       const { data: groupsData } = await supabase
         .from('student_groups')
         .select(`
-          id, title, course_id, start_date, last_lesson_title, max_lessons, lesson_time, status,
+          id, title, course_id, start_date, last_lesson_title, max_lessons, lesson_time, status, teacher_meeting_link,
           courses!inner(title, emoji)
         `)
         .eq('teacher_id', effectiveUserId);
@@ -305,7 +307,8 @@ export default function TeacherDashboard() {
               student_count: count || 0,
               lesson_time: g.lesson_time,
               status: g.status || 'active',
-              lessons_completed: lessonsCount || 0
+              lessons_completed: lessonsCount || 0,
+              teacher_meeting_link: g.teacher_meeting_link || null
             };
           })
         );
@@ -331,6 +334,18 @@ export default function TeacherDashboard() {
         .order('sort_order', { ascending: true });
       
       setTeacherLinks(linksData || []);
+
+      // Compiti da valutare (le policy RLS mostrano solo le consegne dei propri studenti).
+      // In impersonificazione l'admin vedrebbe quelle di tutti: meglio nessun numero.
+      if (isImpersonating) {
+        setPendingCount(null);
+      } else {
+        const { count: pending, error: pendingError } = await supabase
+          .from('homework_submissions')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'pending');
+        setPendingCount(pendingError ? null : pending ?? 0);
+      }
 
       // Fetch statistics and upcoming lessons
       await fetchStatistics(fetchedGroups);
@@ -442,7 +457,9 @@ export default function TeacherDashboard() {
         setTopStudents(sorted.slice(0, 3));
 
         // Students with < 70% attendance
-        const lowAttendance = allStudentActivities.filter(s => s.attendanceRate < 70);
+        const lowAttendance = allStudentActivities
+          .filter(s => s.attendanceRate < 70)
+          .sort((a, b) => a.attendanceRate - b.attendanceRate);
         setLowAttendanceStudents(lowAttendance.slice(0, 5));
       }
     } catch (error) {
@@ -686,12 +703,13 @@ export default function TeacherDashboard() {
   };
 
   const getDateLabel = (dateStr: string) => {
-    const today = new Date().toISOString().split('T')[0];
-    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    // Date nel fuso del browser: con toISOString() dopo mezzanotte "oggi" risultava ancora ieri
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const tomorrow = format(new Date(Date.now() + 24 * 60 * 60 * 1000), 'yyyy-MM-dd');
     
     if (dateStr === today) return 'Oggi';
     if (dateStr === tomorrow) return 'Domani';
-    return new Date(dateStr).toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' });
+    return new Date(`${dateStr}T00:00:00`).toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' });
   };
 
   if (authLoading || isLoading) {
@@ -709,6 +727,30 @@ export default function TeacherDashboard() {
     await supabase.from('profiles').update({ onboarding_completed: false }).eq('id', effectiveUserId);
     setShowOnboarding(true);
   };
+
+  const todayStr = format(new Date(), 'yyyy-MM-dd');
+  const todayLong = new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+  const firstName = profile?.full_name?.trim().split(/\s+/)[0] || '';
+
+  // calendarLessons è già ordinato per data: la prima lezione di ogni gruppo è la prossima
+  const nextLessonByGroup = new Map<string, { lesson_date: string; lesson_number: number; lesson_time: string | null }>();
+  calendarLessons.forEach(l => {
+    if (!nextLessonByGroup.has(l.group_id)) nextLessonByGroup.set(l.group_id, l);
+  });
+
+  const attendanceByGroup = new Map<string, number>();
+  groupStats.forEach(s => {
+    if (s.totalLessons > 0) attendanceByGroup.set(s.groupId, s.attendanceRate);
+  });
+
+  const todayLessonsCount = upcomingLessons.filter(l => l.lesson_date === todayStr).length;
+  const daySummary = groups.length === 0
+    ? 'Qui trovi i tuoi gruppi, le lezioni e i compiti da valutare.'
+    : todayLessonsCount > 0
+      ? `Oggi hai ${todayLessonsCount} ${todayLessonsCount === 1 ? 'lezione' : 'lezioni'}.`
+      : upcomingLessons.length > 0
+        ? `Nessuna lezione oggi. La prossima è ${getDateLabel(upcomingLessons[0].lesson_date).toLowerCase()}.`
+        : 'Nessuna lezione in programma nei prossimi 7 giorni.';
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -851,19 +893,28 @@ export default function TeacherDashboard() {
       <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         <PushNotificationsCard />
 
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 sm:gap-3">
-            <GraduationCap className="w-6 h-6 sm:w-8 sm:h-8 text-tech-teal flex-shrink-0" />
-            Dashboard Insegnante
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Gestisci i tuoi corsi, gruppi e studenti
-          </p>
-          <div className="grid grid-cols-2 sm:flex gap-2 sm:gap-3 mt-3">
+        <div className="mb-6 sm:mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-sm text-muted-foreground capitalize">{todayLong}</p>
+            <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 sm:gap-3">
+              <GraduationCap className="w-6 h-6 sm:w-8 sm:h-8 text-tech-teal flex-shrink-0" />
+              <span className="truncate">{firstName ? `Ciao, ${firstName}` : 'Dashboard Insegnante'}</span>
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">{daySummary}</p>
+          </div>
+          <div className="grid grid-cols-2 sm:flex gap-2 sm:gap-3">
             <Button asChild variant="default">
               <Link to="/insegnante/valutazioni">
                 <Award className="w-4 h-4 mr-2" />
                 Valuta Compiti
+                {!!pendingCount && (
+                  <span
+                    className="ml-2 rounded-full bg-background text-foreground text-xs font-semibold px-1.5 min-w-5 h-5 inline-flex items-center justify-center"
+                    aria-label={`${pendingCount} da valutare`}
+                  >
+                    {pendingCount > 99 ? '99+' : pendingCount}
+                  </span>
+                )}
               </Link>
             </Button>
             <Button asChild variant="outline">
@@ -875,191 +926,153 @@ export default function TeacherDashboard() {
           </div>
         </div>
 
-        {/* Statistics Section */}
-        <div className="grid gap-4 sm:gap-6 md:grid-cols-2 mb-6 sm:mb-8">
-          {/* Attendance by Group */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-primary" />
-                Presenze per Gruppo
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {statsLoading ? (
-                <div className="flex justify-center py-4">
-                  <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                </div>
-              ) : groupStats.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nessun dato disponibile</p>
-              ) : (
-                <div className="space-y-4">
-                  {groupStats.map(stat => (
-                    <div key={stat.groupId} className="space-y-1">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="font-medium">{stat.groupTitle}</span>
-                        <span className={stat.attendanceRate >= 80 ? 'text-green-600' : stat.attendanceRate >= 60 ? 'text-yellow-600' : 'text-red-600'}>
-                          {stat.attendanceRate}%
-                        </span>
-                      </div>
-                      <Progress 
-                        value={stat.attendanceRate} 
-                        className="h-2"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        {stat.totalStudents} studenti • {stat.totalLessons} lezioni
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        {/* Gruppi: la prima cosa che serve all'insegnante */}
+        <TeacherGroupsOverview
+          groups={groups}
+          nextLessons={nextLessonByGroup}
+          attendanceRates={attendanceByGroup}
+          dateLabel={getDateLabel}
+          today={todayStr}
+        />
 
-          {/* Student Activity */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Users className="w-5 h-5 text-primary" />
-                Attività Studenti
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {statsLoading ? (
-                <div className="flex justify-center py-4">
-                  <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {/* Top Students */}
-                  {topStudents.length > 0 && (
-                    <div>
-                      <h4 className="text-sm font-medium flex items-center gap-1 mb-2">
-                        <TrendingUp className="w-4 h-4 text-green-600" />
-                        Più Attivi
-                      </h4>
-                      <div className="space-y-2">
-                        {topStudents.map((s, i) => (
-                          <div key={s.studentId} className="flex items-center justify-between text-sm">
-                            <div className="flex items-center gap-2">
-                              <Badge variant="secondary" className="w-5 h-5 p-0 flex items-center justify-center text-xs">
-                                {i + 1}
-                              </Badge>
-                              <button
-                                onClick={() => navigate(`/insegnante/studente/${s.studentId}`)}
-                                className="hover:text-primary hover:underline"
-                              >
-                                {s.studentName}
-                              </button>
+        {/* Lezioni in arrivo + studenti da seguire */}
+        {groups.length > 0 && (
+          <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3 mb-6 sm:mb-8">
+            <Card className="lg:col-span-2">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <CalendarDays className="w-5 h-5 text-primary" />
+                  Prossime lezioni
+                  <span className="text-sm font-normal text-muted-foreground">· 7 giorni</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {upcomingLessons.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Nessuna lezione in programma nei prossimi 7 giorni.</p>
+                ) : (
+                  <ul className="divide-y -my-2">
+                    {upcomingLessons.map(lesson => {
+                      const time = (lesson.lesson_time || lesson.group_lesson_time)?.substring(0, 5);
+                      const isToday = lesson.lesson_date === todayStr;
+                      return (
+                        <li key={lesson.id}>
+                          <Link
+                            to={`/insegnante/gruppo/${lesson.group_id}`}
+                            className="flex items-center gap-3 py-2.5 -mx-2 px-2 rounded-md no-underline hover:bg-muted/50 transition-colors"
+                          >
+                            <div className={`flex flex-col items-center justify-center rounded-lg px-2 py-1.5 w-[84px] flex-shrink-0 ${isToday ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'}`}>
+                              <span className="text-xs font-semibold capitalize whitespace-nowrap">{getDateLabel(lesson.lesson_date)}</span>
+                              {time && <span className="text-xs opacity-90">{time}</span>}
                             </div>
-                            <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
-                              {s.attendanceRate}%
-                            </Badge>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm truncate">{lesson.group_title}</p>
+                              <p className="text-xs text-muted-foreground truncate">
+                                Lezione {lesson.lesson_number}
+                                {lesson.lesson_title && ` · ${lesson.lesson_title}`}
+                              </p>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
 
-                  {/* Low Attendance Alert */}
-                  {lowAttendanceStudents.length > 0 && (
-                    <div>
-                      <h4 className="text-sm font-medium flex items-center gap-1 mb-2">
-                        <AlertTriangle className="w-4 h-4 text-amber-600" />
-                        Attenzione ({"<"}70%)
-                      </h4>
-                      <div className="space-y-2">
-                        {lowAttendanceStudents.map(s => (
-                          <div key={s.studentId} className="flex items-center justify-between text-sm">
-                            <button
-                              onClick={() => navigate(`/insegnante/studente/${s.studentId}`)}
-                              className="hover:text-primary hover:underline"
-                            >
-                              {s.studentName}
-                            </button>
-                            <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100">
-                              {s.attendanceRate}%
-                            </Badge>
-                          </div>
-                        ))}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Users className="w-5 h-5 text-primary" />
+                  Presenze studenti
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {statsLoading ? (
+                  <div className="flex justify-center py-4">
+                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {lowAttendanceStudents.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-medium flex items-center gap-1.5 mb-2">
+                          <AlertTriangle className="w-4 h-4 text-amber-600" />
+                          Da seguire (sotto il 70%)
+                        </h4>
+                        <ul className="space-y-1.5">
+                          {lowAttendanceStudents.map(s => (
+                            <li key={s.studentId} className="flex items-center justify-between gap-2 text-sm">
+                              <Link to={`/insegnante/studente/${s.studentId}`} className="truncate hover:text-primary hover:underline">
+                                {s.studentName}
+                              </Link>
+                              <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100 flex-shrink-0">
+                                {s.attendanceRate}%
+                              </Badge>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {topStudents.length === 0 && lowAttendanceStudents.length === 0 && (
-                    <p className="text-sm text-muted-foreground">Nessun dato disponibile</p>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                    {topStudents.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-medium flex items-center gap-1.5 mb-2">
+                          <TrendingUp className="w-4 h-4 text-green-600" />
+                          Più presenti
+                        </h4>
+                        <ul className="space-y-1.5">
+                          {topStudents.map(s => (
+                            <li key={s.studentId} className="flex items-center justify-between gap-2 text-sm">
+                              <Link to={`/insegnante/studente/${s.studentId}`} className="truncate hover:text-primary hover:underline">
+                                {s.studentName}
+                              </Link>
+                              <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 flex-shrink-0">
+                                {s.attendanceRate}%
+                              </Badge>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {topStudents.length === 0 && lowAttendanceStudents.length === 0 && (
+                      <p className="text-sm text-muted-foreground">
+                        Qui vedrai chi salta spesso le lezioni, appena segni le prime presenze.
+                      </p>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Weekly Calendar */}
         {calendarLessons.length > 0 && (
           <TeacherWeeklyCalendar lessons={calendarLessons} />
         )}
 
-        {/* Upcoming Lessons */}
-        {upcomingLessons.length > 0 && (
-          <Card className="mb-8">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <CalendarDays className="w-5 h-5 text-primary" />
-                Lezioni in Arrivo (prossimi 7 giorni)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {upcomingLessons.map(lesson => (
-                  <div 
-                    key={lesson.id}
-                    className="flex items-center gap-3 p-3 rounded-lg border bg-background hover:bg-muted/50 cursor-pointer transition-colors"
-                    onClick={() => navigate(`/insegnante/gruppo/${lesson.group_id}`)}
-                  >
-                    <div className="flex flex-col items-center justify-center bg-primary/10 rounded-lg p-2 min-w-[60px]">
-                      <span className="text-xs font-medium text-primary">
-                        {getDateLabel(lesson.lesson_date)}
-                      </span>
-                      {lesson.lesson_date !== new Date().toISOString().split('T')[0] && (
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(lesson.lesson_date).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">{lesson.group_title}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Lezione {lesson.lesson_number}
-                        {lesson.lesson_title && ` • ${lesson.lesson_title}`}
-                        {(lesson.lesson_time || lesson.group_lesson_time) && ` • ${(lesson.lesson_time || lesson.group_lesson_time)?.substring(0, 5)}`}
-                      </p>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 gap-1">
-            <TabsTrigger value="profilo" className="flex-col sm:flex-row gap-1 sm:gap-2 py-2">
-              <User className="w-4 h-4" />
-              <span className="text-[10px] sm:text-sm">Profilo</span>
+          <TabsList className={`grid w-full gap-1 h-auto ${teacherLinks.length > 0 ? 'grid-cols-4' : 'grid-cols-3'}`}>
+            <TabsTrigger value="studenti" className="flex-col sm:flex-row gap-1 sm:gap-2 py-2">
+              <Users className="w-4 h-4" />
+              <span className="text-[10px] sm:text-sm">Studenti</span>
             </TabsTrigger>
             <TabsTrigger value="corsi" className="flex-col sm:flex-row gap-1 sm:gap-2 py-2">
               <BookOpen className="w-4 h-4" />
               <span className="text-[10px] sm:text-sm">Corsi</span>
             </TabsTrigger>
-            <TabsTrigger value="studenti" className="flex-col sm:flex-row gap-1 sm:gap-2 py-2">
-              <Users className="w-4 h-4" />
-              <span className="text-[10px] sm:text-sm">Studenti</span>
-            </TabsTrigger>
-            <TabsTrigger value="gruppi" className="flex-col sm:flex-row gap-1 sm:gap-2 py-2">
-              <UsersRound className="w-4 h-4" />
-              <span className="text-[10px] sm:text-sm">Gruppi</span>
+            {teacherLinks.length > 0 && (
+              <TabsTrigger value="link" className="flex-col sm:flex-row gap-1 sm:gap-2 py-2">
+                <LinkIcon className="w-4 h-4" />
+                <span className="text-[10px] sm:text-sm">Link utili</span>
+              </TabsTrigger>
+            )}
+            <TabsTrigger value="profilo" className="flex-col sm:flex-row gap-1 sm:gap-2 py-2">
+              <User className="w-4 h-4" />
+              <span className="text-[10px] sm:text-sm">Profilo</span>
             </TabsTrigger>
           </TabsList>
 
@@ -1263,220 +1276,75 @@ export default function TeacherDashboard() {
                   )}
                 </div>
 
-                {/* Useful Links Section */}
-                {teacherLinks.length > 0 && (
-                  <div className="border-t pt-6">
-                    <h4 className="font-medium mb-4 flex items-center gap-2">
-                      <LinkIcon className="w-4 h-4 text-muted-foreground" />
-                      Link Utili
-                    </h4>
-                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                      {teacherLinks.map(link => {
-                        const IconComponent = getIconComponent(link.icon);
-                        return (
-                          <a
-                            key={link.id}
-                            href={link.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-3 p-3 rounded-lg border bg-background hover:bg-muted/50 hover:border-primary/50 transition-colors group"
-                          >
-                            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                              <IconComponent className="w-5 h-5" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-sm">{link.title}</p>
-                              {link.description && (
-                                <p className="text-xs text-muted-foreground truncate">{link.description}</p>
-                              )}
-                            </div>
-                            <ExternalLink className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                          </a>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
               </CardContent>
             </Card>
           </TabsContent>
 
           {/* Corsi Tab */}
           <TabsContent value="corsi" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Corsi Assegnati</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {assignedCourses.length === 0 ? (
-                  <div className="text-center py-8">
-                    <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">Nessun corso assegnato</p>
-                  </div>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-32">Slug</TableHead>
-                        <TableHead>Titolo</TableHead>
-                        <TableHead className="text-center">Lezioni</TableHead>
-                        <TableHead className="w-20"></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {assignedCourses.map(course => (
-                        <TableRow 
-                          key={course.id} 
-                          className="cursor-pointer hover:bg-muted/50"
-                          onClick={() => navigate(`/insegnante/corso/${course.slug}`)}
-                        >
-                          <TableCell className="font-mono text-xs text-muted-foreground">
-                            {course.slug}
-                          </TableCell>
-                          <TableCell>
-                            <span className="mr-2">{course.emoji}</span>
-                            {course.title}
-                          </TableCell>
-                          <TableCell className="text-center">{course.total_lessons}</TableCell>
-                          <TableCell>
-                            <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
+            {assignedCourses.length === 0 ? (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">Nessun corso assegnato</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {assignedCourses.map(course => (
+                  <Link
+                    key={course.id}
+                    to={`/insegnante/corso/${course.slug}`}
+                    className="flex items-center gap-3 p-4 rounded-lg border bg-background hover:bg-muted/50 hover:border-primary/50 transition-colors"
+                  >
+                    <span className="text-3xl leading-none" aria-hidden="true">{course.emoji}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold truncate">{course.title}</p>
+                      <p className="text-sm text-muted-foreground">{course.total_lessons} lezioni · materiali e compiti</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  </Link>
+                ))}
+              </div>
+            )}
           </TabsContent>
+
+          {/* Link utili Tab */}
+          {teacherLinks.length > 0 && (
+            <TabsContent value="link" className="space-y-6">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {teacherLinks.map(link => {
+                  const IconComponent = getIconComponent(link.icon);
+                  return (
+                    <a
+                      key={link.id}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-3 rounded-lg border bg-background hover:bg-muted/50 hover:border-primary/50 transition-colors group"
+                    >
+                      <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                        <IconComponent className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm">{link.title}</p>
+                        {link.description && (
+                          <p className="text-xs text-muted-foreground truncate">{link.description}</p>
+                        )}
+                      </div>
+                      <ExternalLink className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    </a>
+                  );
+                })}
+              </div>
+            </TabsContent>
+          )}
 
           {/* Studenti Tab */}
           <TabsContent value="studenti" className="space-y-6">
             <TeacherStudentsList groups={groups} />
           </TabsContent>
 
-          <TabsContent value="gruppi" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <CardTitle>Gruppi Assegnati</CardTitle>
-                  <div className="grid grid-cols-2 sm:flex items-center gap-2 sm:gap-3">
-                    <Select value={groupStatusFilter} onValueChange={setGroupStatusFilter}>
-                      <SelectTrigger className="w-full sm:w-[150px]">
-                        <SelectValue placeholder="Stato" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Tutti</SelectItem>
-                        <SelectItem value="active">Attivi</SelectItem>
-                        <SelectItem value="archived">Archiviati</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Select value={groupSortBy} onValueChange={setGroupSortBy}>
-                      <SelectTrigger className="w-full sm:w-[160px]">
-                        <SelectValue placeholder="Ordina per" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="title">Nome</SelectItem>
-                        <SelectItem value="progress">Progresso</SelectItem>
-                        <SelectItem value="students">Studenti</SelectItem>
-                        <SelectItem value="start_date">Data inizio</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {(() => {
-                  const filtered = groups
-                    .filter(g => groupStatusFilter === 'all' || g.status === groupStatusFilter)
-                    .sort((a, b) => {
-                      switch (groupSortBy) {
-                        case 'progress':
-                          return ((b.lessons_completed || 0) / (b.max_lessons || 1)) - ((a.lessons_completed || 0) / (a.max_lessons || 1));
-                        case 'students':
-                          return (b.student_count || 0) - (a.student_count || 0);
-                        case 'start_date':
-                          return (b.start_date || '').localeCompare(a.start_date || '');
-                        default:
-                          return a.title.localeCompare(b.title);
-                      }
-                    });
-
-                  if (filtered.length === 0) {
-                    return (
-                      <div className="text-center py-8">
-                        <UsersRound className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                        <p className="text-muted-foreground">
-                          {groups.length === 0 ? 'Nessun gruppo assegnato' : 'Nessun gruppo con questo filtro'}
-                        </p>
-                      </div>
-                    );
-                  }
-
-                  return (
-                    <div className="space-y-3">
-                      {filtered.map(group => {
-                        const progressPercent = group.max_lessons > 0 
-                          ? Math.round(((group.lessons_completed || 0) / group.max_lessons) * 100) 
-                          : 0;
-                        
-                        return (
-                          <div
-                            key={group.id}
-                            className="flex flex-col gap-3 p-4 rounded-lg border bg-background hover:bg-muted/50 cursor-pointer transition-colors"
-                            onClick={() => navigate(`/insegnante/gruppo/${group.id}`)}
-                          >
-                            <div className="flex items-center justify-between gap-4">
-                              <div className="flex items-center gap-3 min-w-0">
-                                <span className="text-2xl">{group.course_emoji}</span>
-                                <div className="min-w-0">
-                                  <div className="flex items-center gap-2">
-                                    <h3 className="font-semibold truncate">{group.title}</h3>
-                                    {group.status === 'archived' ? (
-                                      <Badge variant="secondary">Archiviato</Badge>
-                                    ) : (
-                                      <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">Attivo</Badge>
-                                    )}
-                                  </div>
-                                  <p className="text-sm text-muted-foreground">
-                                    {group.course_title}
-                                    {group.start_date && ` · Dal ${new Date(group.start_date).toLocaleDateString('it-IT')}`}
-                                    {group.lesson_time && ` · ${group.lesson_time.substring(0, 5)}`}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-3 flex-shrink-0">
-                                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                  <Users className="w-4 h-4" />
-                                  {group.student_count}
-                                </div>
-                                <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                              </div>
-                            </div>
-                            {/* Progress Bar */}
-                            <div className="space-y-1">
-                              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                                <span>Progresso corso</span>
-                                <span className="font-medium">
-                                  {group.lessons_completed || 0}/{group.max_lessons} lezioni ({progressPercent}%)
-                                </span>
-                              </div>
-                              <Progress value={progressPercent} className="h-2" />
-                            </div>
-                            {group.last_lesson_title && (
-                              <p className="text-xs text-muted-foreground">
-                                Ultima lezione: {group.last_lesson_title}
-                              </p>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })()}
-              </CardContent>
-            </Card>
-          </TabsContent>
         </Tabs>
       </main>
     </div>
@@ -1488,6 +1356,7 @@ function TeacherStudentsList({ groups }: { groups: StudentGroup[] }) {
   const navigate = useNavigate();
   const [students, setStudents] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     fetchStudents();
@@ -1547,10 +1416,36 @@ function TeacherStudentsList({ groups }: { groups: StudentGroup[] }) {
     );
   }
 
+  const query = search.trim().toLowerCase();
+  const visibleStudents = students
+    .filter(s =>
+      !query ||
+      (s.full_name || '').toLowerCase().includes(query) ||
+      s.groups.some((g: any) => (g.title || '').toLowerCase().includes(query))
+    )
+    .sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''));
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>I Miei Studenti</CardTitle>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <CardTitle className="flex items-center gap-2">
+            I Miei Studenti
+            {students.length > 0 && <Badge variant="secondary">{students.length}</Badge>}
+          </CardTitle>
+          {students.length > 0 && (
+            <div className="relative w-full sm:w-64">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Cerca per nome o gruppo"
+                aria-label="Cerca studente"
+                className="pl-9"
+              />
+            </div>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         {students.length === 0 ? (
@@ -1558,6 +1453,8 @@ function TeacherStudentsList({ groups }: { groups: StudentGroup[] }) {
             <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">Nessuno studente nei tuoi gruppi</p>
           </div>
+        ) : visibleStudents.length === 0 ? (
+          <p className="text-center py-8 text-muted-foreground">Nessuno studente trovato per “{search}”</p>
         ) : (
           <Table>
             <TableHeader>
@@ -1565,11 +1462,11 @@ function TeacherStudentsList({ groups }: { groups: StudentGroup[] }) {
                 <TableHead>Nome</TableHead>
                 <TableHead>Gruppi</TableHead>
                 <TableHead className="text-center">Punti</TableHead>
-                <TableHead className="w-20"></TableHead>
+                <TableHead className="w-10"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {students.map(student => (
+              {visibleStudents.map(student => (
                 <TableRow 
                   key={student.id} 
                   className="cursor-pointer hover:bg-muted/50"

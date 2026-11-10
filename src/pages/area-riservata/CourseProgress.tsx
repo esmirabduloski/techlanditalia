@@ -3,6 +3,7 @@ import { useNavigate, Link, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useStudentProgress } from '@/hooks/useStudentProgress';
 import { computeLessonAccess } from '@/lib/lessonAccess';
+import { useLessonSchedule } from '@/hooks/useLessonSchedule';
 import { supabase } from '@/integrations/supabase/client';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -51,7 +52,7 @@ export default function CourseProgress() {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [homework, setHomework] = useState<Homework[]>([]);
   const [allTasks, setAllTasks] = useState<{ id: string; lesson_id: string }[]>([]);
-  const [scheduleByLessonNumber, setScheduleByLessonNumber] = useState<Record<number, string>>({});
+  const { schedule: scheduleByLessonNumber, unlockAll } = useLessonSchedule(courseId, effectiveUserId);
   const [isLoading, setIsLoading] = useState(true);
   const [completingLesson, setCompletingLesson] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -67,36 +68,6 @@ export default function CourseProgress() {
     if (courseId) {
       fetchCourseData();
     }
-  }, [courseId, effectiveUserId]);
-
-  useEffect(() => {
-    const fetchSchedule = async () => {
-      if (!courseId || !effectiveUserId) return;
-      // Find the student's group for this course
-      const { data: groups } = await supabase
-        .from('student_groups')
-        .select('id, group_students!inner(student_id)')
-        .eq('course_id', courseId)
-        .eq('group_students.student_id', effectiveUserId);
-      const groupIds = (groups || []).map((g: any) => g.id);
-      if (groupIds.length === 0) {
-        setScheduleByLessonNumber({});
-        return;
-      }
-      const { data: sched } = await supabase
-        .from('group_lesson_schedule')
-        .select('lesson_number, lesson_date')
-        .in('group_id', groupIds);
-      const map: Record<number, string> = {};
-      (sched || []).forEach((s: any) => {
-        // Keep earliest date for each lesson_number if multiple groups
-        if (!map[s.lesson_number] || s.lesson_date < map[s.lesson_number]) {
-          map[s.lesson_number] = s.lesson_date;
-        }
-      });
-      setScheduleByLessonNumber(map);
-    };
-    fetchSchedule();
   }, [courseId, effectiveUserId]);
 
   const fetchCourseData = async () => {
@@ -223,7 +194,7 @@ export default function CourseProgress() {
   const progressPercent = totalTasksCount > 0 
     ? Math.round((completedTasksCount / totalTasksCount) * 100) 
     : 0;
-  const lessonAccess = computeLessonAccess(lessons, new Set(lessonProgress.map(p => p.lesson_id)), scheduleByLessonNumber);
+  const lessonAccess = computeLessonAccess(lessons, new Set(lessonProgress.map(p => p.lesson_id)), scheduleByLessonNumber, undefined, unlockAll);
 
   return (
     <Layout>

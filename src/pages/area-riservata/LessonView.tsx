@@ -48,7 +48,7 @@ export default function LessonView() {
   const { trackLessonStart, trackLessonComplete, startLessonTimer, getLessonTime } = useAnalytics();
   const { isBookmarked, toggleBookmark } = useBookmarks();
   const { isTaskCompleted, lessonProgress, effectiveUserId } = useStudentProgress();
-  const { lessons: outlineLessons, schedule } = useCourseOutline(courseId, effectiveUserId);
+  const { lessons: outlineLessons, schedule, unlockAll } = useCourseOutline(courseId, effectiveUserId);
   const navigate = useNavigate();
   
   const [course, setCourse] = useState<Course | null>(null);
@@ -140,8 +140,8 @@ export default function LessonView() {
   };
 
   const lessonAccess = useMemo(
-    () => computeLessonAccess(outlineLessons, new Set(lessonProgress.map(p => p.lesson_id)), schedule),
-    [outlineLessons, lessonProgress, schedule],
+    () => computeLessonAccess(outlineLessons, new Set(lessonProgress.map(p => p.lesson_id)), schedule, undefined, unlockAll),
+    [outlineLessons, lessonProgress, schedule, unlockAll],
   );
 
   // Track lesson start

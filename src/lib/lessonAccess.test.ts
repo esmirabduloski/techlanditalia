@@ -6,6 +6,15 @@ const schedule = { 1: '2026-11-03', 2: '2026-11-10', 3: '2026-11-17' };
 const today = '2026-11-10';
 
 describe('lesson access by scheduled date', () => {
+  it('temporarily opens every lesson even without a group calendar', () => {
+    const access = computeLessonAccess(lessons, new Set(), {}, today, true);
+    expect(lessons.map(l => access[l.id].accessible)).toEqual([true, true, true]);
+  });
+  it('temporary access does not award completion of future lessons', () => {
+    const access = computeLessonAccess(lessons, new Set(), schedule, today, true);
+    expect(access['lesson-3'].accessible).toBe(true);
+    expect(access['lesson-3'].canComplete).toBe(false);
+  });
   it('opens the November 10 lesson even when November 3 is unfinished', () => {
     expect(computeLessonAccess(lessons, new Set(), schedule, today)['lesson-2'].accessible).toBe(true);
   });

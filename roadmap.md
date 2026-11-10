@@ -1,0 +1,2 @@
+- [ ] Verify temporary opening of all enrolled-course lessons and calendar-based access.
+- [ ] Resolve missing group assignment for the Roblox accounts named Mirko and Emanuele (requires identifying their correct group).

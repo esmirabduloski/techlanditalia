@@ -11,6 +11,8 @@ import { format, isPast, isToday, isFuture } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { lessonToday } from '@/lib/lessonAccess';
+import { useSiteSetting } from '@/hooks/useSiteSetting';
 
 interface LessonSchedule {
   id: string;
@@ -45,6 +47,7 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [showCompleted, setShowCompleted] = useState(false);
   const navigate = useNavigate();
+  const { value: accessOverride } = useSiteSetting<{ unlockAll?: boolean }>('lesson_access_override', {});
 
   useEffect(() => {
     if (studentId) {
@@ -210,23 +213,6 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
     [lessons]
   );
 
-  // Map: courseId -> id of next unlocked lesson (today or first future)
-  const nextUnlockedByCourse = useMemo(() => {
-    const map = new Map<string, string>();
-    const sorted = [...lessons].sort(
-      (a, b) => new Date(a.lesson_date).getTime() - new Date(b.lesson_date).getTime()
-    );
-    for (const l of sorted) {
-      const courseId = l.group.course.id;
-      if (map.has(courseId)) continue;
-      const date = new Date(l.lesson_date);
-      if (isToday(date) || isFuture(date)) {
-        map.set(courseId, l.id);
-      }
-    }
-    return map;
-  }, [lessons]);
-
   if (isLoading) {
     return (
       <Card>
@@ -353,7 +339,7 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
               const realTitle = lesson.realLessonTitle || lesson.lesson_title;
               const courseId = lesson.group.course.id;
               const hasLessonMaterial = existingLessons.has(`${courseId}_${lesson.lesson_number}`);
-              const isUnlocked = nextUnlockedByCourse.get(courseId) === lesson.id;
+              const isUnlocked = accessOverride?.unlockAll === true || lesson.lesson_date <= lessonToday();
               const isClickable = hasLessonMaterial && isUnlocked;
               
               return (
@@ -367,7 +353,7 @@ export function StudentLessonSchedule({ studentId }: StudentLessonScheduleProps)
                     isClickable && "cursor-pointer hover:shadow-sm",
                     !isClickable && hasLessonMaterial && "opacity-60 cursor-not-allowed"
                   )}
-                  title={!isClickable && hasLessonMaterial ? "Lezione bloccata: disponibile solo la prossima lezione del corso" : undefined}
+                  title={!isClickable && hasLessonMaterial ? `Disponibile dal ${format(date, 'd MMM yyyy', { locale: it })}` : undefined}
                   onClick={() => {
                     if (isClickable) {
                       navigate(`/area-riservata/corso/${courseId}/lezione/${lesson.lesson_number}`);

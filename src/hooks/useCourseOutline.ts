@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useLessonSchedule } from '@/hooks/useLessonSchedule';
 export { computeLessonAccess } from '@/lib/lessonAccess';
 export type { LessonAccess } from '@/lib/lessonAccess';
 
@@ -29,7 +30,7 @@ export function useCourseOutline(
   { includeHiddenTasks = false }: { includeHiddenTasks?: boolean } = {},
 ) {
   const [lessons, setLessons] = useState<OutlineLesson[]>([]);
-  const [schedule, setSchedule] = useState<Record<number, string>>({});
+  const { schedule, unlockAll } = useLessonSchedule(courseId, userId);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -69,38 +70,6 @@ export function useCourseOutline(
     return () => { cancelled = true; };
   }, [courseId, includeHiddenTasks]);
 
-  useEffect(() => {
-    if (!courseId || !userId) return;
-    let cancelled = false;
-
-    const fetchSchedule = async () => {
-      const { data: groups } = await supabase
-        .from('student_groups')
-        .select('id, group_students!inner(student_id)')
-        .eq('course_id', courseId)
-        .eq('group_students.student_id', userId);
-      const groupIds = (groups || []).map(g => g.id);
-      if (groupIds.length === 0) {
-        if (!cancelled) setSchedule({});
-        return;
-      }
-      const { data: sched } = await supabase
-        .from('group_lesson_schedule')
-        .select('lesson_number, lesson_date')
-        .in('group_id', groupIds);
-      const map: Record<number, string> = {};
-      (sched || []).forEach(s => {
-        if (!map[s.lesson_number] || s.lesson_date < map[s.lesson_number]) {
-          map[s.lesson_number] = s.lesson_date;
-        }
-      });
-      if (!cancelled) setSchedule(map);
-    };
-
-    fetchSchedule();
-    return () => { cancelled = true; };
-  }, [courseId, userId]);
-
-  return { lessons, schedule, isLoading };
+  return { lessons, schedule, unlockAll, isLoading };
 }
 

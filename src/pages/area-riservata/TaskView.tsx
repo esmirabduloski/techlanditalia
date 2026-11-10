@@ -85,7 +85,7 @@ export default function TaskView() {
   const { user, isLoading: authLoading } = useAuth();
   const { isTaskCompleted, completeTask, completeLesson, lessonProgress, effectiveUserId, isLoading: progressLoading } = useStudentProgress();
   const { isBookmarked, toggleBookmark } = useBookmarks();
-  const { lessons: outlineLessons, schedule } = useCourseOutline(courseId, effectiveUserId);
+  const { lessons: outlineLessons, schedule, unlockAll } = useCourseOutline(courseId, effectiveUserId);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -291,8 +291,8 @@ export default function TaskView() {
   };
 
   const lessonAccess = useMemo(
-    () => computeLessonAccess(outlineLessons, new Set(lessonProgress.map(p => p.lesson_id)), schedule),
-    [outlineLessons, lessonProgress, schedule],
+    () => computeLessonAccess(outlineLessons, new Set(lessonProgress.map(p => p.lesson_id)), schedule, undefined, unlockAll),
+    [outlineLessons, lessonProgress, schedule, unlockAll],
   );
 
   const taskCompleted = task ? isTaskCompleted(task.id) : false;

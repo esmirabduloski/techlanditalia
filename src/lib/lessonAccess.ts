@@ -20,6 +20,7 @@ export function computeLessonAccess(
   completedLessonIds: Set<string>,
   schedule: Record<number, string>,
   today = lessonToday(),
+  unlockAll = false,
 ): Record<string, LessonAccess> {
   const result: Record<string, LessonAccess> = {};
   let allPreviousCompleted = true;
@@ -32,7 +33,7 @@ export function computeLessonAccess(
       completed, isNext, scheduledDate,
       canComplete: isNext && dateReached,
       // An unfinished earlier lesson must not prevent opening today's material.
-      accessible: completed || dateReached,
+      accessible: unlockAll || completed || dateReached,
     };
     if (!completed) allPreviousCompleted = false;
   }

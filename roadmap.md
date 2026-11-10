@@ -1,2 +1,2 @@
-- [ ] Verify temporary opening of all enrolled-course lessons and calendar-based access.
-- [ ] Resolve missing group assignment for the Roblox accounts named Mirko and Emanuele (requires identifying their correct group).
+- [x] Verify temporary opening of all enrolled-course lessons and calendar-based access (8 unit tests; real Mirko and Emanuele sessions opened all 32 lessons; automated Node browser suite unavailable in this sandbox).
+- [x] Resolve missing group assignment for the Roblox accounts named Mirko and Emanuele (assigned to the user-confirmed Tuesday group; calendar reaches lesson 7 on November 10).

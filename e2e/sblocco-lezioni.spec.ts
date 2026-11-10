@@ -1,6 +1,21 @@
 import { test, expect } from './support/test';
 import { course, lesson, seedStudent, student } from './support/seed';
 
+test('temporary override opens all lessons without a group calendar', async ({ page, fake }) => {
+  seedStudent(fake);
+  fake.seed('site_settings', [{ key: 'lesson_access_override', value: { unlockAll: true }, is_public: true }]);
+  fake.seed('lessons', [
+    { ...lesson, lesson_number: 2, id: 'a0000000-0000-4000-8000-000000000002', title: 'Lezione senza calendario' },
+  ]);
+  await fake.signInBeforeLoad(page, student);
+  await page.goto(`/area-riservata/corso/${course.id}`);
+  const opened = page.getByRole('link').filter({ hasText: 'Lezione senza calendario' });
+  await expect(opened).toHaveCount(1);
+  await opened.click();
+  await expect(page).toHaveURL(new RegExp('/lezione/2$'));
+  await expect(page.getByText('Lezione senza calendario', { exact: true }).first()).toBeVisible();
+});
+
 test('opens scheduled material with an unfinished previous lesson but keeps future lessons locked', async ({ page, fake }) => {
   await page.clock.setFixedTime(new Date('2026-11-10T17:46:00Z'));
   seedStudent(fake);

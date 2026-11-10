@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+export { computeLessonAccess } from '@/lib/lessonAccess';
+export type { LessonAccess } from '@/lib/lessonAccess';
 
 export interface OutlineTask {
   id: string;
@@ -15,17 +17,6 @@ export interface OutlineLesson {
   title: string;
   points_reward: number;
   tasks: OutlineTask[];
-}
-
-export interface LessonAccess {
-  completed: boolean;
-  /** Prima lezione non completata con tutte le precedenti completate */
-  isNext: boolean;
-  /** isNext e data di calendario raggiunta: lo studente può completarla */
-  canComplete: boolean;
-  /** Apribile dallo studente (stessa regola della pagina corso) */
-  accessible: boolean;
-  scheduledDate?: string;
 }
 
 /**
@@ -113,30 +104,3 @@ export function useCourseOutline(
   return { lessons, schedule, isLoading };
 }
 
-/** Stessa regola di sblocco usata in CourseProgress. */
-export function computeLessonAccess(
-  lessons: OutlineLesson[],
-  completedLessonIds: Set<string>,
-  schedule: Record<number, string>,
-): Record<string, LessonAccess> {
-  const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD locale
-  const result: Record<string, LessonAccess> = {};
-  let allPreviousCompleted = true;
-
-  for (const lesson of lessons) {
-    const completed = completedLessonIds.has(lesson.id);
-    const isNext = !completed && allPreviousCompleted;
-    const scheduledDate = schedule[lesson.lesson_number];
-    const canComplete = isNext && !!scheduledDate && todayStr >= scheduledDate;
-    result[lesson.id] = {
-      completed,
-      isNext,
-      canComplete,
-      accessible: completed || canComplete,
-      scheduledDate,
-    };
-    if (!completed) allPreviousCompleted = false;
-  }
-
-  return result;
-}

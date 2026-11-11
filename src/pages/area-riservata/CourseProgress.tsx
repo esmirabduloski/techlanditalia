@@ -448,10 +448,18 @@ export default function CourseProgress() {
 
                                   {submitted ? (
                                     <Badge 
-                                      variant={status === 'approved' ? 'default' : 'secondary'}
-                                      className={status === 'approved' ? 'bg-primary' : ''}
+                                      variant={status === 'approved' || status === 'graded' ? 'default' : 'secondary'}
+                                      className={status === 'approved' || status === 'graded' ? 'bg-primary' : ''}
                                     >
-                                      {status === 'approved' ? '✓ Approvato' : status === 'reviewed' ? '👀 Revisionato' : '⏳ In attesa'}
+                                      {status === 'graded'
+                                        ? '✓ Valutato'
+                                        : status === 'approved'
+                                          ? '✓ Approvato'
+                                          : status === 'reviewed'
+                                            ? '👀 Revisionato'
+                                            : status === 'rejected'
+                                              ? 'Da rivedere'
+                                              : '⏳ In attesa di valutazione'}
                                     </Badge>
                                   ) : !lessonCompleted ? (
                                     <Badge variant="secondary">

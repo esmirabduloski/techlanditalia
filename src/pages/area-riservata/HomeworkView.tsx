@@ -278,7 +278,7 @@ export default function HomeworkView() {
         return (
           <Badge variant="outline" className="text-blue-600 border-blue-300 bg-blue-50">
             <Clock className="w-3 h-3 mr-1" />
-            In revisione
+            In attesa di valutazione
           </Badge>
         );
       case 'rejected':

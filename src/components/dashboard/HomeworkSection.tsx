@@ -286,7 +286,7 @@ export function HomeworkSection() {
         return (
           <Badge variant="outline" className="text-blue-600 border-blue-300 bg-blue-50">
             <Clock className="w-3 h-3 mr-1" />
-            In revisione
+            In attesa di valutazione
           </Badge>
         );
       case "graded":
@@ -330,7 +330,7 @@ export function HomeworkSection() {
                 <SelectContent>
                   <SelectItem value="all">Tutti ({statusCounts.all})</SelectItem>
                   <SelectItem value="pending">Da fare ({statusCounts.pending})</SelectItem>
-                  <SelectItem value="in_review">In revisione ({statusCounts.in_review})</SelectItem>
+                  <SelectItem value="in_review">In attesa di valutazione ({statusCounts.in_review})</SelectItem>
                   <SelectItem value="graded">Valutati ({statusCounts.graded})</SelectItem>
                   <SelectItem value="expired">Scaduti ({statusCounts.expired})</SelectItem>
                 </SelectContent>

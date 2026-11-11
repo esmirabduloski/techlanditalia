@@ -247,3 +247,11 @@ if ! out=$(run_sql supabase_admin supabase/tests/rls/23_second_parent.sql 2>&1);
   exit 1
 fi
 echo "$out" | sed -n 's/.*NOTICE: *//p'
+
+echo "▶ Valutazione senza consegna"
+if ! out=$(run_sql supabase_admin supabase/tests/rls/24_grade_without_submission.sql 2>&1); then
+  echo "$out" | sed -nE 's/.*(NOTICE|WARNING|ERROR): *//p'
+  echo "✗ Test della valutazione senza consegna FALLITI"
+  exit 1
+fi
+echo "$out" | sed -n 's/.*NOTICE: *//p'

@@ -20,6 +20,7 @@ import { useCodeDraft } from '@/hooks/useCodeDraft';
 import { flushCodeDrafts } from '@/lib/codeDrafts';
 import { parseTestCases, pythonCases, scoreResults, webCases, type TestCase, type TestResult } from '@/lib/testCases';
 import { resolveCompiler } from '@/lib/compilerKind';
+import { isSubmissionLocked } from '@/lib/gradeWithoutSubmission';
 
 interface Attachment {
   name: string;
@@ -412,7 +413,7 @@ export default function HomeworkView() {
               onSubmit={handleSubmit}
               isSubmitting={isSubmitting}
               isAlreadySubmitted={!!submission}
-              isLocked={!!submission && ['graded', 'approved'].includes(submission.status)}
+              isLocked={isSubmissionLocked(submission)}
               testCases={homework.test_cases}
               testRunnerRef={testRunnerRef}
             />

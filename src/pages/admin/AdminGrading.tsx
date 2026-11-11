@@ -25,9 +25,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { 
-  LogOut, Loader2, Award, User, Calendar, Save, Download, Code, GraduationCap
+  LogOut, Loader2, Award, User, Calendar, Save, Download, Code, GraduationCap, ClipboardCheck
 } from 'lucide-react';
 import { FeedbackTemplates } from '@/components/feedback/FeedbackTemplates';
+import { GradeWithoutSubmissionDialog } from '@/components/grading/GradeWithoutSubmissionDialog';
+import { hasDelivery } from '@/lib/gradeWithoutSubmission';
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 
@@ -76,6 +78,7 @@ export default function AdminGrading() {
   const [statusFilter, setStatusFilter] = useState<string>('pending');
   const [codeContent, setCodeContent] = useState<string | null>(null);
   const [isLoadingCode, setIsLoadingCode] = useState(false);
+  const [withoutSubmissionOpen, setWithoutSubmissionOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     grade: 100,
@@ -302,6 +305,11 @@ export default function AdminGrading() {
             <h1 className="text-2xl sm:text-3xl font-bold">Valutazione Compiti</h1>
             <p className="text-muted-foreground mt-1">{submissions.length} consegne</p>
           </div>
+          <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" onClick={() => setWithoutSubmissionOpen(true)}>
+            <ClipboardCheck className="w-4 h-4 mr-2" />
+            Valuta senza consegna
+          </Button>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Filtra per stato" />
@@ -312,6 +320,7 @@ export default function AdminGrading() {
               <SelectItem value="graded">Valutati</SelectItem>
             </SelectContent>
           </Select>
+          </div>
         </div>
 
         {/* Submissions List */}
@@ -338,6 +347,9 @@ export default function AdminGrading() {
                         <span className="text-xl">{submission.homework.lesson?.course.emoji ?? '✨'}</span>
                         <h3 className="font-semibold">{submission.homework.title}</h3>
                         {getStatusBadge(submission.status, submission.grade)}
+                        {!hasDelivery(submission) && (
+                          <Badge variant="outline">Senza consegna</Badge>
+                        )}
                       </div>
                       <p className="text-sm text-muted-foreground">
                         {submission.student.full_name} · {submission.homework.lesson?.course.title ?? 'Compito stagionale'}
@@ -530,6 +542,13 @@ export default function AdminGrading() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <GradeWithoutSubmissionDialog
+          open={withoutSubmissionOpen}
+          onOpenChange={setWithoutSubmissionOpen}
+          teacherId={null}
+          onGraded={fetchSubmissions}
+        />
       </main>
     </div>
   );

@@ -25,9 +25,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { 
-  Loader2, Award, Calendar, Save, Download, Code, GraduationCap, ArrowLeft
+  Loader2, Award, Calendar, Save, Download, Code, GraduationCap, ArrowLeft, ClipboardCheck
 } from 'lucide-react';
 import { FeedbackTemplates } from '@/components/feedback/FeedbackTemplates';
+import { GradeWithoutSubmissionDialog } from '@/components/grading/GradeWithoutSubmissionDialog';
+import { hasDelivery } from '@/lib/gradeWithoutSubmission';
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 
@@ -77,6 +79,7 @@ export default function TeacherGrading() {
   const [codeContent, setCodeContent] = useState<string | null>(null);
   const [isLoadingCode, setIsLoadingCode] = useState(false);
   const [savedSuccessfully, setSavedSuccessfully] = useState(false);
+  const [withoutSubmissionOpen, setWithoutSubmissionOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     grade: 100,
@@ -387,6 +390,11 @@ export default function TeacherGrading() {
               <p className="text-muted-foreground mt-1">{submissions.length} consegne</p>
             )}
           </div>
+          <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" onClick={() => setWithoutSubmissionOpen(true)}>
+            <ClipboardCheck className="w-4 h-4 mr-2" />
+            Valuta senza consegna
+          </Button>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Filtra per stato" />
@@ -397,6 +405,7 @@ export default function TeacherGrading() {
               <SelectItem value="graded">Valutati</SelectItem>
             </SelectContent>
           </Select>
+          </div>
         </div>
 
         {/* Submissions List */}
@@ -423,6 +432,9 @@ export default function TeacherGrading() {
                         <span className="text-xl">{submission.homework.lesson?.course.emoji ?? '✨'}</span>
                         <h3 className="font-semibold">{submission.homework.title}</h3>
                         {getStatusBadge(submission.status, submission.grade)}
+                        {!hasDelivery(submission) && (
+                          <Badge variant="outline">Senza consegna</Badge>
+                        )}
                       </div>
                       <p className="text-sm text-muted-foreground">
                         {submission.student.full_name} · {submission.homework.lesson?.course.title ?? 'Compito stagionale'}
@@ -616,6 +628,14 @@ export default function TeacherGrading() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <GradeWithoutSubmissionDialog
+          open={withoutSubmissionOpen}
+          onOpenChange={setWithoutSubmissionOpen}
+          teacherId={isAdmin && isImpersonating && impersonatedUser?.role === 'teacher' ? impersonatedUser.id : user?.id ?? null}
+          initialGroupId={groupIdFilter}
+          onGraded={fetchSubmissions}
+        />
       </main>
     </div>
   );

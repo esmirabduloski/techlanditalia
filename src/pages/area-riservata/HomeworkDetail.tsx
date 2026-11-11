@@ -29,6 +29,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import DOMPurify from "dompurify";
 import { restrictEmbeds } from "@/lib/embeds";
+import { isSubmissionLocked } from "@/lib/gradeWithoutSubmission";
 
 interface Attachment {
   name: string;
@@ -281,6 +282,13 @@ export default function HomeworkDetail() {
     }
     
     switch (submission.status) {
+      case "graded":
+        return (
+          <Badge variant="outline" className="text-green-600 border-green-300 bg-green-50">
+            <CheckCircle2 className="w-3 h-3 mr-1" />
+            Valutato{submission.grade != null ? ` · ${submission.grade}/100` : ""}
+          </Badge>
+        );
       case "approved":
         return (
           <Badge variant="outline" className="text-green-600 border-green-300 bg-green-50">
@@ -292,7 +300,7 @@ export default function HomeworkDetail() {
         return (
           <Badge variant="outline" className="text-blue-600 border-blue-300 bg-blue-50">
             <Clock className="w-3 h-3 mr-1" />
-            In revisione
+            In attesa di valutazione
           </Badge>
         );
       case "rejected":
@@ -525,8 +533,8 @@ export default function HomeworkDetail() {
                 </div>
               )}
 
-              {/* Submission form - only if not approved */}
-              {submission?.status !== "approved" && (
+              {/* Modulo di consegna: non per le consegne già valutate (una valutazione senza consegna sì) */}
+              {!isSubmissionLocked(submission) && (
                 <>
                   <Tabs 
                     value={submitType} 
@@ -597,7 +605,16 @@ export default function HomeworkDetail() {
                 </>
               )}
 
-              {/* Approved message */}
+              {/* Consegna valutata o approvata */}
+              {isSubmissionLocked(submission) && submission?.status === "graded" && (
+                <div className="text-center py-4">
+                  <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-3" />
+                  <h3 className="font-semibold text-foreground">Compito valutato!</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Hai guadagnato {submission.points_earned} punti
+                  </p>
+                </div>
+              )}
               {submission?.status === "approved" && (
                 <div className="text-center py-4">
                   <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-3" />

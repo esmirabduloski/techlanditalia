@@ -568,6 +568,13 @@
       "when": 1794300000000,
       "tag": "0080_grade_without_submission",
       "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "7",
+      "when": 1794400000000,
+      "tag": "0081_lesson_tasks_renumber",
+      "breakpoints": true
     }
   ]
 }

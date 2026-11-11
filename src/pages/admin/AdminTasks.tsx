@@ -113,8 +113,10 @@ export default function AdminTasks() {
     if (error) {
       toast({ title: 'Errore', description: 'Impossibile eliminare il task', variant: 'destructive' });
     } else {
+      // Il database fa scalare indietro di uno i task successivi: ricarica i numeri
       setTasks(tasks.filter(t => t.id !== id));
-      toast({ title: 'Successo', description: 'Task eliminato' });
+      await fetchData();
+      toast({ title: 'Successo', description: 'Task eliminato: i task successivi sono scalati di un numero' });
     }
   };
 
@@ -266,7 +268,7 @@ export default function AdminTasks() {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Elimina task</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Sei sicuro di voler eliminare il task "{task.title}"? {TRASH_RECOVERY_HINT}
+                          Sei sicuro di voler eliminare il task "{task.title}"? I task successivi scaleranno indietro di un numero. {TRASH_RECOVERY_HINT}
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>

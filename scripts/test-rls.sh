@@ -255,3 +255,11 @@ if ! out=$(run_sql supabase_admin supabase/tests/rls/24_grade_without_submission
   exit 1
 fi
 echo "$out" | sed -n 's/.*NOTICE: *//p'
+
+echo "▶ Rinumerazione dei task"
+if ! out=$(run_sql supabase_admin supabase/tests/rls/25_lesson_tasks_renumber.sql 2>&1); then
+  echo "$out" | sed -nE 's/.*(NOTICE|WARNING|ERROR): *//p'
+  echo "✗ Test della rinumerazione dei task FALLITI"
+  exit 1
+fi
+echo "$out" | sed -n 's/.*NOTICE: *//p'

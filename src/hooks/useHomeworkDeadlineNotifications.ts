@@ -66,12 +66,17 @@ export function useHomeworkDeadlineNotifications() {
 
       const courseIds = enrollments.map(e => e.course_id);
 
-      // Get student's group to determine group-specific deadlines
-      const { data: studentGroup } = await supabase
+      // Gruppi dello studente (anche più di uno, di corsi diversi) per le scadenze di gruppo
+      const { data: studentGroups } = await supabase
         .from('group_students')
-        .select('group_id')
-        .eq('student_id', user.id)
-        .maybeSingle();
+        .select('group_id, group:group_id(status)')
+        .eq('student_id', user.id);
+      const groupIds = (studentGroups || []).map(g => g.group_id);
+      const activeGroupIds = new Set(
+        (studentGroups || [])
+          .filter(g => (Array.isArray(g.group) ? g.group[0] : g.group)?.status === 'active')
+          .map(g => g.group_id),
+      );
 
       // Get lessons for enrolled courses
       const { data: lessons } = await supabase
@@ -93,15 +98,17 @@ export function useHomeworkDeadlineNotifications() {
 
       // Get group-specific deadlines if student is in a group
       let groupDeadlinesMap = new Map<string, string>();
-      if (studentGroup?.group_id) {
+      if (groupIds.length > 0) {
         const { data: groupDeadlines } = await supabase
           .from('homework_group_deadlines')
-          .select('homework_id, due_date')
-          .eq('group_id', studentGroup.group_id);
-        
-        groupDeadlinesMap = new Map(
-          groupDeadlines?.map((d) => [d.homework_id, d.due_date]) || []
+          .select('homework_id, due_date, group_id')
+          .in('group_id', groupIds);
+
+        // Vince la scadenza del gruppo attivo su quella di un gruppo archiviato dello stesso corso
+        const sorted = [...(groupDeadlines || [])].sort(
+          (a, b) => Number(activeGroupIds.has(a.group_id)) - Number(activeGroupIds.has(b.group_id)),
         );
+        groupDeadlinesMap = new Map(sorted.map((d) => [d.homework_id, d.due_date]));
       }
 
       // Get student's submissions

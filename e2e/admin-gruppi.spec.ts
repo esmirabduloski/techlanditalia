@@ -92,16 +92,19 @@ test("da telefono i gruppi sono schede", async ({ page, fake }) => {
   await page.screenshot({ path: "test-results/admin-gruppi-telefono.png", fullPage: true });
 });
 
-test("modifica gruppo: aggiunge gli studenti e avvisa chi è già in un altro gruppo del corso", async ({ page, fake }) => {
+test("modifica gruppo: i gruppi archiviati non bloccano, un altro gruppo attivo del corso sì", async ({ page, fake }) => {
   seed(fake);
   const luca = { id: "44444444-4444-4444-8444-444444444401", full_name: "Luca Blu", username: "luca", role: "student" };
   const anna = { id: "44444444-4444-4444-8444-444444444402", full_name: "Anna Gialli", username: "anna", role: "student" };
   const marco = { id: "44444444-4444-4444-8444-444444444403", full_name: "Marco Verdi", username: "marco", role: "student" };
-  fake.seed("profiles", [luca, anna, marco]);
-  // Marco è nel gruppo archiviato dello stesso corso; Anna è già nel gruppo del sabato
+  const paolo = { id: "44444444-4444-4444-8444-444444444404", full_name: "Paolo Rosa", username: "paolo", role: "student" };
+  fake.seed("profiles", [luca, anna, marco, paolo]);
+  const sabato = "e0000000-0000-4000-8000-000000000001";
+  // Anna è già nel gruppo del sabato; Marco nel gruppo archiviato; Paolo nell'altro gruppo attivo del corso
   fake.seed("group_students", [
+    { group_id: sabato, student_id: anna.id, group: { course_id: course.id, title: "Python sabato", status: "active" } },
     { group_id: "e0000000-0000-4000-8000-000000000003", student_id: marco.id, group: { course_id: course.id, title: "Vecchio gruppo", status: "archived" } },
-    { group_id: "e0000000-0000-4000-8000-000000000001", student_id: anna.id, group: { course_id: course.id, title: "Python sabato", status: "active" } },
+    { group_id: "e0000000-0000-4000-8000-000000000002", student_id: paolo.id, group: { course_id: course.id, title: "Python mercoledì", status: "active" } },
   ]);
   await fake.signInBeforeLoad(page, admin);
   await page.goto("/admin/gruppi");
@@ -109,20 +112,22 @@ test("modifica gruppo: aggiunge gli studenti e avvisa chi è già in un altro gr
   await page.getByRole("row", { name: /Python sabato/ }).getByRole("button", { name: "Modifica" }).click();
   const dialog = page.getByRole("dialog", { name: "Modifica Gruppo" });
   await expect(dialog.getByRole("checkbox", { name: /Anna Gialli/ })).toBeChecked();
-  await expect(dialog.getByText('già nel gruppo "Vecchio gruppo" (archiviato) di questo corso')).toBeVisible();
+  await expect(dialog.getByText('già nel gruppo attivo "Python mercoledì" di questo corso')).toBeVisible();
+  await expect(dialog.getByText(/Vecchio gruppo/)).toHaveCount(0);
 
-  // Marco non si può aggiungere: avviso e niente salvataggio
-  await dialog.getByRole("checkbox", { name: /Marco Verdi/ }).click();
-  await expect(dialog.getByRole("alert")).toContainText("Marco Verdi");
+  // Paolo no: avviso e niente salvataggio
+  await dialog.getByRole("checkbox", { name: /Paolo Rosa/ }).click();
+  await expect(dialog.getByRole("alert")).toContainText("Paolo Rosa");
   await dialog.getByRole("button", { name: /Salva/ }).click();
-  await expect(page.getByText("Studenti già in un altro gruppo del corso", { exact: true })).toBeVisible();
-  expect(fake.table("group_students").filter((m) => m.group_id === "e0000000-0000-4000-8000-000000000001")).toHaveLength(1);
+  await expect(page.getByText("Studenti già in un altro gruppo attivo del corso", { exact: true })).toBeVisible();
+  expect(fake.table("group_students").filter((m) => m.group_id === sabato)).toHaveLength(1);
 
-  // Luca sì; Anna resta
-  await dialog.getByRole("checkbox", { name: /Marco Verdi/ }).click();
+  // Luca e Marco (dal gruppo archiviato) sì; Anna resta
+  await dialog.getByRole("checkbox", { name: /Paolo Rosa/ }).click();
   await dialog.getByRole("checkbox", { name: /Luca Blu/ }).click();
+  await dialog.getByRole("checkbox", { name: /Marco Verdi/ }).click();
   await dialog.getByRole("button", { name: /Salva/ }).click();
-  await expect(page.getByText("1 studente aggiunto", { exact: true })).toBeVisible();
-  expect(fake.table("group_students").filter((m) => m.group_id === "e0000000-0000-4000-8000-000000000001").map((m) => m.student_id).sort())
-    .toEqual([luca.id, anna.id].sort());
+  await expect(page.getByText("2 studenti aggiunti", { exact: true })).toBeVisible();
+  expect(fake.table("group_students").filter((m) => m.group_id === sabato).map((m) => m.student_id).sort())
+    .toEqual([luca.id, anna.id, marco.id].sort());
 });

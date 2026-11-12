@@ -142,7 +142,7 @@ export function planGroups(rows: string[][], ctx: GroupsCsvContext): CsvPlan<Gro
     ctx.students.filter((s) => s.username).map((s) => [s.username!.trim().toLowerCase(), s]),
   );
   const usernameById = new Map(ctx.students.map((s) => [s.id, s.username]));
-  // Corso → studente → titolo del gruppo in cui è già (vincolo: un gruppo per corso)
+  // Corso → studente → titolo del gruppo attivo in cui è già (vincolo: un gruppo attivo per corso, 0084)
   const placed = new Map<string, Map<string, string>>();
   const place = (courseId: string, studentId: string, title: string) => {
     if (!placed.has(courseId)) placed.set(courseId, new Map());
@@ -150,7 +150,7 @@ export function planGroups(rows: string[][], ctx: GroupsCsvContext): CsvPlan<Gro
   };
   for (const m of ctx.members) {
     const g = groupById.get(m.group_id);
-    if (g) place(g.course_id, m.student_id, g.title);
+    if (g && g.status === 'active') place(g.course_id, m.student_id, g.title);
   }
   const seenIds = new Map<string, number>();
 
@@ -224,8 +224,9 @@ export function planGroups(rows: string[][], ctx: GroupsCsvContext): CsvPlan<Gro
         if (!s) continue;
         listedIds.add(s.id);
         if (memberIds.has(s.id)) continue;
-        const elsewhere = course ? placed.get(course.id)?.get(s.id) : undefined;
-        if (elsewhere) row.error(`${s.username} è già nel gruppo "${elsewhere}" dello stesso corso`);
+        // In un gruppo archiviato si può sempre aggiungere
+        const elsewhere = course && (!current || current.status === 'active') ? placed.get(course.id)?.get(s.id) : undefined;
+        if (elsewhere) row.error(`${s.username} è già nel gruppo attivo "${elsewhere}" dello stesso corso`);
         else addStudents.push({ id: s.id, username: s.username! });
       }
       const kept = [...memberIds].filter((id) => !listedIds.has(id)).map((id) => usernameById.get(id)).filter(Boolean);

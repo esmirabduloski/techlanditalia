@@ -317,7 +317,7 @@ export default function AdminGroups() {
     }
     if (selectedConflicts.length > 0) {
       toast({
-        title: 'Studenti già in un altro gruppo del corso',
+        title: 'Studenti già in un altro gruppo attivo del corso',
         description: selectedConflicts.map(id => `${studentName(id)}: ${conflictLabel(conflicts.get(id)!)}`).join('\n'),
         variant: 'destructive',
       });
@@ -532,8 +532,8 @@ export default function AdminGroups() {
     });
   };
 
-  // Studenti già in un altro gruppo del corso scelto: il database non li accetta
-  const conflicts = findConflicts(memberships, formData.course_id, editingGroup?.id ?? null);
+  // Studenti già in un altro gruppo attivo del corso scelto: il database non li accetta
+  const conflicts = findConflicts(memberships, formData.course_id, editingGroup?.id ?? null, (editingGroup?.status ?? 'active') === 'active');
   const selectedConflicts = formData.selected_students.filter(id => conflicts.has(id));
   const studentName = (id: string) => students.find(st => st.id === id)?.full_name || 'Studente';
 
@@ -804,7 +804,7 @@ export default function AdminGroups() {
                 </div>
                 {selectedConflicts.length > 0 && (
                   <div role="alert" className="rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/40 p-3 text-sm text-amber-900 dark:text-amber-200">
-                    {selectedConflicts.length === 1 ? 'Uno studente selezionato è' : `${selectedConflicts.length} studenti selezionati sono`} già in un altro gruppo di questo corso
+                    {selectedConflicts.length === 1 ? 'Uno studente selezionato è' : `${selectedConflicts.length} studenti selezionati sono`} già in un altro gruppo attivo di questo corso
                     e non può essere aggiunto: {selectedConflicts.map(studentName).join(', ')}.
                     Toglilo dall'altro gruppo oppure usa "Trasferisci studenti" dal menu Altro di quel gruppo.
                   </div>

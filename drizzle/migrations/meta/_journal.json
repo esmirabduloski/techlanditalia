@@ -589,6 +589,13 @@
       "when": 1794498433958,
       "tag": "0083_lesson_tasks_renumber",
       "breakpoints": true
+    },
+    {
+      "idx": 84,
+      "version": "7",
+      "when": 1794500000000,
+      "tag": "0084_one_active_group_per_course",
+      "breakpoints": true
     }
   ]
 }

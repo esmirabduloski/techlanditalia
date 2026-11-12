@@ -263,3 +263,11 @@ if ! out=$(run_sql supabase_admin supabase/tests/rls/25_lesson_tasks_renumber.sq
   exit 1
 fi
 echo "$out" | sed -n 's/.*NOTICE: *//p'
+
+echo "▶ Un gruppo attivo per corso"
+if ! out=$(run_sql supabase_admin supabase/tests/rls/26_one_active_group_per_course.sql 2>&1); then
+  echo "$out" | sed -nE 's/.*(NOTICE|WARNING|ERROR): *//p'
+  echo "✗ Test del gruppo attivo per corso FALLITI"
+  exit 1
+fi
+echo "$out" | sed -n 's/.*NOTICE: *//p'

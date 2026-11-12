@@ -129,7 +129,7 @@ test("gruppi: gruppo nuovo con studenti, righe con errori saltate", async ({ pag
   await expect(page.getByTestId("csv-import-counts")).toContainText("1 con errori");
   await expect(preview(page)).toContainText("Calendario di 32 lezioni generato in automatico");
   await expect(preview(page)).toContainText("Studenti non trovati: nessuno");
-  await expect(preview(page)).toContainText('luca123 è già nel gruppo "Python sabato" dello stesso corso');
+  await expect(preview(page)).toContainText('luca123 è già nel gruppo attivo "Python sabato" dello stesso corso');
 
   await page.getByRole("button", { name: "Importa 1 riga" }).click();
   await expect(page.getByTestId("csv-import-result")).toHaveText("1 riga importata");

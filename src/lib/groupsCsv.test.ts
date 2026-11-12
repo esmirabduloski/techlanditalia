@@ -89,10 +89,18 @@ describe('planGroups', () => {
     expect(rows[0].errors[0]).toMatch(/ID "zzz" non corrisponde/);
     expect(rows[1].errors).toEqual(['Corso "Robotica" non trovato']);
     expect(rows[2].errors).toEqual(['Insegnante "nessuno@x.it" non trovato (usa la sua email)']);
-    expect(rows[3].errors).toEqual(['Studenti non trovati: pippo', 'mario è già nel gruppo "Scratch sabato" dello stesso corso']);
+    expect(rows[3].errors).toEqual(['Studenti non trovati: pippo', 'mario è già nel gruppo attivo "Scratch sabato" dello stesso corso']);
     // giulia entra in V; la riga dopo la vorrebbe in un altro gruppo dello stesso corso
     expect(rows[4].status).toBe('new');
-    expect(rows[5].errors).toEqual(['giulia è già nel gruppo "V" dello stesso corso']);
+    expect(rows[5].errors).toEqual(['giulia è già nel gruppo attivo "V" dello stesso corso']);
+  });
+
+  it('un gruppo archiviato dello stesso corso non blocca', () => {
+    const c = ctx();
+    c.groups[0] = { ...c.groups[0], status: 'archived' };
+    const [row] = planGroups(parseCsv(`${HEAD}\n;W;Scratch;;;;;;mario`), c).rows;
+    expect(row.errors).toEqual([]);
+    expect(row.status).toBe('new');
   });
 
   it('avvisa se un gruppo nuovo ha lo stesso titolo di uno esistente', () => {

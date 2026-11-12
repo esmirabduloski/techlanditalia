@@ -3285,6 +3285,38 @@ export type Database = {
           },
         ]
       }
+      student_extra_meeting_links: {
+        Row: {
+          created_at: string
+          label: string
+          student_id: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          label: string
+          student_id: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          label?: string
+          student_id?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_extra_meeting_links_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_groups: {
         Row: {
           archived_at: string | null

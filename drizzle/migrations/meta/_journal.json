@@ -603,6 +603,20 @@
       "when": 1794600000000,
       "tag": "0085_student_extra_meeting_links",
       "breakpoints": true
+    },
+    {
+      "idx": 86,
+      "version": "7",
+      "when": 1794600000001,
+      "tag": "0086_one_active_group_per_course",
+      "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1794600000002,
+      "tag": "0087_student_extra_meeting_links",
+      "breakpoints": true
     }
   ]
 }

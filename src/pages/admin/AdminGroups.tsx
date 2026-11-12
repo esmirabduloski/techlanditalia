@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import type { TablesInsert } from "@/integrations/supabase/types";
@@ -23,7 +23,7 @@ import { downloadCsv } from "@/lib/csv";
 import { todayStamp } from "@/lib/csvImport";
 import { applyGroups, GROUP_COLUMNS, groupsTemplateCsv, groupsToCsv, loadGroupsCsvContext, planGroups } from "@/lib/groupsCsv";
 import { 
-  Loader2, Plus, Users, LogOut, Home, Edit, Trash2, UsersRound, Search, Calendar, RotateCcw, Archive, GraduationCap, ArrowRightLeft, GitMerge, ListTree
+  Loader2, Plus, Users, LogOut, Home, Edit, UsersRound, Search, Calendar, RotateCcw, Archive, GraduationCap
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -52,6 +52,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { TRASH_RECOVERY_HINT, TRASH_RETENTION_DAYS } from "@/lib/trash";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { GroupRowActions } from "@/components/admin/GroupRowActions";
+import { countByStatus, filterGroups, formatSchedule, type GroupStatusFilter } from "@/lib/adminGroupsView";
 
 interface CertificateFile {
   path: string;
@@ -120,6 +123,13 @@ export default function AdminGroups() {
   const [mergeSplitGroup, setMergeSplitGroup] = useState<StudentGroup | null>(null);
   const [timelineGroup, setTimelineGroup] = useState<StudentGroup | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<GroupStatusFilter>('active');
+  const [groupSearch, setGroupSearch] = useState('');
+  const statusCounts = useMemo(() => countByStatus(groups), [groups]);
+  const visibleGroups = useMemo(
+    () => filterGroups(groups, statusFilter, groupSearch),
+    [groups, statusFilter, groupSearch],
+  );
   
   const [formData, setFormData] = useState({
     title: '',
@@ -536,6 +546,27 @@ export default function AdminGroups() {
 
   if (!isAdmin) return null;
 
+  const renderGroupActions = (group: StudentGroup, fullWidth = false) => (
+    <GroupRowActions
+      groupId={group.id}
+      groupTitle={group.title}
+      isActive={group.status === 'active'}
+      fullWidth={fullWidth}
+      onEdit={() => openEditDialog(group)}
+      onCalendar={() => setCalendarGroup(group)}
+      onTimeline={() => setTimelineGroup(group)}
+      onTransfer={() => setTransferGroup(group)}
+      onMergeSplit={() => setMergeSplitGroup(group)}
+      onResetAttendance={() => setResetAttendanceConfirm(group)}
+      onArchive={() => {
+        setArchiveGroup(group);
+        setArchiveDate(new Date().toISOString().split('T')[0]);
+      }}
+      onReactivate={() => handleReactivateGroup(group.id)}
+      onDelete={() => setDeleteConfirm(group.id)}
+    />
+  );
+
   return (
     <div className="min-h-screen bg-muted/30">
       {/* Header */}
@@ -551,7 +582,7 @@ export default function AdminGroups() {
               Gestione Gruppi
             </h1>
             <p className="text-muted-foreground mt-1">
-              {groups.length} gruppi creati
+              {statusCounts.active} {statusCounts.active === 1 ? 'gruppo attivo' : 'gruppi attivi'} · {statusCounts.archived} {statusCounts.archived === 1 ? 'archiviato' : 'archiviati'}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -591,130 +622,112 @@ export default function AdminGroups() {
                 </Button>
               </div>
             ) : (
-              <div className="-mx-6 overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                       <TableHead className="w-24">ID</TableHead>
-                       <TableHead>Titolo</TableHead>
-                       <TableHead>Stato</TableHead>
-                       <TableHead>Insegnante</TableHead>
-                       <TableHead>Corso</TableHead>
-                       <TableHead>Data Inizio</TableHead>
-                       <TableHead>Orario</TableHead>
-                       <TableHead className="text-center">Studenti</TableHead>
-                       <TableHead>Ultima Lezione</TableHead>
-                       <TableHead className="w-28">Azioni</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                <TableBody>
-                  {groups.map(group => (
-                    <TableRow key={group.id}>
-                      <TableCell className="font-mono text-xs">
-                        {group.id.substring(0, 8)}...
-                      </TableCell>
-                      <TableCell className="font-medium">{group.title}</TableCell>
-                      <TableCell>
-                        {group.status === 'active' ? (
-                          <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">Attivo</Badge>
-                        ) : (
-                          <Badge variant="secondary">Archiviato</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {group.teacher_name || <span className="text-muted-foreground">-</span>}
-                      </TableCell>
-                      <TableCell>
-                        {group.course_emoji} {group.course_title}
-                      </TableCell>
-                       <TableCell>
-                         {group.start_date ? new Date(group.start_date).toLocaleDateString('it-IT') : '-'}
-                       </TableCell>
-                       <TableCell>
-                         {group.lesson_time ? group.lesson_time.substring(0, 5) : '-'}
-                       </TableCell>
-                       <TableCell className="text-center">
-                        <Badge variant="secondary">{group.student_count}</Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
-                        {group.last_lesson_title || '-'}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                           <Button 
-                             variant="ghost" 
-                             size="icon" 
-                             onClick={() => setTimelineGroup(group)}
-                             title="Timeline programma"
-                           >
-                             <ListTree className="w-4 h-4" />
-                           </Button>
-                           <Button 
-                             variant="ghost" 
-                             size="icon" 
-                             onClick={() => setCalendarGroup(group)}
-                             title="Gestisci calendario"
-                           >
-                             <Calendar className="w-4 h-4" />
-                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => setResetAttendanceConfirm(group)}
-                            title="Reset presenze"
-                          >
-                            <RotateCcw className="w-4 h-4 text-orange-500" />
-                          </Button>
-                           <Button variant="ghost" size="icon" onClick={() => openEditDialog(group)}>
-                             <Edit className="w-4 h-4" />
-                           </Button>
-                           <Button 
-                             variant="ghost" 
-                             size="icon" 
-                             onClick={() => setTransferGroup(group)}
-                             title="Trasferisci studenti"
-                           >
-                             <ArrowRightLeft className="w-4 h-4 text-blue-500" />
-                           </Button>
-                           <Button 
-                             variant="ghost" 
-                             size="icon" 
-                             onClick={() => setMergeSplitGroup(group)}
-                             title="Unisci/Dividi gruppo"
-                           >
-                             <GitMerge className="w-4 h-4 text-purple-500" />
-                           </Button>
-                          {group.status === 'active' ? (
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              onClick={() => {
-                                setArchiveGroup(group);
-                                setArchiveDate(new Date().toISOString().split('T')[0]);
-                              }}
-                              title="Archivia gruppo"
-                            >
-                              <Archive className="w-4 h-4 text-muted-foreground" />
-                            </Button>
-                          ) : (
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              onClick={() => handleReactivateGroup(group.id)}
-                              title="Riattiva gruppo"
-                            >
-                              <RotateCcw className="w-4 h-4 text-green-600" />
-                            </Button>
-                          )}
-                          <Button variant="ghost" size="icon" onClick={() => setDeleteConfirm(group.id)}>
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as GroupStatusFilter)}>
+                    <TabsList>
+                      <TabsTrigger value="active">Attivi ({statusCounts.active})</TabsTrigger>
+                      <TabsTrigger value="archived">Archiviati ({statusCounts.archived})</TabsTrigger>
+                      <TabsTrigger value="all">Tutti ({statusCounts.all})</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                  <div className="relative w-full sm:w-72">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      value={groupSearch}
+                      onChange={(e) => setGroupSearch(e.target.value)}
+                      placeholder="Cerca gruppo, insegnante o corso"
+                      className="pl-9"
+                      aria-label="Cerca gruppi"
+                    />
+                  </div>
+                </div>
+
+                {visibleGroups.length === 0 ? (
+                  <div className="text-center py-10 text-muted-foreground">
+                    {groupSearch.trim()
+                      ? `Nessun gruppo trovato per "${groupSearch.trim()}".`
+                      : statusFilter === 'archived' ? 'Nessun gruppo archiviato.' : 'Nessun gruppo attivo.'}
+                  </div>
+                ) : (
+                  <>
+                    {/* Da computer: tabella */}
+                    <div className="hidden md:block -mx-6 overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="pl-6">Gruppo</TableHead>
+                            <TableHead>Insegnante</TableHead>
+                            <TableHead>Lezioni</TableHead>
+                            <TableHead className="text-center">Studenti</TableHead>
+                            <TableHead>Ultima lezione</TableHead>
+                            <TableHead className="text-right pr-6">Azioni</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {visibleGroups.map(group => (
+                            <TableRow key={group.id} className={group.status === 'active' ? '' : '[&>td:not(:last-child)]:opacity-70'}>
+                              <TableCell className="pl-6">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">{group.title}</span>
+                                  {group.status !== 'active' && <Badge variant="secondary">Archiviato</Badge>}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  {group.course_emoji} {group.course_title}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                {group.teacher_name || <span className="text-muted-foreground">Nessuno</span>}
+                              </TableCell>
+                              <TableCell>
+                                <div>{formatSchedule(group.lesson_days, group.lesson_time)}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {group.start_date ? `dal ${new Date(group.start_date).toLocaleDateString('it-IT')}` : 'Data di inizio non impostata'}
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-center">
+                                <Badge variant="secondary">{group.student_count}</Badge>
+                              </TableCell>
+                              <TableCell className="text-muted-foreground text-sm max-w-[200px] truncate" title={group.last_lesson_title || undefined}>
+                                {group.last_lesson_title || '-'}
+                              </TableCell>
+                              <TableCell className="pr-6">
+                                {renderGroupActions(group)}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+
+                    {/* Da telefono: schede */}
+                    <div className="md:hidden space-y-3">
+                      {visibleGroups.map(group => (
+                        <div key={group.id} className={`rounded-lg border p-4 space-y-3 ${group.status === 'active' ? '' : 'bg-muted/40'}`}>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <div className="font-medium">{group.title}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {group.course_emoji} {group.course_title}
+                              </div>
+                            </div>
+                            {group.status === 'active'
+                              ? <Badge variant="secondary" className="shrink-0">{group.student_count} studenti</Badge>
+                              : <Badge variant="secondary" className="shrink-0">Archiviato</Badge>}
+                          </div>
+                          <div className="text-sm space-y-1">
+                            <div><span className="text-muted-foreground">Insegnante:</span> {group.teacher_name || 'Nessuno'}</div>
+                            <div><span className="text-muted-foreground">Lezioni:</span> {formatSchedule(group.lesson_days, group.lesson_time)}</div>
+                            {group.last_lesson_title && (
+                              <div className="truncate"><span className="text-muted-foreground">Ultima:</span> {group.last_lesson_title}</div>
+                            )}
+                          </div>
+                          {renderGroupActions(group, true)}
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </CardContent>

@@ -53,7 +53,7 @@ export async function gradeWithoutSubmission(params: {
     _homework_id: params.homeworkId,
     _student_id: params.studentId,
     _grade: params.grade,
-    _feedback: params.feedback.trim() || null,
+    _feedback: params.feedback.trim() || undefined,
   });
   if (error) {
     // Funzione assente: la migrazione 0080 non è ancora applicata

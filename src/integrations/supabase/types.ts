@@ -4112,6 +4112,15 @@ export type Database = {
         Args: { p_teacher_ids: string[] }
         Returns: undefined
       }
+      grade_homework_without_submission: {
+        Args: {
+          _feedback?: string
+          _grade: number
+          _homework_id: string
+          _student_id: string
+        }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -4293,6 +4302,10 @@ export type Database = {
         Args: { _student: string; _year: number }
         Returns: undefined
       }
+      shift_lesson_tasks: {
+        Args: { _delta: number; _from: number; _lesson: string }
+        Returns: undefined
+      }
       storage_folder_user: { Args: { _name: string }; Returns: string }
       student_risk_signals: {
         Args: { _rules?: Json }
@@ -4406,6 +4419,7 @@ export type Database = {
         | "qualified"
         | "proposal_sent"
         | "won"
+        | "cancelled"
         | "lost"
         | "nurture"
     }
@@ -4567,6 +4581,7 @@ export const Constants = {
         "qualified",
         "proposal_sent",
         "won",
+        "cancelled",
         "lost",
         "nurture",
       ],

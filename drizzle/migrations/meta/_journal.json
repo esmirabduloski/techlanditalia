@@ -575,6 +575,20 @@
       "when": 1794400000000,
       "tag": "0081_lesson_tasks_renumber",
       "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1794498387740,
+      "tag": "0082_grade_without_submission",
+      "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1794498433958,
+      "tag": "0083_lesson_tasks_renumber",
+      "breakpoints": true
     }
   ]
 }

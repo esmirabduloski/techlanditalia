@@ -91,3 +91,38 @@ test("da telefono i gruppi sono schede", async ({ page, fake }) => {
   expect(overflow).toBeLessThanOrEqual(0);
   await page.screenshot({ path: "test-results/admin-gruppi-telefono.png", fullPage: true });
 });
+
+test("modifica gruppo: aggiunge gli studenti e avvisa chi è già in un altro gruppo del corso", async ({ page, fake }) => {
+  seed(fake);
+  const luca = { id: "44444444-4444-4444-8444-444444444401", full_name: "Luca Blu", username: "luca", role: "student" };
+  const anna = { id: "44444444-4444-4444-8444-444444444402", full_name: "Anna Gialli", username: "anna", role: "student" };
+  const marco = { id: "44444444-4444-4444-8444-444444444403", full_name: "Marco Verdi", username: "marco", role: "student" };
+  fake.seed("profiles", [luca, anna, marco]);
+  // Marco è nel gruppo archiviato dello stesso corso; Anna è già nel gruppo del sabato
+  fake.seed("group_students", [
+    { group_id: "e0000000-0000-4000-8000-000000000003", student_id: marco.id, group: { course_id: course.id, title: "Vecchio gruppo", status: "archived" } },
+    { group_id: "e0000000-0000-4000-8000-000000000001", student_id: anna.id, group: { course_id: course.id, title: "Python sabato", status: "active" } },
+  ]);
+  await fake.signInBeforeLoad(page, admin);
+  await page.goto("/admin/gruppi");
+
+  await page.getByRole("row", { name: /Python sabato/ }).getByRole("button", { name: "Modifica" }).click();
+  const dialog = page.getByRole("dialog", { name: "Modifica Gruppo" });
+  await expect(dialog.getByRole("checkbox", { name: /Anna Gialli/ })).toBeChecked();
+  await expect(dialog.getByText('già nel gruppo "Vecchio gruppo" (archiviato) di questo corso')).toBeVisible();
+
+  // Marco non si può aggiungere: avviso e niente salvataggio
+  await dialog.getByRole("checkbox", { name: /Marco Verdi/ }).click();
+  await expect(dialog.getByRole("alert")).toContainText("Marco Verdi");
+  await dialog.getByRole("button", { name: /Salva/ }).click();
+  await expect(page.getByText("Studenti già in un altro gruppo del corso", { exact: true })).toBeVisible();
+  expect(fake.table("group_students").filter((m) => m.group_id === "e0000000-0000-4000-8000-000000000001")).toHaveLength(1);
+
+  // Luca sì; Anna resta
+  await dialog.getByRole("checkbox", { name: /Marco Verdi/ }).click();
+  await dialog.getByRole("checkbox", { name: /Luca Blu/ }).click();
+  await dialog.getByRole("button", { name: /Salva/ }).click();
+  await expect(page.getByText("1 studente aggiunto", { exact: true })).toBeVisible();
+  expect(fake.table("group_students").filter((m) => m.group_id === "e0000000-0000-4000-8000-000000000001").map((m) => m.student_id).sort())
+    .toEqual([luca.id, anna.id].sort());
+});

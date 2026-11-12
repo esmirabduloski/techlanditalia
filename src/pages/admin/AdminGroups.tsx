@@ -55,6 +55,7 @@ import { TRASH_RECOVERY_HINT, TRASH_RETENTION_DAYS } from "@/lib/trash";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GroupRowActions } from "@/components/admin/GroupRowActions";
 import { countByStatus, filterGroups, formatSchedule, type GroupStatusFilter } from "@/lib/adminGroupsView";
+import { conflictLabel, findConflicts, planMembershipChanges, type Membership } from "@/lib/groupMembership";
 
 interface CertificateFile {
   path: string;
@@ -147,7 +148,9 @@ export default function AdminGroups() {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [studentSearch, setStudentSearch] = useState('');
-  const [studentExistingCourses, setStudentExistingCourses] = useState<Map<string, string[]>>(new Map());
+  // Iscrizioni di tutti gli studenti ai gruppi: chi è già in un gruppo del corso scelto
+  const [memberships, setMemberships] = useState<Membership[]>([]);
+  const [initialStudents, setInitialStudents] = useState<string[]>([]);
 
   useEffect(() => {
     if (!authLoading && (!user || !isAdmin)) {
@@ -268,7 +271,8 @@ export default function AdminGroups() {
       selected_students: []
     });
     setStudentSearch('');
-    setStudentExistingCourses(new Map());
+    setInitialStudents([]);
+    fetchMemberships();
     setIsDialogOpen(true);
   };
 
@@ -301,8 +305,8 @@ export default function AdminGroups() {
       selected_students: groupStudents?.map(gs => gs.student_id) || []
     });
     setStudentSearch('');
-    const studentIds = groupStudents?.map(gs => gs.student_id) || [];
-    fetchStudentExistingCourses(studentIds);
+    setInitialStudents(groupStudents?.map(gs => gs.student_id) || []);
+    fetchMemberships();
     setIsDialogOpen(true);
   };
 
@@ -311,74 +315,78 @@ export default function AdminGroups() {
       toast({ title: 'Errore', description: 'Titolo e corso sono obbligatori', variant: 'destructive' });
       return;
     }
+    if (selectedConflicts.length > 0) {
+      toast({
+        title: 'Studenti già in un altro gruppo del corso',
+        description: selectedConflicts.map(id => `${studentName(id)}: ${conflictLabel(conflicts.get(id)!)}`).join('\n'),
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const groupFields = {
+      title: formData.title,
+      course_id: formData.course_id,
+      teacher_id: formData.teacher_id === '__none__' ? null : formData.teacher_id,
+      start_date: formData.start_date || null,
+      max_lessons: formData.max_lessons,
+      lesson_days: formData.lesson_days,
+      lesson_time: formData.lesson_time || null,
+      whatsapp_link: formData.whatsapp_link || null,
+      mega_chat_link: formData.mega_chat_link || null,
+      teacher_meeting_link: formData.teacher_meeting_link || null,
+      student_meeting_link: formData.student_meeting_link || null,
+    };
 
     setIsSaving(true);
     try {
       if (editingGroup) {
-        // Update group
-        await supabase
+        const { error: updateError } = await supabase
           .from('student_groups')
-          .update({
-            title: formData.title,
-            course_id: formData.course_id,
-            teacher_id: formData.teacher_id === '__none__' ? null : formData.teacher_id,
-            start_date: formData.start_date || null,
-            max_lessons: formData.max_lessons,
-            lesson_days: formData.lesson_days,
-            lesson_time: formData.lesson_time || null,
-            whatsapp_link: formData.whatsapp_link || null,
-            mega_chat_link: formData.mega_chat_link || null,
-            teacher_meeting_link: formData.teacher_meeting_link || null,
-            student_meeting_link: formData.student_meeting_link || null
-          } as any)
+          .update(groupFields)
           .eq('id', editingGroup.id);
+        if (updateError) throw updateError;
 
-        // Update students
-        await supabase
-          .from('group_students')
-          .delete()
-          .eq('group_id', editingGroup.id);
-
-        if (formData.selected_students.length > 0) {
-          await supabase
+        // Solo le differenze: chi resta nel gruppo non viene tolto e rimesso
+        const { toAdd, toRemove } = planMembershipChanges(initialStudents, formData.selected_students);
+        if (toRemove.length > 0) {
+          const { error } = await supabase
             .from('group_students')
-            .insert(formData.selected_students.map(sid => ({
-              group_id: editingGroup.id,
-              student_id: sid
-            })));
+            .delete()
+            .eq('group_id', editingGroup.id)
+            .in('student_id', toRemove);
+          if (error) throw new Error(`Studenti non tolti dal gruppo: ${error.message}`);
+        }
+        if (toAdd.length > 0) {
+          const { error } = await supabase
+            .from('group_students')
+            .insert(toAdd.map(sid => ({ group_id: editingGroup.id, student_id: sid })));
+          if (error) throw new Error(`Studenti non aggiunti: ${error.message}`);
         }
 
-        toast({ title: 'Successo', description: 'Gruppo aggiornato' });
+        const parts = [
+          toAdd.length ? `${toAdd.length} ${toAdd.length === 1 ? 'studente aggiunto' : 'studenti aggiunti'}` : '',
+          toRemove.length ? `${toRemove.length} ${toRemove.length === 1 ? 'tolto' : 'tolti'}` : '',
+        ].filter(Boolean);
+        toast({ title: 'Gruppo aggiornato', description: parts.join(', ') || undefined });
       } else {
-        // Create group
         const { data: newGroup, error } = await supabase
           .from('student_groups')
-          .insert({
-            title: formData.title,
-            course_id: formData.course_id,
-            teacher_id: formData.teacher_id === '__none__' ? null : formData.teacher_id,
-            start_date: formData.start_date || null,
-            max_lessons: formData.max_lessons,
-            lesson_days: formData.lesson_days,
-            lesson_time: formData.lesson_time || null,
-            whatsapp_link: formData.whatsapp_link || null,
-            mega_chat_link: formData.mega_chat_link || null,
-            teacher_meeting_link: formData.teacher_meeting_link || null,
-            student_meeting_link: formData.student_meeting_link || null
-          } as any)
+          .insert(groupFields)
           .select()
           .single();
 
         if (error) throw error;
 
-        // Add students
+        // Studenti prima del calendario, come prima
+        let studentsError: { message: string } | null = null;
         if (formData.selected_students.length > 0) {
-          await supabase
+          ({ error: studentsError } = await supabase
             .from('group_students')
             .insert(formData.selected_students.map(sid => ({
               group_id: newGroup.id,
               student_id: sid
-            })));
+            }))));
         }
 
         // Auto-generate lesson calendar if start_date and lesson_days are set
@@ -402,13 +410,22 @@ export default function AdminGroups() {
           }
         }
 
-        toast({ title: 'Successo', description: 'Gruppo creato con calendario' });
+        if (studentsError) {
+          toast({
+            title: 'Gruppo creato, studenti non aggiunti',
+            description: `${studentsError.message}. Apri "Modifica" sul gruppo per riprovare.`,
+            variant: 'destructive',
+          });
+        } else {
+          toast({ title: 'Successo', description: 'Gruppo creato con calendario' });
+        }
       }
 
       setIsDialogOpen(false);
       fetchData();
-    } catch (error: any) {
-      toast({ title: 'Errore', description: error.message, variant: 'destructive' });
+    } catch (error: unknown) {
+      toast({ title: 'Errore', description: error instanceof Error ? error.message : String(error), variant: 'destructive' });
+      fetchData();
     } finally {
       setIsSaving(false);
     }
@@ -490,29 +507,20 @@ export default function AdminGroups() {
     }
   };
 
-  const fetchStudentExistingCourses = async (studentIds: string[]) => {
-    if (studentIds.length === 0) {
-      setStudentExistingCourses(new Map());
-      return;
-    }
+  const fetchMemberships = async () => {
     const { data } = await supabase
       .from('group_students')
-      .select('student_id, group_id, group:group_id(course_id)')
-      .in('student_id', studentIds);
-
-    const map = new Map<string, string[]>();
-    if (data) {
-      data.forEach((row: any) => {
-        // Skip if editing and this is the current group
-        if (editingGroup && row.group_id === editingGroup.id) return;
-        const courseId = row.group?.course_id;
-        if (!courseId) return;
-        const existing = map.get(row.student_id) || [];
-        if (!existing.includes(courseId)) existing.push(courseId);
-        map.set(row.student_id, existing);
-      });
-    }
-    setStudentExistingCourses(map);
+      .select('student_id, group_id, group:group_id(course_id, title, status)');
+    setMemberships((data || []).map((row) => {
+      const g = (Array.isArray(row.group) ? row.group[0] : row.group) as { course_id: string | null; title: string; status: string | null } | null;
+      return {
+        student_id: row.student_id,
+        group_id: row.group_id,
+        course_id: g?.course_id ?? null,
+        group_title: g?.title ?? '',
+        group_status: g?.status ?? 'active',
+      };
+    }));
   };
 
   const toggleStudent = (studentId: string) => {
@@ -520,21 +528,14 @@ export default function AdminGroups() {
       const newSelected = prev.selected_students.includes(studentId)
         ? prev.selected_students.filter(id => id !== studentId)
         : [...prev.selected_students, studentId];
-      
-      // Fetch existing courses for updated selection
-      fetchStudentExistingCourses(newSelected);
-      
       return { ...prev, selected_students: newSelected };
     });
   };
 
-  // Courses that are blocked because at least one selected student is already in a group for that course
-  const blockedCourseIds = new Set<string>();
-  studentExistingCourses.forEach((courseIds) => {
-    courseIds.forEach(cid => blockedCourseIds.add(cid));
-  });
-
-  const availableCourses = courses.filter(c => !blockedCourseIds.has(c.id));
+  // Studenti già in un altro gruppo del corso scelto: il database non li accetta
+  const conflicts = findConflicts(memberships, formData.course_id, editingGroup?.id ?? null);
+  const selectedConflicts = formData.selected_students.filter(id => conflicts.has(id));
+  const studentName = (id: string) => students.find(st => st.id === id)?.full_name || 'Studente';
 
   if (authLoading || isLoading) {
     return (
@@ -771,18 +772,26 @@ export default function AdminGroups() {
                       return s.full_name.toLowerCase().includes(search) ||
                         (s.username && s.username.toLowerCase().includes(search));
                     })
-                    .map(s => (
-                      <div key={s.id} className="flex items-center gap-2 p-2 hover:bg-muted rounded">
-                        <Checkbox
-                          checked={formData.selected_students.includes(s.id)}
-                          onCheckedChange={() => toggleStudent(s.id)}
-                        />
-                        <span className="text-sm">
-                          {s.full_name}
-                          {s.username && <span className="text-muted-foreground"> (@{s.username})</span>}
-                        </span>
-                      </div>
-                    ))}
+                    .map(s => {
+                      const conflict = conflicts.get(s.id);
+                      const selected = formData.selected_students.includes(s.id);
+                      return (
+                        <label key={s.id} className={`flex items-start gap-2 p-2 rounded cursor-pointer ${selected && conflict ? 'bg-amber-50 dark:bg-amber-950/40' : 'hover:bg-muted'}`}>
+                          <Checkbox
+                            className="mt-0.5"
+                            checked={selected}
+                            onCheckedChange={() => toggleStudent(s.id)}
+                          />
+                          <span className="text-sm">
+                            {s.full_name}
+                            {s.username && <span className="text-muted-foreground"> (@{s.username})</span>}
+                            {conflict && (
+                              <span className="block text-xs text-amber-700 dark:text-amber-400">{conflictLabel(conflict)}</span>
+                            )}
+                          </span>
+                        </label>
+                      );
+                    })}
                   {students.filter(s => {
                     const search = studentSearch.toLowerCase();
                     return s.full_name.toLowerCase().includes(search) ||
@@ -793,35 +802,32 @@ export default function AdminGroups() {
                     </p>
                   )}
                 </div>
+                {selectedConflicts.length > 0 && (
+                  <div role="alert" className="rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/40 p-3 text-sm text-amber-900 dark:text-amber-200">
+                    {selectedConflicts.length === 1 ? 'Uno studente selezionato è' : `${selectedConflicts.length} studenti selezionati sono`} già in un altro gruppo di questo corso
+                    e non può essere aggiunto: {selectedConflicts.map(studentName).join(', ')}.
+                    Toglilo dall'altro gruppo oppure usa "Trasferisci studenti" dal menu Altro di quel gruppo.
+                  </div>
+                )}
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Corso *</Label>
                   <Select
-                    value={blockedCourseIds.has(formData.course_id) ? '' : formData.course_id}
+                    value={formData.course_id}
                     onValueChange={(v) => setFormData(prev => ({ ...prev, course_id: v }))}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Seleziona corso" />
                     </SelectTrigger>
                     <SelectContent>
-                      {availableCourses.map(c => (
+                      {courses.map(c => (
                         <SelectItem key={c.id} value={c.id}>
                           {c.emoji} {c.title}
                         </SelectItem>
                       ))}
-                      {availableCourses.length === 0 && formData.selected_students.length > 0 && (
-                        <div className="px-2 py-3 text-sm text-muted-foreground text-center">
-                          Nessun corso disponibile per gli studenti selezionati
-                        </div>
-                      )}
                     </SelectContent>
                   </Select>
-                  {blockedCourseIds.size > 0 && formData.selected_students.length > 0 && (
-                    <p className="text-xs text-muted-foreground">
-                      {blockedCourseIds.size} cors{blockedCourseIds.size === 1 ? 'o escluso' : 'i esclusi'} (studenti già iscritti)
-                    </p>
-                  )}
                 </div>
 
                 <div className="space-y-2">

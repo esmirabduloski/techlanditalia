@@ -18,6 +18,7 @@ import { StudentCommentsSection } from '@/components/dashboard/StudentCommentsSe
 import { ParentChildrenSection } from '@/components/dashboard/ParentChildrenSection';
 import { StudentLessonSchedule } from '@/components/dashboard/StudentLessonSchedule';
 import { JoinLessonHero } from '@/components/dashboard/JoinLessonHero';
+import { ExtraMeetingLinkButtons } from '@/components/dashboard/ExtraMeetingLinkButtons';
 import { TeacherBioCard } from '@/components/dashboard/TeacherBioCard';
 import { StreakDisplay } from '@/components/dashboard/StreakDisplay';
 import { ChildAttendanceHistory } from '@/components/dashboard/ChildAttendanceHistory';
@@ -281,7 +282,11 @@ export default function Dashboard() {
         <div className="max-w-6xl mx-auto px-4 py-4 sm:py-8">
           {/* Big "Entra a Lezione" CTA at top center: anche per il genitore, i più piccoli entrano dal suo dispositivo */}
           {effectiveUserId && !effectiveIsTeacher && (
-            <JoinLessonHero userId={effectiveUserId} forParent={effectiveIsParent} />
+            <>
+              <JoinLessonHero userId={effectiveUserId} forParent={effectiveIsParent} />
+              {/* Secondo link dato dall'admin al singolo studente: sempre visibile */}
+              <ExtraMeetingLinkButtons userId={effectiveUserId} forParent={effectiveIsParent} />
+            </>
           )}
 
           {/* Header: per il genitore niente avatar e livelli, che sono del figlio */}

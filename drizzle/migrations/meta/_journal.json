@@ -596,6 +596,13 @@
       "when": 1794500000000,
       "tag": "0084_one_active_group_per_course",
       "breakpoints": true
+    },
+    {
+      "idx": 85,
+      "version": "7",
+      "when": 1794600000000,
+      "tag": "0085_student_extra_meeting_links",
+      "breakpoints": true
     }
   ]
 }

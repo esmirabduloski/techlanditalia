@@ -271,3 +271,11 @@ if ! out=$(run_sql supabase_admin supabase/tests/rls/26_one_active_group_per_cou
   exit 1
 fi
 echo "$out" | sed -n 's/.*NOTICE: *//p'
+
+echo "▶ Secondo link per la lezione"
+if ! out=$(run_sql supabase_admin supabase/tests/rls/27_student_extra_meeting_links.sql 2>&1); then
+  echo "$out" | sed -nE 's/.*(NOTICE|WARNING|ERROR): *//p'
+  echo "✗ Test del secondo link FALLITI"
+  exit 1
+fi
+echo "$out" | sed -n 's/.*NOTICE: *//p'

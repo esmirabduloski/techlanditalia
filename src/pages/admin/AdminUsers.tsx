@@ -51,6 +51,8 @@ import { TRASH_RECOVERY_HINT } from '@/lib/trash';
 import { todayStamp } from '@/lib/csvImport';
 import { applyStudents, loadStudentsCsvContext, planStudents, STUDENT_COLUMNS, studentsTemplateCsv, studentsToCsv } from '@/lib/studentsCsv';
 import { fetchChildIds, fetchGuardianLinks, saveParentChildren, type GuardianLink } from '@/lib/familyClient';
+import { fetchExtraMeetingLinks, type ExtraMeetingLink } from '@/lib/extraMeetingLinks';
+import { ExtraMeetingLinkButton } from '@/components/admin/ExtraMeetingLinkButton';
 import {
   Select,
   SelectContent,
@@ -176,6 +178,12 @@ export default function AdminUsers() {
   const [backgroundChecks, setBackgroundChecks] = useState<Map<string, BackgroundCheck>>(new Map());
   const [checkDialogTeacher, setCheckDialogTeacher] = useState<{ id: string; name: string } | null>(null);
   const [mfaDialogUser, setMfaDialogUser] = useState<{ id: string; name: string; email?: string | null } | null>(null);
+  // Secondo link lezione dei singoli studenti (0085)
+  const [extraLinks, setExtraLinks] = useState<Map<string, ExtraMeetingLink>>(new Map());
+  const loadExtraLinks = async () => {
+    const links = await fetchExtraMeetingLinks();
+    setExtraLinks(new Map(links.map((l) => [l.student_id, l])));
+  };
 
   // Precompilazione dalla scheda lead del CRM (?create=1&email=..&name=..&course=..)
   useEffect(() => {
@@ -342,6 +350,7 @@ export default function AdminUsers() {
   useEffect(() => {
     if (user && isAdmin) {
       fetchData();
+      loadExtraLinks();
     }
   }, [user, isAdmin]);
 
@@ -1467,6 +1476,7 @@ export default function AdminUsers() {
                                   </Tooltip>
                                 </TooltipProvider>
                                 <SubscriptionPauseButton pause={pauses.byStudent.get(child.id)} onClick={() => setPauseStudent(child)} />
+                                <ExtraMeetingLinkButton studentId={child.id} studentName={child.full_name} link={extraLinks.get(child.id)} onSaved={loadExtraLinks} />
                                 <TooltipProvider>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
@@ -1609,6 +1619,7 @@ export default function AdminUsers() {
                                 </Tooltip>
                               </TooltipProvider>
                               <SubscriptionPauseButton pause={pauses.byStudent.get(child.id)} onClick={() => setPauseStudent(child)} />
+                              <ExtraMeetingLinkButton studentId={child.id} studentName={child.full_name} link={extraLinks.get(child.id)} onSaved={loadExtraLinks} />
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>

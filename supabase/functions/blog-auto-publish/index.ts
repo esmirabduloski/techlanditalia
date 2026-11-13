@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeadersFor } from "../_shared/cors.ts";
+import { decodeClaims } from "../_shared/mfa.ts";
 import { submitToIndexNow } from "../_shared/indexnow.ts";
 import { captureServerError, withCronMonitor } from "../_shared/sentry.ts";
 
@@ -31,7 +32,8 @@ Deno.serve(async (req) => {
       const { data: { user } } = await supabase.auth.getUser(auth.slice(7));
       if (user) {
         const { data: role } = await supabase.from('user_roles').select('role').eq('user_id', user.id).eq('role', 'admin').maybeSingle();
-        authorized = Boolean(role);
+        // Il service role salta le policy: la 2FA dell'admin va verificata qui
+        authorized = Boolean(role) && decodeClaims(auth.slice(7)).aal === 'aal2';
       }
     }
   }

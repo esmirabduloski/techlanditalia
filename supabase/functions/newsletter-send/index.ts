@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeadersFor } from "../_shared/cors.ts";
+import { decodeClaims, mfaRequiredResponse } from "../_shared/mfa.ts";
 import { rateLimit } from "../_shared/ratelimit.ts";
 import { captureServerError } from "../_shared/sentry.ts";
 import { sendEmail } from "../_shared/email.ts";
@@ -65,6 +66,8 @@ const handler = async (req: Request): Promise<Response> => {
         { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
+    // Il service role salta le policy: la 2FA dell'admin va verificata qui
+    if (decodeClaims(authHeader.replace(/^Bearer /i, "")).aal !== "aal2") return mfaRequiredResponse(corsHeaders);
 
     const { subject, content }: SendNewsletterRequest = await req.json();
 

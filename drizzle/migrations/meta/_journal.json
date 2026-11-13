@@ -617,6 +617,13 @@
       "when": 1794600000002,
       "tag": "0087_student_extra_meeting_links",
       "breakpoints": true
+    },
+    {
+      "idx": 88,
+      "version": "7",
+      "when": 1794700000000,
+      "tag": "0088_security_audit_fixes",
+      "breakpoints": true
     }
   ]
 }

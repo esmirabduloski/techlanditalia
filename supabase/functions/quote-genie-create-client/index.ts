@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeadersFor } from "../_shared/cors.ts";
+import { decodeClaims, mfaRequiredResponse } from "../_shared/mfa.ts";
 
 /** Rata CRM da trasformare in preventivo (opzionale: { lead_id, payment_id }). */
 type PaymentRow = {
@@ -85,6 +86,8 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    // Il service role salta le policy: la 2FA dell'admin va verificata qui
+    if (decodeClaims(authHeader.replace("Bearer ", "")).aal !== "aal2") return mfaRequiredResponse(corsHeaders);
 
     const body = await req.json();
     const leadId = body?.lead_id;

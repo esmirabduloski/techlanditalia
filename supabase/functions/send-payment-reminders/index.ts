@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeadersFor } from "../_shared/cors.ts";
+import { decodeClaims } from "../_shared/mfa.ts";
 import { notifyAdmins } from "../_shared/adminpush.ts";
 import { captureServerError, withCronMonitor } from "../_shared/sentry.ts";
 import { silencedProfileIds } from "../_shared/subscriptionpause.ts";
@@ -94,7 +95,8 @@ serve(async (req: Request): Promise<Response> => {
       if (user) {
         const { data: role } = await supabase
           .from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
-        isAdmin = Boolean(role);
+        // Il service role salta le policy: la 2FA dell'admin va verificata qui
+        isAdmin = Boolean(role) && decodeClaims(auth.slice(7)).aal === "aal2";
       }
     }
   }

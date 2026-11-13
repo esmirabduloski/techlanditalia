@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { corsHeadersFor } from "../_shared/cors.ts";
+import { decodeClaims, mfaRequiredResponse } from "../_shared/mfa.ts";
 import { rateLimit } from "../_shared/ratelimit.ts";
 import { submitToIndexNow, toSiteUrls } from "../_shared/indexnow.ts";
 
@@ -36,7 +37,8 @@ Deno.serve(async (req) => {
     // Solo admin autenticati
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) return json({ error: "Non autorizzato" }, 401, corsHeaders);
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(authHeader.replace("Bearer ", ""));
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
     if (authError || !user) return json({ error: "Non autorizzato" }, 401, corsHeaders);
 
     const { data: adminRole } = await supabaseAdmin
@@ -46,6 +48,8 @@ Deno.serve(async (req) => {
       .eq("role", "admin")
       .maybeSingle();
     if (!adminRole) return json({ error: "Solo gli admin possono inviare URL a IndexNow" }, 403, corsHeaders);
+    // Il service role salta le policy: la 2FA dell'admin va verificata qui
+    if (decodeClaims(token).aal !== "aal2") return mfaRequiredResponse(corsHeaders);
 
     const parsed = BodySchema.safeParse(await req.json().catch(() => null));
     if (!parsed.success) return json({ error: "Body non valido: atteso { urls: string[] }" }, 400, corsHeaders);

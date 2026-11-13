@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeadersFor } from "../_shared/cors.ts";
+import { decodeClaims, mfaRequiredResponse } from "../_shared/mfa.ts";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/notion/v1";
 
@@ -152,6 +153,8 @@ Deno.serve(async (req) => {
       status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
+  // Il service role salta le policy: la 2FA dell'admin va verificata qui
+  if (decodeClaims(authHeader.replace("Bearer ", "")).aal !== "aal2") return mfaRequiredResponse(corsHeaders);
 
   let payload: SyncRequest;
   try {

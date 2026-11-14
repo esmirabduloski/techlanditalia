@@ -147,6 +147,7 @@ serve(async (req) => {
         parentId: newUserId,
         childName,
         childUsername,
+        initialPassword: password,
         courseIds: courseId && courseId !== "none" ? [courseId] : [],
       });
 

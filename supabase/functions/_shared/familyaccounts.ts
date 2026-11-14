@@ -121,12 +121,13 @@ export async function addParentRole(admin: SupabaseClient, userId: string) {
 
 /**
  * Account del figlio collegato al genitore, iscritto ai corsi indicati. La
- * password del figlio NON è quella del genitore: nasce casuale e il genitore la
- * imposta dall'area riservata (parent-set-child-password, 0046_student_passwords).
+ * password iniziale è quella del genitore, quando disponibile. Negli import
+ * senza password nota si abilita il fallback al genitore fino alla scelta
+ * esplicita di una password separata per il figlio.
  */
 export async function createChildAccount(
   admin: SupabaseClient,
-  input: { parentId: string; childName: string; childUsername: string; courseIds: string[] },
+  input: { parentId: string; childName: string; childUsername: string; courseIds: string[]; initialPassword?: string },
 ): Promise<ChildResult> {
   const childName = input.childName.trim();
   const childUsername = input.childUsername.trim();
@@ -136,7 +137,7 @@ export async function createChildAccount(
 
   const { data: childAuthData, error: childAuthError } = await admin.auth.admin.createUser({
     email: childEmail,
-    password: randomUnknownPassword(),
+    password: input.initialPassword ?? randomUnknownPassword(),
     email_confirm: true,
     user_metadata: {
       full_name: childName,
@@ -171,9 +172,11 @@ export async function createChildAccount(
 
   const { error: pwSettingsError } = await admin
     .from("student_password_settings")
-    .upsert({ student_id: childId, own_password: true, set_at: new Date().toISOString() });
+    .upsert({ student_id: childId, own_password: false, set_at: null, set_by: null });
   if (pwSettingsError) {
     console.error("Error saving child password settings:", pwSettingsError);
+    await admin.auth.admin.deleteUser(childId);
+    return { ok: false, stage: "profile", error: "Impossibile configurare la password iniziale del figlio" };
   }
 
   for (const courseId of input.courseIds) {

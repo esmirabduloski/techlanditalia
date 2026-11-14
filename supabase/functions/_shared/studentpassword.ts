@@ -2,8 +2,8 @@
  * Password dello studente, separata da quella del genitore
  * (drizzle/migrations/0046_student_passwords.sql).
  *
- * Gli studenti creati prima del cambio entravano con la password del genitore.
- * student-login continua ad accettarla per loro, senza scadenza, finché il
+ * Gli studenti iniziano con la password del genitore.
+ * student-login continua ad accettarla, senza scadenza, finché il
  * genitore (o un admin) non imposta al figlio una password propria.
  */
 
@@ -39,8 +39,8 @@ export function validateChildPassword(password: unknown): string | null {
 }
 
 /**
- * Password casuale che nessuno conosce, per il figlio appena creato: entra solo
- * dopo che il genitore (o un admin) gli ha impostato una password.
+ * Password casuale per gli import senza credenziali note: il figlio può
+ * comunque accedere attraverso il fallback alla password del genitore.
  */
 export function randomUnknownPassword(): string {
   const bytes = new Uint8Array(24);

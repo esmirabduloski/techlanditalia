@@ -43,8 +43,31 @@ test("una consegna già valutata non si riscrive e lo studente lo vede", async (
   ]);
 
   await page.goto(homeworkUrl);
-  await uploadAndSubmit(page);
 
-  await expect(page.getByText("Il compito è già stato valutato: non puoi più modificare la consegna.", { exact: true })).toBeVisible();
+  // Il modulo di consegna sparisce: lo studente vede la valutazione, non può ricaricare.
+  await expect(page.getByText("Compito valutato!", { exact: true })).toBeVisible();
+  await expect(page.getByText("Hai guadagnato 30 punti")).toBeVisible();
+  await expect(page.locator('input[type="file"]')).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Aggiorna consegna" })).toHaveCount(0);
   expect(fake.table("homework_submissions")[0]).toMatchObject({ status: "graded", file_name: "vecchio.png" });
+});
+
+test("si consegna un gioco Scratch .sb3, anche se il browser non ne conosce il tipo", async ({ page, fake }) => {
+  await page.goto(homeworkUrl);
+  await expect(page.getByText("Trascina un file qui o")).toBeVisible();
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "gioco.sb3",
+    mimeType: "", // Chrome e Safari non hanno un tipo per .sb3
+    buffer: Buffer.from([0x50, 0x4b, 0x03, 0x04, 0x14, 0x00, 0x08, 0x00]), // un .sb3 è uno ZIP
+  });
+  await expect(page.getByText("File caricato", { exact: true })).toBeVisible();
+  expect(fake.callsTo("validate-file-upload")[0].body).toMatchObject({ fileName: "gioco.sb3", mimeType: "application/x.scratch.sb3" });
+
+  await page.getByRole("button", { name: "Invia compito" }).click();
+  await expect(page.getByText("Compito inviato!", { exact: true })).toBeVisible();
+
+  const submissions = fake.table("homework_submissions");
+  expect(submissions).toHaveLength(1);
+  expect(submissions[0]).toMatchObject({ status: "pending", file_name: "gioco.sb3", file_type: "application/x.scratch.sb3" });
+  expect(submissions[0].file_url).toMatch(new RegExp(`^${student.id}/gioco-.*\\.sb3$`));
 });

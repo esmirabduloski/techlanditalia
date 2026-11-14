@@ -23,7 +23,7 @@ test("INVIA consegna il codice appena scritto, anche prima dell'autosave", async
   await page.getByRole("button", { name: "INVIA" }).click();
 
   await expect(page.getByText("Compito inviato! 🎉", { exact: true })).toBeVisible();
-  await expect(page.getByText("In revisione")).toBeVisible();
+  await expect(page.getByText("In attesa di valutazione")).toBeVisible();
   await expect(page.getByRole("button", { name: "Aggiorna consegna" })).toBeVisible();
 
   const submissions = fake.table("homework_submissions");
@@ -49,7 +49,7 @@ test("una seconda consegna aggiorna quella esistente invece di duplicarla", asyn
   await page.getByPlaceholder("Scrivi il tuo codice Python...").fill("x = 2\ny = 3\nprint(x + y)");
   await page.getByRole("button", { name: "Aggiorna consegna" }).click();
 
-  await expect(page.getByText("In revisione")).toBeVisible();
+  await expect(page.getByText("In attesa di valutazione")).toBeVisible();
   const submissions = fake.table("homework_submissions");
   expect(submissions).toHaveLength(1);
   expect(submissions[0]).toMatchObject({ status: "pending", notes: "[CODE]\nx = 2\ny = 3\nprint(x + y)" });

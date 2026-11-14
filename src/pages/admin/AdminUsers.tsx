@@ -35,9 +35,12 @@ import {
   CreditCard,
   ShieldCheck,
   ShieldAlert,
-  FileCheck2
+  FileCheck2,
+  Lock
 } from 'lucide-react';
 import { MfaResetDialog } from '@/components/admin/MfaResetDialog';
+import { LoginLockBadge } from '@/components/admin/LoginLockBadge';
+import { fetchLoginLocks, type LoginLock } from '@/lib/loginLocks';
 import { fetchMfaOverview, type MfaUserStatus } from '@/lib/mfaOverview';
 import { BackgroundCheckDialog } from '@/components/admin/BackgroundCheckDialog';
 import { backgroundCheckStatus, fetchBackgroundChecks, formatItDate, type BackgroundCheck } from '@/lib/backgroundChecks';
@@ -184,6 +187,7 @@ export default function AdminUsers() {
     const links = await fetchExtraMeetingLinks();
     setExtraLinks(new Map(links.map((l) => [l.student_id, l])));
   };
+  const [loginLocks, setLoginLocks] = useState<Map<string, LoginLock>>(new Map());
 
   // Precompilazione dalla scheda lead del CRM (?create=1&email=..&name=..&course=..)
   useEffect(() => {
@@ -414,12 +418,21 @@ export default function AdminUsers() {
     setCourses(coursesData || []);
     setEnrollments(enrollmentsData || []);
     setMfaStatus(await fetchMfaOverview());
+    setLoginLocks(await fetchLoginLocks());
     setBackgroundChecks(await fetchBackgroundChecks());
     setIsLoading(false);
   };
 
   const refreshMfaStatus = async () => setMfaStatus(await fetchMfaOverview());
   const pendingMfaRequests = profiles.filter(p => mfaStatus.get(p.id)?.pendingRequestId);
+
+  const lockedProfiles = profiles.filter(p => loginLocks.has(p.id));
+  const handleUnlocked = (userId: string) =>
+    setLoginLocks(prev => {
+      const next = new Map(prev);
+      next.delete(userId);
+      return next;
+    });
 
   const refreshBackgroundChecks = async () => setBackgroundChecks(await fetchBackgroundChecks());
   // Insegnanti senza certificato del casellario verificato, scaduto o in scadenza
@@ -1023,6 +1036,29 @@ export default function AdminUsers() {
           </div>
         )}
 
+        {lockedProfiles.length > 0 && (
+          <div className="mb-6 rounded-lg border border-destructive/40 bg-destructive/10 p-4">
+            <p className="flex items-center gap-2 font-medium">
+              <Lock className="w-4 h-4 text-destructive" />
+              Account bloccati per troppi tentativi di accesso
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Si sbloccano da soli dopo 15 minuti, oppure subito con "Sblocca".
+            </p>
+            <div className="mt-2 flex flex-col gap-2">
+              {lockedProfiles.map(p => (
+                <div key={p.id} className="flex items-center gap-2 flex-wrap text-sm">
+                  <span className="font-medium">{p.full_name}</span>
+                  <span className="text-muted-foreground">
+                    {p.role === 'student' ? (p.username ? `alunno · ${p.username}` : 'alunno') : p.email}
+                  </span>
+                  <LoginLockBadge lock={loginLocks.get(p.id)} userName={p.full_name} onUnlocked={handleUnlocked} />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {pendingMfaRequests.length > 0 && (
           <div className="mb-6 rounded-lg border border-amber-500/40 bg-amber-500/10 p-4">
             <p className="flex items-center gap-2 font-medium">
@@ -1176,6 +1212,7 @@ export default function AdminUsers() {
                                   {mfaStatus.get(group.parent.id)?.pendingRequestId && (
                                     <Badge className="bg-amber-500 text-white">Reset 2FA richiesto</Badge>
                                   )}
+                                  <LoginLockBadge lock={loginLocks.get(group.parent.id)} userName={group.parent.full_name} onUnlocked={handleUnlocked} />
                                 </div>
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
                                   <span>{hasChildren ? `${group.children.length} ${group.children.length === 1 ? 'figlio' : 'figli'}` : 'Nessun figlio associato'}</span>
@@ -1387,6 +1424,7 @@ export default function AdminUsers() {
                                     <h4 className="font-medium truncate">{child.full_name}</h4>
                                     <Badge variant="outline" className="text-xs">Studente</Badge>
                                     <Badge variant="secondary" className="text-xs">{child.total_points} punti</Badge>
+                                    <LoginLockBadge lock={loginLocks.get(child.id)} userName={child.full_name} onUnlocked={handleUnlocked} />
                                     {group.parent && otherParentNames(child, group.parent.id).length > 0 && (
                                       <Badge variant="outline" className="text-xs gap-1 border-purple-500/40 text-purple-700 dark:text-purple-300">
                                         <Users2 className="w-3 h-3" />
@@ -1525,6 +1563,7 @@ export default function AdminUsers() {
                                   <Badge variant="outline" className="text-xs">Studente</Badge>
                                   <Badge variant="secondary" className="text-xs">{child.total_points} punti</Badge>
                                   {child.isAdmin && <Badge className="bg-amber-500 text-xs">Admin</Badge>}
+                                  <LoginLockBadge lock={loginLocks.get(child.id)} userName={child.full_name} onUnlocked={handleUnlocked} />
                                 </div>
                                 
                                 <div className="flex items-center gap-4 mt-1 text-sm">

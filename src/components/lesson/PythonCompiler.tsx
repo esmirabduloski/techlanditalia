@@ -202,15 +202,18 @@ export function PythonCompiler({ defaultCode, taskId, testCases, onTestResults, 
           )}
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={saveDraft}
-            disabled={isSaving}
-            title="Salva codice"
-          >
-            <Save className="w-4 h-4" />
-          </Button>
+          {/* Senza taskId (es. revisione dell'insegnante) non c'è una bozza da salvare */}
+          {taskId && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={saveDraft}
+              disabled={isSaving}
+              title="Salva codice"
+            >
+              <Save className="w-4 h-4" />
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="sm"

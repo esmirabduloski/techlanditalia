@@ -25,10 +25,12 @@ interface AutoGradingReviewProps {
   testResults: unknown;
   // homework.test_cases: servono nomi e descrizioni dei casi
   testCases: unknown;
+  /** false quando il codice è già aperto nel compilatore accanto */
+  showCode?: boolean;
 }
 
 /** Nel dialogo di valutazione: codice consegnato ed esito dei casi di prova. */
-export function AutoGradingReview({ notes, autoScore, testResults, testCases }: AutoGradingReviewProps) {
+export function AutoGradingReview({ notes, autoScore, testResults, testCases, showCode = true }: AutoGradingReviewProps) {
   const code = parseSubmittedCode(notes);
   const results = parseTestResults(testResults);
   // Solo i casi di cui c'è un risultato: i casi Python non valgono per un compito Web e viceversa
@@ -36,7 +38,7 @@ export function AutoGradingReview({ notes, autoScore, testResults, testCases }: 
 
   return (
     <>
-      {code != null && (
+      {showCode && code != null && (
         <div className="space-y-2">
           <Label className="flex items-center gap-2">
             <Code className="w-4 h-4" />

@@ -585,15 +585,18 @@ export function WebCompiler({ defaultHtmlCode, defaultCssCode, defaultJsCode, ta
               Verifica
             </Button>
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={saveAllDrafts}
-            disabled={isSaving}
-            title="Salva tutto"
-          >
-            <Save className="w-4 h-4" />
-          </Button>
+          {/* Senza taskId (es. revisione dell'insegnante) non c'è una bozza da salvare */}
+          {taskId && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={saveAllDrafts}
+              disabled={isSaving}
+              title="Salva tutto"
+            >
+              <Save className="w-4 h-4" />
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="sm"

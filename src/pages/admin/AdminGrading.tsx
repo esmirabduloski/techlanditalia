@@ -10,10 +10,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
-import { getSignedUrl, openStorageFile } from '@/hooks/useSignedUrl';
+import { openStorageFile } from '@/hooks/useSignedUrl';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { AdminHeader } from '@/components/admin/AdminHeader';
-import { CodeViewer } from '@/components/admin/CodeViewer';
+import { SubmissionWorkspace } from '@/components/grading/SubmissionWorkspace';
 import { AutoGradingReview, AutoScoreBadge } from '@/components/grading/AutoGradingReview';
 import { failedTestsFeedback, parseSubmittedCode, parseTestCases, parseTestResults } from '@/lib/testCases';
 import {
@@ -57,6 +57,11 @@ interface Submission {
     title: string;
     points_reward: number;
     test_cases: unknown;
+    python_env: string | null;
+    default_python_code: string | null;
+    attachments: unknown;
+    /** Corso diretto del compito (anche senza lezione) */
+    course: { slug: string } | null;
     /** null: compito stagionale tolto dalla lezione (le consegne restano da correggere) */
     lesson: {
       title: string;
@@ -64,6 +69,7 @@ interface Submission {
       course: {
         title: string;
         emoji: string;
+        slug: string;
       };
     } | null;
   };
@@ -76,8 +82,6 @@ export default function AdminGrading() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('pending');
-  const [codeContent, setCodeContent] = useState<string | null>(null);
-  const [isLoadingCode, setIsLoadingCode] = useState(false);
   const [withoutSubmissionOpen, setWithoutSubmissionOpen] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -125,10 +129,14 @@ export default function AdminGrading() {
           title,
           points_reward,
           test_cases,
+          python_env,
+          default_python_code,
+          attachments,
+          course:course_id (slug),
           lesson:lesson_id (
             title,
             lesson_number,
-            course:course_id (title, emoji)
+            course:course_id (title, emoji, slug)
           )
         )
       `)
@@ -176,30 +184,6 @@ export default function AdminGrading() {
     }
   };
 
-  const loadCodeContent = async (fileUrl: string) => {
-    setIsLoadingCode(true);
-    try {
-      // I file sono in un bucket privato: serve un link firmato
-      const signedUrl = await getSignedUrl('homework-files', fileUrl, 300);
-      if (!signedUrl) {
-        setCodeContent(null);
-        return;
-      }
-      const response = await fetch(signedUrl);
-      if (response.ok) {
-        const text = await response.text();
-        setCodeContent(text);
-      } else {
-        setCodeContent(null);
-      }
-    } catch (error) {
-      console.error('Error loading code:', error);
-      setCodeContent(null);
-    } finally {
-      setIsLoadingCode(false);
-    }
-  };
-
   const openGradeDialog = async (submission: Submission) => {
     setSelectedSubmission(submission);
     setFormData({
@@ -207,13 +191,7 @@ export default function AdminGrading() {
       grade: submission.grade ?? submission.auto_score ?? 100,
       teacher_feedback: submission.teacher_feedback || '',
     });
-    setCodeContent(null);
     setDialogOpen(true);
-
-    // Load code content if it's a code file
-    if (submission.file_url && isCodeFile(submission.file_name)) {
-      await loadCodeContent(submission.file_url);
-    }
   };
 
   // Un clic: voto = punteggio dei test, feedback = quello scritto o l'elenco dei test da sistemare
@@ -411,8 +389,8 @@ export default function AdminGrading() {
 
         {/* Grade Dialog */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
+          <DialogContent className="w-[calc(100vw-1rem)] max-w-[1600px] sm:max-w-[1600px] h-[96dvh] max-h-[96dvh] p-0 sm:p-0 flex flex-col gap-0 overflow-hidden">
+            <DialogHeader className="p-4 sm:p-6 pb-2 border-b shrink-0">
               <DialogTitle>Valuta Compito</DialogTitle>
               <DialogDescription>
                 {selectedSubmission && (
@@ -422,35 +400,25 @@ export default function AdminGrading() {
                 )}
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-6 py-4">
-              {/* Code Preview Section */}
-              {selectedSubmission?.file_url && isCodeFile(selectedSubmission.file_name) && (
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <Code className="w-4 h-4" />
-                    Codice inviato
-                  </Label>
-                  {isLoadingCode ? (
-                    <div className="flex items-center justify-center py-8 bg-muted/30 rounded-lg">
-                      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : codeContent ? (
-                    <CodeViewer code={codeContent} fileName={selectedSubmission.file_name || undefined} />
-                  ) : (
-                    <div className="text-sm text-muted-foreground bg-muted/30 rounded-lg p-4 text-center">
-                      Impossibile caricare il codice. 
-                      <button
-                        type="button"
-                        onClick={() => openSubmissionFile(selectedSubmission.file_url!)}
-                        className="text-primary underline ml-1"
-                      >
-                        Scarica il file
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
+            <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
+              {/* Consegna: compilatore eseguibile, anteprima di file e progetti Scratch */}
+              <div className="lg:flex-1 lg:min-w-0 lg:overflow-y-auto p-4 sm:p-6 bg-muted/20 border-b lg:border-b-0 lg:border-r">
+                {selectedSubmission && (
+                  <SubmissionWorkspace
+                    submission={selectedSubmission}
+                    homework={{
+                      test_cases: selectedSubmission.homework.test_cases,
+                      python_env: selectedSubmission.homework.python_env,
+                      default_python_code: selectedSubmission.homework.default_python_code,
+                      attachments: selectedSubmission.homework.attachments,
+                      courseSlug: selectedSubmission.homework.lesson?.course.slug ?? selectedSubmission.homework.course?.slug ?? null,
+                    }}
+                  />
+                )}
+              </div>
 
+              {/* Valutazione */}
+              <div className="lg:w-[420px] xl:w-[460px] shrink-0 lg:overflow-y-auto p-4 sm:p-6 space-y-6">
               {/* Codice dal compilatore e correzione automatica */}
               {selectedSubmission && (
                 <AutoGradingReview
@@ -458,6 +426,7 @@ export default function AdminGrading() {
                   autoScore={selectedSubmission.auto_score}
                   testResults={selectedSubmission.test_results}
                   testCases={selectedSubmission.homework.test_cases}
+                  showCode={false}
                 />
               )}
 
@@ -516,8 +485,9 @@ export default function AdminGrading() {
                   rows={4}
                 />
               </div>
+              </div>
             </div>
-            <DialogFooter>
+            <DialogFooter className="p-4 sm:p-6 pt-3 border-t bg-background shrink-0 flex-row flex-wrap justify-end gap-2 sm:gap-2">
               <Button variant="outline" onClick={() => setDialogOpen(false)}>
                 Annulla
               </Button>

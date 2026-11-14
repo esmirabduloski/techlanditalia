@@ -241,13 +241,19 @@ export default function CourseProgress() {
 
           {/* Tabs */}
           <Tabs defaultValue="lessons" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="lessons" className="flex items-center gap-2">
-                <BookOpen className="w-4 h-4" />
+            <TabsList className="grid w-full grid-cols-2 gap-2 h-auto p-1.5 rounded-xl">
+              <TabsTrigger
+                value="lessons"
+                className="flex items-center justify-center gap-2 min-h-14 sm:min-h-16 rounded-lg text-base sm:text-lg font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md"
+              >
+                <BookOpen className="w-5 h-5 sm:w-6 sm:h-6" />
                 Lezioni
               </TabsTrigger>
-              <TabsTrigger value="homework" className="flex items-center gap-2">
-                <ClipboardList className="w-4 h-4" />
+              <TabsTrigger
+                value="homework"
+                className="flex items-center justify-center gap-2 min-h-14 sm:min-h-16 rounded-lg text-base sm:text-lg font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md"
+              >
+                <ClipboardList className="w-5 h-5 sm:w-6 sm:h-6" />
                 Compiti
               </TabsTrigger>
             </TabsList>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { BackButton } from '@/components/ui/back-button';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useStudentProgress } from '@/hooks/useStudentProgress';
@@ -14,7 +15,7 @@ import { MediaConsentCard } from '@/components/account/MediaConsentCard';
 import { AiConsentCard } from '@/components/account/AiConsentCard';
 import { StudentAiConsentCard } from '@/components/account/StudentAiConsentCard';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, Save, Trophy, RotateCcw, ShieldCheck, ChevronRight, UserRound } from 'lucide-react';
+import { Loader2, Save, Trophy, RotateCcw, ShieldCheck, ChevronRight, UserRound } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { stageName } from '@/lib/avatars/catalog';
 
@@ -98,11 +99,7 @@ export default function Profile() {
         <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
           {/* Header */}
           <div className="flex items-center gap-4 mb-8">
-            <Button variant="ghost" size="icon" asChild>
-              <Link to="/area-riservata">
-                <ArrowLeft className="w-5 h-5" />
-              </Link>
-            </Button>
+            <BackButton to="/area-riservata" aria-label="Indietro alla home" />
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-foreground">
                 Il Tuo Profilo

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { BackButton } from '@/components/ui/back-button';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useEffectiveUserId } from '@/hooks/useEffectiveUserId';
@@ -14,7 +15,7 @@ import { WebCompiler } from '@/components/lesson/WebCompiler';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Send, ArrowLeft, Calendar, Trophy, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import { Loader2, Send, Calendar, Trophy, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCodeDraft } from '@/hooks/useCodeDraft';
 import { flushCodeDrafts } from '@/lib/codeDrafts';
@@ -334,9 +335,7 @@ export default function HomeworkView() {
         {/* Top bar */}
         <div className="flex items-center justify-between px-4 py-3 border-b bg-background">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate(`/area-riservata/corso/${homework.lesson.course.id}`)}>
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
+            <BackButton onClick={() => navigate(`/area-riservata/corso/${homework.lesson.course.id}`)} aria-label="Indietro al corso" />
             <div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span>{homework.lesson.course.emoji}</span>
@@ -380,9 +379,7 @@ export default function HomeworkView() {
         {/* Top bar with submit button */}
         <div className="flex items-center justify-between px-4 py-3 border-b bg-background">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate(`/area-riservata/corso/${homework.lesson.course.id}`)}>
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
+            <BackButton onClick={() => navigate(`/area-riservata/corso/${homework.lesson.course.id}`)} aria-label="Indietro al corso" />
             <div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span>{homework.lesson.course.emoji}</span>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { BackButton } from '@/components/ui/back-button';
 import { useNavigate, Link, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useStudentProgress } from '@/hooks/useStudentProgress';
@@ -13,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { 
-  Loader2, ArrowLeft, CheckCircle2, Lock, PlayCircle, 
+  Loader2, CheckCircle2, Lock, PlayCircle, 
   BookOpen, ClipboardList, Trophy, Zap, ExternalLink
 } from 'lucide-react';
 
@@ -202,11 +203,7 @@ export default function CourseProgress() {
         <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
           {/* Header */}
           <div className="flex items-center gap-4 mb-6">
-            <Button variant="ghost" size="icon" asChild>
-              <Link to="/area-riservata">
-                <ArrowLeft className="w-5 h-5" />
-              </Link>
-            </Button>
+            <BackButton to="/area-riservata" aria-label="Indietro alla home" />
             <div className="flex-1">
               <div className="flex items-center gap-3">
                 <span className="text-4xl">{course.emoji}</span>

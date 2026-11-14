@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { ArrowLeft, Check, ChevronRight, ListTree } from 'lucide-react';
+import { BackButton } from '@/components/ui/back-button';
+import { Check, ChevronRight, ListTree } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { getTaskTypeMeta } from '@/lib/lessonTheme';
@@ -63,9 +64,7 @@ export function LessonHeader({
   return (
     <header className={cn('border-b border-border bg-background', className)}>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
-        <Button variant="ghost" size="icon" onClick={onBack} aria-label="Torna al corso" className="shrink-0">
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
+        <BackButton onClick={onBack} aria-label="Indietro al corso" />
 
         {/* Numero lezione ben visibile */}
         <div

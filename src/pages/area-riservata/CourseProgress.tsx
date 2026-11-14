@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { BackButton } from '@/components/ui/back-button';
-import { useNavigate, Link, useParams } from 'react-router-dom';
+import { CourseTutorialButton } from '@/components/dashboard/CourseTutorialButton';
+import { useCourseTutorialIds } from '@/hooks/useCourseTutorialIds';
+import { useNavigate, Link, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useStudentProgress } from '@/hooks/useStudentProgress';
 import { computeLessonAccess } from '@/lib/lessonAccess';
@@ -47,6 +49,8 @@ interface Homework {
 
 export default function CourseProgress() {
   const { courseId } = useParams<{ courseId: string }>();
+  const [searchParams] = useSearchParams();
+  const tutorialCourseIds = useCourseTutorialIds(courseId ? [courseId] : []);
   const { user, isLoading: authLoading } = useAuth();
   const { lessonProgress, homeworkSubmissions, taskProgress, completeLesson, refetch, effectiveUserId } = useStudentProgress();
   const [course, setCourse] = useState<Course | null>(null);
@@ -237,7 +241,7 @@ export default function CourseProgress() {
           </Card>
 
           {/* Tabs */}
-          <Tabs defaultValue="lessons" className="space-y-4">
+          <Tabs defaultValue={searchParams.get("tab") === "compiti" ? "homework" : "lessons"} className="space-y-4">
             <TabsList className="grid w-full grid-cols-2 gap-2 h-auto p-1.5 rounded-xl">
               <TabsTrigger
                 value="lessons"
@@ -380,6 +384,7 @@ export default function CourseProgress() {
 
             {/* Homework Tab */}
             <TabsContent value="homework" className="space-y-3">
+              {courseId && tutorialCourseIds.has(courseId) && <CourseTutorialButton courseId={courseId} />}
               {homework.length === 0 ? (
                 <Card className="border-dashed">
                   <CardContent className="py-8 text-center">

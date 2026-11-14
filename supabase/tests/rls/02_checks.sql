@@ -53,7 +53,8 @@ INSERT INTO rls_test.shared_tables VALUES
   ('ai_consent_versions',     'versioni dell''informativa sugli strumenti AI'),
   ('teacher_links',           'link utili per i docenti'),
   ('school_closures',         'calendario di chiusure e festività'),
-  ('seasonal_themes',         'temi dei compiti stagionali');
+  ('seasonal_themes',         'temi dei compiti stagionali'),
+  ('course_homework_tutorials', 'tutorial del corso su come consegnare i compiti (visibili agli iscritti, test 28)');
 
 -- Tabelle solo-admin anche se hanno una colonna che punta a un utente
 -- (es. il lead CRM collegato a un genitore: il genitore non deve vederlo).

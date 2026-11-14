@@ -43,7 +43,10 @@ const ALLOWED_FILE_TYPES = {
     extensions: ['rbxl', 'rbxlx', 'rbxm', 'rbxmx'], 
     magicBytes: [[0x50, 0x4B, 0x03, 0x04], [0x3C, 0x72, 0x6F, 0x62]] // ZIP or <rob XML
   },
-  
+
+  // Scratch 3 projects (.sb3 are ZIP archives; the client sends this type since browsers leave it empty)
+  'application/x.scratch.sb3': { extensions: ['sb3'], magicBytes: [[0x50, 0x4B, 0x03, 0x04]] },
+
   // Video (for tutorials)
   'video/mp4': { extensions: ['mp4'], magicBytes: [] },
   'video/webm': { extensions: ['webm'], magicBytes: [] },
@@ -212,9 +215,10 @@ serve(async (req) => {
         'pdf', 'txt', 'doc', 'docx', 'zip',
         'py', 'html', 'htm', 'css', 'js', 'json', 'md', 'lua',
         'rbxl', 'rbxlx', 'rbxm', 'rbxmx',
+        'sb3',
         'mp4', 'webm', 'mp3', 'wav'
       ];
-      
+
       if (!homeworkAllowedExtensions.includes(extension)) {
         console.log('Extension not allowed for homework:', extension);
         return new Response(

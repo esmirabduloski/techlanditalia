@@ -16,6 +16,9 @@ interface FileUploadProps {
   onRemoveFile?: () => void;
 }
 
+// I progetti Scratch (.sb3) sono ZIP; quasi nessun browser assegna loro un tipo MIME.
+const SCRATCH_MIME_TYPE = 'application/x.scratch.sb3';
+
 export function FileUpload({ onFileUploaded, existingFile, onRemoveFile }: FileUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
@@ -29,9 +32,11 @@ export function FileUpload({ onFileUploaded, existingFile, onRemoveFile }: FileU
     'pdf', 'txt', 'doc', 'docx', 'zip',
     'py', 'html', 'htm', 'css', 'js', 'json', 'md', 'lua',
     'rbxl', 'rbxlx', 'rbxm', 'rbxmx',
+    'sb3',
     'mp4', 'webm', 'mp3', 'wav'
   ];
   const ALLOWED_MIME_TYPES = [
+    SCRATCH_MIME_TYPE,
     'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
     'application/pdf', 'text/plain', 'text/html', 'text/css', 'text/javascript',
     'application/javascript', 'text/x-python', 'application/x-python', 'application/json',
@@ -83,8 +88,11 @@ export function FileUpload({ onFileUploaded, existingFile, onRemoveFile }: FileU
     // MIME type check - be more permissive for code files
     const isCodeFile = ['py', 'html', 'htm', 'css', 'js', 'json', 'md', 'lua'].includes(extension);
     const isRobloxFile = ['rbxl', 'rbxlx', 'rbxm', 'rbxmx'].includes(extension);
-    
-    if (!ALLOWED_MIME_TYPES.includes(file.type) && !isCodeFile && !isRobloxFile) {
+    const isScratchFile = extension === 'sb3';
+    // Il browser lascia il tipo vuoto (o generico) per .sb3: ne serve uno preciso per la validazione.
+    const mimeType = isScratchFile ? SCRATCH_MIME_TYPE : file.type;
+
+    if (!ALLOWED_MIME_TYPES.includes(mimeType) && !isCodeFile && !isRobloxFile) {
       toast({
         variant: 'destructive',
         title: 'Tipo di file non consentito',
@@ -116,7 +124,7 @@ export function FileUpload({ onFileUploaded, existingFile, onRemoveFile }: FileU
           body: {
             fileName: file.name,
             fileSize: file.size,
-            mimeType: file.type,
+            mimeType,
             fileBytes,
             bucket: 'homework-files'
           }
@@ -139,7 +147,7 @@ export function FileUpload({ onFileUploaded, existingFile, onRemoveFile }: FileU
 
       const { data, error } = await supabase.storage
         .from('homework-files')
-        .upload(fileName, file);
+        .upload(fileName, file, { contentType: mimeType });
 
       if (error) throw error;
 
@@ -151,7 +159,7 @@ export function FileUpload({ onFileUploaded, existingFile, onRemoveFile }: FileU
       if (signedUrlError) throw signedUrlError;
 
       // Store the file path (without signed token) for future signed URL generation
-      onFileUploaded(fileName, file.name, file.type);
+      onFileUploaded(fileName, file.name, mimeType);
 
       toast({
         title: 'File caricato',
@@ -261,7 +269,7 @@ export function FileUpload({ onFileUploaded, existingFile, onRemoveFile }: FileU
         type="file"
         onChange={handleChange}
         className="hidden"
-        accept="image/*,.pdf,.doc,.docx,.txt,.zip,.py,.html,.htm,.css,.js,.json,.md,.lua,.rbxl,.rbxlx,.rbxm,.rbxmx,.mp4,.webm,.mp3,.wav"
+        accept="image/*,.pdf,.doc,.docx,.txt,.zip,.py,.html,.htm,.css,.js,.json,.md,.lua,.rbxl,.rbxlx,.rbxm,.rbxmx,.sb3,.mp4,.webm,.mp3,.wav"
       />
 
       {isUploading ? (
@@ -286,7 +294,7 @@ export function FileUpload({ onFileUploaded, existingFile, onRemoveFile }: FileU
               </button>
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Immagini, PDF, codice (.py, .html, .css), file Roblox, video (max 20MB)
+              Immagini, PDF, codice (.py, .html, .css), giochi Scratch (.sb3), file Roblox, video (max 20MB)
             </p>
           </div>
         </div>

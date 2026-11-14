@@ -279,3 +279,11 @@ if ! out=$(run_sql supabase_admin supabase/tests/rls/27_student_extra_meeting_li
   exit 1
 fi
 echo "$out" | sed -n 's/.*NOTICE: *//p'
+
+echo "▶ Tutorial consegna compiti"
+if ! out=$(run_sql supabase_admin supabase/tests/rls/28_course_homework_tutorials.sql 2>&1); then
+  echo "$out" | sed -nE 's/.*(NOTICE|WARNING|ERROR): *//p'
+  echo "✗ Test del tutorial consegna compiti FALLITI"
+  exit 1
+fi
+echo "$out" | sed -n 's/.*NOTICE: *//p'

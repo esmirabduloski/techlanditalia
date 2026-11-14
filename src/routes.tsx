@@ -97,6 +97,7 @@ export const routes: RouteRecord[] = [
       { path: "area-riservata", lazy: page(() => import("./pages/area-riservata/Dashboard")) },
       { path: "area-riservata/profilo", lazy: page(() => import("./pages/area-riservata/Profile")) },
       { path: "area-riservata/corso/:courseId", lazy: page(() => import("./pages/area-riservata/CourseProgress")) },
+      { path: "area-riservata/corso/:courseId/tutorial-compiti", lazy: page(() => import("./pages/area-riservata/HomeworkTutorial")) },
       { path: "area-riservata/corso/:courseId/lezione/:lessonNumber", lazy: page(() => import("./pages/area-riservata/LessonView")) },
       { path: "area-riservata/corso/:courseId/lezione/:lessonNumber/task/:taskNumber", lazy: page(() => import("./pages/area-riservata/TaskView")) },
       { path: "area-riservata/compito/:homeworkId", lazy: page(() => import("./pages/area-riservata/HomeworkView")) },

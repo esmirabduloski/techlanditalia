@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { CourseHomeworkTutorialCard } from "@/components/admin/CourseHomeworkTutorialCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -272,6 +273,9 @@ export default function AdminCourseContent() {
             Salva modifiche
           </Button>
         </div>
+
+        {/* Tutorial per gli studenti: si salva a parte, non fa parte della pagina pubblica */}
+        {courseId && <CourseHomeworkTutorialCard courseId={courseId} />}
 
         {/* Section visibility */}
         <Card>

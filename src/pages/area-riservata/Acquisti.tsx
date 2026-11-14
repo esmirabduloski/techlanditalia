@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { BackButton } from '@/components/ui/back-button';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, CheckCircle2, Loader2, XCircle, Sparkles, GraduationCap, CheckCircle, Shield, ShoppingCart } from 'lucide-react';
+import { CheckCircle2, Loader2, XCircle, Sparkles, GraduationCap, CheckCircle, Shield, ShoppingCart } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import { AcquistiBenefits } from '@/components/acquisti/AcquistiBenefits';
@@ -232,11 +233,7 @@ export default function Acquisti() {
         <div className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
           {/* Header */}
           <div className="flex items-center gap-3 mb-2">
-            <Button variant="ghost" size="icon" asChild>
-              <Link to="/area-riservata">
-                <ArrowLeft className="w-5 h-5" />
-              </Link>
-            </Button>
+            <BackButton to="/area-riservata" aria-label="Indietro alla home" />
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-2">
                 <GraduationCap className="w-7 h-7 text-primary" />

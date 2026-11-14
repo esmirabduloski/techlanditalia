@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { BackButton } from '@/components/ui/back-button';
 import { useAuth } from '@/hooks/useAuth';
 import { useStudentProgress } from '@/hooks/useStudentProgress';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,8 +10,8 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AvatarDisplay } from '@/components/gamification/AvatarSelector';
 import { getLevelFromPoints } from '@/components/gamification/LevelBadge';
-import { Trophy, Medal, Award, Crown, Eye, EyeOff, ArrowLeft, Loader2, Users } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Trophy, Medal, Award, Crown, Eye, EyeOff, Loader2, Users } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 interface LeaderboardEntry {
@@ -153,9 +154,7 @@ export default function Leaderboard() {
       <div className="container mx-auto px-4 py-8 max-w-3xl">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
-          <Button variant="ghost" size="icon" asChild>
-            <Link to="/area-riservata"><ArrowLeft className="h-5 w-5" /></Link>
-          </Button>
+          <BackButton to="/area-riservata" aria-label="Indietro alla home" />
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Trophy className="h-7 w-7 text-yellow-500" />

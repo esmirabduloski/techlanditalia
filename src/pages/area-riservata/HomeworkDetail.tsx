@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { BackButton } from '@/components/ui/back-button';
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -12,7 +13,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileUpload } from "@/components/homework/FileUpload";
 import { SeasonalBadge } from "@/components/homework/SeasonalBadge";
 import { 
-  ArrowLeft, 
   Download, 
   Paperclip, 
   Clock, 
@@ -393,13 +393,10 @@ export default function HomeworkDetail() {
         <div className="container max-w-4xl space-y-6">
           {/* Header */}
           <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
+            <BackButton
               onClick={() => navigate(`/area-riservata/corso/${homework.lesson.course.id}`)}
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
+              aria-label="Indietro al corso"
+            />
             <div className="flex-1">
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
                 <span>{homework.lesson.course.emoji}</span>

@@ -1,11 +1,11 @@
 import { test, expect } from "./support/test";
-import { course, seedStudent, student } from "./support/seed";
+import { course, homework, seedStudent, student } from "./support/seed";
 import { FAKE_SUPABASE_URL, type FakeUser } from "./support/fakeSupabase";
 
 /**
  * Tutorial "come consegnare i compiti" per corso (Admin → Corsi → Contenuto).
- * Lo studente lo apre dalla card del corso nella home: video in alto, guida PDF
- * sotto mostrata pagina per pagina (non scaricata).
+ * Lo studente lo apre dal tab Compiti della pagina del corso: video in alto,
+ * guida PDF sotto mostrata pagina per pagina (non scaricata).
  */
 
 const admin: FakeUser = {
@@ -49,7 +49,7 @@ test.beforeEach(async ({ page }) => {
   await page.route("https://www.youtube-nocookie.com/**", (route) => route.fulfill({ status: 200, body: "<html></html>" }));
 });
 
-test("lo studente apre il tutorial dalla card: video in alto e PDF pagina per pagina", async ({ page, fake }) => {
+test("lo studente apre il tutorial dal tab Compiti: video in alto e PDF pagina per pagina", async ({ page, fake }) => {
   seedStudent(fake);
   fake.seed("course_homework_tutorials", [
     { course_id: course.id, video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", video_path: null, pdf_path: PDF_PATH },
@@ -63,7 +63,14 @@ test("lo studente apre il tutorial dalla card: video in alto e PDF pagina per pa
       : route.fallback(),
   );
 
+  // Nella home il bottone non c'è: sta solo nel tab Compiti del corso
   await page.goto("/area-riservata");
+  await expect(page.getByText("Apri lezioni e compiti").first()).toBeVisible();
+  await expect(tutorialButton(page)).toHaveCount(0);
+
+  await page.goto(`/area-riservata/corso/${course.id}`);
+  await expect(tutorialButton(page)).toBeHidden(); // tab Lezioni
+  await page.getByRole("tab", { name: "Compiti" }).click();
   await expect(tutorialButton(page)).toBeVisible();
   await tutorialButton(page).click();
 
@@ -83,15 +90,19 @@ test("lo studente apre il tutorial dalla card: video in alto e PDF pagina per pa
   const pdfBox = await page.getByRole("img", { name: "Pagina 1 di 2" }).boundingBox();
   expect(videoBox!.y).toBeLessThan(pdfBox!.y);
 
-  await page.getByRole("button", { name: "Indietro alla home" }).click();
-  await expect(page).toHaveURL(/\/area-riservata$/);
+  // Indietro riporta al tab Compiti del corso
+  await page.getByRole("button", { name: "Indietro ai compiti del corso" }).click();
+  await expect(page).toHaveURL(new RegExp(`/area-riservata/corso/${course.id}\\?tab=compiti$`));
+  await expect(page.getByRole("tab", { name: "Compiti" })).toHaveAttribute("data-state", "active");
+  await expect(tutorialButton(page)).toBeVisible();
 });
 
-test("senza tutorial il bottone nella card non c'è", async ({ page, fake }) => {
+test("senza tutorial il bottone nel tab Compiti non c'è", async ({ page, fake }) => {
   seedStudent(fake);
   await fake.signInBeforeLoad(page, student);
-  await page.goto("/area-riservata");
-  await expect(page.getByText("Apri lezioni e compiti").first()).toBeVisible();
+  await page.goto(`/area-riservata/corso/${course.id}?tab=compiti`);
+  await expect(page.getByRole("tab", { name: "Compiti" })).toHaveAttribute("data-state", "active");
+  await expect(page.getByText(homework.title).first()).toBeVisible();
   await expect(tutorialButton(page)).toHaveCount(0);
 });
 
@@ -117,7 +128,7 @@ test("l'admin salva link del video e PDF del corso, e li toglie", async ({ page,
   await expect(page.getByText("Guida consegna.pdf caricato: ricordati di salvare")).toBeVisible();
 
   await card.getByRole("button", { name: "Salva tutorial" }).click();
-  await expect(page.getByText("Tutorial salvato: gli studenti del corso lo vedono nella home")).toBeVisible();
+  await expect(page.getByText("Tutorial salvato: gli studenti lo vedono nel tab Compiti del corso")).toBeVisible();
   const [row] = fake.table("course_homework_tutorials");
   expect(row).toMatchObject({ course_id: course.id, video_url: "https://youtu.be/dQw4w9WgXcQ", video_path: null });
   expect(row.pdf_path).toMatch(new RegExp(`^${course.id}/guida-\\d+\\.pdf$`));

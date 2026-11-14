@@ -1,9 +1,10 @@
 -- Tutorial "come consegnare i compiti", uno per corso.
 --
 -- L'admin, da Admin → Corsi → Contenuto, carica per ogni corso un video
--- (link YouTube/Vimeo oppure file .mp4/.webm) e una guida in PDF. Nella home
--- lo studente iscritto vede nella card del corso il bottone "Tutorial: come
--- consegnare i compiti", che apre il video e, sotto, il PDF pagina per pagina.
+-- (link YouTube/Vimeo oppure file .mp4/.webm) e una guida in PDF. Nel tab
+-- "Compiti" della pagina del corso lo studente iscritto vede il bottone
+-- "Tutorial: come consegnare i compiti", che apre il video e, sotto, il PDF
+-- pagina per pagina.
 -- Senza riga (o senza video né PDF) niente bottone.
 --
 -- I file stanno nel bucket privato course-tutorials, nella cartella

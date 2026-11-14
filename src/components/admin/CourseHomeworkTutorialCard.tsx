@@ -96,7 +96,7 @@ export function CourseHomeworkTutorialCard({ courseId }: { courseId: string }) {
     setDraft(normalized);
     toast.success(
       normalized.video_url || normalized.video_path || normalized.pdf_path
-        ? 'Tutorial salvato: gli studenti del corso lo vedono nella home'
+        ? 'Tutorial salvato: gli studenti lo vedono nel tab Compiti del corso'
         : 'Tutorial tolto: gli studenti non vedono più il bottone',
     );
   };
@@ -109,7 +109,7 @@ export function CourseHomeworkTutorialCard({ courseId }: { courseId: string }) {
           Tutorial: come consegnare i compiti
         </CardTitle>
         <CardDescription>
-          Video e guida PDF per gli studenti iscritti a questo corso. Nella home, sulla card del corso,
+          Video e guida PDF per gli studenti iscritti a questo corso. Nel tab "Compiti" della pagina del corso
           compare il bottone "Tutorial: come consegnare i compiti" quando c'è almeno il video o il PDF.
         </CardDescription>
       </CardHeader>

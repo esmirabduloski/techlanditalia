@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { PlayCircle } from 'lucide-react';
 
-/** Card del corso nella home: apre il tutorial (video + guida PDF). */
+/** Tab Compiti del corso: apre il tutorial (video + guida PDF). */
 export function CourseTutorialButton({ courseId }: { courseId: string }) {
   return (
     <Link

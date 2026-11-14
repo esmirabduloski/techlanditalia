@@ -54,7 +54,7 @@ export default function HomeworkTutorial() {
       <div className="min-h-screen bg-gradient-to-br from-background via-tech-green-light/20 to-tech-cyan-light/20">
         <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-8 space-y-6">
           <div className="flex items-center gap-4">
-            <BackButton onClick={() => navigate('/area-riservata')} aria-label="Indietro alla home" />
+            <BackButton onClick={() => navigate(`/area-riservata/corso/${courseId}?tab=compiti`)} aria-label="Indietro ai compiti del corso" />
             <div className="min-w-0">
               {course && (
                 <p className="text-sm text-muted-foreground truncate">

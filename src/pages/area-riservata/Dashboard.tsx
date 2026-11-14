@@ -9,6 +9,7 @@ import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { courseButtonColor } from '@/lib/courseButtonColor';
 import { AvatarDisplay } from '@/components/gamification/AvatarSelector';
 import { LevelBadge, PointsDisplay, getLevelFromPoints } from '@/components/gamification/LevelBadge';
 import { BadgesDisplay } from '@/components/gamification/BadgesDisplay';
@@ -34,7 +35,7 @@ import { CelebrationOverlay } from '@/components/gamification/CelebrationOverlay
 import { useCelebration } from '@/hooks/useCelebration';
 import { useStudentBirthYear } from '@/hooks/useStudentBirthYear';
 import { canSelfConsent } from '@/lib/aiConsents';
-import { Loader2, BookOpen, Trophy, Target, Settings, LogOut, Rocket, Shield, GraduationCap, CreditCard, Bookmark } from 'lucide-react';
+import { Loader2, BookOpen, Trophy, Target, Settings, LogOut, Rocket, Shield, GraduationCap, CreditCard, Bookmark, ArrowRight } from 'lucide-react';
 import { TrustpilotLoader } from '@/components/TrustpilotLoader';
 import { useBookmarks } from '@/hooks/useBookmarks';
 import { BugReportButton } from '@/components/BugReportButton';
@@ -475,7 +476,7 @@ export default function Dashboard() {
                 </Card>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {enrollments.map((enrollment) => {
+                  {enrollments.map((enrollment, index) => {
                     const course = enrollment.course;
                     const progressPercent = getCourseProgressPercent(course.id);
                     
@@ -483,7 +484,7 @@ export default function Dashboard() {
                       <Link 
                         key={enrollment.id} 
                         to={`/area-riservata/corso/${course.id}`}
-                        className="block"
+                        className="group block"
                       >
                         <Card className="hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border-border/50">
                           <CardHeader className="pb-2">
@@ -510,6 +511,14 @@ export default function Dashboard() {
                                 <span className="font-medium">{progressPercent}%</span>
                               </div>
                               <Progress value={progressPercent} className="h-2" />
+                            </div>
+                            {/* Bottone principale: tutta la card è il link, questo lo rende evidente */}
+                            <div
+                              className={`mt-4 flex w-full min-h-14 items-center justify-center gap-2 rounded-lg px-4 text-base sm:text-lg font-bold shadow-md transition-colors ${courseButtonColor(index)}`}
+                            >
+                              <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
+                              Apri lezioni e compiti
+                              <ArrowRight className="w-5 h-5 shrink-0 transition-transform group-hover:translate-x-1" />
                             </div>
                           </CardContent>
                         </Card>

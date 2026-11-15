@@ -765,6 +765,41 @@ export type Database = {
           },
         ]
       }
+      course_homework_tutorials: {
+        Row: {
+          course_id: string
+          created_at: string
+          pdf_path: string | null
+          updated_at: string
+          video_path: string | null
+          video_url: string | null
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          pdf_path?: string | null
+          updated_at?: string
+          video_path?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          pdf_path?: string | null
+          updated_at?: string
+          video_path?: string | null
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_homework_tutorials_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: true
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       course_proposals: {
         Row: {
           created_at: string

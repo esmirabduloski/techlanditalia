@@ -63,10 +63,13 @@ const PITCH_GAIN = 1.6; // quanto in fretta si arriva all'inclinazione massima
 const TILT_RAD = 0.24; // inclinazione massima della testa (di profilo)
 const LIFT_PX = 9; // quanto la testa si alza/abbassa (di fronte)
 const NOD_PX = 12; // quanto il volto sale/scende nella sagoma (di fronte)
-// Passaggio destra <-> sinistra sopra la testa: breve giro animato, con un po'
-// di isteresi per non rimbalzare quando il cursore resta sul confine.
-const SWING_MS = 220;
-const SWING_HYSTERESIS = 2.5;
+// Sopra la testa, entro questi gradi, si mostra la posa frontale: la testa
+// resta ferma e cambia solo il lato verso cui guardano gli occhi. Il cambio di
+// lato è una dissolvenza brevissima (uno "sguardo" che scatta), con un po' di
+// isteresi per non rimbalzare quando il cursore resta sul confine.
+const CENTER_ZONE = 4;
+const SIDE_HYSTERESIS = 1;
+const SIDE_SWITCH_MS = 130;
 
 type Patch = HTMLCanvasElement;
 type Sprites = {
@@ -74,12 +77,14 @@ type Sprites = {
   patches: Patch[][];
   /** Per bambino: di quanti pixel si spostano i lineamenti da una posa alla successiva. */
   shifts: number[][];
-  /** Per bambino: quanto la testa (sagoma) è spostata rispetto all'asse del busto nella posa frontale. */
-  headOffset: number[];
-  /** Per bambino: la posa usata come "frontale", cioè quella con la testa più dritta. */
+  /**
+   * Per bambino: la posa usata come "frontale", cioè quella in cui la testa è
+   * più simmetrica. Specchiandola la testa resta identica, quindi tra guardare
+   * a destra e guardare a sinistra non cambia né posizione né grandezza.
+   */
   front: number[];
-  /** Per bambino: quanto i lineamenti sono fuori centro rispetto alla sagoma in quella posa. */
-  faceLag: number[];
+  /** Per bambino: di quanto spostare le pose specchiate perché la testa combaci. */
+  mirrorShift: number[];
 };
 
 // Fascia del volto (occhi, naso, bocca) usata per allineare due pose vicine.
@@ -88,11 +93,10 @@ const FACE_X1 = HALF_W + 62;
 const FACE_Y0 = 395 - TOP;
 const FACE_Y1 = 492 - TOP;
 const MAX_SHIFT = 32;
-// Oltre questo scarto (in pixel) tra volto e sagoma si cerca una posa più dritta.
-const MAX_FACE_LAG = 7;
-const MAX_FRONT_POSE = 2;
-const FACE_BAND: readonly [number, number] = [FACE_Y0, FACE_Y1];
-const EYE_BAND: readonly [number, number] = [EYES_Y - TOP - 18, EYES_Y - TOP + 18];
+// La posa frontale si cerca tra le prime della sequenza.
+const MAX_FRONT_POSE = 4;
+// Righe del ritaglio che contengono la testa (sopra le spalle).
+const HEAD_ROWS = 505 - TOP;
 
 function luminance(px: Uint8ClampedArray): Uint8Array {
   const out = new Uint8Array(PATCH_W * PATCH_H);
@@ -102,41 +106,44 @@ function luminance(px: Uint8ClampedArray): Uint8Array {
   return out;
 }
 
-/** Distanza (in pixel) tra il centro della testa, all'altezza degli occhi, e l'asse del ritaglio. */
-function headOffCenter(mask: Uint8Array): number {
-  let sum = 0;
-  let rows = 0;
-  for (let y = FACE_Y0; y < FACE_Y0 + 50; y++) {
-    let min = -1;
-    let max = -1;
-    for (let x = 0; x < PATCH_W; x++) {
-      if (!mask[y * PATCH_W + x]) continue;
-      if (min < 0) min = x;
-      max = x;
-    }
-    if (min < 0) continue;
-    sum += (min + max) / 2 - (PATCH_W - 1) / 2;
-    rows++;
-  }
-  return rows ? sum / rows : 0;
-}
-
-function mirrored(gray: Uint8Array): Uint8Array {
-  const out = new Uint8Array(gray.length);
-  for (let y = 0; y < PATCH_H; y++) {
-    const row = y * PATCH_W;
-    for (let x = 0; x < PATCH_W; x++) out[row + x] = gray[row + PATCH_W - 1 - x];
-  }
+/** Luminosità del solo bambino: il cielo diventa bianco pieno. */
+function silhouette(px: Uint8ClampedArray, mask: Uint8Array): Uint8Array {
+  const out = luminance(px);
+  for (let i = 0; i < out.length; i++) if (!mask[i]) out[i] = 255;
   return out;
 }
 
+/**
+ * Quanto la testa è simmetrica: confronta la posa con il proprio riflesso e
+ * restituisce lo scarto minimo e lo spostamento del riflesso che lo ottiene.
+ */
+function mirrorFit(head: Uint8Array): { error: number; shift: number } {
+  let best = { error: Infinity, shift: 0 };
+  for (let shift = -MAX_SHIFT; shift <= MAX_SHIFT; shift++) {
+    let sum = 0;
+    let count = 0;
+    for (let y = 0; y < HEAD_ROWS; y += 2) {
+      const row = y * PATCH_W;
+      for (let x = 40; x < PATCH_W - 40; x += 2) {
+        const mx = PATCH_W - 1 - (x - shift);
+        if (mx < 0 || mx >= PATCH_W) continue;
+        sum += Math.abs(head[row + x] - head[row + mx]);
+        count++;
+      }
+    }
+    const error = sum / count;
+    if (error < best.error) best = { error, shift };
+  }
+  return best;
+}
+
 /** Spostamento orizzontale che sovrappone al meglio il volto di `from` a quello di `to`. */
-function faceShift(from: Uint8Array, to: Uint8Array, band = FACE_BAND): number {
+function faceShift(from: Uint8Array, to: Uint8Array): number {
   let best = 0;
   let bestScore = Infinity;
   for (let shift = -MAX_SHIFT; shift <= MAX_SHIFT; shift++) {
     let score = 0;
-    for (let y = band[0]; y < band[1]; y += 2) {
+    for (let y = FACE_Y0; y < FACE_Y1; y += 2) {
       const row = y * PATCH_W;
       for (let x = FACE_X0; x < FACE_X1; x += 2) {
         score += Math.abs(to[row + x + shift] - from[row + x]);
@@ -314,10 +321,9 @@ async function extractSprites(video: HTMLVideoElement): Promise<Sprites> {
   const base = makeCanvas(VIEW, VIEW);
   const patches: Patch[][] = KIDS.map(() => []);
   const shifts: number[][] = KIDS.map(() => []);
-  const headOffset: number[] = [];
-  const faceLag: number[] = [];
   const front: number[] = KIDS.map(() => 0);
-  const faceCenter: number[] = [];
+  const mirrorShift: number[] = KIDS.map(() => 0);
+  const symmetry: number[] = KIDS.map(() => Infinity);
   const previous: Uint8Array[] = [];
 
   for (let p = 0; p < POSES.length; p++) {
@@ -330,22 +336,15 @@ async function extractSprites(video: HTMLVideoElement): Promise<Sprites> {
       const mask = kidMask(image.data);
       const gray = luminance(image.data);
       if (p > 0) shifts[k].push(faceShift(previous[k], gray));
-      // Nella clip gli occhi anticipano la testa: nel primo fotogramma lo
-      // sguardo è al centro ma la testa è ancora girata, e specchiandola
-      // salterebbe dall'altra parte. Tra le prime pose scegliamo come
-      // "frontale" quella in cui il volto è meglio centrato nella sagoma:
-      // così tra guardare a destra e a sinistra la testa cambia il meno possibile.
-      if (p === 0) {
-        headOffset[k] = headOffCenter(mask);
-        faceCenter[k] = -faceShift(gray, mirrored(gray), EYE_BAND) / 2;
-        faceLag[k] = headOffset[k] - faceCenter[k];
-      } else if (p <= MAX_FRONT_POSE) {
-        faceCenter[k] += shifts[k][p - 1];
-        const lag = headOffCenter(mask) - faceCenter[k];
-        if (Math.abs(faceLag[k]) > MAX_FACE_LAG && Math.abs(lag) < Math.abs(faceLag[k])) {
+      // Nella clip gli occhi anticipano la testa: nei primi fotogrammi lo
+      // sguardo è già avanti ma la testa è ancora girata. Come "frontale"
+      // prendiamo la posa in cui la testa è più simmetrica.
+      if (p <= MAX_FRONT_POSE) {
+        const fit = mirrorFit(silhouette(image.data, mask));
+        if (fit.error < symmetry[k]) {
+          symmetry[k] = fit.error;
           front[k] = p;
-          faceLag[k] = lag;
-          headOffset[k] = headOffCenter(mask);
+          mirrorShift[k] = fit.shift;
         }
       }
       previous[k] = gray;
@@ -359,15 +358,15 @@ async function extractSprites(video: HTMLVideoElement): Promise<Sprites> {
       patches[k].push(buildPatch(image, mask));
     });
   }
-  return { base, patches, shifts, headOffset, faceLag, front };
+  return { base, patches, shifts, front, mirrorShift };
 }
 
 type Look = {
   yaw: number;
   pitch: number;
-  /** Da che lato sta guardando: 1 destra (pose originali), -1 sinistra (pose specchiate). */
+  /** Da che lato guardano gli occhi: 1 destra (pose originali), -1 sinistra (specchiate). */
   side: 1 | -1;
-  /** Avanzamento del giro tra i due lati: 0 destra, 1 sinistra. */
+  /** Avanzamento del cambio di lato: 0 destra, 1 sinistra. */
   swing: number;
 };
 type Renderer = (looks: Look[]) => void;
@@ -440,31 +439,25 @@ type Blend = {
 
 /** Le due pose da mostrare per lo sguardo richiesto, per un dato bambino. */
 function blendFor(look: Look, sprites: Sprites, kid: number): Blend {
-  // Giro in corso: la posa frontale si trasforma nel proprio riflesso.
+  const front = sprites.front[kid];
+  // Cambio di lato in corso: la posa frontale sfuma nel proprio riflesso.
+  // La testa coincide, quindi si vedono muoversi solo gli occhi.
   if (look.swing > 0 && look.swing < 1) {
     const t = look.swing;
-    return {
-      a: sprites.front[kid],
-      b: sprites.front[kid],
-      flipA: false,
-      flipB: true,
-      mix: t * t * (3 - 2 * t),
-      slide: 2 * sprites.faceLag[kid],
-    };
+    return { a: front, b: front, flipA: false, flipB: true, mix: t * t * (3 - 2 * t), slide: 0 };
   }
   const left = look.side < 0;
   const angle = Math.min(Math.max(left ? -look.yaw : look.yaw, 0), POSES[POSES.length - 1][1]);
-  const front = sprites.front[kid];
   let lower = front;
   while (lower < POSES.length - 2 && POSES[lower + 1][1] <= angle) lower++;
-  const from = lower === front ? 0 : POSES[lower][1];
+  const from = lower === front ? CENTER_ZONE : POSES[lower][1];
   const to = POSES[lower + 1][1];
   return {
     a: lower,
     b: lower + 1,
     flipA: left,
     flipB: left,
-    mix: (angle - from) / (to - from),
+    mix: Math.max(0, (angle - from) / (to - from)),
     slide: (left ? -1 : 1) * sprites.shifts[kid][lower],
   };
 }
@@ -563,7 +556,8 @@ function createWebglRenderer(canvas: HTMLCanvasElement, sprites: Sprites): Rende
       bind(patches[k][a], patches[k][b]);
       gl.uniform4f(loc.rect, kid.axis - CROP_X - HALF_W, TOP, PATCH_W, PATCH_H);
       // Ogni posa scivola verso l'altra: a metà strada i lineamenti coincidono.
-      const head = (flip: boolean) => (flip ? -1 : 1) * sprites.headOffset[k];
+      // Le pose specchiate vengono spostate quanto basta perché la testa combaci.
+      const head = (flip: boolean) => (flip ? 0.5 : -0.5) * sprites.mirrorShift[k];
       gl.uniform2f(loc.shiftA, slide * mix, nod);
       gl.uniform2f(loc.shiftB, -slide * (1 - mix), nod);
       gl.uniform1f(loc.flipA, flipA ? 1 : 0);
@@ -681,16 +675,16 @@ export function HeroScrubVideo() {
           look.yaw = targets[k].yaw;
           look.pitch = targets[k].pitch;
         }
-        // Cambio di lato: parte il giro, e finché non è finito lo sguardo
-        // resta vicino al centro (così non si salta a metà movimento).
-        if (look.side > 0 && look.yaw < -SWING_HYSTERESIS) look.side = -1;
-        else if (look.side < 0 && look.yaw > SWING_HYSTERESIS) look.side = 1;
+        // Cambio di lato degli occhi: finché la dissolvenza non è finita lo
+        // sguardo resta nella zona centrale, dove la testa è comunque ferma.
+        if (look.side > 0 && look.yaw < -SIDE_HYSTERESIS) look.side = -1;
+        else if (look.side < 0 && look.yaw > SIDE_HYSTERESIS) look.side = 1;
         const goal = look.side < 0 ? 1 : 0;
         if (look.swing !== goal) {
-          const step = dt / SWING_MS;
+          const step = dt / SIDE_SWITCH_MS;
           look.swing =
             goal > look.swing ? Math.min(1, look.swing + step) : Math.max(0, look.swing - step);
-          look.yaw = Math.max(-SWING_HYSTERESIS, Math.min(SWING_HYSTERESIS, look.yaw));
+          look.yaw = Math.max(-CENTER_ZONE, Math.min(CENTER_ZONE, look.yaw));
           moving = true;
         }
       });

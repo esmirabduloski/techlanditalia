@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getSupabase } from '@/integrations/supabase/lazyClient';
 import { useAuth } from '@/hooks/useAuth';
+import { randomUUID } from '@/lib/uuid';
 
 // Session ID management
 const getSessionId = (): string => {
@@ -75,7 +76,7 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
     // L'id nasce qui e l'insert non chiede la riga indietro: page_views la leggono
     // solo gli admin, e con .select() l'RLS rifiutava (401) le visite di tutti gli altri.
     // Le uscite (UPDATE) le può scrivere solo l'utente loggato proprietario della riga.
-    const id = crypto.randomUUID?.();
+    const id = randomUUID();
     currentPageViewId.current = null;
 
     try {

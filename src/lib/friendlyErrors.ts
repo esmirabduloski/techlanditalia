@@ -241,6 +241,7 @@ function explainKnown(type: string, msg: string, code: string): Explained {
     case 'EOFError':
       return { title: 'Mancano dati in input', explanation: msg && !/EOF when reading/.test(msg) ? msg : 'Il programma ha chiesto un `input()` ma non c\'era niente da leggere.' };
     case 'KeyboardInterrupt':
+    case 'InputInterrupt':
       return { title: 'Programma interrotto', explanation: 'Hai annullato la finestra dell\'input, quindi il programma si è fermato.' };
     case 'OverflowError':
       return { title: 'Numero troppo grande', explanation: 'Il risultato è un numero troppo grande da gestire.' };

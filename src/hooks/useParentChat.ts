@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useTurnstile } from '@/hooks/useTurnstile';
+import { randomUUID } from '@/lib/uuid';
 
 type Message = {
   role: 'user' | 'assistant' | 'operator';
@@ -20,7 +21,7 @@ const WELCOME =
   'Ciao! 👋 Sono l\'assistente virtuale di TECHLAND, un sistema di intelligenza artificiale: le mie risposte sono generate automaticamente. Posso rispondere alle domande sui nostri corsi di coding per bambini e ragazzi. Se preferisci parlare con una persona, chiedi un operatore.';
 
 // Generate a unique session ID for this chat session
-const generateSessionId = () => crypto.randomUUID();
+const generateSessionId = () => randomUUID();
 
 export function useParentChat() {
   const sessionIdRef = useRef(generateSessionId());

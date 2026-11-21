@@ -134,6 +134,11 @@ export default defineConfig(({ mode, isSsrBuild }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+    // Una sola copia di ProseMirror nel bundle: il lockfile della build può
+    // annidare versioni diverse (es. prosemirror-state/node_modules/prosemirror-transform)
+    // e i Fragment di una copia non sono riconosciuti dall'altra -> "Can not convert
+    // <> to a Fragment" premendo Invio nell'editor dei compiti (Sentry).
+    dedupe: ["prosemirror-model", "prosemirror-transform", "prosemirror-state", "prosemirror-view"],
   },
   ssgOptions: {
     entry: "src/main.tsx",

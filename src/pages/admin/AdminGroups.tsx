@@ -166,54 +166,47 @@ export default function AdminGroups() {
 
   const fetchData = async () => {
     try {
-      // Fetch groups with course and teacher info
+      // Gruppi con corso e numero di studenti in una sola richiesta
+      // (prima: 2 query per gruppo, segnalate da Sentry come N+1).
       const { data: groupsData } = await supabase
         .from('student_groups')
         .select(`
           id, title, course_id, teacher_id, start_date, last_lesson_title, max_lessons, lesson_days, lesson_time, status, archived_at, certificates,
-          courses!inner(title, emoji)
+          courses!inner(title, emoji),
+          group_students(count)
         `)
         .order('created_at', { ascending: false });
 
       if (groupsData) {
-        // Get teacher names and student counts
-        const enrichedGroups = await Promise.all(
-          groupsData.map(async (g: any) => {
-            let teacherName = '';
-            if (g.teacher_id) {
-              const { data: teacher } = await supabase
-                .from('profiles')
-                .select('full_name')
-                .eq('id', g.teacher_id)
-                .single();
-              teacherName = teacher?.full_name || '';
-            }
+        // Nomi degli insegnanti: una query per tutti i gruppi
+        const teacherIds = [...new Set(groupsData.map((g: any) => g.teacher_id).filter(Boolean))] as string[];
+        const teacherNames = new Map<string, string>();
+        if (teacherIds.length > 0) {
+          const { data: teacherRows } = await supabase
+            .from('profiles')
+            .select('id, full_name')
+            .in('id', teacherIds);
+          for (const t of teacherRows ?? []) teacherNames.set(t.id, t.full_name || '');
+        }
 
-            const { count } = await supabase
-              .from('group_students')
-              .select('*', { count: 'exact', head: true })
-              .eq('group_id', g.id);
-
-            return {
-              id: g.id,
-              title: g.title,
-              course_id: g.course_id,
-              course_title: g.courses?.title,
-              course_emoji: g.courses?.emoji,
-              teacher_id: g.teacher_id,
-              teacher_name: teacherName,
-              start_date: g.start_date,
-              last_lesson_title: g.last_lesson_title,
-              max_lessons: g.max_lessons,
-              student_count: count || 0,
-              lesson_days: (g.lesson_days as number[]) || [0],
-              lesson_time: g.lesson_time,
-              status: g.status || 'active',
-              archived_at: g.archived_at,
-              certificates: ((g as any).certificates as CertificateFile[]) || []
-            };
-          })
-        );
+        const enrichedGroups = groupsData.map((g: any) => ({
+          id: g.id,
+          title: g.title,
+          course_id: g.course_id,
+          course_title: g.courses?.title,
+          course_emoji: g.courses?.emoji,
+          teacher_id: g.teacher_id,
+          teacher_name: g.teacher_id ? teacherNames.get(g.teacher_id) ?? '' : '',
+          start_date: g.start_date,
+          last_lesson_title: g.last_lesson_title,
+          max_lessons: g.max_lessons,
+          student_count: g.group_students?.[0]?.count ?? 0,
+          lesson_days: (g.lesson_days as number[]) || [0],
+          lesson_time: g.lesson_time,
+          status: g.status || 'active',
+          archived_at: g.archived_at,
+          certificates: (g.certificates as CertificateFile[]) || []
+        }));
         setGroups(enrichedGroups);
       }
 

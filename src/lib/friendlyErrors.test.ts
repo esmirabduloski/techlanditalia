@@ -29,9 +29,9 @@ describe('explainPythonError', () => {
     const annullato = `Traceback (most recent call last):
   File "/lib/python311.zip/_pyodide/_base.py", line 571, in eval_code_async
   File "<exec>", line 2, in <module>
-  File "<techland>", line 16, in _js_input
-KeyboardInterrupt: Input annullato dall'utente`;
-    expect(explainPythonError(annullato, 'print(1)\nx = input()\n')).toMatchObject({ type: 'KeyboardInterrupt', line: 2 });
+  File "<techland>", line 22, in _js_input
+InputInterrupt: Input annullato dall'utente`;
+    expect(explainPythonError(annullato, 'print(1)\nx = input()\n')).toMatchObject({ type: 'InputInterrupt', line: 2, title: 'Programma interrotto' });
   });
 
   it('Pygame Zero: immagine o suono che non c\'è tra i file del gioco', () => {

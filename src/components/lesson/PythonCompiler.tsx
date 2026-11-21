@@ -42,6 +42,12 @@ from io import StringIO
 sys.stdout = StringIO()
 sys.stderr = StringIO()
 
+# Eccezione normale, non KeyboardInterrupt: in asyncio le BaseException vengono
+# rilanciate fuori dal task, finiscono nel setTimeout di Pyodide e Sentry le
+# registra come errori non gestiti anche se runCode le ha già mostrate all'alunno.
+class InputInterrupt(Exception):
+    pass
+
 def _js_input(prompt_text=""):
     from js import prompt as _js_prompt
     # Flush pending stdout to the browser output before showing the prompt
@@ -51,7 +57,7 @@ def _js_input(prompt_text=""):
         msg = pending + msg
     result = _js_prompt(msg)
     if result is None:
-        raise KeyboardInterrupt("Input annullato dall'utente")
+        raise InputInterrupt("Input annullato dall'utente")
     # Echo the input into stdout so it appears in the output panel
     print(str(prompt_text) + str(result))
     return str(result)

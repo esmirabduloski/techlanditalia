@@ -12,6 +12,7 @@ import {
 } from '@/lib/payments';
 import { cn } from '@/lib/utils';
 import type { PaymentInsert } from '@/hooks/useCRMPayments';
+import { randomUUID } from '@/lib/uuid';
 
 interface Props {
   open: boolean;
@@ -56,7 +57,7 @@ export function ScheduleInstallmentsDialog({
   const handleSubmit = async () => {
     if (!valid || !cents) return;
     setSaving(true);
-    const planId = crypto.randomUUID();
+    const planId = randomUUID();
     const ok = await onSubmit(plan.map(p => ({
       amount_cents: cents,
       status: 'scheduled',
